@@ -25,6 +25,24 @@
         "url": "https://gh-proxy.com/https://github.com/ryantm/agenix.git"
       }
     },
+    "cirruslabs-cli": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1780337541,
+        "narHash": "sha256-7KVWRKl+Wxn3sAqAKE8lnhOeElH+J01CITvjxHtDp5o=",
+        "ref": "master",
+        "rev": "4fef6a32df31b4c51bf745ae2d86b53a037a1a6c",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gh-proxy.com/https://github.com/cirruslabs/homebrew-cli.git"
+      },
+      "original": {
+        "ref": "master",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gh-proxy.com/https://github.com/cirruslabs/homebrew-cli.git"
+      }
+    },
     "comin": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -264,6 +282,7 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "cirruslabs-cli": "cirruslabs-cli",
         "comin": "comin",
         "home-manager": "home-manager_2",
         "homebrew": "homebrew",

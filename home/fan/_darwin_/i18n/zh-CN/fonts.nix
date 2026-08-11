@@ -1,4 +1,4 @@
-# fontconfig 默认字体（用户层）：中文苹方 + 等宽 Monaspace Nerd Font
+# fontconfig 默认字体（用户层）：中文苹方（Monaspace 已移除，等宽字体不指定用系统默认）
 _: {
   fonts.fontconfig = {
     enable = true;
@@ -11,9 +11,6 @@ _: {
       ];
       sansSerif = [
         "PingFang SC"
-      ];
-      monospace = [
-        "MonaspiceNe Nerd Font Mono"
       ];
       emoji = [
         "Apple Color Emoji"

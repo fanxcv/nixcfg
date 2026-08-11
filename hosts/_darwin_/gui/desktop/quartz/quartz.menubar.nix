@@ -22,8 +22,8 @@
     };
 
     controlcenter = {
-      # 电池图标不显示百分比
-      BatteryShowPercentage = false;
+      # 电池图标显示百分比
+      BatteryShowPercentage = true;
     };
 
     CustomUserPreferences = {

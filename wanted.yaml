@@ -7,6 +7,8 @@
 #   3. 构建验证
 #   4. 回填本文件，你的注释原样保留
 #
+# 双向同步规则见 AGENTS.md：改 nix 配置也必须同步回本文件
+#
 # 怎么改：
 #   - 加一行 = 安装/启用；删一行 = 卸载/移除；改值 = 更新配置
 #   - 行首 # 注释掉 = 保留但未启用（如 brew 公式，激活时会被卸载）
@@ -64,7 +66,7 @@ macos:
       # --- 菜单栏/时钟 ---
       menubar.hour24: true        # 24 小时制
       menubar.show_weekday: true  # 显示星期
-      menubar.battery_percent: false  # 电池百分比
+      menubar.battery_percent: true  # 电池百分比
       # --- 输入/触控板 ---
       input.fn_keys: true         # 按 fn 显示 F 键
       input.trackpad_force_click: true    # 用力点按
@@ -86,11 +88,14 @@ macos:
       softwareupdate.auto_macos: false  # 不自动装 macOS 更新
       # 电源策略：共享不声明（三台各自按需，mini-m4 见下方专属段）
 
+    locale:                      # 语言环境（系统级，launchctl setenv 全局生效）
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+
     services:                    # 系统服务
       # tailscale 用 App（三台已装，IP 保持稳定）；nix 服务会换 IP，不启用
 
-    fonts:                       # 字体
-      - monaspace                # Monaspace Nerd Font 全家桶
+    fonts:                        # 字体（Monaspace 已全部移除）
 
     user_pkgs:                   # Nix 安装的 CLI 工具（→ home/fan/_common_/）
       - ripgrep                  # 搜索

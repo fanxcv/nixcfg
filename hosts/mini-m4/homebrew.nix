@@ -10,7 +10,7 @@
     { name = "blender"; }           # 3D 建模
   ];
 
-  homebrew.formulae = lib.mkAfter [
-    "tart" # macOS 虚拟机（cirruslabs/cli tap 由声明自动处理）
+  homebrew.brews = lib.mkAfter [
+    "tart" # macOS 虚拟机（cirruslabs/homebrew-cli tap 由 flake input 声明自动处理）
   ];
 }
