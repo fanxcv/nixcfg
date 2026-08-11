@@ -5,6 +5,7 @@
 
 # === 敏感文件（明文忽略；加密的 *.age 正常提交） ===
 .secrets/
+secrets/source/
 secrets/*.env
 secrets/**/*.env
 *.env

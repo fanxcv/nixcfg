@@ -13,6 +13,22 @@
 
 ## 加密新文件
 
+明文统一放 `source/`（已 gitignore），一键批量加密，接收者自动取 `keys.nix` 全部公钥：
+
+```bash
+./encrypt.sh           # 加密 source/ 下所有文件 → secrets/<同名>.age
+./encrypt.sh --force   # 覆盖已存在的 .age
+```
+
+例：git 凭据也走这套加密（`git-credentials.age` 位置与 secrets.nix 预留一致）：
+
+```bash
+cp ~/.secrets/git-credentials source/git-credentials
+./encrypt.sh           # → secrets/git-credentials.age，激活时解密到 ~/.git-credentials
+```
+
+单文件手写命令等价形式：
+
 ```bash
 # 单接收者（-r 用 keys.nix 里的公钥）
 age -e -r age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204 \
