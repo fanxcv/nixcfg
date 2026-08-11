@@ -10,8 +10,10 @@ services:
     privileged: true
     restart: always
     environment:
-      TZ: "Asia/Shanghai"
-      USER: "root"   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
+      - TZ=Asia/Shanghai
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+      - USER=root   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
     volumes:
       - ./vsc:/root/.vscode-server
       - ./JetBrains/cache:/root/.cache/JetBrains
@@ -23,7 +25,6 @@ services:
       - /root/.config/mise:/root/.config/mise
       - /root/.cache/mise:/root/.cache/mise
       - /root/.config/uv:/root/.config/uv
-      - /root/.git-credentials:/root/.git-credentials
       - /root/.claude.json:/root/.claude.json
       - /root/.claude:/root/.claude
       - /root/.codex:/root/.codex
