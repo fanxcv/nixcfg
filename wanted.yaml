@@ -155,7 +155,7 @@ macos:
         general:                 # 常规块（注入 + 整文件声明）
           view_style: adaptive   # 视图样式（RustDesk_default.toml）
           keep_awake_incoming: false   # 来连时防睡眠
-          keep_awake_outgoing: false   # 外连时防睡眠
+          keep_awake_outgoing: true    # 外连时防睡眠（实机已开启）
           use_texture_render: true     # 纹理渲染
           av1_test: true         # AV1 测试
           check_update: false    # 不检查更新

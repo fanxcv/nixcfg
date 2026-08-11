@@ -94,7 +94,7 @@ apply_updates(
         "kb_layout_type": "'''",                      # 常规：键盘布局
     },
     {
-        "keep-awake-during-outgoing-sessions": "'N'",  # 常规：外连时防睡眠
+        "keep-awake-during-outgoing-sessions": "'Y'",  # 常规：外连时防睡眠（实机已开启）
         "use-texture-render": "'Y'",                 # 常规：纹理渲染
         "enable-udp-punch": "'Y'",                   # 网络：UDP 打洞
         "enable-check-update": "'N'",                # 常规：不检查更新
