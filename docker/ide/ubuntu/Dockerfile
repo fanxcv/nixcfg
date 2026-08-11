@@ -42,8 +42,16 @@ RUN groupadd -r nixbld && useradd -g nixbld nixbld \
 
 # nix 配置：国内 binary cache + flake 支持（单用户模式配置文件在 ~/.config/nix/nix.conf）
 # 与 flake.nix 的 nixConfig 一致，覆盖非 flake 命令场景
+# nix 可执行性三件套（构建时镜像内无 ~/.zshenv，安装器不会自动创建，需显式写好）：
+#   1. ENV PATH 追加 nix bin：docker exec ide nix / sh -c 等非 shell 场景可用
+#   2. ~/.zshenv source nix.sh：zsh 所有模式（登录/交互/非交互）加载 PATH + NIX_SSL_CERT_FILE
+#   3. ~/.zshrc source nix.sh：交互式 zsh 的 PATH 持久化（zshenv 之上双保险，避免 hm 覆盖 zshenv 时丢失）
+# 不写则 nix run .#ide / home-manager 激活 / ssh 非交互命令全部找不到 nix
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.nix-profile/bin:/nix/var/nix/profiles/default/bin"
 RUN mkdir -p /root/.config/nix \
-    && printf 'substituters = https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/\nexperimental-features = nix-command flakes\n' > /root/.config/nix/nix.conf
+    && printf 'substituters = https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/\nexperimental-features = nix-command flakes\n' > /root/.config/nix/nix.conf \
+    && printf '. /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n' > /root/.zshenv \
+    && printf '. /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n' >> /root/.zshrc
 
 COPY entrypoint.sh /usr/local/bin/
 
