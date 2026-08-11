@@ -1,0 +1,19 @@
+# === Nix 构建产物 ===
+/result
+/result-*
+*.qcow2
+
+# === 敏感文件（明文忽略；加密的 *.age 正常提交） ===
+.secrets/
+secrets/*.env
+secrets/**/*.env
+*.env
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# === 系统 / 编辑器 ===
+.DS_Store
+*.swp
+.idea/

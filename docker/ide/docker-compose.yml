@@ -1,0 +1,58 @@
+networks:
+  fan:
+    external: true
+
+services:
+  ide:
+    build: ./ubuntu
+    container_name: ide
+    hostname: lenovo-ide
+    privileged: true
+    restart: always
+    environment:
+      TZ: "Asia/Shanghai"
+      USER: "root"   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
+    volumes:
+      - ./vsc:/root/.vscode-server
+      - ./JetBrains/cache:/root/.cache/JetBrains
+      - ./JetBrains/config:/root/.config/JetBrains
+      - ./JetBrains/share:/root/.local/share/JetBrains
+      - /root/.local/share/mise:/root/.local/share/mise
+      - /root/.local/state/mise:/root/.local/state/mise
+      - /root/.config/opencode:/root/.config/opencode
+      - /root/.config/mise:/root/.config/mise
+      - /root/.cache/mise:/root/.cache/mise
+      - /root/.config/uv:/root/.config/uv
+      - /root/.git-credentials:/root/.git-credentials
+      - /root/.claude.json:/root/.claude.json
+      - /root/.claude:/root/.claude
+      - /root/.codex:/root/.codex
+      - /root/.ssh:/root/.ssh:ro
+      - /root/.m2:/root/.m2
+      - /mnt:/mnt
+      # nix 配置仓库：compose 位于仓库内 docker/ide/，挂载仓库根（../../）；容器内不 clone
+      - ../../:/root/nixcfg
+      # AI 密钥等敏感环境变量（chmod 600，不进 nix 配置）
+      - /root/.secrets:/root/.secrets
+      # pi agent 配置持久化（clone 自 git.fan-x.fun，见 _common_/pi.nix）
+      - /root/.pi:/root/.pi
+      # nix store 持久化：容器重建后不重新下载（named volume 首次创建自动拷贝镜像内 /nix）
+      - nix-store:/nix
+    ports:
+      - 41025:41025
+      - 2222:22
+    networks:
+      - fan
+    deploy:
+      resources:
+        limits:
+          memory: 22G
+        reservations:
+          memory: 22G
+    logging:
+      options:
+        max-size: 10m
+        max-file: 1
+
+volumes:
+  nix-store:

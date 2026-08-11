@@ -1,0 +1,11 @@
+# macOS 用户层配置（home-manager，内嵌于 nix-darwin）
+# 自动扫描导入：新增 .nix 文件即生效
+
+{ pkgs, tools, ... }:
+{
+  imports = tools.scan ./.;
+
+  # darwin 用户身份固定 fan（内嵌模式下由 users/fan 的 home-manager.users 挂载）
+  home.username = "fan";
+  home.homeDirectory = "/Users/fan";
+}

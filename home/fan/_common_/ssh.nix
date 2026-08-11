@@ -1,0 +1,74 @@
+# ssh 配置：授权公钥拉取 + sshd 禁用密码认证（对应 alpine-init.sh 的 ssh_config()）
+#   1. curl mac.pub + github keys → ~/.ssh/authorized_keys（任一来源失败则保留现有）
+#   2. 注释旧行 + 追加 PasswordAuthentication no / ChallengeResponseAuthentication no
+# 系统级修改需要 root：直接以 root 跑 home-manager switch（容器/服务器常见），
+#   或给 sudo 配 NOPASSWD；macOS 上 uname 守卫自动跳过
+# 安全闭环：改完先 sshd -t 验证，失败自动回滚，防止 sshd 起不来把自己锁在门外
+
+{ pkgs, lib, ... }:
+{
+  home.activation.sshConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    configure_ssh() {
+      # macOS 跳过（无 sshd_config 管理需求）
+      [ "$(uname -s)" = "Linux" ] || return 0
+
+      # 1) 拉取授权公钥（对应脚本 ssh_config() 的 curl 部分）
+      mkdir -p "$HOME/.ssh"
+      chmod 700 "$HOME/.ssh"
+      keys_tmp="$HOME/.ssh/authorized_keys.tmp"
+      : > "$keys_tmp"
+      if ${pkgs.curl}/bin/curl -sfL https://file.fan-x.fun/d/Onedrive/script/mac.pub -o "$keys_tmp" \
+        && ${pkgs.curl}/bin/curl -sfL https://github.com/fanxcv.keys >> "$keys_tmp" \
+        && [ -s "$keys_tmp" ]; then
+        mv -f "$keys_tmp" "$HOME/.ssh/authorized_keys"
+        chmod 600 "$HOME/.ssh/authorized_keys"
+      else
+        rm -f "$keys_tmp"
+        echo "警告: 公钥拉取失败，保留现有 ~/.ssh/authorized_keys"
+      fi
+
+      # 2) sshd 禁用密码认证（公钥未就位则跳过，防止禁密码后无法登录）
+      if [ ! -s "$HOME/.ssh/authorized_keys" ]; then
+        echo "警告: authorized_keys 为空，跳过 sshd 加固"
+        return 0
+      fi
+      [ -f /etc/ssh/sshd_config ] || return 0
+
+      SUDO=""
+      [ "$(id -u)" = 0 ] || SUDO="sudo"
+      sshd_config=/etc/ssh/sshd_config
+
+      # 备份 + 注释旧行 + 幂等追加
+       cp "$sshd_config" "$sshd_config.hm-bak" || return 0
+       ${pkgs.gnused}/bin/sed -i 's/^\(\s*\(PasswordAuthentication\|ChallengeResponseAuthentication\) .\+\)/# \1/g' "$sshd_config"
+      grep -q '^PasswordAuthentication no' "$sshd_config" \
+        || echo 'PasswordAuthentication no' |  tee -a "$sshd_config" > /dev/null
+      grep -q '^ChallengeResponseAuthentication no' "$sshd_config" \
+        || echo 'ChallengeResponseAuthentication no' |  tee -a "$sshd_config" > /dev/null
+
+      # 验证：失败先剔除 ChallengeResponse（OpenSSH 9.8+ 已移除该指令），仍失败则整体回滚
+      if !  /usr/sbin/sshd -t 2>/dev/null; then
+         ${pkgs.gnused}/bin/sed -i '/^ChallengeResponseAuthentication no/d' "$sshd_config"
+        if !  /usr/sbin/sshd -t 2>/dev/null; then
+           mv -f "$sshd_config.hm-bak" "$sshd_config"
+          echo "警告: sshd -t 验证失败，已回滚配置"
+          return 0
+        fi
+        echo "提示: 当前 OpenSSH 不支持 ChallengeResponseAuthentication（9.8+ 已移除），已跳过该项"
+      fi
+
+      # 配置有变才重启（兼容 Alpine rc-service / Ubuntu systemctl）
+      before=$(${pkgs.coreutils}/bin/md5sum "$sshd_config.hm-bak" | cut -d' ' -f1)
+      after=$(${pkgs.coreutils}/bin/md5sum "$sshd_config" | cut -d' ' -f1)
+       rm -f "$sshd_config.hm-bak"
+      if [ "$before" != "$after" ]; then
+        echo "===> sshd_config 已变更，重启 sshd"
+         rc-service sshd restart 2>/dev/null \
+          ||  systemctl restart ssh 2>/dev/null \
+          ||  systemctl restart sshd 2>/dev/null \
+          || echo "警告: sshd 重启失败，请手动重启"
+      fi
+    }
+    configure_ssh
+  '';
+}
