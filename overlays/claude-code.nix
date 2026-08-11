@@ -10,8 +10,13 @@ final: prev: {
       url = let
         key = "${final.stdenv.hostPlatform.node.platform}-${final.stdenv.hostPlatform.node.arch}";
       in "https://registry.npmmirror.com/@anthropic-ai/claude-code-${key}/-/claude-code-${key}-${old.version}.tgz";
-      # 已测：linux-arm64 2.1.226；其他平台首次构建报 hash mismatch 时填入
-      sha256 = "sha256-+7smENr/cNEYyN2orv/ukrOPIKpGTnWMPQnjyDq271Y=";
+      # 各平台 npm 平台包 tarball 内容不同，hash 必须按平台区分（2.1.226 全部实测）
+      sha256 = ({
+        "linux-x64" = "sha256-087pXoakMsjXy5SWvCbsNTeAjh6oXoIHBxy6PTSYPX8=";
+        "linux-arm64" = "sha256-+7smENr/cNEYyN2orv/ukrOPIKpGTnWMPQnjyDq271Y=";
+        "darwin-x64" = "sha256-9yNzWwDWkqv097nRQe9iNv7gGZy11iuRxfNNKHIoHoY=";
+        "darwin-arm64" = "sha256-88qgfBM9i7VA61m1aYVVLxhiOBSAUDaBev4fgJgqv50=";
+      }).${key} or (throw "claude-code: 平台 ${key} 的 tarball hash 未记录，先用 nix-prefetch-url 获取后填入 overlays/claude-code.nix");
     };
     dontUnpack = false;
     sourceRoot = "package";
