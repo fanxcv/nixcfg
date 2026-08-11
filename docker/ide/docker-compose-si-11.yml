@@ -1,0 +1,64 @@
+networks:
+  fan:
+    external: true
+
+services:
+  ide:
+    build: ./ubuntu
+    container_name: ide
+    hostname: si-11-ide
+    privileged: true
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+      - USER=root   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
+      - all_proxy=http://pve.mi.fan-x.eu.org:7890
+      - http_proxy=http://pve.mi.fan-x.eu.org:7890
+      - https_proxy=http://pve.mi.fan-x.eu.org:7890
+      - HTTP_PROXY=http://pve.mi.fan-x.eu.org:7890
+      - HTTPS_PROXY=http://pve.mi.fan-x.eu.org:7890
+      - NO_PROXY=127.0.0.1,localhost,::1,10.*,10.0.0.0/8,172.*,172.0.0.0/8,.qksxin.com
+    extra_hosts:
+      - "gitlab.hczqdev.cn:10.1.0.30"
+      - "maven.hzdev.cn:10.1.0.30"
+    volumes:
+      - ./JetBrains/share:/root/.local/share/JetBrains
+      - ./JetBrains/config:/root/.config/JetBrains
+      - ./JetBrains/cache:/root/.cache/JetBrains
+      - ./mise/share:/root/.local/share/mise
+      - ./mise/state:/root/.local/state/mise
+      - ./mise/config:/root/.config/mise
+      - ./mise/cache:/root/.cache/mise
+      - ./skemate:/root/.config/skemate
+      - ./vsc:/root/.vscode-server
+      - ~/.config/uv:/root/.config/uv
+      - ~/.config/opencode:/root/.config/opencode
+      - ~/.git-credentials:/root/.git-credentials
+      - ~/.claude.json:/root/.claude.json
+      - ~/.claude:/root/.claude
+      - ~/.codex:/root/.codex
+      - ~/.ssh:/root/.ssh:ro
+      - ./.m2:/root/.m2
+      - ./go:/root/go
+      - /ficc:/ficc
+      # nix 配置仓库：compose 位于仓库内 docker/ide/，挂载仓库根（../../）；容器内不 clone
+      - ../../:/root/nixcfg
+      # AI 密钥等敏感环境变量（chmod 600，不进 nix 配置）
+      - /root/.secrets:/root/.secrets
+      # pi agent 配置持久化（clone 自 git.fan-x.fun，见 _common_/pi.nix）
+      - /root/.pi:/root/.pi
+      # nix store 持久化：容器重建后不重新下载（named volume 首次创建自动拷贝镜像内 /nix）
+      - nix-store:/nix
+    ports:
+      - 2222:22
+    networks:
+      - fan
+    logging:
+      options:
+        max-size: 10m
+        max-file: 1
+
+volumes:
+  nix-store:

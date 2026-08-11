@@ -39,7 +39,6 @@ services:
       # nix store 持久化：容器重建后不重新下载（named volume 首次创建自动拷贝镜像内 /nix）
       - nix-store:/nix
     ports:
-      - 41025:41025
       - 2222:22
     networks:
       - fan
