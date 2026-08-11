@@ -21,7 +21,7 @@ in
     envExtra = ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n";
     initContent = ''
       # ---- oh-my-zsh（git clone 方式，安装/更新见下方 home.activation）----
-      plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
+      plugins=(git zsh-syntax-highlighting zsh-autosuggestions mise)
       export ZSH="$HOME/.oh-my-zsh"
       export ZSH_CUSTOM="$ZSH/custom"
       source "$ZSH/oh-my-zsh.sh"

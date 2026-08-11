@@ -71,6 +71,11 @@
       url = "git+https://gh-proxy.com/https://github.com/homebrew/homebrew-cask.git?ref=main&shallow=1";
       flake = false;
     };
+    # tart 等公式的 tap（mini-m4 的 hosts/mini-m4/homebrew.nix 声明）
+    cirruslabs-cli = {
+      url = "git+https://gh-proxy.com/https://github.com/cirruslabs/cli.git?ref=main&shallow=1";
+      flake = false;
+    };
   };
 
   outputs =

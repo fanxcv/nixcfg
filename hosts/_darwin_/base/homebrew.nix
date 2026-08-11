@@ -5,7 +5,7 @@
 
 { inputs, config, ... }:
 let
-  inherit (inputs) homebrew-core homebrew-cask;
+  inherit (inputs) homebrew-core homebrew-cask cirruslabs-cli;
 in
 {
   nix-homebrew = {
@@ -21,6 +21,7 @@ in
     taps = {
       "homebrew/homebrew-core" = homebrew-core;
       "homebrew/homebrew-cask" = homebrew-cask;
+      "cirruslabs/cli" = cirruslabs-cli; # tart 等（mini-m4 用）
     };
 
     # tap 全声明化：禁止手动 brew tap

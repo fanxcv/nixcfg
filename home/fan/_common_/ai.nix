@@ -49,5 +49,6 @@ let
   };
 in
 {
-  home.packages = [ beads ];
+  # beads 以 Dolt 为存储后端（嵌入式/独立 server 均需 dolt CLI 管理），随 beads 一并安装
+  home.packages = [ beads pkgs.dolt ];
 }

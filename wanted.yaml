@@ -16,19 +16,11 @@
 macos:
   all_macs:                      # ← 三台 Mac 共享（mba-m5 / mbp-m1 / mini-m4）
     apps:                        # GUI 应用（brew cask → hosts/_darwin_/base/apps.nix）
-      - qq                       # 腾讯 QQ
-      - wechat                   # 微信
-      - feishu                   # 飞书
-      - keka                     # 压缩/解压
-      - chromium                 # 浏览器
-      - obsidian                 # 笔记
-      - alacritty                # 终端
-      - visual-studio-code       # 编辑器
-      - cyberduck                # SFTP/FTP 客户端
-      - tableplus                # 数据库客户端
-      - pearcleaner              # 应用卸载清理
-      - keepingyouawake          # 防睡眠
       - orbstack                 # 容器运行时
+      - iterm2                   # 终端
+      - microsoft-edge           # 浏览器
+      - rustdesk                 # 远程控制（自建中继）
+      - tencent-lemon            # 系统清理
 
     formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix）
       # 当前 39 个手动安装的公式未声明，激活（zap）会卸载；要保留就取消注释
@@ -36,7 +28,6 @@ macos:
       # - ollama                  # 本地大模型
       # - mlx                     # Apple ML 工具
       # - mlx-c                   # Apple ML C 接口
-      # - tart                    # macOS 虚拟机
       # - beads                   # AI 记忆（与下方 pkg 重复，不建议）
       # - tmux                    # 终端复用（与下方 pkg 重复，不建议）
       # - zsh                     # 系统自带，不建议
@@ -45,25 +36,17 @@ macos:
 
     settings:                    # 系统设置（→ hosts/_darwin_/gui/ 与 kernel/）
       # --- Dock ---
-      dock.orientation: bottom   # Dock 位置（bottom/left/right）
+      dock.orientation: left     # Dock 位置（bottom/left/right）
       dock.autohide: false       # 自动隐藏
       dock.magnification: true   # 悬停放大
-      dock.tilesize: 44          # 图标尺寸
-      dock.largesize: 58         # 放大后尺寸
+      dock.tilesize: 33          # 图标尺寸
+      dock.largesize: 60         # 放大后尺寸
       dock.mineffect: genie      # 最小化动画
       dock.show_recent: false    # 显示最近使用
       dock.right_bottom_corner: 1   # 右下热区（1=禁用）
       dock.persistent_apps:      # Dock 固定应用
-        - safari
-        - chromium
-        - qq
-        - wechat
-        - feishu
-        - alacritty
-        - obsidian
-        - visual-studio-code
-        - cyberduck
-        - tableplus
+        - iterm2
+        - Microsoft Edge
       # --- Finder ---
       finder.view_style: Nlsv    # 视图（Nlsv=列表）
       finder.remove_old_trash: true    # 30 天清废纸篓
@@ -92,27 +75,19 @@ macos:
       windowmanager.tiled_margins: false  # 分屏间距
       # --- 外观 ---
       appearance.auto_dark: true  # 自动深色模式
-      appearance.icon_tint: Blue  # 图标色调
+      appearance.icon_tint: MultiColour   # 主题色（多色）
+      appearance.glass_diffusion: 0       # Liquid Glass 扩散（0=透明）
       # --- 屏保 ---
       screensaver.idle_seconds: 600   # 10 分钟启动屏保
       # --- 空间 ---
       spaces.span_displays: true  # 跨屏显示空间
-      # --- 电源（pmset）---
-      pmset.battery.hibernatemode: 0    # 仅内存睡眠
-      pmset.battery.powernap: false     # 睡眠不跑维护
-      pmset.battery.wake_on_lan: false  # 禁局域网唤醒
-      pmset.battery.sleep_min: 3        # 3 分钟睡眠
-      pmset.battery.display_sleep_min: 3    # 3 分钟关屏
-      pmset.ac.sleep_min: 10            # 插电 10 分钟睡眠
-      pmset.ac.display_sleep_min: 5     # 插电 5 分钟关屏
-      pmset.ac.powernap: false          # 睡眠不跑维护
-      pmset.ac.tcp_keepalive: true      # 保持 TCP
       # --- 其他 ---
       startup.chime: false      # 关开机音
       softwareupdate.auto_macos: false  # 不自动装 macOS 更新
+      # 电源策略：共享不声明（三台各自按需，mini-m4 见下方专属段）
 
     services:                    # 系统服务
-      tailscale: true            # 组网（保留本地 DNS）
+      # tailscale 用 App（三台已装，IP 保持稳定）；nix 服务会换 IP，不启用
 
     fonts:                       # 字体
       - monaspace                # Monaspace Nerd Font 全家桶
@@ -130,16 +105,7 @@ macos:
       - pi-coding-agent          # pi agent
 
     app_configs:                 # 应用级配置
-      vscode:                    # settings.json + keybindings
-        font: MonaspiceNe Nerd Font Mono
-        font_size: 13
-      alacritty:                 # 终端（字体与系统对齐）
-        font_size: 13
-        window: 100x30
-      chromium_extensions:       # 浏览器扩展
-        - ublock-origin-lite     # 广告拦截
-        - bitwarden              # 密码管理
-        - translator             # 翻译
+      iterm2:                    # 终端（已移除 alacritty，iTerm2 暂无深度配置）
       edge_extensions: []        # Edge 扩展（External Extensions 机制就绪，填 ID 即装）
       rustdesk_server:           # 自建中继（所有 Mac 生效）
         rendezvous: 120.55.164.147:21116
@@ -159,13 +125,33 @@ macos:
       pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
 
     secrets:                     # 密钥文件（agenix 加密入库）
-      rustdesk_toml: true        # RustDesk 身份（每台 Mac 各自加密一份，见下）
+      rustdesk_toml: true        # RustDesk 身份（所有 Mac 共用一份，secrets/rustdesk.toml.age）
       ai_env: manual             # ~/.secrets/ai.env 手动维护，不进 nix 不提交 git
 
-  mini_m4:                       # ← mini-m4 专属（→ home/fan/mini-m4/）
+  mini_m4:                       # ← mini-m4 专属（→ hosts/mini-m4/ + home/fan/mini-m4/）
+    apps:                        # 专属 GUI 应用（cask，追加到共享清单）
+      - jetbrains-toolbox        # IDE 管理器
+      - intellij-idea            # IDEA（插件见下）
+      - blender                  # 3D 建模
+    formulae:                    # 专属 brew 公式
+      - tart                     # macOS 虚拟机
     idea_plugins:                # IDEA 插件（Toolbox 升级后需同步版本目录）
       - claude-code              # Claude Code 插件（marketplace 27310, v0.1.14-beta）
-    rustdesk_identity: rustdesk.toml.mini-m4.age   # 本机加密文件已入库
+    mise:                        # mise 运行时组件（→ home/fan/mini-m4/mise.nix）
+      - android-sdk
+      - bun
+      - cocoapods
+      - dart                     # 自定义下载源（googleapis）
+      - flutter                  # 自定义下载源（googleapis）
+      - go@1.25
+      - java@oracle-17
+      - node@22
+      - python@3.11
+    power:                       # 电源策略（pmset，→ hosts/mini-m4/power.nix）
+      ac_sleep: 0                # 永不睡眠
+      ac_display_sleep: 10       # 10 分钟关屏
+      ac_powernap: true          # 睡眠跑维护
+      ac_wake_on_lan: true       # 局域网唤醒
 
   # 说明：mba-m5 / mbp-m1 暂无专属配置（沿用共享层）。要加专属项，
   # 在这里加 `mba-m5:` / `mbp-m1:` 区段，并在 home/fan/<机器名>/ 下建文件。
@@ -195,14 +181,7 @@ nixos:
 current_state:
   mini_m4:
     unmanaged_apps:              # 已装但未声明（激活不会卸载 cask，但不会出现在 Dock 清单）
-      - Blender
       - HBuilderX
-      - JetBrains Toolbox
-      - Microsoft Edge
-      - RustDesk
-      - Tencent Lemon
-      - IntelliJ IDEA
-      - Claude Code URL Handler
       - Xcode
       - GarageBand
       - iMovie
@@ -212,11 +191,10 @@ current_state:
     unmanaged_tap:               # 手动 tap（mutableTaps=false 下激活会被清除）
       - cirruslabs/cli
     drift:                       # 声明 vs 实际的差异（激活后由声明值覆盖）
-      - "Dock: left/33/60（声明 bottom/44/58）"
+      - "Dock: left/33/60（与声明一致，等激活）"
       - "右下角热区: 14（声明 1=禁用）"
-      - "pmset: 出厂值（声明未生效）"
+      - "pmset: mini-m4 声明 sleep 0/display 10/powernap 1/womp 1（与实机一致）"
       - "截图/登录窗口/菜单栏: 未配置"
     missing:                     # 缺失项（home-manager 激活后补齐）
       - ~/.secrets/ai.env
       - ~/.local/bin/fpi
-      - Monaspace 字体
