@@ -6,10 +6,10 @@
 { lib }:
 final: prev: {
   claude-code = prev.claude-code.overrideAttrs (old: {
-    src = final.fetchurl {
-      url = let
-        key = "${final.stdenv.hostPlatform.node.platform}-${final.stdenv.hostPlatform.node.arch}";
-      in "https://registry.npmmirror.com/@anthropic-ai/claude-code-${key}/-/claude-code-${key}-${old.version}.tgz";
+    src = let
+      key = "${final.stdenv.hostPlatform.node.platform}-${final.stdenv.hostPlatform.node.arch}";
+    in final.fetchurl {
+      url = "https://registry.npmmirror.com/@anthropic-ai/claude-code-${key}/-/claude-code-${key}-${old.version}.tgz";
       # 各平台 npm 平台包 tarball 内容不同，hash 必须按平台区分（2.1.226 全部实测）
       sha256 = ({
         "linux-x64" = "sha256-087pXoakMsjXy5SWvCbsNTeAjh6oXoIHBxy6PTSYPX8=";
