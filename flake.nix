@@ -120,6 +120,12 @@
       mkDarwinConfig = { hostName, system ? "aarch64-darwin" }:
       nix-darwin.lib.darwinSystem {
         inherit system;
+        # 与 mkHomeConfig 同款 pkgs：claude-code 镜像 overlay + unfree 放行
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
+          overlays = [ claudeOverlay ];
+        };
         modules = [
           ./hosts/${hostName}
           {
@@ -128,6 +134,10 @@
         ];
         specialArgs = {
           inherit self inputs outputs tools;
+          # darwin 固定值（与 mkHomeConfig 的注入对齐，home 层模块统一取用）
+          useChinaMirror = true;
+          isContainer = false;
+          platform = "darwin";
         };
       };
     in
@@ -161,13 +171,17 @@
       ide-global = self.homeConfigurations."fan@ide-global".activationPackage;
 
       # --- 一步到位：nix run .#<机器名>（构建 + activate 一条命令）---
+      # ide 容器可能跑在不同架构服务器（lenovo/si-11 等），激活配置必须按当前 system 构建：
+      # 不能引用固定架构的 homeConfigurations（会 platform mismatch，如 x86_64 机器拿到 aarch64 配置）
       packages = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
+            ideCfg = mkHomeConfig { hostName = "ide"; system = system; isContainer = true; };
+            ideGlobalCfg = mkHomeConfig { hostName = "ide"; system = system; useChinaMirror = false; isContainer = true; };
         in {
           ide = pkgs.writeShellScriptBin "ide-activate"
-            "export USER=root; exec ${self.homeConfigurations."fan@ide".activationPackage}/activate";
+            "export USER=root; exec ${ideCfg.activationPackage}/activate";
           ide-global = pkgs.writeShellScriptBin "ide-activate"
-            "export USER=root; exec ${self.homeConfigurations."fan@ide-global".activationPackage}/activate";
+            "export USER=root; exec ${ideGlobalCfg.activationPackage}/activate";
           # Mac 一次性构建+激活别名：nix run .#darwin-mba-m5 等
           "darwin-mba-m5" = pkgs.writeShellScriptBin "darwin-mba-m5"
             "exec ${self.darwinConfigurations.mba-m5.system}/activate";
