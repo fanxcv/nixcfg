@@ -20,9 +20,12 @@
   programs.git = {
     enable = true;
     # 对应脚本里的 git config --global（只生成 ~/.gitconfig，不安装 git 本身）
-    userName = "fan";
-    userEmail = "fan@fan-x.fun";
-    extraConfig = {
+    # 新版 hm 统一用 settings（userName/userEmail/extraConfig 已弃用）
+    settings = {
+      user = {
+        name = "fan";
+        email = "fan@fan-x.fun";
+      };
       credential.helper = "store";
       init.defaultBranch = "main";
       pull.rebase = true;

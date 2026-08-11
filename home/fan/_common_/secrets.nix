@@ -3,7 +3,7 @@
 #   export AI_FAN_CLAUDE=...   # claude key（claude code / pi 的 PIPI_CLAUDE_KEY）
 #   export AI_FAN_CODEX=...    # codex key（pi 的 IPI_CODEX_KEY）
 #   export AI_FAN_CHAT=...     # chat key（codex CLI 直接读 / pi 的 PIPI_CHAT_KEY）
-# 各工具的变量映射在下方 initExtra 统一派生，AI 工具无需感知源变量名
+# 各工具的变量映射在下方 initContent 统一派生，AI 工具无需感知源变量名
 #   容器（root）  → /root/.secrets/ai.env，compose 挂载自宿主机，容器重建不丢
 #   NixOS 真机    → /home/fan/.secrets/ai.env，本机文件（chmod 600，手动创建）
 #   mac（fan）    → /Users/fan/.secrets/ai.env，本机文件（chmod 600，手动创建）
@@ -21,7 +21,7 @@
 
 { pkgs, lib, inputs, config, ... }:
 {
-  programs.zsh.initExtra = ''
+  programs.zsh.initContent = ''
     [ -f "$HOME/.secrets/ai.env" ] && source "$HOME/.secrets/ai.env"
     # AI key 映射：ai.env 的 AI_FAN_* → 各工具环境变量（未定义为无害空值）
     export ANTHROPIC_AUTH_TOKEN="$AI_FAN_CLAUDE"   # claude code（cc_claude 内也有独立派生）

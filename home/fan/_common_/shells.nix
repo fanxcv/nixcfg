@@ -15,7 +15,7 @@ in
 {
   programs.zsh = {
     enable = true;
-    initExtra = ''
+    initContent = ''
       # ---- oh-my-zsh（git clone 方式，安装/更新见下方 home.activation）----
       plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
       export ZSH="$HOME/.oh-my-zsh"
