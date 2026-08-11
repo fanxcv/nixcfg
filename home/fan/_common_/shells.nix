@@ -15,6 +15,10 @@ in
 {
   programs.zsh = {
     enable = true;
+    # nix.sh 加载由 HM 接管（Dockerfile 不再写 ~/.zshenv ~/.zshrc，避免 clobber）：
+    #   envExtra → ~/.zshenv（zsh 所有模式，含 ssh 远程命令）
+    #   initContent 末尾再 source 一次 → ~/.zshrc 双保险（原 Dockerfile 同款语义）
+    envExtra = ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n";
     initContent = ''
       # ---- oh-my-zsh（git clone 方式，安装/更新见下方 home.activation）----
       plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
@@ -27,6 +31,9 @@ in
       alias ll='ls -lah'
       alias la='ls -A'
       alias untar='tar -xzf'
+
+      # nix 双保险（envExtra 已 source 过，此处幂等）
+      . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
     '';
   };
 

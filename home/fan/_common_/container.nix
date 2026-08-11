@@ -6,4 +6,9 @@
 {
   home.username = lib.mkIf isContainer (lib.mkForce "root");
   home.homeDirectory = lib.mkIf isContainer (lib.mkForce "/root");
+
+  # 旧镜像构建期写过 ~/.zshrc ~/.zshenv（Dockerfile 已改写到 /etc/zsh/zshenv，新镜像无此文件）：
+  # HM 的 programs.zsh 要接管这两个文件，force 覆盖旧镜像残留；新镜像 force 无副作用
+  home.file.".zshrc".force = lib.mkIf isContainer true;
+  home.file.".zshenv".force = lib.mkIf isContainer true;
 }
