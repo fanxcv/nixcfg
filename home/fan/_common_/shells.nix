@@ -24,8 +24,9 @@ in
       plugins=(git zsh-syntax-highlighting zsh-autosuggestions mise)
       export ZSH="$HOME/.oh-my-zsh"
       export ZSH_CUSTOM="$ZSH/custom"
-      source "$ZSH/oh-my-zsh.sh"
+      # 主题必须在 source oh-my-zsh.sh 之前设置，否则加载瞬间仍是默认 robbyrussell
       ZSH_THEME="fishy-custom"
+      source "$ZSH/oh-my-zsh.sh"
 
       # 常用别名
       alias ll='ls -lah'

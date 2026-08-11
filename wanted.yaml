@@ -15,6 +15,41 @@
 #   - 行尾 # 是你的备注，我同步时不会动它
 # ============================================================
 
+global:                        # ← 所有平台生效（mac / linux 容器 / NixOS 真机）→ home/fan/_common_/
+  pkgs:                        # Nix 安装的 CLI 工具
+    - ripgrep                  # 搜索
+    - fd                       # 查找
+    - jq                       # JSON 处理
+    - rtk                      # RTK 工具
+    - tmux                     # 终端复用（gpakosz 配置自动装）
+    - beads                    # AI 记忆（bd）
+    - claude-code              # Claude Code CLI
+    - ccline                   # claude statusline
+    - codex                    # OpenAI Codex CLI
+    - pi-coding-agent          # pi agent
+
+  app_configs:                 # 跨平台应用级配置
+    git:                       # git 全局配置
+      user: fan
+      email: fan@fan-x.fun
+      pull_rebase: true
+    zsh:                       # shell（oh-my-zsh 自动 clone）
+      theme: fishy-custom
+      plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]
+    tmux:                      # gpakosz 配置（mouse on + base-index 1）
+    codex:                     # codex 通用段（机器手动段自动合并）
+      model: gpt-5.6-sol
+      provider: fan
+    claude:                    # claude code
+      proxy: https://ai.qksxin.com
+    pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
+    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix）
+      node_default: lts        # 默认 node@lts（config.local.toml 兜底；机器可覆盖，如 mini-m4 node@24）
+
+  secrets:                     # 密钥约定（跨平台，→ home/fan/_common_/secrets.nix agenix）
+    ai_env: agenix             # AI key（secrets/ai.env.age 激活时解密到 ~/.secrets/ai.env，含 ide 容器）
+    git_credentials: agenix    # git 凭据（secrets/git-credentials.age → ~/.git-credentials）
+
 macos:
   all_macs:                      # ← 三台 Mac 共享（mba-m5 / mbp-m1 / mini-m4）
     apps:                        # GUI 应用（brew cask → hosts/_darwin_/base/apps.nix）
@@ -23,6 +58,9 @@ macos:
       - microsoft-edge           # 浏览器
       - rustdesk                 # 远程控制（自建中继）
       - tencent-lemon            # 系统清理
+      - bitwarden
+      - tailscale
+      - clash-verge-rev
 
     formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix）
       # 当前 39 个手动安装的公式未声明，激活（zap）会卸载；要保留就取消注释
@@ -42,10 +80,10 @@ macos:
       dock.autohide: false       # 自动隐藏
       dock.magnification: true   # 悬停放大
       dock.tilesize: 33          # 图标尺寸
-      dock.largesize: 60         # 放大后尺寸
+      dock.largesize: 55         # 放大后尺寸
       dock.mineffect: genie      # 最小化动画
       dock.show_recent: false    # 显示最近使用
-      dock.right_bottom_corner: 1   # 右下热区（1=禁用）
+      dock.right_bottom_corner: 14   # 右下热区（1=禁用）
       dock.persistent_apps:      # Dock 固定应用
         - iterm2
         - Microsoft Edge
@@ -72,11 +110,12 @@ macos:
       input.trackpad_force_click: true    # 用力点按
       input.trackpad_tap_click: true      # 轻点点击
       # --- 窗口管理 ---
-      windowmanager.stage_manager: false  # 台前调度
-      windowmanager.auto_hide: false      # 侧栏自动隐藏
+      windowmanager.stage_manager: true  # 台前调度
+      windowmanager.auto_hide: true      # 侧栏自动隐藏
       windowmanager.tiled_margins: false  # 分屏间距
       # --- 外观 ---
-      appearance.auto_dark: true  # 自动深色模式
+      appearance.style: Dark      # 固定深色（不自动切换）
+      appearance.auto_dark: false # 不自动切换
       appearance.icon_tint: MultiColour   # 主题色（多色）
       appearance.glass_diffusion: 0       # Liquid Glass 扩散（0=透明）
       # --- 屏保 ---
@@ -97,41 +136,33 @@ macos:
 
     fonts:                        # 字体（Monaspace 已全部移除）
 
-    user_pkgs:                   # Nix 安装的 CLI 工具（→ home/fan/_common_/）
-      - ripgrep                  # 搜索
-      - fd                       # 查找
-      - jq                       # JSON 处理
-      - rtk                      # RTK 工具
-      - tmux                     # 终端复用（gpakosz 配置自动装）
-      - beads                    # AI 记忆（bd）
-      - claude-code              # Claude Code CLI
-      - ccline                   # claude statusline
-      - codex                    # OpenAI Codex CLI
-      - pi-coding-agent          # pi agent
+    user_pkgs:                   # 已上提至 global.pkgs（跨平台，→ home/fan/_common_/）
 
-    app_configs:                 # 应用级配置
+    app_configs:                 # mac 专属应用级配置（跨平台项在 global.app_configs）
       iterm2:                    # 终端（已移除 alacritty，iTerm2 暂无深度配置）
       edge_extensions: []        # Edge 扩展（External Extensions 机制就绪，填 ID 即装）
-      rustdesk_server:           # 自建中继（所有 Mac 生效）
-        rendezvous: 120.55.164.147:21116
-        key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=
-      git:                       # git 全局配置
-        user: fan
-        email: fan@fan-x.fun
-        pull_rebase: true
-      zsh:                       # shell（oh-my-zsh 自动 clone）
-        theme: fishy-custom
-        plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]
-      codex:                     # codex 通用段（机器手动段自动合并）
-        model: gpt-5.6-sol
-        provider: fan
-      claude:                    # claude code
-        proxy: https://ai.qksxin.com
-      pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
+      rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效）
+        rendezvous: 120.55.164.147:21116   # 网络：ID 服务器（hbbs）
+        key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 网络：加密公钥
+        network:                 # 网络块（RustDesk2.toml + local 注入）
+          direct_server: true    # 直连优先
+          udp_punch: true        # UDP 打洞
+        security:                # 安全块（RustDesk2.toml 注入 + RustDesk.toml agenix）
+          unlock_pin: ""         # 解锁 PIN（空）
+          trusted_devices: 009GnjljLRT/b2k0DwCFQSXI6O   # 可信设备
+          allow_remote_config_modification: true  # 允许远程改配置
+          password: agenix       # 永久密码/身份（secrets/rustdesk.toml.age 所有 Mac 共用）
+        general:                 # 常规块（注入 + 整文件声明）
+          view_style: adaptive   # 视图样式（RustDesk_default.toml）
+          keep_awake_incoming: false   # 来连时防睡眠
+          keep_awake_outgoing: false   # 外连时防睡眠
+          use_texture_render: true     # 纹理渲染
+          av1_test: true         # AV1 测试
+          check_update: false    # 不检查更新
+          hwcodec: file          # 硬件编解码（RustDesk_hwcodec.toml 整文件声明）
 
     secrets:                     # 密钥文件（agenix 加密入库）
       rustdesk_toml: true        # RustDesk 身份（所有 Mac 共用一份，secrets/rustdesk.toml.age）
-      ai_env: manual             # ~/.secrets/ai.env 手动维护，不进 nix 不提交 git
 
   mini_m4:                       # ← mini-m4 专属（→ hosts/mini-m4/ + home/fan/mini-m4/）
     apps:                        # 专属 GUI 应用（cask，追加到共享清单）
@@ -150,7 +181,7 @@ macos:
       - flutter                  # 自定义下载源（googleapis）
       - go@1.25
       - java@oracle-17
-      - node@22
+      - node@24                 # 覆盖共享默认 lts（config.local.toml 的 node=lts 兜底）
       - python@3.11
     power:                       # 电源策略（pmset，→ hosts/mini-m4/power.nix）
       ac_sleep: 0                # 永不睡眠
@@ -158,8 +189,14 @@ macos:
       ac_powernap: true          # 睡眠跑维护
       ac_wake_on_lan: true       # 局域网唤醒
 
-  # 说明：mba-m5 / mbp-m1 暂无专属配置（沿用共享层）。要加专属项，
-  # 在这里加 `mba-m5:` / `mbp-m1:` 区段，并在 home/fan/<机器名>/ 下建文件。
+  mba_m5:                       # ← mba-m5 专属（实机导入草案，待你调整）
+    apps:                        # 本机 GUI 应用（共享层已声明 orbstack/iterm2/edge/rustdesk/lemon，不重复）
+      - visual-studio-code       # 本机已装
+      - wechat                   # 本机已装
+      - jetbrains-toolbox        # 本机已装（mini_m4 也声明了，可考虑上提共享层）
+      - microsoft-remote-desktop # Windows App（微软远程桌面），本机已装
+      - ryujinx                  # Switch 模拟器，本机已装
+      - bilibili                 # 本机已装
 
 linux:
   ide:                           # ← Docker 开发容器（ide / ide-global，Ubuntu）
@@ -175,31 +212,10 @@ linux:
     docker: true                 # docker/compose/buildx + 自启 + fan 网络（容器内自动跳过）
     ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
     mise: true                   # 运行时管理器（组件用 mise use -g 手配）
+    secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
+    pi:                          # pi agent 配置（~/.pi/agent，clone 用 ai.env 的 PI_CONFIG_GIT_TOKEN）
+      token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai.env 读取，clone 后清 origin
 
 nixos:
   pending:                       # ← NixOS 真机（待接入，见 hosts/README.md）
     comin: true                  # git 驱动自动部署
-
-# ============================================================
-# 以下为当前实机状态对照（只读参考，不用改）
-# ============================================================
-current_state:
-  mini_m4:
-    unmanaged_apps:              # 已装但未声明（激活不会卸载 cask，但不会出现在 Dock 清单）
-      - HBuilderX
-      - Xcode
-      - GarageBand
-      - iMovie
-      - Keynote
-      - Numbers
-      - Pages
-    unmanaged_tap:               # 手动 tap（mutableTaps=false 下激活会被清除）
-      - cirruslabs/cli
-    drift:                       # 声明 vs 实际的差异（激活后由声明值覆盖）
-      - "Dock: left/33/60（与声明一致，等激活）"
-      - "右下角热区: 14（声明 1=禁用）"
-      - "pmset: mini-m4 声明 sleep 0/display 10/powernap 1/womp 1（与实机一致）"
-      - "截图/登录窗口/菜单栏: 未配置"
-    missing:                     # 缺失项（home-manager 激活后补齐）
-      - ~/.secrets/ai.env
-      - ~/.local/bin/fpi

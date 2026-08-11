@@ -43,6 +43,9 @@
 
 | wanted.yaml 区段 | Nix 位置 |
 |---|---|
+| global.pkgs | home/fan/_common_/base.nix、ai.nix、claude.nix、codex.nix、pi.nix |
+| global.app_configs | home/fan/_common_/（base.nix、shells.nix、tmux.nix、codex.nix、claude.nix、pi.nix、mise.nix） |
+| global.secrets | home/fan/_common_/secrets.nix、secrets/ |
 | macos.all_macs.apps | hosts/_darwin_/base/apps.nix |
 | macos.all_macs.formulae | hosts/_darwin_/base/homebrew.nix |
 | macos.all_macs.settings | hosts/_darwin_/gui/desktop/quartz/*.nix、gui/display/*.nix、kernel/*.nix |

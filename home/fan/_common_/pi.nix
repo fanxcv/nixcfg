@@ -9,6 +9,12 @@
   # pi-coding-agent 包（npm 打包 buildNpmPackage，自带 node）
   home.packages = [ pkgs.pi-coding-agent ];
 
+  # 默认：装了 pi 的机器用 mise 安装 node@lts（pi 运行时依赖 node）
+  # config.local.toml 优先级低于 config.toml——机器主配置可覆盖，如 mini-m4 用 node@24
+  home.file.".config/mise/config.local.toml".text = ''
+    [tools]
+    node = "lts"
+  '';
   # ---- pi 启动 wrapper（本机 ~/.pi/agent/bin/fpi 的 nix 化）----
   # fff 覆盖模式（PI_FFF_MODE=override），pi 由 nix 提供（原生二进制），不再依赖 mise node@22
   home.file.".local/bin/fpi" = {
@@ -34,11 +40,15 @@
         PI_TOKEN=$(grep -E '^(export )?PI_CONFIG_GIT_TOKEN=' "$HOME/.secrets/ai.env" 2>/dev/null | head -1 | sed 's/^export //' | cut -d= -f2-)
       fi
 
+      # 非交互：凭据缺失/无效时 git 直接失败返回，避免激活卡在密码提示
+      export GIT_TERMINAL_PROMPT=0
+
       if [ ! -e "$PI_DIR/.git" ]; then
         rm -rf "$PI_DIR"
         mkdir -p "$HOME/.pi"
         if [ -n "$PI_TOKEN" ]; then
-          ${pkgs.git}/bin/git clone --quiet "https://fan:@git.fan-x.fun/fan/pi-config.git" "$PI_DIR" \
+          # Gitea Basic 认证：用户名 fan + 密码为 token；clone 后立即清掉
+          ${pkgs.git}/bin/git clone --quiet "https://fan:''${PI_TOKEN}@git.fan-x.fun/fan/pi-config.git" "$PI_DIR" \
             || echo "警告: pi 配置 clone 失败（密钥无效或网络问题），可稍后手动拉取"
           # 清理 origin 里的 token，后续 pull 走 ~/.git-credentials
           ${pkgs.git}/bin/git -C "$PI_DIR" remote set-url origin "$PI_REPO" 2>/dev/null || true

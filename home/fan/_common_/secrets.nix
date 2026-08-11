@@ -40,18 +40,33 @@
     fi
   '';
 
-  # === agenix：加密 secrets 自动解密（启用时取消下方注释）=================
-  # imports = [ inputs.agenix.homeManagerModules.default ];
-  #
-  # age.identityPaths = [ "${config.home.homeDirectory}/.secrets/age-keys.txt" ];
-  # age.secrets.aiEnv = {
-  #   file = ../../../secrets/ai.env.age;   # 相对本文件：仓库根/secrets/
-  #   path = "${config.home.homeDirectory}/.secrets/ai.env";
-  #   mode = "600";
-  # };
-  # age.secrets.gitCredentials = {
-  #   file = ../../../secrets/git-credentials.age;
-  #   path = "${config.home.homeDirectory}/.git-credentials";
-  #   mode = "600";
-  # };
+  # === agenix：加密 secrets 自动解密（已启用；密钥就位要求见 secrets/README.md）===
+  imports = [ inputs.agenix.homeManagerModules.default ];
+
+  age.identityPaths = [ "${config.home.homeDirectory}/.secrets/age-keys.txt" ];
+  age.secrets.aiEnv = {
+    file = ../../../secrets/ai.env.age;   # 相对本文件：仓库根/secrets/
+    path = "${config.home.homeDirectory}/.secrets/ai.env";
+    mode = "600";
+  };
+  age.secrets.gitCredentials = {
+    file = ../../../secrets/git-credentials.age;
+    path = "${config.home.homeDirectory}/.git-credentials";
+    mode = "600";
+  };
+
+  # 容器激活兜底：agenix 模块在 Linux 走 systemd user service（mac 走 launchd），
+  # ide 容器无 user systemd（日志：User systemd daemon not running），服务永不触发；
+  # 这里在激活期直接解密（幂等：目标已存在则跳过）。路径字面量直接引用仓库内 .age 文件。
+  home.activation.agenixContainerFallback = lib.hm.dag.entryBefore [ "setupPi" ] ''
+    AGE_BIN="${pkgs.age}/bin/age"
+    AGE_KEY="$HOME/.secrets/age-keys.txt"
+    if [ -f "$AGE_KEY" ]; then
+      umask 077
+      [ -f "$HOME/.secrets/ai.env" ] || "$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.secrets/ai.env" ${../../..}/secrets/ai.env.age
+      [ -f "$HOME/.git-credentials" ] || "$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.git-credentials" ${../../..}/secrets/git-credentials.age
+    else
+      echo "警告: 未找到 $AGE_KEY，agenix 解密跳过（mac 由 launchd 兜底，容器需先放私钥）"
+    fi
+  '';
 }

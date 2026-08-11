@@ -17,7 +17,7 @@ in
     # Dock 图标常规尺寸 33pt
     tilesize = 33;
     # 悬停放大后 60pt
-    largesize = 60;
+    largesize = 55;
     # 窗口最小化用神奇效果
     mineffect = "genie";
     # 不显示最近使用的应用
@@ -27,7 +27,7 @@ in
     # 最小化窗口保留独立缩略图
     minimize-to-application = false;
     # 右下角热区动作 = 1（禁用）
-    wvous-br-corner = 1;
+    wvous-br-corner = 14;
 
     # Dock 固定应用（与 apps.nix casks 对齐；系统应用路径按 macOS 版本微调）
     persistent-apps = [

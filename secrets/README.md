@@ -2,11 +2,14 @@
 
 密钥用 age 加密入库（.age 文件可提交 git），激活时由 home-manager 的 agenix
 模块自动解密到目标路径。明文只存在于：加密时的源文件 + 解密后的目标路径。
+**已启用**：secrets.nix 的 agenix 块处于激活状态，激活时自动解密 ai.env →
+~/.secrets/ai.env、git-credentials → ~/.git-credentials。
 
 ## 密钥对
 
 - 私钥：`$HOME/.secrets/age-keys.txt`（chmod 600，**永不提交 git**）
-  - 容器场景：compose 已挂载 `~/.secrets → /root/.secrets`（宿主机），容器重建不丢
+  - 容器场景：compose 挂载 `./.secrets → /root/.secrets`（docker/ide/ 目录下，随仓库走）
+    ——把 age-keys.txt 放进 docker/ide/.secrets/ 即可，容器重建不丢
   - 新增机器：把私钥拷到该机 `$HOME/.secrets/age-keys.txt`，公钥加入 `keys.nix`
 - 公钥：`age-keygen -y ~/.secrets/age-keys.txt`
 - 当前接收者见 `keys.nix`（本仓库当前仅一台 ide 容器）
@@ -52,11 +55,12 @@ age -e -r age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204 \
     -o secrets/ai.env.age /tmp/ai.env && rm /tmp/ai.env
 ```
 
-## 启用（home-manager 侧）
+## 启用（home-manager 侧）——当前状态：
 
-1. 加密文件就位（上面的命令，目标路径与 secrets.nix 中声明一致）
-2. `home/fan/_common_/secrets.nix` 取消 agenix 注释块（imports + age.* 两处）
-3. 私钥就位：`$HOME/.secrets/age-keys.txt`
+1. ✅ 加密文件就位：secrets/ai.env.age、secrets/git-credentials.age（git 已跟踪）
+2. ✅ `home/fan/_common_/secrets.nix` agenix 块已启用（imports + age.* 已取消注释）
+3. ⚠️ 私钥就位：`docker/ide/.secrets/age-keys.txt`（容器内 /root/.secrets/age-keys.txt）
+   ——每个新部署的容器都要放；缺失会导致激活失败（agenix 不解密即报错）
 4. 容器内 `nix run .#ide` 重新激活验证
 
 ## RustDesk 机器身份（所有 Mac）
