@@ -1,0 +1,222 @@
+# ============================================================
+# 软件与配置清单 —— 唯一编辑入口（直接改这份文件）
+# ============================================================
+# 改完后对我说"同步"，我会：
+#   1. 找出你的改动（增/删/改的行）
+#   2. 翻译成 Nix 配置（更新仓库对应模块）
+#   3. 构建验证
+#   4. 回填本文件，你的注释原样保留
+#
+# 怎么改：
+#   - 加一行 = 安装/启用；删一行 = 卸载/移除；改值 = 更新配置
+#   - 行首 # 注释掉 = 保留但未启用（如 brew 公式，激活时会被卸载）
+#   - 行尾 # 是你的备注，我同步时不会动它
+# ============================================================
+
+macos:
+  all_macs:                      # ← 三台 Mac 共享（mba-m5 / mbp-m1 / mini-m4）
+    apps:                        # GUI 应用（brew cask → hosts/_darwin_/base/apps.nix）
+      - qq                       # 腾讯 QQ
+      - wechat                   # 微信
+      - feishu                   # 飞书
+      - keka                     # 压缩/解压
+      - chromium                 # 浏览器
+      - obsidian                 # 笔记
+      - alacritty                # 终端
+      - visual-studio-code       # 编辑器
+      - cyberduck                # SFTP/FTP 客户端
+      - tableplus                # 数据库客户端
+      - pearcleaner              # 应用卸载清理
+      - keepingyouawake          # 防睡眠
+      - orbstack                 # 容器运行时
+
+    formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix）
+      # 当前 39 个手动安装的公式未声明，激活（zap）会卸载；要保留就取消注释
+      # - dolt                    # 数据库
+      # - ollama                  # 本地大模型
+      # - mlx                     # Apple ML 工具
+      # - mlx-c                   # Apple ML C 接口
+      # - tart                    # macOS 虚拟机
+      # - beads                   # AI 记忆（与下方 pkg 重复，不建议）
+      # - tmux                    # 终端复用（与下方 pkg 重复，不建议）
+      # - zsh                     # 系统自带，不建议
+      # - ffmpeg                  # 音视频（含 x264/x265/lame 等依赖）
+      # 依赖库（openssl/python/readline 等）由公式自动带，无需手动声明
+
+    settings:                    # 系统设置（→ hosts/_darwin_/gui/ 与 kernel/）
+      # --- Dock ---
+      dock.orientation: bottom   # Dock 位置（bottom/left/right）
+      dock.autohide: false       # 自动隐藏
+      dock.magnification: true   # 悬停放大
+      dock.tilesize: 44          # 图标尺寸
+      dock.largesize: 58         # 放大后尺寸
+      dock.mineffect: genie      # 最小化动画
+      dock.show_recent: false    # 显示最近使用
+      dock.right_bottom_corner: 1   # 右下热区（1=禁用）
+      dock.persistent_apps:      # Dock 固定应用
+        - safari
+        - chromium
+        - qq
+        - wechat
+        - feishu
+        - alacritty
+        - obsidian
+        - visual-studio-code
+        - cyberduck
+        - tableplus
+      # --- Finder ---
+      finder.view_style: Nlsv    # 视图（Nlsv=列表）
+      finder.remove_old_trash: true    # 30 天清废纸篓
+      finder.new_window_target: Home   # 新窗口打开个人目录
+      finder.show_external_drives: true    # 桌面显示外置盘
+      finder.show_hard_drives: false      # 桌面不显示内置盘
+      finder.show_removable: true         # 桌面显示可移动盘
+      # --- 截图 ---
+      screencapture.location: ~/Desktop   # 保存位置
+      screencapture.type: png             # 格式
+      screencapture.thumbnail: true       # 右下角缩略图
+      # --- 登录窗口 ---
+      loginwindow.guest: false            # 禁访客
+      loginwindow.console_access: false   # 禁 console 登录
+      # --- 菜单栏/时钟 ---
+      menubar.hour24: true        # 24 小时制
+      menubar.show_weekday: true  # 显示星期
+      menubar.battery_percent: false  # 电池百分比
+      # --- 输入/触控板 ---
+      input.fn_keys: true         # 按 fn 显示 F 键
+      input.trackpad_force_click: true    # 用力点按
+      input.trackpad_tap_click: true      # 轻点点击
+      # --- 窗口管理 ---
+      windowmanager.stage_manager: false  # 台前调度
+      windowmanager.auto_hide: false      # 侧栏自动隐藏
+      windowmanager.tiled_margins: false  # 分屏间距
+      # --- 外观 ---
+      appearance.auto_dark: true  # 自动深色模式
+      appearance.icon_tint: Blue  # 图标色调
+      # --- 屏保 ---
+      screensaver.idle_seconds: 600   # 10 分钟启动屏保
+      # --- 空间 ---
+      spaces.span_displays: true  # 跨屏显示空间
+      # --- 电源（pmset）---
+      pmset.battery.hibernatemode: 0    # 仅内存睡眠
+      pmset.battery.powernap: false     # 睡眠不跑维护
+      pmset.battery.wake_on_lan: false  # 禁局域网唤醒
+      pmset.battery.sleep_min: 3        # 3 分钟睡眠
+      pmset.battery.display_sleep_min: 3    # 3 分钟关屏
+      pmset.ac.sleep_min: 10            # 插电 10 分钟睡眠
+      pmset.ac.display_sleep_min: 5     # 插电 5 分钟关屏
+      pmset.ac.powernap: false          # 睡眠不跑维护
+      pmset.ac.tcp_keepalive: true      # 保持 TCP
+      # --- 其他 ---
+      startup.chime: false      # 关开机音
+      softwareupdate.auto_macos: false  # 不自动装 macOS 更新
+
+    services:                    # 系统服务
+      tailscale: true            # 组网（保留本地 DNS）
+
+    fonts:                       # 字体
+      - monaspace                # Monaspace Nerd Font 全家桶
+
+    user_pkgs:                   # Nix 安装的 CLI 工具（→ home/fan/_common_/）
+      - ripgrep                  # 搜索
+      - fd                       # 查找
+      - jq                       # JSON 处理
+      - rtk                      # RTK 工具
+      - tmux                     # 终端复用（gpakosz 配置自动装）
+      - beads                    # AI 记忆（bd）
+      - claude-code              # Claude Code CLI
+      - ccline                   # claude statusline
+      - codex                    # OpenAI Codex CLI
+      - pi-coding-agent          # pi agent
+
+    app_configs:                 # 应用级配置
+      vscode:                    # settings.json + keybindings
+        font: MonaspiceNe Nerd Font Mono
+        font_size: 13
+      alacritty:                 # 终端（字体与系统对齐）
+        font_size: 13
+        window: 100x30
+      chromium_extensions:       # 浏览器扩展
+        - ublock-origin-lite     # 广告拦截
+        - bitwarden              # 密码管理
+        - translator             # 翻译
+      edge_extensions: []        # Edge 扩展（External Extensions 机制就绪，填 ID 即装）
+      rustdesk_server:           # 自建中继（所有 Mac 生效）
+        rendezvous: 120.55.164.147:21116
+        key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=
+      git:                       # git 全局配置
+        user: fan
+        email: fan@fan-x.fun
+        pull_rebase: true
+      zsh:                       # shell（oh-my-zsh 自动 clone）
+        theme: fishy-custom
+        plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]
+      codex:                     # codex 通用段（机器手动段自动合并）
+        model: gpt-5.6-sol
+        provider: fan
+      claude:                    # claude code
+        proxy: https://ai.qksxin.com
+      pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
+
+    secrets:                     # 密钥文件（agenix 加密入库）
+      rustdesk_toml: true        # RustDesk 身份（每台 Mac 各自加密一份，见下）
+      ai_env: manual             # ~/.secrets/ai.env 手动维护，不进 nix 不提交 git
+
+  mini_m4:                       # ← mini-m4 专属（→ home/fan/mini-m4/）
+    idea_plugins:                # IDEA 插件（Toolbox 升级后需同步版本目录）
+      - claude-code              # Claude Code 插件（marketplace 27310, v0.1.14-beta）
+    rustdesk_identity: rustdesk.toml.mini-m4.age   # 本机加密文件已入库
+
+  # 说明：mba-m5 / mbp-m1 暂无专属配置（沿用共享层）。要加专属项，
+  # 在这里加 `mba-m5:` / `mbp-m1:` 区段，并在 home/fan/<机器名>/ 下建文件。
+
+linux:
+  ide:                           # ← Docker 开发容器（ide / ide-global，Ubuntu）
+    pkgs:                        # → home/fan/_linux_/ + _nixos_/ + _alpine_/
+      - git                      # Linux 基础三件套（mac 自带不装）
+      - vim
+      - curl
+      - gnumake                  # Ubuntu 基础
+      - net-tools
+      - inetutils
+      - busybox                  # Alpine 基础（完整 applet）
+      - cacert                   # Alpine CA 证书
+    docker: true                 # docker/compose/buildx + 自启 + fan 网络（容器内自动跳过）
+    ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
+    mise: true                   # 运行时管理器（组件用 mise use -g 手配）
+
+nixos:
+  pending:                       # ← NixOS 真机（待接入，见 hosts/README.md）
+    comin: true                  # git 驱动自动部署
+
+# ============================================================
+# 以下为当前实机状态对照（只读参考，不用改）
+# ============================================================
+current_state:
+  mini_m4:
+    unmanaged_apps:              # 已装但未声明（激活不会卸载 cask，但不会出现在 Dock 清单）
+      - Blender
+      - HBuilderX
+      - JetBrains Toolbox
+      - Microsoft Edge
+      - RustDesk
+      - Tencent Lemon
+      - IntelliJ IDEA
+      - Claude Code URL Handler
+      - Xcode
+      - GarageBand
+      - iMovie
+      - Keynote
+      - Numbers
+      - Pages
+    unmanaged_tap:               # 手动 tap（mutableTaps=false 下激活会被清除）
+      - cirruslabs/cli
+    drift:                       # 声明 vs 实际的差异（激活后由声明值覆盖）
+      - "Dock: left/33/60（声明 bottom/44/58）"
+      - "右下角热区: 14（声明 1=禁用）"
+      - "pmset: 出厂值（声明未生效）"
+      - "截图/登录窗口/菜单栏: 未配置"
+    missing:                     # 缺失项（home-manager 激活后补齐）
+      - ~/.secrets/ai.env
+      - ~/.local/bin/fpi
+      - Monaspace 字体

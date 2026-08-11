@@ -18,3 +18,9 @@ id_ed25519
 .DS_Store
 *.swp
 .idea/
+files/
+
+# === docker/ide ===
+docker/ide/*
+!docker/ide/ubuntu/
+!docker/ide/*.yml

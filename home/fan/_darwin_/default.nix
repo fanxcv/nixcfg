@@ -8,4 +8,6 @@
   # darwin 用户身份固定 fan（内嵌模式下由 users/fan 的 home-manager.users 挂载）
   home.username = "fan";
   home.homeDirectory = "/Users/fan";
+  # standalone 入口（home/fan/default.nix）不参与 darwin 内嵌，这里补 stateVersion
+  home.stateVersion = "25.05";
 }

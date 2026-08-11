@@ -59,6 +59,23 @@ age -e -r age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204 \
 3. 私钥就位：`$HOME/.secrets/age-keys.txt`
 4. 容器内 `nix run .#ide` 重新激活验证
 
+## RustDesk 机器身份（所有 Mac）
+
+RustDesk.toml 含每台机器的 ID 密钥对，**必须各机独立**（共享会导致 ID 冲突）：
+
+```bash
+# 每台 Mac 各自执行：
+age -d -i ~/.secrets/age-keys.txt -o /tmp/rustdesk.toml \
+    <该机已有的 .age 或从本机配置复制>
+# 编辑/确认后：
+age -e -R <(grep -oE 'age1[a-z0-9]{50,}' keys.nix | sort -u) \
+    -o secrets/rustdesk.toml.<hostName>.age /tmp/rustdesk.toml && rm /tmp/rustdesk.toml
+```
+
+命名约定：`rustdesk.toml.<hostName>.age`（如 rustdesk.toml.mini-m4.age），
+解密逻辑在 `hosts/_darwin_/base/rustdesk.nix`（按机器自动选择文件，缺失则跳过）。
+文件必须提交 git（flake 的 self 只打包已跟踪文件）。
+
 ## 轮换私钥
 
 ```bash

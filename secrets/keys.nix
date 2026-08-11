@@ -8,9 +8,14 @@ let
     ide = [
       "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
     ];
+    mini-m4 = [
+      "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
+    ];
   };
 in
 {
-  hosts = hosts // { all = concatLists (attrValues hosts); };
+  hosts = hosts // {
+    all = concatLists (attrValues hosts);
+  };
   all = concatLists (attrValues hosts);
 }

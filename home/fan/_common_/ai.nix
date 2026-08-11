@@ -27,7 +27,7 @@ let
       url = "${proxy}https://github.com/gastownhall/beads/releases/download/v1.1.2/beads_1.1.2_${os}_${goArch}.tar.gz";
       sha256 = {
         "linux-arm64"   = "sha256-oTQBX69L4KQ/hoGo1gLq8LfCVclX8J08kzJXyMkv3RA=";
-        "linux-x64"     = placeholderHash; # TODO: 首次构建时填入
+        "linux-x64"     = "sha256-py1x7TdJVdyfg6D5C1S9e2oAFnCd0Wdq4uNoZR7UAcI=";
         "darwin-arm64"  = "sha256-mwE3qDoq/TQ+Kr0qUGvnLqAychAA92Zpws+Bcp54UB0=";
         "darwin-x64"    = placeholderHash; # TODO: 首次构建时填入
       }.${platKey};
