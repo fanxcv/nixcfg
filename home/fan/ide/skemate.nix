@@ -18,26 +18,32 @@
     sed "s|@skemate@|${pkgs.skemate}|" ${./skemate.service} > "$tmp"
     if ! cmp -s "$tmp" "$unit"; then
       cp "$tmp" "$unit"
-      systemctl daemon-reload >/dev/null 2>&1 || true
-      systemctl enable skemate.service >/dev/null 2>&1 || true
     fi
     rm -f "$tmp"
+    # 无条件：确保 systemd 认识 unit 且已启用（幂等）；失败不再静默，输出真实错误
+    if ! /usr/bin/systemctl daemon-reload; then
+      echo "警告: systemctl daemon-reload 失败，错误如上"
+    fi
+    if ! /usr/bin/systemctl enable skemate.service; then
+      echo "警告: systemctl enable skemate.service 失败，错误如上（容器重启后不会自启）"
+    fi
     # 兜底：unit 未变但服务挂了（如崩溃循环）也尝试拉起，失败输出最近日志便于排查
     # 用 ActiveState 判断而非 is-active：崩溃循环时 unit 处于 auto-restart（activating），is-active 会误判为 active
-    state=$(systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
+    state=$(/usr/bin/systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
     if [ "$state" != "active" ]; then
-      if systemctl restart skemate.service >/dev/null 2>&1; then
+      if /usr/bin/systemctl restart skemate.service; then
         sleep 2
-        state=$(systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
+        state=$(/usr/bin/systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
         if [ "$state" = "active" ]; then
           echo "===> skemate.service 已重新拉起"
         else
           echo "警告: skemate.service 拉起后未存活（当前状态 $state，可能崩溃循环），最近日志："
-          journalctl -u skemate.service -n 10 --no-pager 2>/dev/null || true
+          /usr/bin/journalctl -u skemate.service -n 10 --no-pager 2>/dev/null || true
         fi
       else
-        echo "警告: systemctl restart skemate.service 失败，最近日志："
-        journalctl -u skemate.service -n 10 --no-pager 2>/dev/null || true
+        echo "警告: systemctl restart skemate.service 失败（错误如上），unit 状态："
+        /usr/bin/systemctl status skemate.service --no-pager -n 5 2>&1 | head -12 || true
+        /usr/bin/journalctl -u skemate.service -n 10 --no-pager 2>/dev/null || true
       fi
     fi
   '');
