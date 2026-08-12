@@ -87,8 +87,10 @@
       # 目录扫描/相对路径工具（模块自动导入，见 tools/scan.nix、tools/relative.nix）
       tools = import ./tools { inherit lib self; };
       # claude-code 分发镜像（npm 平台包走 npmmirror），定义见 overlays/claude-code.nix
+      # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
       # overlay 无法在 home 模块层注册（pkgs 先于模块构造），只能在此注入
       claudeOverlay = import ./overlays/claude-code.nix { inherit lib; };
+      skemateOverlay = import ./overlays/skemate.nix { inherit lib; };
       # 每个 system 生成一套可运行包（nix run 一步 build+activate）
       forAllSystems = lib.genAttrs [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       # 生成指定机器上的 home 配置（用户由 home/fan/default.nix 决定：Linux=root / darwin=fan）
@@ -107,7 +109,7 @@
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
-            overlays = [ claudeOverlay ];
+            overlays = [ claudeOverlay skemateOverlay ];
           };
           modules = [
             ./home/fan
@@ -129,7 +131,7 @@
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
-          overlays = [ claudeOverlay ];
+          overlays = [ claudeOverlay skemateOverlay ];
         };
         modules = [
           ./hosts/${hostName}

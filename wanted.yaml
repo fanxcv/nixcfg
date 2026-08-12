@@ -212,6 +212,10 @@ linux:
     docker: true                 # docker/compose/buildx + 自启 + fan 网络（容器内自动跳过）
     ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
     mise: true                   # 运行时管理器（组件用 mise use -g 手配）
+    skemate:                     # 自研终端复用服务（→ overlays/skemate.nix + home/fan/ide/skemate.nix）
+      version: 0.5.72            # latest.json 最新版（linux-amd64 / darwin-arm64）
+      service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd）
+      config: 宿主机挂载           # 配置不管理：docker/ide/skemate/ → /root/.config/skemate（compose 挂载）
     secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
     pi:                          # pi agent 配置（~/.pi/agent，clone 用 ai.env 的 PI_CONFIG_GIT_TOKEN）
       token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai.env 读取，clone 后清 origin

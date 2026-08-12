@@ -19,6 +19,7 @@ services:
       - ./JetBrains/cache:/root/.cache/JetBrains
       - ./JetBrains/config:/root/.config/JetBrains
       - ./JetBrains/share:/root/.local/share/JetBrains
+      - ./skemate:/root/.config/skemate
       - /root/.local/share/mise:/root/.local/share/mise
       - /root/.local/state/mise:/root/.local/state/mise
       - /root/.config/opencode:/root/.config/opencode

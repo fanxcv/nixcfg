@@ -1,0 +1,45 @@
+# skemate（自研终端复用服务）分发 overlay
+# 二进制托管在 w-apis.qksxin.com/terminal，latest.json 记录各平台版本与 sha256（hex）
+# 升级流程：
+#   curl -fsSL https://w-apis.qksxin.com/terminal/latest.json   # 查最新 version 与 sha256
+#   nix hash convert --hash-algo sha256 --to sri <hex>           # hex → SRI 填入下方
+# 平台：latest.json 当前仅 linux-amd64 / darwin-arm64 两个构建，其他平台直接 throw
+
+{ lib }:
+final: prev: {
+  skemate = final.stdenv.mkDerivation {
+    pname = "skemate";
+    version = "0.5.72";
+
+    # nix system → 官方下载文件名（latest.json 的 platforms 键）
+    src = let
+      platformKey = {
+        "x86_64-linux" = "linux-amd64";
+        "aarch64-darwin" = "darwin-arm64";
+      }.${final.stdenv.hostPlatform.system} or (throw
+        "skemate: 平台 ${final.stdenv.hostPlatform.system} 无官方构建（latest.json 仅 linux-amd64 / darwin-arm64）");
+      hashes = {
+        "linux-amd64" = "sha256-U3SSioHkOKJj57Ys2ge2o868FWxkOFFz610DuOXwkUs=";
+        "darwin-arm64" = "sha256-pA7DtpBqRNM3Qy70DmJWLJjsBJViyexzkHV6Fg6TVaI=";
+      };
+    in final.fetchurl {
+      # latest.json 的 url 形如 /0.5.72/skemate-linux-amd64（含 skemate- 前缀）
+      url = "https://w-apis.qksxin.com/terminal/${final.skemate.version}/skemate-${platformKey}";
+      sha256 = hashes.${platformKey} or (throw "skemate: ${platformKey} 的 sha256 未记录，请按升级流程填充");
+      executable = true;
+    };
+
+    dontUnpack = true;
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 $src $out/bin/skemate
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "自研终端复用服务（skemate）";
+      mainProgram = "skemate";
+      platforms = [ "x86_64-linux" "aarch64-darwin" ];
+    };
+  };
+}

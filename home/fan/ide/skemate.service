@@ -1,0 +1,15 @@
+[Unit]
+Description=SkeMate 终端复用服务
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment=HOME=/root
+ExecStart=@skemate@/bin/skemate serve
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
