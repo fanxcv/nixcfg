@@ -29,7 +29,6 @@ services:
       - /root/.claude.json:/root/.claude.json
       - /root/.claude:/root/.claude
       - /root/.codex:/root/.codex
-      - /root/.ssh:/root/.ssh:ro
       - /root/.pi:/root/.pi
       - /root/.m2:/root/.m2
       - /mnt:/mnt

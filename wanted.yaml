@@ -43,8 +43,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     claude:                    # claude code
       proxy: https://ai.qksxin.com
     pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
-    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix）
-      node_default: lts        # 默认 node@lts（config.local.toml 兜底；机器可覆盖，如 mini-m4 node@24）
+    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；组件按机器声明，不再有全局默认）
 
   secrets:                     # 密钥约定（跨平台，→ home/fan/_common_/secrets.nix agenix）
     ai_env: agenix             # AI key（secrets/ai.env.age 激活时解密到 ~/.secrets/ai.env，含 ide 容器）
@@ -181,7 +180,7 @@ macos:
       - flutter                  # 自定义下载源（googleapis）
       - go@1.25
       - java@oracle-17
-      - node@24                 # 覆盖共享默认 lts（config.local.toml 的 node=lts 兜底）
+      - node@24                 # 本机 node 主版本（config.local.toml 已废弃删除，各机器自行声明）
       - python@3.11
     power:                       # 电源策略（pmset，→ hosts/mini-m4/power.nix）
       ac_sleep: 0                # 永不睡眠
@@ -210,10 +209,10 @@ linux:
       - inetutils
       - busybox                  # Alpine 基础（完整 applet）
       - cacert                   # Alpine CA 证书
-    docker: true                 # docker/compose/buildx + 自启 + fan 网络（容器内自动跳过）
+    docker: true                 # docker/compose/buildx + 自启 + fan 网络（NixOS/Alpine 真机；ide 容器 isContainer=true 直接移除，不装不跑）
     ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
     file_backup: ".backup"       # 激活时手配文件冲突自动备份再覆盖（flake 入口注入 HOME_MANAGER_BACKUP_EXT）
-    mise:                        # mise 运行时组件，按容器声明（→ home/fan/ide/mise.nix，激活：nix run .#ide-si11 / .#ide-lenovo）
+    mise:                        # mise 运行时组件，按容器声明（→ home/fan/ide/mise.nix，激活：nix run .#ide-si11 / .#ide-lenovo；激活自动 mise install 缺失组件）
       si11:                      # si-11-ide 容器（激活：nix run .#ide-si11）
         - bun@latest
         - go@1.25
@@ -234,7 +233,7 @@ linux:
     mirrors: true                # npm/pip/uv 国内镜像（npm→npmmirror、pip/uv→清华 TUNA，→ home/fan/_linux_/mirror.nix；useChinaMirror=false 时直连官方）
     skemate:                     # 自研终端复用服务（→ overlays/skemate.nix + home/fan/ide/skemate.nix）
       version: 0.5.72            # latest.json 最新版（linux-amd64 / darwin-arm64）
-      service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd）
+      service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
       config: 宿主机挂载           # 配置不管理：docker/ide/skemate/ → /root/.config/skemate（compose 挂载）
     secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
     pi:                          # pi agent 配置（~/.pi/agent，clone 用 ai.env 的 PI_CONFIG_GIT_TOKEN）

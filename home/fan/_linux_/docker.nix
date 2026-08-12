@@ -6,7 +6,7 @@
 #   pkgs.docker-buildx   → 脚本 Ubuntu 分支的 docker-buildx-plugin（nix 侧统一提供）
 # 自启 + dc 软链 + network fan 由 home.activation 完成（需 root 或 sudo NOPASSWD）
 # 容器环境不安装：isContainer 由 flake.nix 传入（ide 容器 = true，真机默认 false），
-#   activation 里再用 /.dockerenv 运行时兜底检测（即使参数漏配也不会在容器里误装）
+#   包与 activation 均 mkIf 跳过——容器里 docker daemon 起不来，连检测都不跑
 
 { pkgs, lib, isContainer ? false, ... }:
 {
@@ -16,13 +16,8 @@
     docker-buildx
   ]);
 
-  home.activation.setupDocker = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.setupDocker = lib.mkIf (!isContainer) (lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_docker() {
-      # 容器兜底：Docker 容器都有 /.dockerenv（非特权下 daemon 起不来，不自启不建网）
-      if [ -f /.dockerenv ]; then
-        echo "提示: 检测到 Docker 容器（/.dockerenv），跳过 docker 安装/自启/network fan"
-        return 0
-      fi
       SUDO=""
       [ "$(id -u)" = 0 ] || SUDO="sudo"
 
@@ -50,5 +45,5 @@
       fi
     }
     setup_docker
-  '';
+  '');
 }
