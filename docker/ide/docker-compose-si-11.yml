@@ -34,6 +34,7 @@ services:
       - ./mise/config:/root/.config/mise
       - ./mise/cache:/root/.cache/mise
       - ./skemate:/root/.config/skemate
+      - ./ssh-keys:/etc/ssh-host-keys
       - ./vsc:/root/.vscode-server
       - ~/.config/uv:/root/.config/uv
       - ~/.claude.json:/root/.claude.json

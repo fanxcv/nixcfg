@@ -210,6 +210,7 @@ linux:
       - busybox                  # Alpine 基础（完整 applet）
       - cacert                   # Alpine CA 证书
     docker: true                 # docker/compose/buildx + 自启 + fan 网络（NixOS/Alpine 真机；ide 容器 isContainer=true 直接移除，不装不跑）
+    ssh_host_key: 持久化          # sshd host key 存宿主机 docker/ide/ssh-keys/（entrypoint 生成/复用，→ docker/ide/ubuntu/entrypoint.sh），容器重建不换 key
     ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
     file_backup: ".backup"       # 激活时手配文件冲突自动备份再覆盖（flake 入口注入 HOME_MANAGER_BACKUP_EXT）
     mise:                        # mise 运行时组件，按容器声明（→ home/fan/ide/mise.nix，激活：nix run .#ide-si11 / .#ide-lenovo；激活自动 mise install 缺失组件）
