@@ -22,11 +22,13 @@ final: prev: {
         "linux-amd64" = "sha256-U3SSioHkOKJj57Ys2ge2o868FWxkOFFz610DuOXwkUs=";
         "darwin-arm64" = "sha256-pA7DtpBqRNM3Qy70DmJWLJjsBJViyexzkHV6Fg6TVaI=";
       };
-    in final.fetchurl {
+      # 用 builtins.fetchurl（eval 期 nix 下载器）而非 pkgs.fetchurl（构建期 curl builder）：
+      # curl builder 带 --continue-at - 断点续传，网络中断时 Range 拼接会产出坏文件
+      # （si-11 容器实测 hash mismatch；builtins.fetchurl 下载即校验，构建期只从 store 复制）
+    in builtins.fetchurl {
       # latest.json 的 url 形如 /0.5.72/skemate-linux-amd64（含 skemate- 前缀）
       url = "https://w-apis.qksxin.com/terminal/${final.skemate.version}/skemate-${platformKey}";
       sha256 = hashes.${platformKey} or (throw "skemate: ${platformKey} 的 sha256 未记录，请按升级流程填充");
-      executable = true;
     };
 
     dontUnpack = true;
