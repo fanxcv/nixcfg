@@ -19,7 +19,7 @@
 # 注意：age.secrets 在激活期解密，file 缺失或私钥不在会导致激活失败（不做静默跳过），
 # 所以未启用前保持注释，避免影响现有容器。
 
-{ pkgs, lib, inputs, config, ... }:
+{ pkgs, lib, inputs, config, isContainer ? false, ... }:
 {
   programs.zsh.initContent = ''
     [ -f "$HOME/.secrets/ai.env" ] && source "$HOME/.secrets/ai.env"
@@ -41,15 +41,18 @@
   '';
 
   # === agenix：加密 secrets 自动解密（已启用；密钥就位要求见 secrets/README.md）===
+  # 容器（isContainer）禁用 age.secrets：模块在 Linux 注册 systemd user service，容器无
+  # user systemd 永不触发，且历史运行会留下指向 /run/user/<uid>/agenix 的 symlink（容器
+  # 重启后悬空）；容器只走下方 agenixContainerFallback 激活期解密。mac/NixOS 不受影响。
   imports = [ inputs.agenix.homeManagerModules.default ];
 
-  age.identityPaths = [ "${config.home.homeDirectory}/.secrets/age-keys.txt" ];
-  age.secrets.aiEnv = {
+  age.identityPaths = lib.mkIf (!isContainer) [ "${config.home.homeDirectory}/.secrets/age-keys.txt" ];
+  age.secrets.aiEnv = lib.mkIf (!isContainer) {
     file = ../../../secrets/ai.env.age;   # 相对本文件：仓库根/secrets/
     path = "${config.home.homeDirectory}/.secrets/ai.env";
     mode = "600";
   };
-  age.secrets.gitCredentials = {
+  age.secrets.gitCredentials = lib.mkIf (!isContainer) {
     file = ../../../secrets/git-credentials.age;
     path = "${config.home.homeDirectory}/.git-credentials";
     mode = "600";
@@ -63,6 +66,12 @@
     AGE_KEY="$HOME/.secrets/age-keys.txt"
     if [ -f "$AGE_KEY" ]; then
       umask 077
+      # 清理历史悬空 symlink：agenix systemd user service 曾在容器运行过时会留下
+      # 指向 /run/user/<uid>/agenix 的链，容器重启后 /run 清空即悬空；-f 检查对其为
+      # false，但 age -o 写入会跟随链接到不存在的目录而失败 → 先删再解密（幂等）
+      for secret_path in "$HOME/.secrets/ai.env" "$HOME/.git-credentials"; do
+        [ -L "$secret_path" ] && [ ! -e "$secret_path" ] && rm -f "$secret_path"
+      done
       [ -f "$HOME/.secrets/ai.env" ] || "$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.secrets/ai.env" ${../../..}/secrets/ai.env.age
       [ -f "$HOME/.git-credentials" ] || "$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.git-credentials" ${../../..}/secrets/git-credentials.age
     else

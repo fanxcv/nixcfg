@@ -46,7 +46,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；组件按机器声明，不再有全局默认）
 
   secrets:                     # 密钥约定（跨平台，→ home/fan/_common_/secrets.nix agenix）
-    ai_env: agenix             # AI key（secrets/ai.env.age 激活时解密到 ~/.secrets/ai.env，含 ide 容器）
+    ai_env: agenix             # AI key（secrets/ai.env.age 激活时解密到 ~/.secrets/ai.env；mac=launchd、容器=激活期兜底解密）
     git_credentials: agenix    # git 凭据（secrets/git-credentials.age → ~/.git-credentials）
 
 macos:
