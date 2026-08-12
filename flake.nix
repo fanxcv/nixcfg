@@ -103,7 +103,7 @@
       #   isContainer:     是否容器环境（容器里 docker daemon 起不来，不安装 docker 全家桶；
       #                     容器用户覆盖为 root，见 _common_/container.nix）
       mkHomeConfig =
-        { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? true, isContainer ? false }:
+        { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? true, isContainer ? false, ideMachine ? null }:
         home-manager.lib.homeManagerConfiguration {
           # claude-code 在 nixpkgs 标记 unfree，用 predicate 只放行它（import 重新求值带 config 的 pkgs）
           pkgs = import nixpkgs {
@@ -118,7 +118,7 @@
             ./home/fan/${hostName}
           ];
           extraSpecialArgs = {
-            inherit self inputs outputs tools useChinaMirror hostName isContainer platform;
+            inherit self inputs outputs tools useChinaMirror hostName isContainer platform ideMachine;
           };
         };
       # 生成指定 macOS 机器的 nix-darwin 配置（home-manager 内嵌，darwin-rebuild 一次管全部）
@@ -150,10 +150,11 @@
     in
     {
       homeConfigurations = {
-        # Docker 练手容器（Ubuntu）；容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
-        "fan@ide" = mkHomeConfig { hostName = "ide"; isContainer = true; };
-        # 同容器，国外网络：跳过国内镜像
-        "fan@ide-global" = mkHomeConfig { hostName = "ide"; useChinaMirror = false; isContainer = true; };
+        # Docker 开发容器（Ubuntu，si-11-ide / lenovo-ide）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
+        # 所有容器均走代理（compose 层 http_proxy 等环境变量），网络环境一致，不再区分国内/国外变体
+        # 机器专属：mise 组件按容器声明（home/fan/ide/mise.nix），容器内 nix run .#ide-si11 / .#ide-lenovo
+        "fan@ide-si11" = mkHomeConfig { hostName = "ide"; ideMachine = "si11"; isContainer = true; };
+        "fan@ide-lenovo" = mkHomeConfig { hostName = "ide"; ideMachine = "lenovo"; isContainer = true; };
 
         # --- 多台 ide 开发容器：一行注册即可（机器目录可选），hostname 在部署层 docker-compose 里设 ---
         # "fan@ide-eu" = mkHomeConfig { hostName = "ide-eu"; isContainer = true; };
@@ -174,21 +175,19 @@
 
       # --- 简短命令别名：nix build .#<机器名> && ./result/activate（两步）---
       # homeConfigurations 标准名保留（兼容 home-manager switch --flake 等工具）
-      ide = self.homeConfigurations."fan@ide".activationPackage;
-      ide-global = self.homeConfigurations."fan@ide-global".activationPackage;
 
       # --- 一步到位：nix run .#<机器名>（构建 + activate 一条命令）---
       # ide 容器可能跑在不同架构服务器（lenovo/si-11 等），激活配置必须按当前 system 构建：
       # 不能引用固定架构的 homeConfigurations（会 platform mismatch，如 x86_64 机器拿到 aarch64 配置）
       packages = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
-            ideCfg = mkHomeConfig { hostName = "ide"; system = system; isContainer = true; };
-            ideGlobalCfg = mkHomeConfig { hostName = "ide"; system = system; useChinaMirror = false; isContainer = true; };
         in {
-          ide = pkgs.writeShellScriptBin "ide-activate"
-            "export USER=root; exec ${ideCfg.activationPackage}/activate";
-          ide-global = pkgs.writeShellScriptBin "ide-activate"
-            "export USER=root; exec ${ideGlobalCfg.activationPackage}/activate";
+          # 机器专属别名：mise 组件按容器声明（home/fan/ide/mise.nix），si-11/lenovo 各一份
+          # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
+          ide-si11 = pkgs.writeShellScriptBin "ide-activate"
+            "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide"; system = system; ideMachine = "si11"; isContainer = true; }).activationPackage}/activate";
+          ide-lenovo = pkgs.writeShellScriptBin "ide-activate"
+            "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide"; system = system; ideMachine = "lenovo"; isContainer = true; }).activationPackage}/activate";
           # Mac 一次性构建+激活别名：nix run .#darwin-mba-m5 等
           "darwin-mba-m5" = pkgs.writeShellScriptBin "darwin-mba-m5"
             "exec ${self.darwinConfigurations.mba-m5.system}/activate";
@@ -198,7 +197,7 @@
             "exec ${self.darwinConfigurations.mini-m4.system}/activate";
         });
 
-      # --- 多台 ide 部署的别名同规则：nix build .#ide-eu / .#ide-us ---
+      # --- 多台 ide 部署的别名同规则：nix build .#ide-si11 / .#ide-lenovo（packages 块内各一行）---
 
       # 代码格式化：nix fmt 一键格式化（treefmt：nixfmt + statix，配置见 formatter.nix）
       formatter = forAllSystems (system:

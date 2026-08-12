@@ -78,8 +78,8 @@ docker compose up -d        # systemd 启动，sshd 自启（端口 2222→22）
 docker exec -it ide bash     # 首次 SSH 还没公钥，用 docker exec
 
 cd /root/nixcfg            # 配置仓库已由宿主机拉取并挂载，无需 clone
-nix run .#ide                # 构建 + 激活（拉公钥、加固 sshd、oh-my-zsh/tmux 配置就位）
-# mise 组件清单已清空：需要时按机器 mise use -g 添加（node/python 等运行时）
+nix run .#ide-si11         # si-11 容器；lenovo 容器用 .#ide-lenovo（构建 + 激活：拉公钥、加固 sshd、oh-my-zsh/tmux 配置就位）
+# mise 组件由 nix 按容器声明（home/fan/ide/mise.nix），激活自动写入 ~/.config/mise/config.toml
 ```
 
 ### 4. 验证
@@ -100,11 +100,11 @@ rg --version                 # ripgrep（nix 安装，全平台）
 git -C ./nixcfg pull         # 宿主机
 # 或容器内：cd /root/nixcfg && git pull
 
-# 容器内应用配置改动
-nix run .#ide
+# 容器内应用配置改动（si-11 / lenovo 分别用 .#ide-si11 / .#ide-lenovo）
+nix run .#ide-si11
 
 # 升级 nixpkgs 里的工具版本（claude/codex/pi 等新版本）
-nix flake update nixpkgs && nix run .#ide
+nix flake update nixpkgs && nix run .#ide-si11
 ```
 
 **不需要重新 build 镜像**——只有动 systemd/sshd 本体/zsh 登录 shell 时才需要改 `docker/ide/ubuntu/Dockerfile` 并重建。
@@ -114,12 +114,11 @@ nix flake update nixpkgs && nix run .#ide
 每台服务器只需 flake.nix 两行 + 部署层各管各的（hostname 在 compose 里设，密钥在各自宿主机）：
 
 ```nix
-"fan@ide-eu" = mkHomeConfig { hostName = "ide-eu"; isContainer = true; };
-ide-eu = pkgs.writeShellScriptBin "ide-activate" "exec ${self.homeConfigurations."fan@ide-eu".activationPackage}/activate";
-# packages 块内：ide-eu = ...
+"fan@ide-si11" = mkHomeConfig { hostName = "ide"; ideMachine = "si11"; isContainer = true; };
+# packages 块内：ide-si11 = ...（mise 组件按容器声明，见 home/fan/ide/mise.nix）
 ```
 
-→ `nix run .#ide-eu`。机器目录可建可不建（flake 自动跳过不存在的）。
+→ si-11 容器内 `nix run .#ide-si11`，lenovo 用 `.#ide-lenovo`。机器专属微调放 home/fan/ide/（mise.nix 按 ideMachine 区分）。
 
 ## 构建 NixOS 真机（待补）
 
@@ -155,18 +154,20 @@ macbook = self.homeConfigurations."fan@macbook".activationPackage;  # packages �
 
 ## 镜像控制
 
-| 层级 | 国内环境（默认） | 国外环境 |
-|---|---|---|
-| Dockerfile 装 nix | 清华镜像（install 脚本 + tarball + binary cache） | 改 Dockerfile 官方源 |
-| home 配置 | `fan@ide`（mise 走 npmmirror、git 走 gh-proxy） | `fan@ide-global`（useChinaMirror = false） |
+| 层级 | 国内环境（默认） |
+|---|---|
+| Dockerfile 装 nix | 清华镜像（install 脚本 + tarball + binary cache） |
+| home 配置 | `fan@ide-si11` / `fan@ide-lenovo`（mise 走 npmmirror、git 走 gh-proxy） |
+
+所有容器均走代理（compose 层 http_proxy 等环境变量），网络环境一致，不再区分国内/国外变体。
 
 优先级：命令行 `--option` > `NIX_CONFIG` > `/etc/nix/nix.conf` > flake `nixConfig`。
 
 ## 常用命令
 
 ```bash
-nix run .#ide                # 构建 + 激活（一步）
-nix build .#ide && ./result/activate   # 两步法
+nix run .#ide-si11          # si-11 构建 + 激活（一步）；lenovo 用 .#ide-lenovo
+nix build .#ide-si11 && ./result/activate   # 两步法
 nix flake update nixpkgs     # 升级工具版本
 nix flake check              # 语法检查（有 nix 的机器上）
 ```

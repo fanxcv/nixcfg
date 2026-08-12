@@ -1,8 +1,8 @@
 # shell 环境：zsh + oh-my-zsh + 定制 fishy 主题
 # 对应 alpine-init.sh 的 install_oh_my_zsh()：git clone 方式（不用 Nix 包，可 omz update）
 # 镜像开关（对应脚本的 use_proxy="https://gh-proxy.com/"）：
-#   useChinaMirror=true（默认）→ 安装/更新地址加 https://gh-proxy.com/ 前缀
-#   useChinaMirror=false（fan@ide-global）→ 直连 GitHub 原始地址
+#   useChinaMirror=true（默认，所有 ide 容器）→ 安装/更新地址加 https://gh-proxy.com/ 前缀
+#   useChinaMirror=false（NixOS 真机国外直连场景）→ 直连 GitHub 原始地址
 # 注意：clone 的 origin 即安装地址，oh-my-zsh 自动更新 / omz update 天然走同一通道
 
 { pkgs, lib, self, useChinaMirror ? true, ... }:

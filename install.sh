@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ⚠️ 已废弃：本脚本对应旧的「docker run + 挂载 /config」流程，与新架构冲突（用户/配置名均已变更）。
-# 新流程见 README.md：docker/ide/ubuntu/Dockerfile 构建镜像（内含 nix 安装）+ 容器内 nix run .#ide。
+# 新流程见 README.md：docker/ide/ubuntu/Dockerfile 构建镜像（内含 nix 安装）+ 容器内 nix run .#ide-si11。
 # 保留仅供参考，勿再执行。
 # 一键安装：Ubuntu 容器内执行，自动完成全部配置（幂等，可重复执行）
 # 用法：
@@ -106,7 +106,7 @@ if [ -n "$CACERT" ] && [ ! -e /nix/var/nix/profiles/default/etc/ssl/certs/ca-bun
 fi
 
 echo "==> [5/7] 激活 home-manager 配置（首次 5~15 分钟，之后秒级）"
-su - fan -c 'nix run /config#homeConfigurations."fan@ide".activationPackage'
+su - fan -c 'nix run /config#homeConfigurations."fan@ide-si11".activationPackage'
 
 echo "==> [6/7] 设置 fan 默认 shell 为 zsh"
 chsh -s /usr/bin/zsh fan

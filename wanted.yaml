@@ -175,7 +175,7 @@ macos:
       - claude-code              # Claude Code 插件（marketplace 27310, v0.1.14-beta）
     mise:                        # mise 运行时组件（→ home/fan/mini-m4/mise.nix）
       - android-sdk
-      - bun
+      - bun@latest
       - cocoapods
       - dart                     # 自定义下载源（googleapis）
       - flutter                  # 自定义下载源（googleapis）
@@ -199,7 +199,8 @@ macos:
       - bilibili                 # 本机已装
 
 linux:
-  ide:                           # ← Docker 开发容器（ide / ide-global，Ubuntu）
+  ide:                           # ← Docker 开发容器（si-11-ide / lenovo-ide，Ubuntu）
+    proxy: true                  # 所有容器走代理（compose 层 http_proxy 等环境变量，→ docker/ide/docker-compose-*.yml）；网络环境一致，不再区分国内/国外变体
     pkgs:                        # → home/fan/_linux_/ + _nixos_/ + _alpine_/
       - git                      # Linux 基础三件套（mac 自带不装）
       - vim
@@ -211,7 +212,26 @@ linux:
       - cacert                   # Alpine CA 证书
     docker: true                 # docker/compose/buildx + 自启 + fan 网络（容器内自动跳过）
     ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
-    mise: true                   # 运行时管理器（组件用 mise use -g 手配）
+    file_backup: ".backup"       # 激活时手配文件冲突自动备份再覆盖（flake 入口注入 HOME_MANAGER_BACKUP_EXT）
+    mise:                        # mise 运行时组件，按容器声明（→ home/fan/ide/mise.nix，激活：nix run .#ide-si11 / .#ide-lenovo）
+      si11:                      # si-11-ide 容器（激活：nix run .#ide-si11）
+        - bun@latest
+        - go@1.25
+        - java@zulu-8
+        - maven@3
+        - node@22
+        - python@3.12
+        - uv@latest
+      lenovo:                    # lenovo-ide 容器（激活：nix run .#ide-lenovo；java 默认 oracle-17，另有 pipx）
+        - bun@latest
+        - go@1.25
+        - java@oracle-17
+        - maven@3
+        - node@22
+        - python@3.12
+        - uv@latest
+        - pipx@latest
+    mirrors: true                # npm/pip/uv 国内镜像（npm→npmmirror、pip/uv→清华 TUNA，→ home/fan/_linux_/mirror.nix；useChinaMirror=false 时直连官方）
     skemate:                     # 自研终端复用服务（→ overlays/skemate.nix + home/fan/ide/skemate.nix）
       version: 0.5.72            # latest.json 最新版（linux-amd64 / darwin-arm64）
       service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd）
