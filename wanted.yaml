@@ -189,10 +189,10 @@ macos:
       - dart                     # 自定义下载源（googleapis）
       - flutter                  # 自定义下载源（googleapis）
       - go@1.25
-      - java@oracle-17
+      - java@oracle-25
       - node@24                 # 本机 node 主版本（config.local.toml 已废弃删除，各机器自行声明）
-      - python@3.11
-    android_emulator: 声明式   # 模拟器（emulator+2 镜像+Pixel_Fold/Tablet AVD，→ home/fan/mini-m4/android-emulator.nix 激活期幂等恢复）
+      - python@3
+    android_emulator: 声明式   # 模拟器（emulator+android-37.0 镜像+Pixel_Fold AVD，→ home/fan/mini-m4/android-emulator.nix 激活期幂等恢复）
     power:                       # 电源策略（pmset，→ hosts/mini-m4/power.nix）
       ac_sleep: 0                # 永不睡眠
       ac_display_sleep: 10       # 10 分钟关屏
