@@ -1,8 +1,10 @@
 # 安卓模拟器声明式恢复（emulator + 系统镜像 + AVD）
 # ANDROID_HOME 由 mise android-sdk 接管（mise.nix），但 emulator/system-images/AVD
-# 是 sdkmanager/avdmanager 的产物（不在 nix store）。本模块在激活期幂等保证它们就位：
-# 已装则跳过（不联网不下载），缺失才安装——重装系统/清空 SDK 后一条 nix 命令恢复模拟器。
-# AVD 定义对齐实机现状：Pixel_Fold(android-37.0 ps16k)
+# 是 sdkmanager/avdmanager 的产物（不在 nix store）。本模块在激活期幂等保证工具链就位：
+#   java / android-sdk（cmdline-tools）由 mise 自动补装（首次联网，幂等秒过）
+#   emulator / system-images 只声明不下载（镜像巨大，按需手动 sdkmanager 安装）
+#   AVD 在镜像就位后创建（Pixel_Fold(android-37.0 ps16k)）
+# 重装系统/清空 SDK 后一条 nix 命令恢复工具链；镜像/AVD 装好后同样自动恢复
 
 { lib, ... }:
 {
@@ -10,7 +12,6 @@
     ANDROID_HOME="''${ANDROID_HOME:-/Users/fan/sdk/Android}"
     SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
     AVDMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
-    SETUP_LOG="/tmp/android-emulator-setup.log"
 
     # java 由 mise 提供（config.toml java=oracle-25）；activation 脚本是 sh（不读 .zshenv），
     # PATH 无 ~/.nix-profile/bin（mise 所在），显式补全；shims 供 java 使用
@@ -24,26 +25,24 @@
         exit 0
       fi
     fi
-    # sdkmanager 缺失 = Android SDK 未装（mise 组件按需安装，全新环境常见），优雅跳过
+    # sdkmanager 缺失 = android-sdk 组件未装 → mise 自动补装（幂等，已装秒过）
     if [ ! -x "$SDKMANAGER" ]; then
-      echo "警告: 未找到 sdkmanager（''${SDKMANAGER}），模拟器声明跳过（先 mise install android-sdk 或手动装 SDK 再重跑激活）"
-      exit 0
+      echo "[android-emulator] 未找到 sdkmanager，尝试 mise install android-sdk（首次部署自动补装）..."
+      if command -v mise >/dev/null 2>&1 && mise install android-sdk >/dev/null 2>&1 && [ -x "$SDKMANAGER" ]; then
+        echo "[android-emulator] android-sdk 已装（cmdline-tools）"
+      else
+        echo "警告: mise install android-sdk 失败，模拟器声明跳过（先手动 mise install android-sdk 再重跑激活）"
+        exit 0
+      fi
     fi
 
-    # --- emulator + 系统镜像（幂等：目录齐全则跳过，避免每次激活联网检查）---
+    # --- emulator + 系统镜像（只声明不下载：镜像巨大，缺失时按需手动安装）---
     if [ -x "$ANDROID_HOME/emulator/emulator" ] \
       && [ -d "$ANDROID_HOME/system-images/android-37.0/google_apis_playstore_ps16k/arm64-v8a" ]; then
       echo "[android-emulator] emulator + 系统镜像已就位"
     else
-      yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
-      echo "[android-emulator] 安装 emulator + 系统镜像（日志: ''${SETUP_LOG}）"
-      if ! "$SDKMANAGER" "emulator" \
-          "system-images;android-37.0;google_apis_playstore_ps16k;arm64-v8a" \
-          >"$SETUP_LOG" 2>&1; then
-        echo "错误: sdkmanager 安装失败，日志尾部："
-        tail -20 "$SETUP_LOG"
-        exit 1
-      fi
+      echo "[android-emulator] emulator/system-images 未装，跳过（不自动下载；手动安装: \"$SDKMANAGER\" emulator system-images;android-37.0;google_apis_playstore_ps16k;arm64-v8a）"
+      exit 0
     fi
 
     # --- AVD（缺失时重建，device id 与镜像包名对齐实机定义）---

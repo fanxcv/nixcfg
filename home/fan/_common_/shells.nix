@@ -51,7 +51,9 @@ in
   # 已装好则跳过 clone（幂等）；失败只警告不中断 switch
   home.activation.cloneOhMyZsh = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if [ ! -e "$HOME/.oh-my-zsh/oh-my-zsh.sh" ]; then
-      rm -rf "$HOME/.oh-my-zsh"
+      # .oh-my-zsh 在 NixOS 真机是 /persist 的 bind mount（home.persistence），
+      # rm 挂载点会报 Device busy（激活环境无 mountpoint 命令，统一用 find -delete 清内容）
+      find "$HOME/.oh-my-zsh" -mindepth 1 -delete 2>/dev/null || true
       ${pkgs.git}/bin/git clone --quiet ${ohMyZshRepo} "$HOME/.oh-my-zsh" \
         || echo "警告: oh-my-zsh clone 失败，下次 switch 重试或手动: git clone ${ohMyZshRepo} ~/.oh-my-zsh"
     fi
@@ -59,7 +61,7 @@ in
     mkdir -p "$HOME/.oh-my-zsh/custom/plugins"
     for plugin in zsh-syntax-highlighting zsh-autosuggestions; do
       if [ ! -d "$HOME/.oh-my-zsh/custom/plugins/$plugin/.git" ]; then
-        rm -rf "$HOME/.oh-my-zsh/custom/plugins/$plugin"
+        find "$HOME/.oh-my-zsh/custom/plugins/$plugin" -mindepth 1 -delete 2>/dev/null || true
         ${pkgs.git}/bin/git clone --quiet "${useProxy}https://github.com/zsh-users/$plugin.git" \
           "$HOME/.oh-my-zsh/custom/plugins/$plugin" \
           || echo "警告: 插件 $plugin clone 失败"
