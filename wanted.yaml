@@ -237,6 +237,7 @@ linux:
       service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
       config: 宿主机挂载           # 配置不管理：docker/ide/skemate/ → /root/.config/skemate（compose 挂载）
     ide-si:                      # ← 机器（原 si-11-ide 更名，hostname=ide-si；激活：nix run .#ide-si）
+      ssh_host_key: agenix       # SSH host key 固定（secrets/ssh-host-key.<host>.age，激活解密到 /etc/ssh-host-keys/，容器重建/服务器重装后 known_hosts 不失配，→ home/fan/_container_/ssh-host-key.nix）
       proxy: true                # 走代理（已由 nix 接管：compose 原代理变量/extra_hosts 已删 → home/fan/ide-si/sysenv.nix，nix run 激活即生效；JVM 不读 shell 代理，JAVA_TOOL_OPTIONS 注入）
       sysenv: 接管环境变量+hosts  # 替代 compose environment/extra_hosts，免重建容器：代理/NO_PROXY/JAVA_TOOL_OPTIONS → /etc/environment.d + .zshenv + ~/.ssh/environment；内网 hosts（gitlab/maven.hzdev.cn → 10.1.0.30）→ 激活幂等追加 + oneshot 启动恢复（仅本机）
       mise:                      # mise 运行时组件（→ home/fan/ide-si/mise.nix，激活自动 mise install 缺失组件）
@@ -248,6 +249,7 @@ linux:
         - python@3.12
         - uv@latest
     ide-lenovo:                  # ← 机器（激活：nix run .#ide-lenovo）
+      ssh_host_key: agenix       # SSH host key 固定（同 ide-si，→ home/fan/_container_/ssh-host-key.nix）
       proxy: false               # 国内机器直连，不需要
       mise:                      # java 默认 oracle-17，另有 pipx（→ home/fan/ide-lenovo/mise.nix）
         - bun@latest
