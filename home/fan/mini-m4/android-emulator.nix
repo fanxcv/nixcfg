@@ -12,8 +12,9 @@
     AVDMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
     SETUP_LOG="/tmp/android-emulator-setup.log"
 
-    # java 由 mise 提供（config.toml java=oracle-25）；activation 环境无 shims，显式补 PATH
-    export PATH="$HOME/.local/share/mise/shims:$PATH"
+    # java 由 mise 提供（config.toml java=oracle-25）；activation 脚本是 sh（不读 .zshenv），
+    # PATH 无 ~/.nix-profile/bin（mise 所在），显式补全；shims 供 java 使用
+    export PATH="$HOME/.nix-profile/bin:$HOME/.local/share/mise/shims:$PATH"
     if ! command -v java >/dev/null 2>&1; then
       echo "[android-emulator] 未找到 java，尝试 mise install java@oracle-25（首次部署自动补装）..."
       if command -v mise >/dev/null 2>&1 && mise install java@oracle-25 >/dev/null 2>&1; then
