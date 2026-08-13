@@ -251,3 +251,4 @@ nixos:
     apps: [edge, bitwarden]              # GUI 应用（对齐 mac；rustdesk/clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install）
     comin: false                 # 手动 nixos-rebuild switch（comin 服务已就绪，需要自动部署时启用）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）
+    user_password: agenix        # fan 登录密码 hash（secrets/fan-password.age，→ hosts/_nixos_/base/password.nix；SSH 走公钥，密码仅 SDDM 图形登录）
