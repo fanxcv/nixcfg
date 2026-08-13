@@ -73,3 +73,29 @@
 - rustdesk/clash-verge-rev 未装（需要时真机补装，注意 libsciter 需放行）
 - claude-code 的 linux-arm64/darwin hash 可能也过期（本次只修了 linux-x64）
 - NixOS 26.05 与 26.11 的差异：comin 包需用 input 自带（稳定版 nixpkgs 无）
+
+## 重建复盘（2026-08-14 凌晨）
+
+### 全流程耗时
+| 阶段 | 耗时 | 说明 |
+|---|---|---|
+| 删 VM + 重建 + 引导跳板 | ~40min | 踩了 OVMF/SecureBoot/路径坑 |
+| nixos-anywhere 部署 | ~2.5h | comin go-modules 被墙 → GOPROXY 注入 |
+| 系统修复（密码/SSH/LVM） | ~3h | 见下 |
+| **总计** | **~6h** | 首轮"所有问题已解决"的假设被打破 |
+
+### 新问题清单（本次新增）
+1. **comin go-modules 走 proxy.golang.org 被墙** → buildGoModule 的 overrideModAttrs 注入 preBuild export GOPROXY=goproxy.cn（env 注入无效，impureEnvVars 机制会覆盖）
+2. **nixos-anywhere 的 USTC 注入失效**：--no-substitute-on-destination 隐含 machineSubstituters=n → 用 --disk-encryption-keys 通道直接写 installer 的 /root/.config/nix/nix.conf（substituters 覆盖式，USTC 排前）
+3. **host key 0 字节**：Debian 模板清空 key 等 cloud-init 生成但没跑 → chroot ssh-keygen -A
+4. **fan 密码/SSH host key 全部失效**：agenix identityPaths=/home/fan/.secrets（bind mount 晚于系统激活）→ agenix.nix 加 /persist 直连路径
+5. **.oh-my-zsh bind mount rm 失败**：激活脚本 rm -rf 挂载点 → 改 find -delete
+6. **SSH 公钥被 home-manager 激活覆盖**：ssh.nix 拉取源 mac.pub 是 OneDrive HTML → 内置 mac id_rsa 到仓库（mac-pub.pub）
+7. **comin 认证失败**：go-git 不走 git credential.helper → 改 auth.username + access_token_path（token 去 URL 编码）
+8. **LVM PV 头损坏**（VM 运行时 nbd 挂盘导致）→ 数据完好，LABELONE 位置恢复即可（LVM label 在 PV sector 1，非 sector 0！）
+
+### 关键教训
+- **严禁 VM 运行时 nbd 挂载同一盘**（本次 LVM 损坏的根源）
+- macOS tar 会混入 ._* AppleDouble 文件 → 传输用 git push/pull，不用 tar
+- LVM label 在 sector 1（512B 偏移），恢复时别复制到 sector 0
+- 目标机源码目录直接用 git clone（comin 同仓库），不要 tar 解压
