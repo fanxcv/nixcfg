@@ -23,7 +23,6 @@
 
 - 删除软件/配置 → wanted.yaml 对应条目一并删除（含相关残留配置引用）
 - 新增/修改 → 按 wanted.yaml 格式（`- 名称 # 备注` / `键: 值 # 备注`）同步填写
-- `current_state` 区段（实机对照）在状态变化时更新
 - 平台/机器层结构变化（新增机器区段、模块目录调整）→ wanted.yaml 对应区段同步调整
 
 顺序要求：**先同步 wanted.yaml，再跑 eval 验证**，提交前检查
@@ -66,4 +65,3 @@
 - [ ] 机器专属新增：wanted.yaml 加 `<机器名>:` 区段 + 对应目录建模块（tools.scan 自动导入）
 - [ ] 提交前核对 `git diff wanted.yaml` 与 nix 改动一致
 - [ ] 密钥类文件（secrets/*.age）必须入库 git（flake 的 self 只打包已跟踪文件）
-- [ ] 未声明但实机存在的软件，记录到 wanted.yaml 的 current_state 区段（不擅自声明）

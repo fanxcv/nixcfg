@@ -73,6 +73,8 @@ macos:
       # - ffmpeg                  # 音视频（含 x264/x265/lame 等依赖）
       # 依赖库（openssl/python/readline 等）由公式自动带，无需手动声明
 
+    brew_mirror: true            # bottles 走 USTC 镜像（HOMEBREW_BOTTLE_DOMAIN，三台 Mac 全部生效，→ hosts/_darwin_/base/homebrew.nix）
+
     settings:                    # 系统设置（→ hosts/_darwin_/gui/ 与 kernel/）
       # --- Dock ---
       dock.orientation: left     # Dock 位置（bottom/left/right）
@@ -127,13 +129,17 @@ macos:
       screensaver.idle_seconds: 600   # 10 分钟启动屏保
       # --- 空间 ---
       spaces.span_displays: true  # 跨屏显示空间
+      # --- 系统应用 ---
+      activitymonitor.show_category: 100    # 活动监视器显示全部进程（→ quartz.applications.nix）
+      activitymonitor.open_main_window: false  # 启动不自动打开主窗口
+      ical.sidebar_shown: false             # 日历默认隐藏左侧列表
       # --- 其他 ---
       startup.chime: false      # 关开机音
       softwareupdate.auto_macos: false  # 不自动装 macOS 更新
       # 电源策略：共享不声明（三台各自按需，mini-m4 见下方专属段）
 
-    locale:                      # 语言环境（系统级，launchctl setenv 全局生效）
-      LANG: en_US.UTF-8
+    locale:                      # 语言环境（系统级 env；GUI 界面语言由 AppleLocale=zh_CN 决定，见 settings.locale.zh_CN）
+      LANG: en_US.UTF-8          # 环境变量用英文：SSH 连 Linux 服务器不触发中文 locale 问题
       LC_ALL: en_US.UTF-8
 
     services:                    # 系统服务
@@ -195,14 +201,14 @@ macos:
     apps:                        # 本机 GUI 应用（共享层已声明 orbstack/iterm2/edge/rustdesk/lemon，不重复）
       - visual-studio-code       # 本机已装
       - wechat                   # 本机已装
-      - jetbrains-toolbox        # 本机已装（mini_m4 也声明了，可考虑上提共享层）
+      - jetbrains-toolbox        # 本机已装（仅本机声明，mini-m4 不要）
       - microsoft-remote-desktop # Windows App（微软远程桌面），本机已装
       - ryujinx                  # Switch 模拟器，本机已装
       - bilibili                 # 本机已装
 
 linux:
   ide:                           # ← Docker 开发容器（si-11-ide / lenovo-ide，Ubuntu）
-    proxy: true                  # 所有容器走代理（compose 层 http_proxy 等环境变量，→ docker/ide/docker-compose-*.yml）；网络环境一致，不再区分国内/国外变体
+    proxy: {si11: true, lenovo: false}  # 按容器区分：si-11 走代理（compose 注入 http_proxy → docker-compose-si-11.yml），lenovo 国内机器直连不需要
     pkgs:                        # → home/fan/_linux_/ + _nixos_/ + _alpine_/
       - git                      # Linux 基础三件套（mac 自带不装）
       - vim
@@ -250,5 +256,6 @@ nixos:
     desktop: plasma6             # KDE Plasma 6 + SDDM（Wayland）+ 中文输入（fcitx5 拼音）
     apps: [edge, bitwarden]              # GUI 应用（对齐 mac；rustdesk/clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install）
     comin: true                  # git 驱动自动部署（git.fan-x.fun 私有仓库，凭据走 /root/.git-credentials agenix）
+    tailscale: 安装+服务           # 仅安装与启用（headscale/登录用户手动处理，state 就绪后再分机器声明式管理，→ hosts/nix-pve/services/tailscale.nix）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）
     user_password: agenix        # fan 登录密码 hash（secrets/fan-password.age，→ hosts/_nixos_/base/password.nix；SSH 走公钥，密码仅 SDDM 图形登录）

@@ -32,6 +32,11 @@ in
     # tap 全声明化：禁止手动 brew tap
     mutableTaps = false;
 
+    # bottles 走国内镜像（USTC）；cask 的 app 安装包无镜像，仍走代理
+    extraEnv = {
+      HOMEBREW_BOTTLE_DOMAIN = "https://mirrors.ustc.edu.cn/homebrew-bottles";
+    };
+
     trust = {
       # tap 整体信任：全新部署时 brew 拒绝 untrusted tap 的 formula（实机因包已装未触发，
       # 重放验证暴露）；激活时执行 brew trust --tap

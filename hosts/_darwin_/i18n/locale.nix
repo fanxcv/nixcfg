@@ -1,10 +1,10 @@
 # 语言环境（系统级，所有 Mac）：中文界面 + 中文系统语言
-# LANG/LC_ALL 写入全局环境；AppleLocale/AppleLanguages 决定 GUI 界面语言
+# 语言环境：GUI 界面中文（AppleLocale/AppleLanguages），环境变量用英文（SSH 到 Linux 服务器不触发中文 locale 问题）
 # 用户层 home.language.base 见 home/fan/_darwin_/i18n/zh-CN/locale.nix
 {
   environment.variables = {
-    LANG = "zh_CN.UTF-8";
-    LC_ALL = "zh_CN.UTF-8";
+    LANG = "en_US.UTF-8";
+    LC_ALL = "en_US.UTF-8";
   };
 
   system.defaults.CustomUserPreferences.NSGlobalDomain = {
