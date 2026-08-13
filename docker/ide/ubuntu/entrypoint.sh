@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 
-# sshd host key 持久化：复用宿主机 docker/ide/ssh-keys/ 的密钥（bind mount 到 /etc/ssh-host-keys），
-# 容器重建后 host key 不变，客户端 known_hosts 不会失配（REMOTE HOST IDENTIFICATION HAS CHANGED）
-# 首次启动自动生成；重建后文件已存在则跳过生成，直接同步到 /etc/ssh/ 供 sshd 使用
+# sshd host key：由 nix 激活固定（home/fan/_container_/ssh-host-key.nix，agenix 解密到
+# /etc/ssh-host-keys/ 并同步 /etc/ssh/）。本脚本仅兜底：key 缺失（如首次启动/未激活）时生成临时 key，
+# 激活后会被覆盖为固定 key；compose 已无 bind mount（key 不再宿主机持久化）
 KEYDIR=/etc/ssh-host-keys
 if [ ! -s "$KEYDIR/ssh_host_ed25519_key" ]; then
   mkdir -p "$KEYDIR"
