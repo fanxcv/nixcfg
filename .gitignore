@@ -24,3 +24,6 @@ files/
 docker/ide/*
 !docker/ide/ubuntu/
 !docker/ide/*.yml
+
+# === AI ===
+.pi*/

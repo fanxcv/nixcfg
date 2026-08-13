@@ -48,6 +48,23 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # --- NixOS 真机（nix-pve，PVE 上的虚拟机）：声明式磁盘 / 不可变系统 / Plasma 桌面 ---
+    # 注意：新增 input 用直连 GitHub（走代理拉取；gh-proxy 限流时锁不动），已有 input 保持 gh-proxy
+    disko = {
+      url = "git+https://github.com/nix-community/disko.git?ref=master&shallow=1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    impermanence = {
+      url = "git+https://github.com/nix-community/impermanence.git?ref=master&shallow=1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    # Plasma 面板/字体/KWin 声明式定制（home 层，见 home/fan/_nixos_/gui/plasma.nix）
+    plasma-manager = {
+      url = "git+https://github.com/nix-community/plasma-manager.git?ref=trunk&shallow=1";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
+
     # --- macOS（nix-darwin）：三台 Mac 的系统层，见 hosts/_darwin_/ 与 hosts/<host>/ ---
     nix-darwin = {
       url = "git+https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git?ref=master&shallow=1";
@@ -171,6 +188,27 @@
         mba-m5 = mkDarwinConfig { hostName = "mba-m5"; };
         mbp-m1 = mkDarwinConfig { hostName = "mbp-m1"; };
         mini-m4 = mkDarwinConfig { hostName = "mini-m4"; };
+      };
+
+      # --- NixOS 真机：nix-pve（Proxmox VE 上的虚拟机，128G 盘 + KDE Plasma 桌面）---
+      # 系统层：hosts/nix-pve/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面）
+      # 用户层：users/fan 的 home-manager.users 指向 home/fan/nix-pve（复用同一份 home 配置）
+      # 部署：nixos-rebuild switch --flake .#nix-pve（手动；comin 自动部署未启用）
+      nixosConfigurations.nix-pve = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        # 与 mkHomeConfig 同款 pkgs：claude-code 镜像 overlay + unfree 放行（claude-code / microsoft-edge / libsciter[clash-verge-rev]）
+        pkgs = import nixpkgs {
+          system = "x86_64-linux";
+          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" "microsoft-edge" "libsciter" ];
+          overlays = [ claudeOverlay skemateOverlay ];
+        };
+        modules = [ ./hosts/nix-pve ];
+        specialArgs = {
+          inherit self inputs outputs tools;
+          useChinaMirror = true;
+          isContainer = false;
+          platform = "nixos";
+        };
       };
 
       # --- 简短命令别名：nix build .#<机器名> && ./result/activate（两步）---

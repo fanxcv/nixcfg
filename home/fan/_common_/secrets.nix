@@ -75,7 +75,7 @@
       [ -f "$HOME/.secrets/ai.env" ] || "$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.secrets/ai.env" ${../../..}/secrets/ai.env.age
       [ -f "$HOME/.git-credentials" ] || "$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.git-credentials" ${../../..}/secrets/git-credentials.age
     else
-      echo "警告: 未找到 $AGE_KEY，agenix 解密跳过（mac 由 launchd 兜底，容器需先放私钥）"
+      echo "警告: 未找到 ''${AGE_KEY}，agenix 解密跳过（mac 由 launchd 兜底，容器需先放私钥）"
     fi
   '';
 }

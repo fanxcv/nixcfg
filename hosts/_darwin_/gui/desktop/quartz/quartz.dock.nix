@@ -1,9 +1,5 @@
 # Dock 声明（system.defaults.dock）
 # persistent-apps 是 Dock 固定应用清单，与 homebrew casks（apps.nix）保持一致，按需增删
-{ config, ... }:
-let
-  userHome = config.users.users.${config.system.primaryUser}.home;
-in
 {
   system.defaults.dock = {
     # Dock 在屏幕左侧
@@ -29,25 +25,16 @@ in
     # 右下角热区动作 = 1（禁用）
     wvous-br-corner = 14;
 
-    # Dock 固定应用（与 apps.nix casks 对齐；系统应用路径按 macOS 版本微调）
+    # Dock 固定应用（与 apps.nix casks 对齐；Apps.app 为 macOS 26 Tahoe 启动器）
     persistent-apps = [
+      {
+        app = "/System/Applications/Apps.app";
+      }
       {
         app = "/Applications/iTerm.app";
       }
       {
         app = "/Applications/Microsoft Edge.app";
-      }
-    ];
-
-    # Dock 分隔线右侧：下载目录堆栈
-    persistent-others = [
-      {
-        folder = {
-          path = "${userHome}/Downloads";
-          arrangement = "date-added";  # 按加入日期排序
-          displayas = "stack";         # 文件堆栈
-          showas = "fan";              # 扇形展开
-        };
       }
     ];
   };

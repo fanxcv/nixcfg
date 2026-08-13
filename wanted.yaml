@@ -43,7 +43,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     claude:                    # claude code
       proxy: https://ai.qksxin.com
     pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
-    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；组件按机器声明，不再有全局默认）
+    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器没指定 config.toml 时默认 node@lts，指定了整体覆盖，不引入 local.toml）
 
   secrets:                     # 密钥约定（跨平台，→ home/fan/_common_/secrets.nix agenix）
     ai_env: agenix             # AI key（secrets/ai.env.age 激活时解密到 ~/.secrets/ai.env；mac=launchd、容器=激活期兜底解密）
@@ -61,7 +61,7 @@ macos:
       - tailscale
       - clash-verge-rev
 
-    formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix）
+    formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix；autoMigrate 已开：全新部署自动接管已有 Homebrew）
       # 当前 39 个手动安装的公式未声明，激活（zap）会卸载；要保留就取消注释
       # - dolt                    # 数据库
       # - ollama                  # 本地大模型
@@ -84,10 +84,16 @@ macos:
       dock.show_recent: false    # 显示最近使用
       dock.right_bottom_corner: 14   # 右下热区（1=禁用）
       dock.persistent_apps:      # Dock 固定应用
+        - Apps.app               # macOS 26 Tahoe 启动器（仅 Tahoe 存在）
         - iterm2
         - Microsoft Edge
+      # --- 语言/输入法 ---
+      locale.zh_CN: true         # 中文界面（LANG/AppleLocale，→ hosts/_darwin_/i18n/locale.nix）
+      input.ime: pinyin_only     # 仅简体拼音，移除 ABC（→ quartz.input.nix HIToolbox）
       # --- Finder ---
       finder.view_style: Nlsv    # 视图（Nlsv=列表）
+      finder.sort_column: dateModified    # 列表视图排序列（修改日期，→ quartz.finder.nix）
+      finder.sort_descending: true        # 逆序（最新在上，→ quartz.finder.nix）
       finder.remove_old_trash: true    # 30 天清废纸篓
       finder.new_window_target: Home   # 新窗口打开个人目录
       finder.show_external_drives: true    # 桌面显示外置盘
@@ -165,15 +171,11 @@ macos:
 
   mini_m4:                       # ← mini-m4 专属（→ hosts/mini-m4/ + home/fan/mini-m4/）
     apps:                        # 专属 GUI 应用（cask，追加到共享清单）
-      - jetbrains-toolbox        # IDE 管理器
-      - intellij-idea            # IDEA（插件见下）
       - blender                  # 3D 建模
     formulae:                    # 专属 brew 公式
       - tart                     # macOS 虚拟机
-    idea_plugins:                # IDEA 插件（Toolbox 升级后需同步版本目录）
-      - claude-code              # Claude Code 插件（marketplace 27310, v0.1.14-beta）
     mise:                        # mise 运行时组件（→ home/fan/mini-m4/mise.nix）
-      - android-sdk
+      - android-sdk              # env 注入 ANDROID_HOME + platform-tools/emulator 到 PATH
       - bun@latest
       - cocoapods
       - dart                     # 自定义下载源（googleapis）
@@ -182,6 +184,7 @@ macos:
       - java@oracle-17
       - node@24                 # 本机 node 主版本（config.local.toml 已废弃删除，各机器自行声明）
       - python@3.11
+    android_emulator: 声明式   # 模拟器（emulator+2 镜像+Pixel_Fold/Tablet AVD，→ home/fan/mini-m4/android-emulator.nix 激活期幂等恢复）
     power:                       # 电源策略（pmset，→ hosts/mini-m4/power.nix）
       ac_sleep: 0                # 永不睡眠
       ac_display_sleep: 10       # 10 分钟关屏
@@ -241,5 +244,10 @@ linux:
       token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai.env 读取，clone 后清 origin
 
 nixos:
-  pending:                       # ← NixOS 真机（待接入，见 hosts/README.md）
-    comin: true                  # git 驱动自动部署
+  nix-pve:                       # ← 第一台 NixOS 真机（Proxmox VE 虚拟机，128G 盘 + KDE Plasma 桌面）
+    platform: qemu-vm            # PVE 虚拟机（virtio 磁盘 / GRUB EFI / OVMF，见 hosts/nix-pve/hardware.nix）
+    disk: 128G                   # LVM：boot 1G + nix 48G + persist 40G + tmpfs 根（余量 lvextend 可扩）
+    desktop: plasma6             # KDE Plasma 6 + SDDM（Wayland）+ 中文输入（fcitx5 拼音）
+    apps: [edge, bitwarden, rustdesk, clash-verge-rev]  # GUI 应用（对齐 mac 常用）
+    comin: false                 # 手动 nixos-rebuild switch（comin 服务已就绪，需要自动部署时启用）
+    ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）

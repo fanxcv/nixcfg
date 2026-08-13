@@ -70,8 +70,25 @@
       TrackpadTwoFingerFromRightEdgeSwipeGesture = 3;
     };
 
-    # 上游暂无专用 option 的设置（CustomUserPreferences 直接写 defaults）
+    # 输入法：仅简体拼音（移除 ABC）——系统语言为中文后拼音输入法可用
+    # hitoolbox 域上游仅白名单 AppleFnUsageType，输入源列表走 CustomUserPreferences
     "CustomUserPreferences" = {
+      "com.apple.HIToolbox" = {
+        # 启用输入源列表 = 只有拼音（不含 ABC）
+        AppleEnabledInputSources = [
+          {
+            "InputSourceKind" = "Input Mode";
+            "TISInputSourceID" = "com.apple.inputmethod.SCIM.ITABC";
+          }
+        ];
+        # 历史输入源同步（避免菜单栏残留 ABC）
+        AppleInputSourceHistory = [
+          {
+            "InputSourceKind" = "Input Mode";
+            "TISInputSourceID" = "com.apple.inputmethod.SCIM.ITABC";
+          }
+        ];
+      };
       NSGlobalDomain = {
         # 键盘 UI 导航模式 = 1（全键盘控制）
         "AppleKeyboardUIMode" = 1;

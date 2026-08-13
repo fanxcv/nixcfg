@@ -5,8 +5,6 @@
 { lib, ... }:
 {
   homebrew.casks = lib.mkAfter [
-    { name = "jetbrains-toolbox"; } # IDE 管理器
-    { name = "intellij-idea"; }     # IDEA（插件见 home/fan/mini-m4/idea.nix）
     { name = "blender"; }           # 3D 建模
   ];
 

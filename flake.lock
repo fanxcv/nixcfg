@@ -89,6 +89,28 @@
         "type": "github"
       }
     },
+    "disko": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1781152676,
+        "narHash": "sha256-RxWs5ND31KzTG7wvMM+PMfUjyNpmIEr999lqNARaM5o=",
+        "ref": "master",
+        "rev": "ff8702b4de27f72b4c78573dfb89ec74e36abdf1",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/nix-community/disko.git"
+      },
+      "original": {
+        "ref": "master",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/nix-community/disko.git"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -148,6 +170,27 @@
         "url": "https://gh-proxy.com/https://github.com/nix-community/home-manager.git"
       }
     },
+    "home-manager_3": {
+      "inputs": {
+        "nixpkgs": [
+          "impermanence",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1768598210,
+        "narHash": "sha256-kkgA32s/f4jaa4UG+2f8C225Qvclxnqs76mf8zvTVPg=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "c47b2cc64a629f8e075de52e4742de688f930dc6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
     "homebrew": {
       "flake": false,
       "locked": {
@@ -200,6 +243,29 @@
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/homebrew/homebrew-core.git"
+      }
+    },
+    "impermanence": {
+      "inputs": {
+        "home-manager": "home-manager_3",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1769548169,
+        "narHash": "sha256-03+JxvzmfwRu+5JafM0DLbxgHttOQZkUtDWBmeUkN8Y=",
+        "ref": "master",
+        "rev": "7b1d382faf603b6d264f58627330f9faa5cba149",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/nix-community/impermanence.git"
+      },
+      "original": {
+        "ref": "master",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/nix-community/impermanence.git"
       }
     },
     "nix-darwin": {
@@ -279,18 +345,46 @@
         "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
       }
     },
+    "plasma-manager": {
+      "inputs": {
+        "home-manager": [
+          "home-manager"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1785762349,
+        "narHash": "sha256-jZhZkzAwc7f3exzcTDJWP2WCAchCv0iNC3UF/QsahdQ=",
+        "ref": "trunk",
+        "rev": "a19a2a029fa180911bd89c554dca1616e10f4c1d",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/nix-community/plasma-manager.git"
+      },
+      "original": {
+        "ref": "trunk",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/nix-community/plasma-manager.git"
+      }
+    },
     "root": {
       "inputs": {
         "agenix": "agenix",
         "cirruslabs-cli": "cirruslabs-cli",
         "comin": "comin",
+        "disko": "disko",
         "home-manager": "home-manager_2",
         "homebrew": "homebrew",
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
+        "impermanence": "impermanence",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs_2",
+        "plasma-manager": "plasma-manager",
         "treefmt-nix": "treefmt-nix_2"
       }
     },

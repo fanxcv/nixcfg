@@ -10,7 +10,10 @@ grep -qE 'age1[a-z0-9]{50,}' keys.nix || { echo "错误：keys.nix 中没有 age
 
 count=0
 while IFS= read -r f; do
-  out="$(basename "$f").age"
+  # 保持 source/ 下的子目录结构（如 hosts/nix-pve/）
+  rel="${f#source/}"
+  out="${rel}.age"
+  mkdir -p "$(dirname "$out")"
   if [[ -f "$out" && "${1:-}" != "--force" ]]; then
     echo "跳过（已存在，用 --force 覆盖）: $out"
     continue
