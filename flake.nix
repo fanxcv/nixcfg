@@ -23,9 +23,9 @@
 
   inputs = {
     # git+https 走 gh-proxy（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
-    # 稳定版 nixos-26.05：闭包二进制在镜像/官方永久缓存 → 构建全命中 USTC/TUNA，不随每日更新失效；
-    # rev 锁到国内镜像已同步的 channel 点更新版本（升级：跑 scripts/update-nixpkgs.sh）
-    nixpkgs.url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixos-26.05&rev=70cc4559b10a6062b05ff1af17e0add065ccaed9&shallow=1";
+    # 稳定版 nixos-26.05：闭包二进制在镜像/官方永久缓存 → 构建命中 USTC/TUNA；
+    # 不锁 rev：分支点更新慢（几周一次），nix flake update 自动跟随（升级=全量 nix flake update）
+    nixpkgs.url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixos-26.05&shallow=1";
     home-manager = {
       # 与 nixpkgs 26.05 配套的 release 分支（master 要求更新的 nixpkgs）
       url = "git+https://gh-proxy.com/https://github.com/nix-community/home-manager.git?ref=release-26.05&shallow=1";
@@ -72,8 +72,8 @@
     # --- macOS（nix-darwin）：三台 Mac 的系统层，见 hosts/_darwin_/ 与 hosts/<host>/ ---
     # nix-darwin 用配套分支：nix-darwin-26.05 ↔ nixpkgs-26.05-darwin（checkRelease 强制匹配）
     nixpkgs-darwin = {
-      # darwin 专属 channel（闭包含完整 darwin 构建，镜像同步），rev 锁镜像同步点
-      url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-26.05-darwin&rev=2e49fce950fece113519c5d75da869601d01550f&shallow=1";
+      # darwin 专属 channel（闭包含完整 darwin 构建，镜像同步）；不锁 rev，跟随分支
+      url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-26.05-darwin&shallow=1";
     };
     nix-darwin = {
       url = "git+https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git?ref=nix-darwin-26.05&shallow=1";
