@@ -155,10 +155,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1786356609,
-        "narHash": "sha256-ou8fYz5w9yhXC8YbvvExybFIa19MyW5G/8dEPqa90hM=",
+        "lastModified": 1786538400,
+        "narHash": "sha256-PH8B1YKxedcWKNw2xsk6cKPVk/rJoLgdlWd5d+Icies=",
         "ref": "master",
-        "rev": "c30c7955cec30d664a9baced6bc0112e263d4647",
+        "rev": "e13ba5e5abbd9b912fa8c6979bd119e87ca7fdd9",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/nix-community/home-manager.git"
@@ -194,10 +194,10 @@
     "homebrew": {
       "flake": false,
       "locked": {
-        "lastModified": 1786369370,
-        "narHash": "sha256-EgDw+PF3vMzdxaq6v0c7JGBKXiGERb9VvcvPHHRikW8=",
+        "lastModified": 1786551636,
+        "narHash": "sha256-6Di/xahANPxP/izGYulo+E2kUjDEqln3lvsar78/7D4=",
         "ref": "main",
-        "rev": "007333f25eeb61fcebed5e5eb5df1cee29dc2701",
+        "rev": "ec55b2e3f893467a8c7c1952a724907797a3b8d0",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/Homebrew/brew.git"
@@ -212,10 +212,10 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1786424664,
-        "narHash": "sha256-gYDARvbnonAYR02lLj7fNlMMX54jvW/IuWO1jfm/xTQ=",
+        "lastModified": 1786599687,
+        "narHash": "sha256-1svZ1XSsJ46p0ebJetLJMY1TQW5OsTdOTM7dCHH6+I0=",
         "ref": "main",
-        "rev": "7e490539115e18c5c25e11386c42cc44ec91c9dc",
+        "rev": "0b377c14d6fc4c21d10a0a1b7e82f35e97b4d70f",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/homebrew/homebrew-cask.git"
@@ -230,10 +230,10 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1786432799,
-        "narHash": "sha256-fP1ja33tGmAZrGBwdefLhlDynpI3glgIoeSJop54+b8=",
+        "lastModified": 1786600371,
+        "narHash": "sha256-4mJYpwdGc/eFi/+1EAQHTy+0AT74g92jyNED927tCtg=",
         "ref": "main",
-        "rev": "4c5ca88f4b8b73ae332facf79268a0f98fd568b5",
+        "rev": "ededd2a3283ef61335ff81fc6da91c2f168a2332",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/homebrew/homebrew-core.git"
@@ -297,10 +297,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1786217209,
-        "narHash": "sha256-rusAj5QBnbSwXG6csns6dwxTeCOGRcj08VmlnhUQ6ZY=",
+        "lastModified": 1786580329,
+        "narHash": "sha256-/8cBGYJ+Cj2bSdXv7+B+DFIU+s5u/iKouWUZUvFz32E=",
         "ref": "main",
-        "rev": "486357ea434dc0061ea52121ff99b1d33096c811",
+        "rev": "7be2ffcda4d9632edb7150b263ee081abba5e984",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/zhaofengli/nix-homebrew.git"
@@ -330,10 +330,10 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1786348146,
-        "narHash": "sha256-we5zDEFfn8TgzeWKjKDMIjeQZ59omEPl23NIF+13/ys=",
+        "lastModified": 1786534138,
+        "narHash": "sha256-fBJMdnKUTUDtfi/BYLr71HLaC9dG382arxLF2Egg2uo=",
         "ref": "nixpkgs-unstable",
-        "rev": "d482ef84049d9b7276b83a06e4e4d76983830097",
+        "rev": "044bfe75bfe4c7bbe043dc17b5e42ea823b84a09",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"

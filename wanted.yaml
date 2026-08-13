@@ -248,6 +248,6 @@ nixos:
     platform: qemu-vm            # PVE 虚拟机（virtio 磁盘 / GRUB EFI / OVMF，见 hosts/nix-pve/hardware.nix）
     disk: 128G                   # LVM：boot 1G + nix 48G + persist 40G + tmpfs 根（余量 lvextend 可扩）
     desktop: plasma6             # KDE Plasma 6 + SDDM（Wayland）+ 中文输入（fcitx5 拼音）
-    apps: [edge, bitwarden, rustdesk, clash-verge-rev]  # GUI 应用（对齐 mac 常用）
+    apps: [edge, bitwarden]              # GUI 应用（对齐 mac；rustdesk/clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install）
     comin: false                 # 手动 nixos-rebuild switch（comin 服务已就绪，需要自动部署时启用）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）
