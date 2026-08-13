@@ -38,6 +38,13 @@
     mode = "0600";
   };
 
+  # comin 的 go-git 认证 token（见 services/comin.nix 的 auth.access_token_path）
+  age.secrets."comin-token" = {
+    file = tools.relative "secrets/comin-token.age";
+    path = "/run/agenix/comin-token";
+    mode = "0400";
+  };
+
   programs.git = {
     enable = true;
     config.credential.helper = "store";

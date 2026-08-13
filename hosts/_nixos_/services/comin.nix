@@ -54,8 +54,13 @@ in
     remotes = [
       {
         name = "origin";
-        # 私有仓库：凭据走 /root/.git-credentials（agenix 解密，见 hosts/nix-pve/default.nix）
+        # 私有仓库认证：comin 用 go-git 库（不走 git credential.helper），
+        # 必须显式配 username + access_token_path（token 由 agenix 解密，见 hosts/nix-pve/default.nix）
         url = "https://git.fan-x.fun/fan/nixcfg.git";
+        auth = {
+          username = "fan";
+          access_token_path = "/run/agenix/comin-token";
+        };
         branches.main.name = "main";
       }
     ];
