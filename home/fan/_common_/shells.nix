@@ -15,6 +15,9 @@ in
 {
   programs.zsh = {
     enable = true;
+    # HM 模板自带 compinit（无 -u）遇 nix store 不安全目录（owner=admin，compaudit 误判）会 y/n 询问；
+    # omz 已接管 compinit（ZSH_DISABLE_COMPFIX=true → compinit -u 不询问），此处关闭 HM 自带的避免重复调用
+    enableCompletion = false;
     # nix.sh 加载由 HM 接管（Dockerfile 不再写 ~/.zshenv ~/.zshrc，避免 clobber）：
     #   envExtra → ~/.zshenv（zsh 所有模式，含 ssh 远程命令）
     #   initContent 末尾再 source 一次 → ~/.zshrc 双保险（原 Dockerfile 同款语义）

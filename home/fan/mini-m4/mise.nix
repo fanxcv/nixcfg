@@ -20,6 +20,8 @@
     [env]
     ANDROID_HOME = "/Users/fan/sdk/Android"
     # adb / emulator 等命令行工具注入 PATH（模拟器组件声明见 android-emulator.nix）
-    PATH = { path = [ "$ANDROID_HOME/platform-tools", "$ANDROID_HOME/emulator" ] }
+    # 注：PATH 注入必须用 env._.path（PATH = { path = [...] } 是废语法，mise 2026.5 报 PATH has no value）；
+    #   _.path 不做 shell 展开，需用 Tera 模板 {{env.ANDROID_HOME}} 引用同表变量
+    _.path = ["{{env.ANDROID_HOME}}/platform-tools", "{{env.ANDROID_HOME}}/emulator"]
   '';
 }
