@@ -15,8 +15,13 @@
     # java 由 mise 提供（config.toml java=oracle-17）；activation 环境无 shims，显式补 PATH
     export PATH="$HOME/.local/share/mise/shims:$PATH"
     if ! command -v java >/dev/null 2>&1; then
-      echo "警告: 未找到 java（mise 未装？），安卓模拟器声明跳过"
-      exit 0
+      echo "[android-emulator] 未找到 java，尝试 mise install java（首次部署自动补装）..."
+      if command -v mise >/dev/null 2>&1 && mise install java >/dev/null 2>&1; then
+        echo "[android-emulator] java 已装（mise oracle-17）；其余组件请手动 mise install"
+      else
+        echo "警告: mise install java 失败，安卓模拟器声明跳过（先手动 mise install 再重跑激活）"
+        exit 0
+      fi
     fi
     # sdkmanager 缺失 = Android SDK 未装（mise 组件按需安装，全新环境常见），优雅跳过
     if [ ! -x "$SDKMANAGER" ]; then

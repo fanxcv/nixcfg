@@ -122,7 +122,8 @@ PYEOF
     setup_rustdesk_server
   '';
 
-  # 纯静态配置文件整文件声明（仓库文件同步自 mini-m4 实机）
+  # 纯静态配置文件整文件声明（RustDesk_default.toml 同步自 mini-m4 实机）
+  # 注：RustDesk_hwcodec.toml 已移除静态声明——app 启动会规范化重写该文件（symlink 被覆盖成
+  #   普通文件），HM 每次部署报 in-the-way 冲突；硬件编解码改由 app/GUI 自管
   home.file."Library/Preferences/com.carriez.RustDesk/RustDesk_default.toml".source = ./rustdesk/RustDesk_default.toml;
-  home.file."Library/Preferences/com.carriez.RustDesk/RustDesk_hwcodec.toml".source = ./rustdesk/RustDesk_hwcodec.toml;
 }

@@ -11,7 +11,7 @@ _: {
     { name = "rustdesk"; }       # 远程控制（自建中继）
     { name = "tencent-lemon"; }  # 系统清理
     { name = "bitwarden"; }       # 密码管理
-    { name = "tailscale"; }       # 组网（App 版）
+    { name = "tailscale-app"; }   # 组网（App 版；旧名 tailscale 已被 homebrew 重命名）
     { name = "clash-verge-rev"; } # 代理客户端
   ];
 }

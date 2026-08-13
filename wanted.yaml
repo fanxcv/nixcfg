@@ -60,7 +60,7 @@ macos:
       - rustdesk                 # 远程控制（自建中继）
       - tencent-lemon            # 系统清理
       - bitwarden
-      - tailscale
+      - tailscale-app           # 组网（App 版；旧名 tailscale 已被 homebrew 重命名）
       - clash-verge-rev
 
     formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix；autoMigrate 已开：全新部署自动接管已有 Homebrew）
@@ -172,7 +172,7 @@ macos:
           use_texture_render: true     # 纹理渲染
           av1_test: true         # AV1 测试
           check_update: false    # 不检查更新
-          hwcodec: file          # 硬件编解码（RustDesk_hwcodec.toml 整文件声明）
+          hwcodec: app 自管       # 硬件编解码（app 启动会重写该文件，静态声明已移除，GUI 可调）
         deploy: 停service→注入→重启 # 激活时先 bootout root service 再注入（service 退出会写回旧配置覆盖文件，→ rustdesk.nix）
 
     secrets:                     # 密钥文件（agenix 加密入库）
