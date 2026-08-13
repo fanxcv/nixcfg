@@ -10,8 +10,8 @@
 #     （--server）+ GUI 三进程常驻；root service 是配置权威，退出时（SIGTERM）写回内存配置
 #     → 直接注入文件会被覆盖，注入必须发生在 bootout 之后
 #   - 所有 [options] 键必须写 RustDesk2.toml：RustDesk_local.toml 的 [options] 会被 GUI 启动时清空
-#   - 身份文件（RustDesk.toml）会被 1.4.9 启动时重置（外部身份注入失效，密码需 GUI 设置）
-# 机器专属的 RustDesk.toml（ID 密钥对/密码）走 agenix，所有 Mac 共用一份（见 hosts/_darwin_/base/rustdesk.nix）
+#   - 身份文件（RustDesk.toml）会被 1.4.9 启动时重置（外部身份注入失效，身份由 app 自生成，
+#     永久密码需各机 GUI 设置；不再用 agenix 注入身份）
 
 { lib, ... }:
 let

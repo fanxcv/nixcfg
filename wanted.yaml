@@ -164,7 +164,7 @@ macos:
           unlock_pin: ""         # 解锁 PIN（空）
           trusted_devices: 009GnjljLRT/b2k0DwCFQSXI6O   # 可信设备
           allow_remote_config_modification: true  # 允许远程改配置
-          password: agenix       # 永久密码/身份（⚠ 1.4.9 启动会重置外部身份文件，此注入已失效，密码需 GUI 设置）
+          password: GUI 设置       # 永久密码（1.4.9 重置外部身份，agenix 注入已移除，密码需各机 GUI 设置）
         general:                 # 常规块（注入 + 整文件声明）
           view_style: adaptive   # 视图样式（RustDesk_default.toml）
           keep_awake_incoming: false   # 来连时防睡眠
@@ -176,7 +176,6 @@ macos:
         deploy: 停service→注入→重启 # 激活时先 bootout root service 再注入（service 退出会写回旧配置覆盖文件，→ rustdesk.nix）
 
     secrets:                     # 密钥文件（agenix 加密入库）
-      rustdesk_toml: true        # RustDesk 身份（所有 Mac 共用一份，secrets/rustdesk.toml.age）
 
   mini_m4:                       # ← mini-m4 专属（→ hosts/mini-m4/ + home/fan/mini-m4/）
     apps:                        # 专属 GUI 应用（cask，追加到共享清单）

@@ -63,22 +63,11 @@ age -e -r age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204 \
    ——每个新部署的容器都要放；缺失会导致激活失败（agenix 不解密即报错）
 4. 容器内 `nix run .#ide-si`（lenovo 用 `.#ide-lenovo`）重新激活验证
 
-## RustDesk 机器身份（所有 Mac）
+## RustDesk 身份（不再走 agenix）
 
-RustDesk.toml 含每台机器的 ID 密钥对，**必须各机独立**（共享会导致 ID 冲突）：
-
-```bash
-# 每台 Mac 各自执行：
-age -d -i ~/.secrets/age-keys.txt -o /tmp/rustdesk.toml \
-    <该机已有的 .age 或从本机配置复制>
-# 编辑/确认后：
-age -e -R <(grep -oE 'age1[a-z0-9]{50,}' keys.nix | sort -u) \
-    -o secrets/rustdesk.toml.<hostName>.age /tmp/rustdesk.toml && rm /tmp/rustdesk.toml
-```
-
-命名约定：`rustdesk.toml.<hostName>.age`（如 rustdesk.toml.mini-m4.age），
-解密逻辑在 `hosts/_darwin_/base/rustdesk.nix`（按机器自动选择文件，缺失则跳过）。
-文件必须提交 git（flake 的 self 只打包已跟踪文件）。
+RustDesk 1.4.9 启动时会重置外部替换的身份文件（RustDesk.toml），agenix 身份注入已移除
+（2026-08 验证）：身份由各机 app 自生成，永久密码在各机 GUI 设置 → 安全 → 永久密码。
+服务器/中继配置（rendezvous/key/direct-server 等）见 home/fan/_darwin_/rustdesk.nix。
 
 ## 轮换私钥
 

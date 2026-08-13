@@ -27,3 +27,5 @@ docker/ide/*
 
 # === AI ===
 .pi*/
+# 部署日志产物
+.deploy*.log
