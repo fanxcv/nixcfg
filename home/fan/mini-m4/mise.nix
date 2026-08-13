@@ -20,6 +20,6 @@
     [env]
     ANDROID_HOME = "/Users/fan/sdk/Android"
     # adb / emulator 等命令行工具注入 PATH（模拟器组件声明见 android-emulator.nix）
-    PATH = { path = [ "$ANDROID_HOME/platform-tools" "$ANDROID_HOME/emulator" ] }
+    PATH = { path = [ "$ANDROID_HOME/platform-tools", "$ANDROID_HOME/emulator" ] }
   '';
 }

@@ -26,6 +26,9 @@ in
       export ZSH_CUSTOM="$ZSH/custom"
       # 主题必须在 source oh-my-zsh.sh 之前设置，否则加载瞬间仍是默认 robbyrussell
       ZSH_THEME="fishy-custom"
+      # nix store 目录（/nix/.../share/zsh）被 compaudit 判为不安全且无法 chmod 持久修复，跳过补全安全检查
+      # （仅跳过权限校验与询问，补全正常加载；否则每次开终端都会 y/n 询问）
+      export ZSH_DISABLE_COMPFIX="true"
       source "$ZSH/oh-my-zsh.sh"
 
       # 常用别名

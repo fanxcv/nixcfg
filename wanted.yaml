@@ -36,6 +36,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     zsh:                       # shell（oh-my-zsh 自动 clone）
       theme: fishy-custom
       plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]
+      disable_compfix: true    # nix store 目录 compaudit 误报不安全，跳过补全安全检查（→ shells.nix ZSH_DISABLE_COMPFIX）
     tmux:                      # gpakosz 配置（mouse on + base-index 1）
     codex:                     # codex 通用段（机器手动段自动合并）
       model: gpt-5.6-sol
