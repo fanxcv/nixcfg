@@ -11,15 +11,25 @@
     export ANDROID_HOME="''${ANDROID_HOME:-/Users/fan/sdk/Android}"
     # java 由 mise 提供（config.toml java=oracle-25）；activation 脚本是 sh（不读 .zshenv），
     # PATH 无 ~/.nix-profile/bin（mise 所在），显式补全；shims 供 java 使用
-    export PATH="$HOME/.nix-profile/bin:$HOME/.local/share/mise/shims:$PATH"
+    export PATH="$HOME/.nix-profile/bin:$HOME/.local/share/mise/shims:/usr/bin:/bin:$PATH"
+    # home-manager 激活 PATH 是纯 nix store 工具集（无 /usr/bin → 无 which），sdkmanager 的
+    # which java 检查会失败；显式设置 JAVA_HOME（mise 安装路径）走 $JAVA_HOME/bin/java 绝对路径
+    MISE_JAVA="$(command -v mise >/dev/null 2>&1 && mise where java 2>/dev/null || true)"
+    if [ -n "$MISE_JAVA" ] && [ -x "$MISE_JAVA/bin/java" ]; then
+      export JAVA_HOME="$MISE_JAVA"
+      export PATH="$MISE_JAVA/bin:$PATH"
+    fi
     # mise 的 android-sdk 装在 installs/android-sdk/<ver>/cmdline-tools/<ver>/bin/（版本目录，非 latest），动态定位
     MISE_ASDK="$(command -v mise >/dev/null 2>&1 && mise where android-sdk 2>/dev/null || true)"
     SDKMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
     AVDMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/avdmanager 2>/dev/null | head -1)"
     SETUP_LOG="/tmp/android-emulator-setup.log"
-    if ! command -v java >/dev/null 2>&1; then
+    if ! command -v java >/dev/null 2>&1 && [ ! -x "$JAVA_HOME/bin/java" ]; then
       echo "[android-emulator] 未找到 java，尝试 mise install java@oracle-25（首次部署自动补装）..."
       if command -v mise >/dev/null 2>&1 && mise install java@oracle-25 >/dev/null 2>&1; then
+        MISE_JAVA="$(mise where java 2>/dev/null)"
+        [ -n "$MISE_JAVA" ] && export JAVA_HOME="$MISE_JAVA"
+        [ -n "$MISE_JAVA" ] && export PATH="$MISE_JAVA/bin:$PATH"
         echo "[android-emulator] java 已装（mise oracle-25）；其余组件请手动 mise install"
       else
         echo "警告: mise install java@oracle-25 失败，安卓模拟器声明跳过（先手动 mise install 再重跑激活）"
