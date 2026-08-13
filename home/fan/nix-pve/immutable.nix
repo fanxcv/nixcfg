@@ -8,6 +8,10 @@ _: {
         mode = "0700";
       }
       {
+        directory = ".secrets";
+        mode = "0700";
+      }
+      {
         directory = ".oh-my-zsh";
         mode = "0755";
       }
