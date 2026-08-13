@@ -75,6 +75,7 @@ macos:
       # 依赖库（openssl/python/readline 等）由公式自动带，无需手动声明
 
     brew_mirror: true            # bottles 走 USTC 镜像（HOMEBREW_BOTTLE_DOMAIN，三台 Mac 全部生效，→ hosts/_darwin_/base/homebrew.nix）
+    brew_cask_proxy: 10.2.236.20:7890   # cask app 安装包无镜像，经 extraEnv 注入 brew wrapper 走局域网代理（→ hosts/_darwin_/base/homebrew.nix）
 
     settings:                    # 系统设置（→ hosts/_darwin_/gui/ 与 kernel/）
       # --- Dock ---
