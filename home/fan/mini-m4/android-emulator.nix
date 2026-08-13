@@ -17,6 +17,7 @@
     MISE_ASDK="$(command -v mise >/dev/null 2>&1 && mise where android-sdk 2>/dev/null || true)"
     SDKMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
     AVDMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/avdmanager 2>/dev/null | head -1)"
+    SETUP_LOG="/tmp/android-emulator-setup.log"
     if ! command -v java >/dev/null 2>&1; then
       echo "[android-emulator] 未找到 java，尝试 mise install java@oracle-25（首次部署自动补装）..."
       if command -v mise >/dev/null 2>&1 && mise install java@oracle-25 >/dev/null 2>&1; then
