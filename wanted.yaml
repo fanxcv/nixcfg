@@ -157,14 +157,14 @@ macos:
       rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效）
         rendezvous: 120.55.164.147:21116   # 网络：ID 服务器（hbbs）
         key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 网络：加密公钥
-        network:                 # 网络块（RustDesk2.toml + local 注入）
+        network:                 # 网络块（RustDesk2.toml 注入；1.4.9 全键归 RustDesk2，local 的 [options] 会被 GUI 清空）
           direct_server: true    # 直连优先
           udp_punch: true        # UDP 打洞
         security:                # 安全块（RustDesk2.toml 注入 + RustDesk.toml agenix）
           unlock_pin: ""         # 解锁 PIN（空）
           trusted_devices: 009GnjljLRT/b2k0DwCFQSXI6O   # 可信设备
           allow_remote_config_modification: true  # 允许远程改配置
-          password: agenix       # 永久密码/身份（secrets/rustdesk.toml.age 所有 Mac 共用）
+          password: agenix       # 永久密码/身份（⚠ 1.4.9 启动会重置外部身份文件，此注入已失效，密码需 GUI 设置）
         general:                 # 常规块（注入 + 整文件声明）
           view_style: adaptive   # 视图样式（RustDesk_default.toml）
           keep_awake_incoming: false   # 来连时防睡眠
@@ -173,6 +173,7 @@ macos:
           av1_test: true         # AV1 测试
           check_update: false    # 不检查更新
           hwcodec: file          # 硬件编解码（RustDesk_hwcodec.toml 整文件声明）
+        deploy: 停service→注入→重启 # 激活时先 bootout root service 再注入（service 退出会写回旧配置覆盖文件，→ rustdesk.nix）
 
     secrets:                     # 密钥文件（agenix 加密入库）
       rustdesk_toml: true        # RustDesk 身份（所有 Mac 共用一份，secrets/rustdesk.toml.age）
