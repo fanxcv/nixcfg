@@ -8,6 +8,7 @@
   lib,
   pkgs,
   config,
+  inputs,
   ...
 }:
 let
@@ -20,10 +21,12 @@ in
 {
   services.comin = {
     enable = true;
+    # nixpkgs 稳定版无 comin 包（26.05），用 comin input 自带的包
+    package = inputs.comin.packages.${pkgs.stdenv.hostPlatform.system}.default or pkgs.comin;
     remotes = [
       {
         name = "origin";
-        # TODO: 换成真实仓库地址（自建 Gitea 占位；私有仓库需带凭据的 URL）
+        # 私有仓库：凭据走 /root/.git-credentials（agenix 解密，见 hosts/nix-pve/default.nix）
         url = "https://git.fan-x.fun/fan/nixcfg.git";
         branches.main.name = "main";
       }
