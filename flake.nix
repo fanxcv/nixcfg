@@ -23,8 +23,9 @@
 
   inputs = {
     # git+https 走 gh-proxy（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
-    # shallow=1：只拉浅历史，首次 eval 不下载全仓库；nix flake update 仍能跟随分支新 commit
-    nixpkgs.url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&shallow=1";
+    # rev 锁定到国内镜像已同步的 nixos-unstable channel 版本（保证构建命中 USTC/TUNA 缓存，避免 fallback 官方/本地编译）；
+    # 升级：跑 scripts/update-nixpkgs.sh（查镜像最新同步 rev 并改写此处），或手动按 README「日常更新」流程
+    nixpkgs.url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&rev=2fcb964de67fcf60b43471c55d5d99e61a9ccb5a&shallow=1";
     home-manager = {
       url = "git+https://gh-proxy.com/https://github.com/nix-community/home-manager.git?ref=master&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -46,6 +47,8 @@
     comin = {
       url = "git+https://gh-proxy.com/https://github.com/nlewo/comin.git?ref=refs/tags/v0.14.0&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
+      # comin 内部自带的 treefmt-nix 整体跟随（否则它解析 github 旧版 + 旧 nixpkgs，lock 残留双节点）
+      inputs.treefmt-nix.follows = "treefmt-nix";
     };
 
     # --- NixOS 真机（nix-pve，PVE 上的虚拟机）：声明式磁盘 / 不可变系统 / Plasma 桌面 ---

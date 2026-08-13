@@ -104,7 +104,8 @@ git -C ./nixcfg pull         # 宿主机
 nix run .#ide-si11
 
 # 升级 nixpkgs 里的工具版本（claude/codex/pi 等新版本）
-nix flake update nixpkgs && nix run .#ide-si11
+# nixpkgs rev 锁定到国内镜像同步版本（保证构建命中 USTC/TUNA 缓存），升级用脚本自动对齐镜像：
+./scripts/update-nixpkgs.sh && nix run .#ide-si11
 ```
 
 **不需要重新 build 镜像**——只有动 systemd/sshd 本体/zsh 登录 shell 时才需要改 `docker/ide/ubuntu/Dockerfile` 并重建。
@@ -168,7 +169,7 @@ macbook = self.homeConfigurations."fan@macbook".activationPackage;  # packages �
 ```bash
 nix run .#ide-si11          # si-11 构建 + 激活（一步）；lenovo 用 .#ide-lenovo
 nix build .#ide-si11 && ./result/activate   # 两步法
-nix flake update nixpkgs     # 升级工具版本
+./scripts/update-nixpkgs.sh  # 升级 nixpkgs 到镜像同步版（构建走国内缓存）
 nix flake check              # 语法检查（有 nix 的机器上）
 ```
 
