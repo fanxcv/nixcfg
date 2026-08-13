@@ -23,8 +23,9 @@
 
   inputs = {
     # git+https 走 gh-proxy（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
-    # rev 锁定到国内镜像已同步的 nixos-unstable channel 版本（保证构建命中 USTC/TUNA 缓存，避免 fallback 官方/本地编译）；
-    # 升级：跑 scripts/update-nixpkgs.sh（查镜像最新同步 rev 并改写此处），或手动按 README「日常更新」流程
+    # rev 锁定到国内镜像已同步的 nixos-unstable channel 版本（构建命中 USTC/TUNA 缓存，避免 fallback 官方/本地编译）；
+    # 不用 channel tarball 做 input：tarball 无 git 信息，nixpkgs 版本号会变成 26.11.19800101.dirty（无 rev/commit 时间）
+    # 升级：跑 scripts/update-nixpkgs.sh（查镜像最新同步 rev 并改写此处）
     nixpkgs.url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&rev=2fcb964de67fcf60b43471c55d5d99e61a9ccb5a&shallow=1";
     home-manager = {
       url = "git+https://gh-proxy.com/https://github.com/nix-community/home-manager.git?ref=master&shallow=1";
