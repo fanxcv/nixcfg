@@ -1,4 +1,4 @@
-# 先软链接 ln -sf nixcfg/docker/ide/docker-compose-si-11.yml docker-compose.yml
+# 先软链接 ln -sf nixcfg/docker/ide/docker-compose-si.yml docker-compose.yml
 networks:
   fan:
     external: true
@@ -7,7 +7,7 @@ services:
   ide:
     build: ./nixcfg/docker/ide/ubuntu
     container_name: ide
-    hostname: si-11-ide
+    hostname: ide-si
     privileged: true
     restart: always
     environment:
@@ -15,16 +15,9 @@ services:
       - LC_ALL=C.UTF-8
       - LANG=C.UTF-8
       - USER=root   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
-      - all_proxy=http://pve.mi.fan-x.eu.org:7890
-      - http_proxy=http://pve.mi.fan-x.eu.org:7890
-      - https_proxy=http://pve.mi.fan-x.eu.org:7890
-      - ALL_PROXY=http://pve.mi.fan-x.eu.org:7890
-      - HTTP_PROXY=http://pve.mi.fan-x.eu.org:7890
-      - HTTPS_PROXY=http://pve.mi.fan-x.eu.org:7890
-      - NO_PROXY=127.0.0.1,localhost,::1,10.*,10.0.0.0/8,172.*,172.0.0.0/8,.qksxin.com
-    extra_hosts:
-      - "gitlab.hczqdev.cn:10.1.0.30"
-      - "maven.hzdev.cn:10.1.0.30"
+    # 代理变量 + extra_hosts 已由 nix 接管（home/fan/ide-si/sysenv.nix，nix run 激活即生效）：
+    #   环境变量 → /etc/environment.d + ~/.ssh/environment（PermitUserEnvironment）+ .zshenv + JAVA_TOOL_OPTIONS
+    #   hosts → 激活幂等追加 + ide-extra-hosts oneshot 服务启动自动恢复；下次重建容器后此处不再需要
     volumes:
       - ./JetBrains/share:/root/.local/share/JetBrains
       - ./JetBrains/config:/root/.config/JetBrains

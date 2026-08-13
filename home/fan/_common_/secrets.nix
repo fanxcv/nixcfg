@@ -15,7 +15,7 @@
 #   1. 加密文件就位：secrets/ai.env.age、secrets/git-credentials.age（age -e -r <pubkey>）
 #   2. 取消下方 imports / age.* 两处注释
 #   3. 私钥就位：$HOME/.secrets/age-keys.txt（与 ai.env 同目录同挂载，容器重建不丢）
-#   4. 容器内 nix run .#ide-si11（lenovo 用 .#ide-lenovo）重新激活验证
+#   4. 容器内 nix run .#ide-si（lenovo 用 .#ide-lenovo）重新激活验证
 # 注意：age.secrets 在激活期解密，file 缺失或私钥不在会导致激活失败（不做静默跳过），
 # 所以未启用前保持注释，避免影响现有容器。
 

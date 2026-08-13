@@ -10,12 +10,13 @@ final: prev: {
       key = "${final.stdenv.hostPlatform.node.platform}-${final.stdenv.hostPlatform.node.arch}";
     in final.fetchurl {
       url = "https://registry.npmmirror.com/@anthropic-ai/claude-code-${key}/-/claude-code-${key}-${old.version}.tgz";
-      # 各平台 npm 平台包 tarball 内容不同，hash 必须按平台区分（2.1.226 全部实测）
+      # 各平台 npm 平台包 tarball 内容不同，hash 必须按平台区分（2.1.223 实测，
+      # Anthropic 重发过 npm 包：linux-arm64/darwin-* 已更新，linux-x64 未变）
       sha256 = ({
-        "linux-x64" = "sha256-087pXoakMsjXy5SWvCbsNTeAjh6oXoIHBxy6PTSYPX8=";
-        "linux-arm64" = "sha256-+7smENr/cNEYyN2orv/ukrOPIKpGTnWMPQnjyDq271Y=";
-        "darwin-x64" = "sha256-9yNzWwDWkqv097nRQe9iNv7gGZy11iuRxfNNKHIoHoY=";
-        "darwin-arm64" = "sha256-88qgfBM9i7VA61m1aYVVLxhiOBSAUDaBev4fgJgqv50=";
+        "linux-x64" = "sha256-+zNcfFtE/pxbSNFdQcp5A+HQ7SoeqTLaDo9bCfNKGoY=";
+        "linux-arm64" = "sha256-KcSexiv76ZXlsTVKTDLRcQEGXSx3ItXQKFz6agjYxEE=";
+        "darwin-x64" = "sha256-CbmTP8KxpjSUFDNFmLiBqJYLQc5DUnBdT6p9HHAQ7KE=";
+        "darwin-arm64" = "sha256-OdByisHzyNsH5wh0yGwJGuB3JqhI6b28GNUo3ZF31W0=";
       }).${key} or (throw "claude-code: 平台 ${key} 的 tarball hash 未记录，先用 nix-prefetch-url 获取后填入 overlays/claude-code.nix");
     };
     dontUnpack = false;

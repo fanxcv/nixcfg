@@ -123,13 +123,13 @@
       #   hostName:        机器名（容器 hostname 由部署层 docker-compose 决定，与此无关）
       #                     home/fan/<hostName>/ 目录可选：存在则注入机器微调，不存在自动跳过
       #   system:          架构（aarch64-linux / x86_64-linux / aarch64-darwin）
-      #   platform:        平台（nixos=Linux系容器/NixOS / alpine=Alpine服务器 / darwin=macOS，
-      #                     注入 home/fan/_nixos_ 或 _alpine_ 或 _darwin_）
+      #   platform:        平台（nixos=NixOS真机 / ubuntu=Ubuntu服务器真机 / container=容器（继承 ubuntu）/ alpine=Alpine服务器 / darwin=macOS，
+      #                     注入 home/fan/_nixos_ 或 _ubuntu_ 或 _container_ 或 _alpine_ 或 _darwin_）
       #   useChinaMirror:  是否走国内镜像（false 时 mise 等直连官方源）
       #   isContainer:     是否容器环境（容器里 docker daemon 起不来，不安装 docker 全家桶；
       #                     容器用户覆盖为 root，见 _common_/container.nix）
       mkHomeConfig =
-        { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? true, isContainer ? false, ideMachine ? null }:
+        { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? true, isContainer ? false }:
         home-manager.lib.homeManagerConfiguration {
           # claude-code 在 nixpkgs 标记 unfree，用 predicate 只放行它（import 重新求值带 config 的 pkgs）
           pkgs = import nixpkgs {
@@ -144,7 +144,7 @@
             ./home/fan/${hostName}
           ];
           extraSpecialArgs = {
-            inherit self inputs outputs tools useChinaMirror hostName isContainer platform ideMachine;
+            inherit self inputs outputs tools useChinaMirror hostName isContainer platform;
           };
         };
       # 生成指定 macOS 机器的 nix-darwin 配置（home-manager 内嵌，darwin-rebuild 一次管全部）
@@ -176,11 +176,12 @@
     in
     {
       homeConfigurations = {
-        # Docker 开发容器（Ubuntu，si-11-ide / lenovo-ide）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
-        # 所有容器均走代理（compose 层 http_proxy 等环境变量），网络环境一致，不再区分国内/国外变体
-        # 机器专属：mise 组件按容器声明（home/fan/ide/mise.nix），容器内 nix run .#ide-si11 / .#ide-lenovo
-        "fan@ide-si11" = mkHomeConfig { hostName = "ide"; ideMachine = "si11"; isContainer = true; };
-        "fan@ide-lenovo" = mkHomeConfig { hostName = "ide"; ideMachine = "lenovo"; isContainer = true; };
+        # Docker 开发容器（Ubuntu，ide-si / ide-lenovo）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
+        # 代理：仅 ide-si 走（sysenv.nix 接管环境变量+hosts，与 compose 无关）；lenovo 国内直连
+        # 机器专属：mise 组件按机器目录声明（home/fan/ide-si/mise.nix / ide-lenovo/mise.nix），容器内 nix run .#ide-si / .#ide-lenovo
+        # 容器平台层（_container_，继承 _ubuntu_ 系统基础）：Ubuntu 层留给服务器/真机，_nixos_ 仅 NixOS 真机
+        "fan@ide-si" = mkHomeConfig { hostName = "ide-si"; platform = "container"; isContainer = true; };
+        "fan@ide-lenovo" = mkHomeConfig { hostName = "ide-lenovo"; platform = "container"; isContainer = true; };
 
         # --- 多台 ide 开发容器：一行注册即可（机器目录可选），hostname 在部署层 docker-compose 里设 ---
         # "fan@ide-eu" = mkHomeConfig { hostName = "ide-eu"; isContainer = true; };
@@ -229,12 +230,12 @@
       packages = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
         in {
-          # 机器专属别名：mise 组件按容器声明（home/fan/ide/mise.nix），si-11/lenovo 各一份
+          # 机器专属别名：mise 组件按机器目录声明（home/fan/ide-si/mise.nix / ide-lenovo/mise.nix），si/lenovo 各一份
           # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
-          ide-si11 = pkgs.writeShellScriptBin "ide-activate"
-            "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide"; system = system; ideMachine = "si11"; isContainer = true; }).activationPackage}/activate";
+          ide-si = pkgs.writeShellScriptBin "ide-activate"
+            "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide-si"; system = system; platform = "container"; isContainer = true; }).activationPackage}/activate";
           ide-lenovo = pkgs.writeShellScriptBin "ide-activate"
-            "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide"; system = system; ideMachine = "lenovo"; isContainer = true; }).activationPackage}/activate";
+            "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide-lenovo"; system = system; platform = "container"; isContainer = true; }).activationPackage}/activate";
           # Mac 一次性构建+激活别名：nix run .#darwin-mba-m5 等
           "darwin-mba-m5" = pkgs.writeShellScriptBin "darwin-mba-m5"
             "exec ${self.darwinConfigurations.mba-m5.system}/activate";
@@ -244,7 +245,7 @@
             "exec ${self.darwinConfigurations.mini-m4.system}/activate";
         });
 
-      # --- 多台 ide 部署的别名同规则：nix build .#ide-si11 / .#ide-lenovo（packages 块内各一行）---
+      # --- 多台 ide 部署的别名同规则：nix build .#ide-si / .#ide-lenovo（packages 块内各一行）---
 
       # 代码格式化：nix fmt 一键格式化（treefmt：nixfmt + statix，配置见 formatter.nix）
       formatter = forAllSystems (system:

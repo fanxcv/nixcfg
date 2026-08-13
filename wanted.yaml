@@ -207,23 +207,37 @@ macos:
       - bilibili                 # 本机已装
 
 linux:
-  ide:                           # ← Docker 开发容器（si-11-ide / lenovo-ide，Ubuntu）
-    proxy: {si11: true, lenovo: false}  # 按容器区分：si-11 走代理（compose 注入 http_proxy → docker-compose-si-11.yml），lenovo 国内机器直连不需要
-    pkgs:                        # → home/fan/_linux_/ + _nixos_/ + _alpine_/
-      - git                      # Linux 基础三件套（mac 自带不装）
+  common:                        # Linux 系公共（NixOS/Ubuntu/Alpine 共用，→ home/fan/_linux_/）
+    pkgs:                        # Linux 基础三件套（mac 自带不装）
+      - git
       - vim
       - curl
-      - gnumake                  # Ubuntu 基础
-      - net-tools
-      - inetutils
+    docker: true                 # docker/compose/buildx + 自启 + fan 网络（NixOS/Alpine 真机；ide 容器 isContainer=true 直接移除，不装不跑）
+    mirrors: true                # npm/pip/uv 国内镜像（npm→npmmirror、pip/uv→清华 TUNA，→ home/fan/_linux_/mirror.nix；useChinaMirror=false 时直连官方）
+  alpine:                        # Alpine 平台（→ home/fan/_alpine_/；暂无机器，仅平台层记录）
+    pkgs:
       - busybox                  # Alpine 基础（完整 applet）
       - cacert                   # Alpine CA 证书
-    docker: true                 # docker/compose/buildx + 自启 + fan 网络（NixOS/Alpine 真机；ide 容器 isContainer=true 直接移除，不装不跑）
+  ubuntu:                        # ← Ubuntu 平台层（→ home/fan/_ubuntu_/；服务器/真机，容器经 _container_ 继承本层）
+    pkgs:                        # Ubuntu 基础（原 _nixos_/base.nix 迁入）
+      - gnumake
+      - net-tools
+      - inetutils
+  container:                     # ← 容器平台层（→ home/fan/_container_/，继承 _ubuntu_ 系统基础；当前 ide-si / ide-lenovo）
     ssh_host_key: 持久化          # sshd host key 存宿主机 docker/ide/ssh-keys/（entrypoint 生成/复用，→ docker/ide/ubuntu/entrypoint.sh），容器重建不换 key
     ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
     file_backup: ".backup"       # 激活时手配文件冲突自动备份再覆盖（flake 入口注入 HOME_MANAGER_BACKUP_EXT）
-    mise:                        # mise 运行时组件，按容器声明（→ home/fan/ide/mise.nix，激活：nix run .#ide-si11 / .#ide-lenovo；激活自动 mise install 缺失组件）
-      si11:                      # si-11-ide 容器（激活：nix run .#ide-si11）
+    secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
+    pi:                          # pi agent 配置（~/.pi/agent，clone 用 ai.env 的 PI_CONFIG_GIT_TOKEN）
+      token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai.env 读取，clone 后清 origin
+    skemate:                     # 自研终端复用服务（→ overlays/skemate.nix + home/fan/_container_/skemate.nix，两台共用一份）
+      version: 0.5.72            # latest.json 最新版（linux-amd64 / darwin-arm64）
+      service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
+      config: 宿主机挂载           # 配置不管理：docker/ide/skemate/ → /root/.config/skemate（compose 挂载）
+    ide-si:                      # ← 机器（原 si-11-ide 更名，hostname=ide-si；激活：nix run .#ide-si）
+      proxy: true                # 走代理（已由 nix 接管：compose 原代理变量/extra_hosts 已删 → home/fan/ide-si/sysenv.nix，nix run 激活即生效；JVM 不读 shell 代理，JAVA_TOOL_OPTIONS 注入）
+      sysenv: 接管环境变量+hosts  # 替代 compose environment/extra_hosts，免重建容器：代理/NO_PROXY/JAVA_TOOL_OPTIONS → /etc/environment.d + .zshenv + ~/.ssh/environment；内网 hosts（gitlab/maven.hzdev.cn → 10.1.0.30）→ 激活幂等追加 + oneshot 启动恢复（仅本机）
+      mise:                      # mise 运行时组件（→ home/fan/ide-si/mise.nix，激活自动 mise install 缺失组件）
         - bun@latest
         - go@1.25
         - java@zulu-8
@@ -231,7 +245,9 @@ linux:
         - node@22
         - python@3.12
         - uv@latest
-      lenovo:                    # lenovo-ide 容器（激活：nix run .#ide-lenovo；java 默认 oracle-17，另有 pipx）
+    ide-lenovo:                  # ← 机器（激活：nix run .#ide-lenovo）
+      proxy: false               # 国内机器直连，不需要
+      mise:                      # java 默认 oracle-17，另有 pipx（→ home/fan/ide-lenovo/mise.nix）
         - bun@latest
         - go@1.25
         - java@oracle-17
@@ -240,14 +256,6 @@ linux:
         - python@3.12
         - uv@latest
         - pipx@latest
-    mirrors: true                # npm/pip/uv 国内镜像（npm→npmmirror、pip/uv→清华 TUNA，→ home/fan/_linux_/mirror.nix；useChinaMirror=false 时直连官方）
-    skemate:                     # 自研终端复用服务（→ overlays/skemate.nix + home/fan/ide/skemate.nix）
-      version: 0.5.72            # latest.json 最新版（linux-amd64 / darwin-arm64）
-      service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
-      config: 宿主机挂载           # 配置不管理：docker/ide/skemate/ → /root/.config/skemate（compose 挂载）
-    secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
-    pi:                          # pi agent 配置（~/.pi/agent，clone 用 ai.env 的 PI_CONFIG_GIT_TOKEN）
-      token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai.env 读取，clone 后清 origin
 
 nixos:
   nix-pve:                       # ← 第一台 NixOS 真机（Proxmox VE 虚拟机，128G 盘 + KDE Plasma 桌面）

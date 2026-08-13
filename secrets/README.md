@@ -38,7 +38,7 @@ age -e -r age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204 \
     -o secrets/ai.env.age /root/.secrets/ai.env
 
 # 多接收者（从 keys.nix 批量取）
-age -e -R <(nix eval --raw .#homeConfigurations."fan@ide-si11".config.home.homeDirectory 2>/dev/null) \
+age -e -R <(nix eval --raw .#homeConfigurations."fan@ide-si".config.home.homeDirectory 2>/dev/null) \
     -o secrets/xxx.age <明文源>
 ```
 
@@ -61,7 +61,7 @@ age -e -r age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204 \
 2. ✅ `home/fan/_common_/secrets.nix` agenix 块已启用（imports + age.* 已取消注释）
 3. ⚠️ 私钥就位：`docker/ide/.secrets/age-keys.txt`（容器内 /root/.secrets/age-keys.txt）
    ——每个新部署的容器都要放；缺失会导致激活失败（agenix 不解密即报错）
-4. 容器内 `nix run .#ide-si11`（lenovo 用 `.#ide-lenovo`）重新激活验证
+4. 容器内 `nix run .#ide-si`（lenovo 用 `.#ide-lenovo`）重新激活验证
 
 ## RustDesk 机器身份（所有 Mac）
 

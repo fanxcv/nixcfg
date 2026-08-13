@@ -25,13 +25,17 @@ nixcfg/
     │   ├── ssh.nix            #   公钥拉取 + sshd 加固（root/sudo 执行）
     │   └── tmux.nix           #   tmux + gpakosz 配置
     ├── _linux_/               # Linux 系公共（git/vim/curl + docker，NixOS/Alpine 共用）
-    ├── _nixos_/               # Ubuntu/Linux 平台（make/net-tools/inetutils）
+    ├── _nixos_/               # NixOS 平台（真机桌面：Plasma/gui/i18n）
+    ├── _ubuntu_/              # Ubuntu 平台（服务器/真机基础：make/net-tools/inetutils）
+    ├── _container_/           # 容器平台（ide-si/ide-lenovo：skemate 公共，继承 _ubuntu_）
     ├── _alpine_/              # Alpine 平台（busybox/cacert + ssh 服务端配置）
     ├── _darwin_/              # macOS 平台（三台 Mac 生效）
-    └── ide/                   # 机器微调（可留空，flake 自动跳过不存在的目录）
+    ├── ide-si/                # 机器微调：ide-si 容器（原 si-11-ide，代理+hosts 接管）
+    ├── ide-lenovo/            # 机器微调：ide-lenovo 容器（mise 组件差异）
+    └── mba-m5/ mbp-m1/ mini-m4/ nix-pve/   # 真机微调（可留空，flake 自动跳过不存在的目录）
 ```
 
-**平台矩阵**：`_common_`（全平台）+ `_linux_`（Linux 系公共，NixOS/Alpine 共用）+ `_${platform}_`（nixos/alpine/darwin）+ `<host>`（机器微调，可选）。用户身份：nixos/darwin = fan，alpine = root；容器（isContainer=true）强制 root。
+**平台矩阵**：`_common_`（全平台）+ `_linux_`（Linux 系公共，NixOS/Ubuntu/Alpine 共用）+ `_${platform}_`（nixos/ubuntu/container/alpine/darwin，container 继承 ubuntu）+ `<host>`（机器微调，可选）。用户身份：nixos/darwin = fan，alpine = root；容器（isContainer=true）强制 root。
 
 ## 构建 ide 容器（Docker 开发容器）
 
@@ -78,8 +82,8 @@ docker compose up -d        # systemd 启动，sshd 自启（端口 2222→22）
 docker exec -it ide bash     # 首次 SSH 还没公钥，用 docker exec
 
 cd /root/nixcfg            # 配置仓库已由宿主机拉取并挂载，无需 clone
-nix run .#ide-si11         # si-11 容器；lenovo 容器用 .#ide-lenovo（构建 + 激活：拉公钥、加固 sshd、oh-my-zsh/tmux 配置就位）
-# mise 组件由 nix 按容器声明（home/fan/ide/mise.nix），激活自动写入 ~/.config/mise/config.toml
+nix run .#ide-si          # ide-si 容器（原 si-11-ide）；lenovo 容器用 .#ide-lenovo（构建 + 激活：拉公钥、加固 sshd、oh-my-zsh/tmux 配置就位）
+# mise 组件由 nix 按机器目录声明（home/fan/ide-si/mise.nix / ide-lenovo/mise.nix），激活自动写入 ~/.config/mise/config.toml
 ```
 
 ### 4. 验证
@@ -100,12 +104,12 @@ rg --version                 # ripgrep（nix 安装，全平台）
 git -C ./nixcfg pull         # 宿主机
 # 或容器内：cd /root/nixcfg && git pull
 
-# 容器内应用配置改动（si-11 / lenovo 分别用 .#ide-si11 / .#ide-lenovo）
-nix run .#ide-si11
+# 容器内应用配置改动（ide-si / lenovo 分别用 .#ide-si / .#ide-lenovo）
+nix run .#ide-si
 
 # 升级 nixpkgs 里的工具版本（claude/codex/pi 等新版本）
 # 稳定版 nixos-26.05 不锁 rev，nix flake update 直接跟随分支点更新（构建命中镜像缓存）
-nix flake update && nix run .#ide-si11
+nix flake update && nix run .#ide-si
 ```
 
 **不需要重新 build 镜像**——只有动 systemd/sshd 本体/zsh 登录 shell 时才需要改 `docker/ide/ubuntu/Dockerfile` 并重建。
@@ -115,11 +119,12 @@ nix flake update && nix run .#ide-si11
 每台服务器只需 flake.nix 两行 + 部署层各管各的（hostname 在 compose 里设，密钥在各自宿主机）：
 
 ```nix
-"fan@ide-si11" = mkHomeConfig { hostName = "ide"; ideMachine = "si11"; isContainer = true; };
-# packages 块内：ide-si11 = ...（mise 组件按容器声明，见 home/fan/ide/mise.nix）
+"fan@ide-si" = mkHomeConfig { hostName = "ide-si"; platform = "container"; isContainer = true; };
+"fan@ide-lenovo" = mkHomeConfig { hostName = "ide-lenovo"; platform = "container"; isContainer = true; };
+# packages 块内：ide-si = ...（mise 组件按机器目录声明，见 home/fan/ide-si/mise.nix）
 ```
 
-→ si-11 容器内 `nix run .#ide-si11`，lenovo 用 `.#ide-lenovo`。机器专属微调放 home/fan/ide/（mise.nix 按 ideMachine 区分）。
+→ ide-si 容器内 `nix run .#ide-si`，lenovo 用 `.#ide-lenovo`。机器专属微调放 home/fan/<host>/（ide-si 含 sysenv.nix 代理+hosts；ide-lenovo 仅 mise 差异）。
 
 ## 构建 NixOS 真机（待补）
 
@@ -158,17 +163,17 @@ macbook = self.homeConfigurations."fan@macbook".activationPackage;  # packages �
 | 层级 | 国内环境（默认） |
 |---|---|
 | Dockerfile 装 nix | 清华镜像（install 脚本 + tarball + binary cache） |
-| home 配置 | `fan@ide-si11` / `fan@ide-lenovo`（mise 走 npmmirror、git 走 gh-proxy） |
+| home 配置 | `fan@ide-si` / `fan@ide-lenovo`（mise 走 npmmirror、git 走 gh-proxy） |
 
-所有容器均走代理（compose 层 http_proxy 等环境变量），网络环境一致，不再区分国内/国外变体。
+所有容器网络环境各管各的：ide-si 走代理（nix 接管：sysenv.nix 环境变量+hosts），lenovo 国内直连。
 
 优先级：命令行 `--option` > `NIX_CONFIG` > `/etc/nix/nix.conf` > flake `nixConfig`。
 
 ## 常用命令
 
 ```bash
-nix run .#ide-si11          # si-11 构建 + 激活（一步）；lenovo 用 .#ide-lenovo
-nix build .#ide-si11 && ./result/activate   # 两步法
+nix run .#ide-si          # ide-si 构建 + 激活（一步）；lenovo 用 .#ide-lenovo
+nix build .#ide-si && ./result/activate   # 两步法
 nix flake update            # 升级全部依赖（nixpkgs 稳定版点更新，构建走国内缓存）
 nix flake check              # 语法检查（有 nix 的机器上）
 ```
@@ -177,7 +182,7 @@ nix flake check              # 语法检查（有 nix 的机器上）
 
 | alpine-init.sh | 本仓库 |
 |---|---|
-| install_packages（apk/apt 基础包） | `_linux_/base.nix`（git/vim/curl）+ `_nixos_/base.nix`（make/net-tools）+ `_alpine_/base.nix`（busybox/cacert） |
+| install_packages（apk/apt 基础包） | `_linux_/base.nix`（git/vim/curl）+ `_ubuntu_/base.nix`（make/net-tools，容器经 `_container_` 继承）+ `_alpine_/base.nix`（busybox/cacert） |
 | git config --global | `_common_/base.nix` programs.git |
 | install_oh_my_zsh（gh-proxy） | `_common_/shells.nix`（clone + 插件 + 主题） |
 | install_mise | `_common_/mise.nix`（mise 本体；组件清单分机器确定） |

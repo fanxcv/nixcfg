@@ -7,6 +7,11 @@
   home.username = lib.mkIf isContainer (lib.mkForce "root");
   home.homeDirectory = lib.mkIf isContainer (lib.mkForce "/root");
 
+  # 容器无 user systemd：覆盖 reloadSystemd 钩子为空脚本，
+  # 消除每次激活的 "User systemd daemon not running. Skipping reload." 警告
+  # （容器只有系统级 systemd，skemate 等系统服务的启停由各自 activation 直接调 systemctl；原 ide/systemd.nix 迁入）
+  home.activation.reloadSystemd = lib.mkIf isContainer (lib.mkForce (lib.hm.dag.entryAfter [ "linkGeneration" ] ""));
+
   # 旧镜像构建期写过 ~/.zshrc ~/.zshenv（Dockerfile 已改写到 /etc/zsh/zshenv，新镜像无此文件）：
   # HM 的 programs.zsh 要接管这两个文件，force 覆盖旧镜像残留；新镜像 force 无副作用
   # 注意键必须带 "./" 前缀与 hm 的 zsh 模块对齐（dotDirRel），否则会生成孤立条目报错

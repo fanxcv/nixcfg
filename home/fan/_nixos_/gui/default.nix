@@ -1,5 +1,5 @@
-# GUI 桌面应用（ide 容器是无头开发环境，跳过桌面应用/Plasma；真机如 nix-pve 保留）
-{ tools, lib, isContainer ? false, ... }:
+# GUI 桌面应用（NixOS 真机桌面：Plasma + Edge/Bitwarden；容器无头，不经过本平台层）
+{ tools, ... }:
 {
-  imports = lib.optionals (!isContainer) (tools.scan ./.);
+  imports = tools.scan ./.;
 }

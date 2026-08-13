@@ -20,6 +20,13 @@
 
   networking.hostName = "nix-pve";
 
+  # nix 下载走国内镜像（comin 部署/手动 rebuild 用；root 的 nix.conf 由 NixOS 生成，天然 trusted）
+  nix.settings.substituters = [
+    "https://mirrors.ustc.edu.cn/nix-channels/store"
+    "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+    "https://cache.nixos.org/"
+  ];
+
   # fan sudo 免密（日常维护/手动 rebuild 用）
   security.sudo.wheelNeedsPassword = false;
 

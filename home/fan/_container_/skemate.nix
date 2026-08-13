@@ -1,5 +1,4 @@
-# skemate（自研终端复用服务）——ide 容器专属配置
-# 两台容器（lenovo-ide / si-11-ide）共用本目录（flake 均以 hostName=ide 注册，isContainer=true）
+# skemate（自研终端复用服务）——容器平台层公共（ide-si / ide-lenovo 共用一份）
 #   安装：overlays/skemate.nix 提供 pkgs.skemate（平台匹配 latest.json 官方构建）
 #   配置：Nix 不管理——宿主机 compose 挂载 ./skemate → /root/.config/skemate，
 #         config.json / tunnel.yaml 等由用户在宿主机 docker/ide/skemate/ 自行维护
@@ -7,12 +6,13 @@
 #         Restart=always），容器重启自动拉起；unit 模板见 ./skemate.service，
 #         激活时 sed 注入 skemate store 路径，内容不变则跳过（幂等）；
 #         无论 unit 是否变更，激活都会检查服务存活，挂了自动重启并输出 journalctl
+#   原在 ide-si/ide-lenovo 各一份，移入容器平台层去重（平台层即容器语义，不再需要 isContainer 门控）
 
-{ pkgs, lib, isContainer ? false, ... }:
+{ pkgs, lib, ... }:
 {
-  home.packages = lib.mkIf isContainer [ pkgs.skemate ];
+  home.packages = [ pkgs.skemate ];
 
-  home.activation.skemateService = lib.mkIf isContainer (lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.skemateService = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     unit=/etc/systemd/system/skemate.service
     tmp=$(mktemp)
     sed "s|@skemate@|${pkgs.skemate}|" ${./skemate.service} > "$tmp"
@@ -46,5 +46,5 @@
         /usr/bin/journalctl -u skemate.service -n 10 --no-pager 2>/dev/null || true
       fi
     fi
-  '');
+  '';
 }

@@ -34,7 +34,7 @@
 |---|---|
 | hosts/_darwin_/、home/fan/_darwin_/、users/fan、hosts/<mac机>/、home/fan/<mac机>/ | darwinConfigurations（改共享层 → 三台；改机器专属 → 仅该机器） |
 | home/fan/_common_/、home/fan/default.nix | darwinConfigurations + homeConfigurations（跨平台共享层，两边都受影响） |
-| home/fan/_linux_/、_nixos_/、_alpine_/、ide/ | homeConfigurations（ide-si11 / ide-lenovo） |
+| home/fan/_linux_/、_ubuntu_/、_container_/、_nixos_/、_alpine_/、ide-si/、ide-lenovo/ | homeConfigurations（ide-si / ide-lenovo） |
 | hosts/_nixos_/ | nixosConfigurations（当前未接入真机，暂无目标） |
 | secrets/、flake.nix、AGENTS.md、wanted.yaml | 按实际影响面判断；不确定时跑受影响平台的 eval |
 
@@ -55,7 +55,9 @@
 | macos.all_macs.app_configs | home/fan/_darwin_/gui/apps/*.nix、home/fan/_common_/*.nix |
 | macos.all_macs.secrets | hosts/_common_/base/agenix.nix、hosts/_darwin_/base/rustdesk.nix、secrets/ |
 | macos.mini_m4 | hosts/mini-m4/*.nix、home/fan/mini-m4/*.nix |
-| linux.ide | home/fan/_linux_/、home/fan/_nixos_/、home/fan/_alpine_/、home/fan/ide/ |
+| linux.ubuntu 公共（pkgs） | home/fan/_ubuntu_/、home/fan/_linux_/ |
+| linux.container 公共（skemate/部署） | home/fan/_container_/、home/fan/_linux_/ |
+| linux.container.ide-si / ide-lenovo | home/fan/ide-si/、home/fan/ide-lenovo/ |
 | nixos.pending | hosts/_nixos_/ |
 
 ## 强制动作清单
