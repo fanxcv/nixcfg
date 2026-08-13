@@ -52,7 +52,9 @@ let
 in
 {
   home.packages = [
-    pkgs.claude-code
+    # 关 installCheck：claude --version 在 nixbld（无 HOME）环境会死循环（99% CPU），
+    # 构建本身没问题（npmmirror 裸二进制，见 overlays/claude-code.nix）
+    (pkgs.claude-code.overrideAttrs { doInstallCheck = false; })
     ccline
   ];
 

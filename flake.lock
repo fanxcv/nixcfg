@@ -157,16 +157,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1786538400,
-        "narHash": "sha256-PH8B1YKxedcWKNw2xsk6cKPVk/rJoLgdlWd5d+Icies=",
-        "ref": "master",
-        "rev": "e13ba5e5abbd9b912fa8c6979bd119e87ca7fdd9",
+        "lastModified": 1785119570,
+        "narHash": "sha256-Rgs2xKnGLFWQscxUaXX07oyZeuMDOHEbqDOsgliLFGM=",
+        "ref": "release-26.05",
+        "rev": "d4fd24667c8cbef124bb70a20380cab75ec8474d",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/nix-community/home-manager.git"
       },
       "original": {
-        "ref": "master",
+        "ref": "release-26.05",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/nix-community/home-manager.git"
@@ -273,20 +273,20 @@
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgs-darwin"
         ]
       },
       "locked": {
-        "lastModified": 1785389976,
-        "narHash": "sha256-0tLW8Ff5yt8AH97jw4ZpFJ0OCJ122zIlgWGDmOfU/VU=",
-        "ref": "master",
-        "rev": "15abb8c98f336cd8bd840d71059adebabe60bf04",
+        "lastModified": 1783744694,
+        "narHash": "sha256-2cp6N3rrwnGYLTx9l6N+NI+kwrCWxvJUbj5WJhvB29A=",
+        "ref": "nix-darwin-26.05",
+        "rev": "c3e90c89649b07d1a96e4b9dd6cd0d6e44b91a74",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git"
       },
       "original": {
-        "ref": "master",
+        "ref": "nix-darwin-26.05",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git"
@@ -316,17 +316,35 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1786384358,
-        "narHash": "sha256-RzPPiWeUtuvymnpuEWsdtzli5w4kjZs49FqEs3/1u+I=",
-        "ref": "nixpkgs-unstable",
-        "rev": "2fcb964de67fcf60b43471c55d5d99e61a9ccb5a",
+        "lastModified": 1786430034,
+        "narHash": "sha256-Vux08kA5PICwS2sViCMfwVLAHNoH8TkKAeBo25LjpMI=",
+        "ref": "nixos-26.05",
+        "rev": "70cc4559b10a6062b05ff1af17e0add065ccaed9",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
       },
       "original": {
-        "ref": "nixpkgs-unstable",
-        "rev": "2fcb964de67fcf60b43471c55d5d99e61a9ccb5a",
+        "ref": "nixos-26.05",
+        "rev": "70cc4559b10a6062b05ff1af17e0add065ccaed9",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+      }
+    },
+    "nixpkgs-darwin": {
+      "locked": {
+        "lastModified": 1786444855,
+        "narHash": "sha256-Uu0Qa0gg5Ztgl7EYhAEIDy0jJioPPP43zLqSNoMlAV4=",
+        "ref": "nixpkgs-26.05-darwin",
+        "rev": "2e49fce950fece113519c5d75da869601d01550f",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+      },
+      "original": {
+        "ref": "nixpkgs-26.05-darwin",
+        "rev": "2e49fce950fece113519c5d75da869601d01550f",
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
@@ -371,6 +389,7 @@
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-darwin": "nixpkgs-darwin",
         "plasma-manager": "plasma-manager",
         "treefmt-nix": "treefmt-nix"
       }

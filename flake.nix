@@ -23,12 +23,12 @@
 
   inputs = {
     # git+https 走 gh-proxy（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
-    # rev 锁定到国内镜像已同步的 nixos-unstable channel 版本（构建命中 USTC/TUNA 缓存，避免 fallback 官方/本地编译）；
-    # 不用 channel tarball 做 input：tarball 无 git 信息，nixpkgs 版本号会变成 26.11.19800101.dirty（无 rev/commit 时间）
-    # 升级：跑 scripts/update-nixpkgs.sh（查镜像最新同步 rev 并改写此处）
-    nixpkgs.url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&rev=2fcb964de67fcf60b43471c55d5d99e61a9ccb5a&shallow=1";
+    # 稳定版 nixos-26.05：闭包二进制在镜像/官方永久缓存 → 构建全命中 USTC/TUNA，不随每日更新失效；
+    # rev 锁到国内镜像已同步的 channel 点更新版本（升级：跑 scripts/update-nixpkgs.sh）
+    nixpkgs.url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixos-26.05&rev=70cc4559b10a6062b05ff1af17e0add065ccaed9&shallow=1";
     home-manager = {
-      url = "git+https://gh-proxy.com/https://github.com/nix-community/home-manager.git?ref=master&shallow=1";
+      # 与 nixpkgs 26.05 配套的 release 分支（master 要求更新的 nixpkgs）
+      url = "git+https://gh-proxy.com/https://github.com/nix-community/home-manager.git?ref=release-26.05&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -70,9 +70,14 @@
     };
 
     # --- macOS（nix-darwin）：三台 Mac 的系统层，见 hosts/_darwin_/ 与 hosts/<host>/ ---
+    # nix-darwin 用配套分支：nix-darwin-26.05 ↔ nixpkgs-26.05-darwin（checkRelease 强制匹配）
+    nixpkgs-darwin = {
+      # darwin 专属 channel（闭包含完整 darwin 构建，镜像同步），rev 锁镜像同步点
+      url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-26.05-darwin&rev=2e49fce950fece113519c5d75da869601d01550f&shallow=1";
+    };
     nix-darwin = {
-      url = "git+https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git?ref=master&shallow=1";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "git+https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git?ref=nix-darwin-26.05&shallow=1";
+      inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
 
     # homebrew 声明式管理（casks 清单见 hosts/_darwin_/base/apps.nix）
@@ -148,8 +153,8 @@
       mkDarwinConfig = { hostName, system ? "aarch64-darwin" }:
       nix-darwin.lib.darwinSystem {
         inherit system;
-        # 与 mkHomeConfig 同款 pkgs：claude-code 镜像 overlay + unfree 放行
-        pkgs = import nixpkgs {
+        # mac 用 nixpkgs-26.05-darwin channel（darwin 闭包完整，镜像命中）；与 nix-darwin-26.05 分支配套
+        pkgs = import inputs."nixpkgs-darwin" {
           inherit system;
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
           overlays = [ claudeOverlay skemateOverlay ];
