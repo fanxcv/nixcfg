@@ -8,7 +8,6 @@
 { lib, ... }:
 {
   home.activation.setupAndroidEmulator = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    export ANDROID_HOME="''${ANDROID_HOME:-/Users/fan/sdk/Android}"
     # java 由 mise 提供（config.toml java=oracle-25）；activation 脚本是 sh（不读 .zshenv），
     # PATH 无 ~/.nix-profile/bin（mise 所在），显式补全；shims 供 java 使用
     export PATH="$HOME/.nix-profile/bin:$HOME/.local/share/mise/shims:/usr/bin:/bin:$PATH"
@@ -21,6 +20,9 @@
     fi
     # mise 的 android-sdk 装在 installs/android-sdk/<ver>/cmdline-tools/<ver>/bin/（版本目录，非 latest），动态定位
     MISE_ASDK="$(command -v mise >/dev/null 2>&1 && mise where android-sdk 2>/dev/null || true)"
+    # sdkmanager/emulator/镜像全部落在 mise 的 android-sdk 目录（非 /Users/fan/sdk/Android），
+    # ANDROID_HOME 默认值跟随真实安装位置
+    export ANDROID_HOME="''${ANDROID_HOME:-$MISE_ASDK}"
     SDKMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
     AVDMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/avdmanager 2>/dev/null | head -1)"
     SETUP_LOG="/tmp/android-emulator-setup.log"
@@ -52,8 +54,8 @@
     fi
 
     # --- emulator + 系统镜像（缺失则 sdkmanager 自动安装，幂等：齐全则跳过避免每次联网检查）---
-    if [ -x "$ANDROID_HOME/emulator/emulator" ] \
-      && [ -d "$ANDROID_HOME/system-images/android-37.0/google_apis_playstore_ps16k/arm64-v8a" ]; then
+    if [ -x "$MISE_ASDK/emulator/emulator" ] \
+      && [ -d "$MISE_ASDK/system-images/android-37.0/google_apis_playstore_ps16k/arm64-v8a" ]; then
       echo "[android-emulator] emulator + 系统镜像已就位"
     else
       yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true

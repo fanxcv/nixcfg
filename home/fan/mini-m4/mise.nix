@@ -18,7 +18,9 @@
     python = "3"
 
     [env]
-    ANDROID_HOME = "/Users/fan/sdk/Android"
+    # SDK 根跟随 mise 的 latest 链接（升级 android-sdk 版本无需改此处）；
+    # emulator/system-images 由 sdkmanager 装到该目录下（见 android-emulator.nix）
+    ANDROID_HOME = "/Users/fan/.local/share/mise/installs/android-sdk/latest"
     # adb / emulator 等命令行工具注入 PATH（模拟器组件声明见 android-emulator.nix）
     # 注：PATH 注入必须用 env._.path（PATH = { path = [...] } 是废语法，mise 2026.5 报 PATH has no value）；
     #   _.path 不做 shell 展开，需用 Tera 模板 {{env.ANDROID_HOME}} 引用同表变量
