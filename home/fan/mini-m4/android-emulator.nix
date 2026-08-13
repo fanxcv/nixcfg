@@ -1,10 +1,9 @@
 # 安卓模拟器声明式恢复（emulator + 系统镜像 + AVD）
 # ANDROID_HOME 由 mise android-sdk 接管（mise.nix），但 emulator/system-images/AVD
-# 是 sdkmanager/avdmanager 的产物（不在 nix store）。本模块在激活期幂等保证工具链就位：
-#   java / android-sdk（cmdline-tools）由 mise 自动补装（首次联网，幂等秒过）
-#   emulator / system-images 只声明不下载（镜像巨大，按需手动 sdkmanager 安装）
-#   AVD 在镜像就位后创建（Pixel_Fold(android-37.0 ps16k)）
-# 重装系统/清空 SDK 后一条 nix 命令恢复工具链；镜像/AVD 装好后同样自动恢复
+# 是 sdkmanager/avdmanager 的产物（不在 nix store）。本模块在激活期幂等保证全部就位：
+#   java / android-sdk（cmdline-tools）由 mise 自动补装；emulator / system-images 由
+#   sdkmanager 自动安装（均首次联网下载，已装则秒过）
+# AVD 在镜像就位后创建（Pixel_Fold(android-37.0 ps16k)）；重装系统/清空 SDK 后一条 nix 命令恢复
 
 { lib, ... }:
 {
@@ -42,13 +41,20 @@
       fi
     fi
 
-    # --- emulator + 系统镜像（只声明不下载：镜像巨大，缺失时按需手动安装）---
+    # --- emulator + 系统镜像（缺失则 sdkmanager 自动安装，幂等：齐全则跳过避免每次联网检查）---
     if [ -x "$ANDROID_HOME/emulator/emulator" ] \
       && [ -d "$ANDROID_HOME/system-images/android-37.0/google_apis_playstore_ps16k/arm64-v8a" ]; then
       echo "[android-emulator] emulator + 系统镜像已就位"
     else
-      echo "[android-emulator] emulator/system-images 未装，跳过（不自动下载；手动安装: \"$SDKMANAGER\" emulator system-images;android-37.0;google_apis_playstore_ps16k;arm64-v8a）"
-      exit 0
+      yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+      echo "[android-emulator] 安装 emulator + 系统镜像（日志: ''${SETUP_LOG}，首次需下载）"
+      if ! "$SDKMANAGER" "emulator" \
+          "system-images;android-37.0;google_apis_playstore_ps16k;arm64-v8a" \
+          >"$SETUP_LOG" 2>&1; then
+        echo "错误: sdkmanager 安装失败，日志尾部："
+        tail -20 "$SETUP_LOG"
+        exit 1
+      fi
     fi
 
     # --- AVD（缺失时重建，device id 与镜像包名对齐实机定义）---
