@@ -32,13 +32,9 @@ in
     # tap 全声明化：禁止手动 brew tap
     mutableTaps = false;
 
-    # 网络策略：bottles 走国内镜像（USTC）；cask 的 app 安装包无镜像，走局域网代理
-    # （sudo --preserve-env=PATH 不传代理变量，必须经 extraEnv 注入 brew wrapper 才能生效）
+    # 网络策略：bottles 走国内镜像（USTC）；cask 的 app 安装包无镜像，由用户侧代理环境变量自行处理
     extraEnv = {
       HOMEBREW_BOTTLE_DOMAIN = "https://mirrors.ustc.edu.cn/homebrew-bottles";
-      https_proxy = "http://10.2.236.20:7890";
-      http_proxy = "http://10.2.236.20:7890";
-      all_proxy = "http://10.2.236.20:7890";
     };
 
     trust = {
