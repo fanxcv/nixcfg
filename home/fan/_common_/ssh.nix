@@ -13,13 +13,16 @@
       [ "$(uname -s)" = "Linux" ] || return 0
 
       # 1) 拉取授权公钥（对应脚本 ssh_config() 的 curl 部分）
+      #    注意：file.fan-x.fun 的 mac.pub 曾返回 OneDrive HTML（非公钥），不再作为源；
+      #    改为 github 的 keys + 内置本机 id_rsa（声明式，不依赖外部文件服务）
       mkdir -p "$HOME/.ssh"
       chmod 700 "$HOME/.ssh"
       keys_tmp="$HOME/.ssh/authorized_keys.tmp"
       : > "$keys_tmp"
-      if ${pkgs.curl}/bin/curl -sfL https://file.fan-x.fun/d/Onedrive/script/mac.pub -o "$keys_tmp" \
-        && ${pkgs.curl}/bin/curl -sfL https://github.com/fanxcv.keys >> "$keys_tmp" \
+      if ${pkgs.curl}/bin/curl -sfL https://github.com/fanxcv.keys -o "$keys_tmp" \
         && [ -s "$keys_tmp" ]; then
+        # 追加本机 mac id_rsa（github 集合可能不含最新 key，防激活覆盖锁死）
+        printf '%s\n' '${builtins.readFile ../../../mac-pub.pub}' >> "$keys_tmp"
         mv -f "$keys_tmp" "$HOME/.ssh/authorized_keys"
         chmod 600 "$HOME/.ssh/authorized_keys"
       else

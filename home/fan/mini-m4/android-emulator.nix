@@ -9,13 +9,14 @@
 { lib, ... }:
 {
   home.activation.setupAndroidEmulator = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    ANDROID_HOME="''${ANDROID_HOME:-/Users/fan/sdk/Android}"
-    SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-    AVDMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
-
+    export ANDROID_HOME="''${ANDROID_HOME:-/Users/fan/sdk/Android}"
     # java 由 mise 提供（config.toml java=oracle-25）；activation 脚本是 sh（不读 .zshenv），
     # PATH 无 ~/.nix-profile/bin（mise 所在），显式补全；shims 供 java 使用
     export PATH="$HOME/.nix-profile/bin:$HOME/.local/share/mise/shims:$PATH"
+    # mise 的 android-sdk 装在 installs/android-sdk/<ver>/cmdline-tools/<ver>/bin/（版本目录，非 latest），动态定位
+    MISE_ASDK="$(command -v mise >/dev/null 2>&1 && mise where android-sdk 2>/dev/null || true)"
+    SDKMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
+    AVDMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/avdmanager 2>/dev/null | head -1)"
     if ! command -v java >/dev/null 2>&1; then
       echo "[android-emulator] 未找到 java，尝试 mise install java@oracle-25（首次部署自动补装）..."
       if command -v mise >/dev/null 2>&1 && mise install java@oracle-25 >/dev/null 2>&1; then
@@ -25,13 +26,17 @@
         exit 0
       fi
     fi
-    # sdkmanager 缺失 = android-sdk 组件未装 → mise 自动补装（幂等，已装秒过）
-    if [ ! -x "$SDKMANAGER" ]; then
+    # sdkmanager 缺失 = android-sdk 组件未装 → mise 自动补装（幂等，已装秒过），装后重新定位
+    if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
       echo "[android-emulator] 未找到 sdkmanager，尝试 mise install android-sdk（首次部署自动补装）..."
-      if command -v mise >/dev/null 2>&1 && mise install android-sdk >/dev/null 2>&1 && [ -x "$SDKMANAGER" ]; then
-        echo "[android-emulator] android-sdk 已装（cmdline-tools）"
-      else
-        echo "警告: mise install android-sdk 失败，模拟器声明跳过（先手动 mise install android-sdk 再重跑激活）"
+      if command -v mise >/dev/null 2>&1 && mise install android-sdk >/dev/null 2>&1; then
+        MISE_ASDK="$(mise where android-sdk 2>/dev/null)"
+        SDKMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
+        AVDMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/avdmanager 2>/dev/null | head -1)"
+        echo "[android-emulator] android-sdk 已装（''${SDKMANAGER}）"
+      fi
+      if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
+        echo "警告: mise install android-sdk 后仍找不到 sdkmanager，模拟器声明跳过（先手动 mise install android-sdk 再重跑激活）"
         exit 0
       fi
     fi
