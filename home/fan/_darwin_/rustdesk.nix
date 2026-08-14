@@ -9,9 +9,11 @@
 #   - RustDesk 以 root LaunchDaemon（system 域 com.carriez.RustDesk_service）+ user LaunchAgent
 #     （--server）+ GUI 三进程常驻；root service 是配置权威，退出时（SIGTERM）写回内存配置
 #     → 直接注入文件会被覆盖，注入必须发生在 bootout 之后
+#   - GUI 会话在位时 root service 退化为 IPC-only，实际注册者是与登录用户绑定的 --server
+#     （LaunchAgent KeepAlive 常驻）→ 注入登录用户域（fan）+ root 域（无 GUI 会话时的注册源）
 #   - 所有 [options] 键必须写 RustDesk2.toml：RustDesk_local.toml 的 [options] 会被 GUI 启动时清空
-#   - 身份文件（RustDesk.toml）会被 1.4.9 启动时重置（外部身份注入失效，身份由 app 自生成，
-#     永久密码需各机 GUI 设置；不再用 agenix 注入身份）
+#   - 1.4.9 的 enable-udp-punch/enable-ipv6-punch 读 RustDesk_local.toml 的 [options]，自建服务器时
+#     local 无值强制 N → 两文件 [options] 全键双写
 
 { lib, ... }:
 let
@@ -24,14 +26,12 @@ in
   home.activation.setupRustDeskServer = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_rustdesk_server() {
       local dir="$HOME/Library/Preferences/com.carriez.RustDesk"
-      # service 以 root 跑（LaunchDaemon），配置域是 /var/root；GUI/--server 会话是 admin（tart VM 登录用户，uid 501），
-      # 配置域是 /Users/admin。仅注入 fan 域时 service/GUI 仍读默认值 → ID 注册到官方服务器。
-      # 实测（1.4.9）：GUI 会话在位时 service 退化为 IPC-only，注册者是 admin 的 --server（LaunchAgent KeepAlive 常驻），
-      #   故 admin 域必须与 root 域完全一致（含身份文件 RustDesk.toml，enc_id 同源 → GUI 显示的 ID = 注册的 ID）
+      # 注入两域：fan（GUI/--server 会话域，实际注册者）与 /var/root（root service 域，
+      #   无 GUI 会话时 service 全功能注册的配置源）。GUI 会话在位时 service 退化 IPC-only，
+      #   注册者是 --server（LaunchAgent KeepAlive 常驻，读登录用户域）
       local root_dir="/var/root/Library/Preferences/com.carriez.RustDesk"
-      local admin_dir="/Users/admin/Library/Preferences/com.carriez.RustDesk"
       mkdir -p "$dir"
-      sudo -n mkdir -p "$root_dir" "$admin_dir" 2>/dev/null || true
+      sudo -n mkdir -p "$root_dir" 2>/dev/null || true
 
       # 1. 停 root service（退出时会写回内存旧配置，注入必须在 bootout 之后）
       sudo -n launchctl bootout system/com.carriez.RustDesk_service 2>/dev/null || true
@@ -139,21 +139,15 @@ PYEOF
       sudo -n chmod 600 "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml
       rm -f "$INJECT"
 
-      # 4. admin 域直接复制 root 域结果（配置 + 身份文件统一 → GUI 显示 ID = --server 注册 ID）；
-      #    chown/chmod 用 sudo sh -c 展开 glob（fan 的 shell 无权读 admin 目录，直接 glob 会展开失败）
-      sudo -n cp "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml "$root_dir"/RustDesk.toml "$admin_dir"/ 2>/dev/null || true
-      sudo -n sh -c "chown admin:staff '$admin_dir'/*.toml && chmod 600 '$admin_dir'/*.toml" 2>/dev/null || true
-
-      # 5. 重启全部进程：sudo pkill（root 权限，fan 版 pkill 杀不掉 admin 的 --server）；
-      #    --server 由 LaunchAgent KeepAlive 自动拉起并读取刚注入的 admin 域配置；
+      # 4. 重启全部进程：sudo pkill（root 权限，fan 版 pkill 杀不掉其他用户的进程）；
+      #    --server 由 LaunchAgent KeepAlive 自动拉起并读取刚注入的登录用户域配置；
       #    清理残留 ipc socket，避免 service 误判已有实例退化为 IPC-only（不影响 --server 注册，仅求干净）
       sudo -n pkill -9 -f "RustDesk.app/Contents/MacOS" 2>/dev/null || true
       sudo -n rm -rf /tmp/RustDesk-0 /tmp/RustDesk-501 2>/dev/null || true
       sleep 1
       sudo -n launchctl bootstrap system /Library/LaunchDaemons/com.carriez.RustDesk_service.plist 2>/dev/null || true
 
-      # 6. GUI（admin 会话拉起，UID 501 为 tart VM 登录用户；--server 由 LaunchAgent 管理）
-      sudo -n launchctl asuser 501 open -a RustDesk 2>/dev/null || true
+      # 5. GUI 由用户自行打开（登录用户桌面）；--server 由 LaunchAgent 管理
     }
     setup_rustdesk_server
   '';

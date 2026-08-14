@@ -173,7 +173,7 @@ macos:
           av1_test: true         # AV1 测试
           check_update: false    # 不检查更新
           hwcodec: app 自管       # 硬件编解码（app 启动会重写该文件，静态声明已移除，GUI 可调）
-        deploy: 停service→注入三域→sudo重启 # 注入 fan/root/admin 三域：service(root) 读 /var/root 域、GUI/--server(admin 会话) 读 /Users/admin 域；admin 域含身份文件与 root 域同源（GUI 显示 ID = 注册 ID），--server 为实际注册者（GUI 会话在位时 service 退化 IPC-only）
+        deploy: 停service→注入两域→sudo重启 # 注入 fan + /var/root 两域（GUI 会话在位时 service 退化 IPC-only，注册者是登录用户的 --server 读 fan 域；root 域为无 GUI 会话时 service 全功能注册的配置源）；1.4.9 的 udp-punch 等键读 RustDesk_local.toml，两文件 [options] 全键双写
 
     secrets:                     # 密钥文件（agenix 加密入库）
 
