@@ -54,7 +54,8 @@ in
   home.packages = [
     # 关 installCheck：claude --version 在 nixbld（无 HOME）环境会死循环（99% CPU），
     # 构建本身没问题（npmmirror 裸二进制，见 overlays/claude-code.nix）
-    (pkgs.claude-code.overrideAttrs { doInstallCheck = false; })
+    # unstable 通道（周级 flake update 跟随，与 vscode 同机制；claudeOverlay 已应用到 unstable 实例）
+    (pkgs.repos.unstable.claude-code.overrideAttrs { doInstallCheck = false; })
     ccline
   ];
 

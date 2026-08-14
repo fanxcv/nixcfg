@@ -8,8 +8,8 @@
 
 { pkgs, lib, ... }:
 {
-  # codex 包（Rust 编译，nixpkgs 提供）
-  home.packages = [ pkgs.codex ];
+  # codex 包（Rust 编译，unstable 通道——周级 flake update 跟随，与 vscode 同机制）
+  home.packages = [ pkgs.repos.unstable.codex ];
 
   home.file.".codex/config.toml".text = ''
     model_provider = "fan"

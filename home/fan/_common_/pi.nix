@@ -6,8 +6,8 @@
 
 { pkgs, lib, ... }:
 {
-  # pi-coding-agent 包（npm 打包 buildNpmPackage，自带 node）
-  home.packages = [ pkgs.pi-coding-agent ];
+  # pi-coding-agent 包（npm 打包 buildNpmPackage，自带 node；unstable 通道——周级 flake update 跟随）
+  home.packages = [ pkgs.repos.unstable.pi-coding-agent ];
   # ---- pi 启动 wrapper（本机 ~/.pi/agent/bin/fpi 的 nix 化）----
   # fff 覆盖模式（PI_FFF_MODE=override），pi 由 nix 提供（原生二进制），不再依赖 mise node@22
   home.file.".local/bin/fpi" = {

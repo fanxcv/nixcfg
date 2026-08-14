@@ -23,10 +23,10 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     - rtk                      # RTK 工具
     - tmux                     # 终端复用（gpakosz 配置自动装）
     - beads                    # AI 记忆（bd）
-    - claude-code              # Claude Code CLI
+    - claude-code              # Claude Code CLI（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/claude.nix）
     - ccline                   # claude statusline
-    - codex                    # OpenAI Codex CLI
-    - pi-coding-agent          # pi agent
+    - codex                    # OpenAI Codex CLI（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/codex.nix）
+    - pi-coding-agent          # pi agent（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/pi.nix）
     - btop                     # 系统监控（所有机器）
 
   app_configs:                 # 跨平台应用级配置

@@ -32,9 +32,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # --- unstable 通道：仅个别需要新版本的包使用（vscode 本体 + 扩展市场，→ pkgs.repos.unstable）---
+    # --- unstable 通道：需要新版本的包使用（vscode 本体 + 扩展市场、claude-code/codex/pi，→ pkgs.repos.unstable）---
     # 锁 rev（flake.lock）+ 周级 nix flake update：unstable 滚动快、二进制保留期短于稳定分支，长时间不更新会掉缓存
-    # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix）
+    # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix、home/fan/_common_/{claude,codex,pi}.nix）
     unstable = {
       url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&shallow=1";
     };
@@ -131,8 +131,8 @@
       claudeOverlay = import ./overlays/claude-code.nix { inherit lib; };
       skemateOverlay = import ./overlays/skemate.nix { inherit lib; };
       # unstable/vscode 市场 overlay（pkgs.repos.unstable / pkgs.repos.vscode，定义见 overlays/）
-      # unstable 只服务 vscode：包本体（nixos）+ 扩展市场（mac/nixos），命中面压到最小
-      unstableOverlay = import ./overlays/unstable.nix { inherit inputs; };
+      # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ claude-code/codex/pi（_common_）
+      unstableOverlay = import ./overlays/unstable.nix { inherit inputs claudeOverlay; };
       vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
       # unfree 白名单：claude-code（镜像包）+ vscode 本体/扩展（unstable 通道，见 modules/home/vscode.nix；
       # pylance 为微软专有 license，remote-ssh 同理）
