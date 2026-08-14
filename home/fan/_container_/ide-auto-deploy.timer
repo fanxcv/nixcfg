@@ -1,0 +1,10 @@
+[Unit]
+Description=ide-auto-deploy 轮询 timer（每 60s，与 comin 默认轮询周期一致）
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target
