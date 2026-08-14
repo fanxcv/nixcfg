@@ -15,6 +15,7 @@
     fd
     jq
     rtk
+    btop
   ];
 
   programs.git = {

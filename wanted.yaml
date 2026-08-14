@@ -27,6 +27,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     - ccline                   # claude statusline
     - codex                    # OpenAI Codex CLI
     - pi-coding-agent          # pi agent
+    - btop                     # 系统监控（所有机器）
 
   app_configs:                 # 跨平台应用级配置
     git:                       # git 全局配置
@@ -46,6 +47,12 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       proxy: https://ai.qksxin.com
     pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
     mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器没指定 config.toml 时默认 node@lts，指定了整体覆盖，不引入 local.toml）
+    mirrors:                   # 开发工具国内镜像（→ home/fan/_common_/mirrors.nix，所有机器；useChinaMirror=false 时不写，默认官方源）
+      npm: npmmirror           # 装过 node 的机器：.npmrc registry
+      pip: 清华 TUNA           # python 机器：.config/pip/pip.conf
+      uv: 清华 TUNA            # uv 机器：.config/uv/uv.toml
+      go: goproxy.cn           # 装过 go 的机器：.config/go/env GOPROXY
+      flutter: flutter-io.cn   # flutter 机器：PUB_HOSTED_URL/FLUTTER_STORAGE_BASE_URL（环境变量，mise SDK 下载源不受影响）
 
   secrets:                     # 密钥约定（跨平台，→ home/fan/_common_/secrets.nix agenix）
     ai_env: agenix             # AI key（secrets/ai.env.age 激活时解密到 ~/.secrets/ai.env；mac=launchd、容器=激活期兜底解密）
@@ -164,16 +171,13 @@ macos:
           unlock_pin: ""         # 解锁 PIN（空）
           trusted_devices: 009GnjljLRT/b2k0DwCFQSXI6O   # 可信设备
           allow_remote_config_modification: true  # 允许远程改配置
-          password: GUI 设置       # 永久密码（1.4.9 重置外部身份，agenix 注入已移除，密码需各机 GUI 设置）
         general:                 # 常规块（注入 + 整文件声明）
           view_style: adaptive   # 视图样式（RustDesk_default.toml）
           keep_awake_incoming: false   # 来连时防睡眠
-          keep_awake_outgoing: true    # 外连时防睡眠（实机已开启）
+          keep_awake_outgoing: true    # 外连时防睡眠
           use_texture_render: true     # 纹理渲染
           av1_test: true         # AV1 测试
           check_update: false    # 不检查更新
-          hwcodec: app 自管       # 硬件编解码（app 启动会重写该文件，静态声明已移除，GUI 可调）
-        deploy: 停service→注入两域→sudo重启 # 注入 fan + /var/root 两域（GUI 会话在位时 service 退化 IPC-only，注册者是登录用户的 --server 读 fan 域；root 域为无 GUI 会话时 service 全功能注册的配置源）；1.4.9 的 udp-punch 等键读 RustDesk_local.toml，两文件 [options] 全键双写
 
     secrets:                     # 密钥文件（agenix 加密入库）
 
@@ -215,7 +219,7 @@ linux:
       - vim
       - curl
     docker: true                 # docker/compose/buildx + 自启 + fan 网络（NixOS/Alpine 真机；ide 容器 isContainer=true 直接移除，不装不跑）
-    mirrors: true                # npm/pip/uv 国内镜像（npm→npmmirror、pip/uv→清华 TUNA，→ home/fan/_linux_/mirror.nix；useChinaMirror=false 时直连官方）
+    mirrors: 已上提 global.app_configs.mirrors  # npm/pip/uv/go/flutter 镜像现为所有机器通用（→ home/fan/_common_/mirrors.nix）
   alpine:                        # Alpine 平台（→ home/fan/_alpine_/；暂无机器，仅平台层记录）
     pkgs:
       - busybox                  # Alpine 基础（完整 applet）
@@ -226,7 +230,7 @@ linux:
       - net-tools
       - inetutils
   container:                     # ← 容器平台层（→ home/fan/_container_/，继承 _ubuntu_ 系统基础；当前 ide-si / ide-lenovo）
-    ssh_host_key: 持久化          # sshd host key 存宿主机 docker/ide/ssh-keys/（entrypoint 生成/复用，→ docker/ide/ubuntu/entrypoint.sh），容器重建不换 key
+    ssh_host_key: agenix         
     ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
     file_backup: ".backup"       # 激活时手配文件冲突自动备份再覆盖（flake 入口注入 HOME_MANAGER_BACKUP_EXT）
     secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
@@ -237,9 +241,13 @@ linux:
       service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
       config: 宿主机挂载           # 配置不管理：docker/ide/skemate/ → /root/.config/skemate（compose 挂载）
     lazygit: true                # 终端 Git UI（→ home/fan/_container_/lazygit.nix，参考 tsln1998/nixcfg；只装 lazygit 不带 gitflow）
+    container_pkgs:              # 容器专属工具（→ home/fan/_container_/packages.nix）
+      http-server: nix 包        # 本地静态服务器（原 npm -g，改 nix）
+      unzip: nix 包              # 原手工 apt，改 nix
+      git-lfs: nix 包            # git 大文件（git lfs 命令在用）
+      libatomic1: maven 关联     # GCC runtime 库（apt 专属，nixpkgs 无对应包；激活脚本 grep config.toml 有 maven 才 apt 装，dpkg 判断幂等）
     auto_deploy: timer 轮询 60s  # 配置自动部署（→ home/fan/_container_/ide-auto-deploy.{nix,sh,service,timer}）：git pull --ff-only → HEAD 变更才 nix run .#<机器>；状态 /var/lib/ide-auto-deploy/last（重建后清空→首轮自动激活）；不用 comin（只认 nixos/darwin 输出且需 NixOS 系统）
     ide-si:                      # ← 机器（原 si-11-ide 更名，hostname=ide-si；激活：nix run .#ide-si）
-      ssh_host_key: agenix       # SSH host key 固定（secrets/hosts/<host>/ssh_host_ed25519_key.age，与 nix-pve 同构；激活解密到 /etc/ssh-host-keys/ 并同步 sshd，compose 无挂载，重建后激活即恢复固定 key，→ home/fan/_container_/ssh-host-key.nix）
       proxy: true                # 走代理（已由 nix 接管：compose 原代理变量/extra_hosts 已删 → home/fan/ide-si/sysenv.nix，nix run 激活即生效；JVM 不读 shell 代理，JAVA_TOOL_OPTIONS 注入）
       sysenv: 接管环境变量+hosts  # 替代 compose environment/extra_hosts，免重建容器：代理/NO_PROXY/JAVA_TOOL_OPTIONS → /etc/environment.d + .zshenv + ~/.ssh/environment；内网 hosts（gitlab/maven.hzdev.cn → 10.1.0.30）→ 激活幂等追加 + oneshot 启动恢复（仅本机）
       mise:                      # mise 运行时组件（→ home/fan/ide-si/mise.nix，激活自动 mise install 缺失组件）
@@ -251,7 +259,6 @@ linux:
         - python@3.12
         - uv@latest
     ide-lenovo:                  # ← 机器（激活：nix run .#ide-lenovo）
-      ssh_host_key: agenix       # SSH host key 固定（同 ide-si，→ home/fan/_container_/ssh-host-key.nix）
       proxy: false               # 国内机器直连，不需要
       mise:                      # java 默认 oracle-17，另有 pipx（→ home/fan/ide-lenovo/mise.nix）
         - bun@latest
