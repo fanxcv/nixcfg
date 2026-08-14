@@ -237,7 +237,6 @@ linux:
       service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
       config: 宿主机挂载           # 配置不管理：docker/ide/skemate/ → /root/.config/skemate（compose 挂载）
     auto_deploy: timer 轮询 60s  # 配置自动部署（→ home/fan/_container_/ide-auto-deploy.{nix,sh,service,timer}）：git pull --ff-only → HEAD 变更才 nix run .#<机器>；状态 /var/lib/ide-auto-deploy/last（重建后清空→首轮自动激活）；不用 comin（只认 nixos/darwin 输出且需 NixOS 系统）
-    entrypoint_activate: 重建即激活 # compose 重建时 entrypoint 前台跑一次 nix run .#<机器>（→ docker/ide/ubuntu/entrypoint.sh，机器名取 compose IDE_MACHINE，缺省 ide-si）：重建后 home 丢失需恢复，nix store 为持久卷增量构建快；失败不阻塞启动（轮询重试）；代理从 /etc/environment.d 按 KEY 提取（整文件 source 会被 JAVA_TOOL_OPTIONS 行搞挂）
     ide-si:                      # ← 机器（原 si-11-ide 更名，hostname=ide-si；激活：nix run .#ide-si）
       ssh_host_key: agenix       # SSH host key 固定（secrets/hosts/<host>/ssh_host_ed25519_key.age，与 nix-pve 同构；激活解密到 /etc/ssh-host-keys/ 并同步 sshd，compose 无挂载，重建后激活即恢复固定 key，→ home/fan/_container_/ssh-host-key.nix）
       proxy: true                # 走代理（已由 nix 接管：compose 原代理变量/extra_hosts 已删 → home/fan/ide-si/sysenv.nix，nix run 激活即生效；JVM 不读 shell 代理，JAVA_TOOL_OPTIONS 注入）
