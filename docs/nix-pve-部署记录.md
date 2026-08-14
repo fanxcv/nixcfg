@@ -165,5 +165,5 @@
 ### 遗留项
 
 - tailscale 重新登录（全新系统 Logged out）
-- 镜像构建产物留存：/root/cloud-img-result2/（PVE），后续重置可直接复用
+- 镜像构建产物已清理（2026-08-14 同日，nix-collect-garbage 释放 7.1G）；镜像自建方法可复现（见上文"新方法"）
 - PVE 已装 Determinate Nix（以后构建/复用镜像用）
