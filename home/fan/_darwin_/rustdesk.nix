@@ -24,7 +24,13 @@ in
   home.activation.setupRustDeskServer = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_rustdesk_server() {
       local dir="$HOME/Library/Preferences/com.carriez.RustDesk"
+      # service 以 root 跑（LaunchDaemon），配置域是 /var/root；GUI 会话是 admin（tart VM 登录用户），
+      # 配置域是 /Users/admin。仅注入 fan 域时 service/GUI 仍读默认值 → ID 注册到官方服务器。
+      # 三域全部注入：fan（HM 用户）/ root（service 权威）/ admin（GUI 会话）
+      local root_dir="/var/root/Library/Preferences/com.carriez.RustDesk"
+      local admin_dir="/Users/admin/Library/Preferences/com.carriez.RustDesk"
       mkdir -p "$dir"
+      sudo -n mkdir -p "$root_dir" "$admin_dir" 2>/dev/null || true
 
       # 1. 停所有 RustDesk 进程：先 user 进程（GUI/--server），再 root service（bootout）
       #    root service 退出时会写回内存旧配置，所以注入必须在 bootout 之后
@@ -33,8 +39,9 @@ in
       sudo -n launchctl bootout system/com.carriez.RustDesk_service 2>/dev/null || true
       sleep 1
 
-      # 2. 注入配置（全键写 RustDesk2.toml；local 只写顶层 kb_layout_type）
-      python3 - "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}" <<'PYEOF'
+      # 2. 注入脚本落盘（三域共用；顶层字段替换/补开头，[options] 段字段替换/补段，其余原样保留）
+      INJECT="/tmp/rustdesk_inject.py"
+      cat > "$INJECT" <<'PYEOF'
 import re
 import sys
 
@@ -113,9 +120,18 @@ apply_updates(
     {},
 )
 PYEOF
-      chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
 
-      # 3. 重启：root service（读注入后的文件）+ GUI（连带拉起 --server）
+      # 3. 注入三域（先 fan 后 root/admin；sudo -n 依赖 sudoers NOPASSWD，激活环境已验证可用）
+      python3 "$INJECT" "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
+      chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
+      sudo -n python3 "$INJECT" "$root_dir/RustDesk2.toml" "$root_dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
+      sudo -n chmod 600 "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml
+      sudo -n python3 "$INJECT" "$admin_dir/RustDesk2.toml" "$admin_dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
+      sudo -n chown admin:staff "$admin_dir"/RustDesk2.toml "$admin_dir"/RustDesk_local.toml 2>/dev/null || true
+      sudo -n chmod 600 "$admin_dir"/RustDesk2.toml "$admin_dir"/RustDesk_local.toml
+      rm -f "$INJECT"
+
+      # 4. 重启：root service（读注入后的文件）+ GUI（连带拉起 --server）
       sudo -n launchctl bootstrap system /Library/LaunchDaemons/com.carriez.RustDesk_service.plist 2>/dev/null || true
       open -a RustDesk 2>/dev/null || true
     }
