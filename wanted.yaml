@@ -46,7 +46,9 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     claude:                    # claude code
       proxy: https://ai.qksxin.com
     pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
+      token_env: PI_CONFIG_GIT_TOKEN  # 全局环境变量：从 ~/.secrets/ai.env 读取（global.secrets.ai_env），clone 后清 origin
     mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器没指定 config.toml 时默认 node@lts，指定了整体覆盖，不引入 local.toml）
+      - node@lts
     mirrors:                   # 开发工具国内镜像（→ home/fan/_common_/mirrors.nix，所有机器；useChinaMirror=false 时不写，默认官方源）
       npm: npmmirror           # 装过 node 的机器：.npmrc registry
       pip: 清华 TUNA           # python 机器：.config/pip/pip.conf
@@ -234,8 +236,6 @@ linux:
     ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
     file_backup: ".backup"       # 激活时手配文件冲突自动备份再覆盖（flake 入口注入 HOME_MANAGER_BACKUP_EXT）
     secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
-    pi:                          # pi agent 配置（~/.pi/agent，clone 用 ai.env 的 PI_CONFIG_GIT_TOKEN）
-      token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai.env 读取，clone 后清 origin
     skemate:                     # 自研终端复用服务（→ overlays/skemate.nix + home/fan/_container_/skemate.nix，两台共用一份）
       version: 0.5.72            # latest.json 最新版（linux-amd64 / darwin-arm64）
       service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
