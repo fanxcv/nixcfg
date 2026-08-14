@@ -173,7 +173,7 @@ macos:
           av1_test: true         # AV1 测试
           check_update: false    # 不检查更新
           hwcodec: app 自管       # 硬件编解码（app 启动会重写该文件，静态声明已移除，GUI 可调）
-        deploy: 停service→注入→重启 # 激活时先 bootout root service 再注入（service 退出会写回旧配置覆盖文件，→ rustdesk.nix）
+        deploy: 停service→注入三域→sudo重启 # 注入 fan/root/admin 三域：service(root) 读 /var/root 域、GUI/--server(admin 会话) 读 /Users/admin 域；admin 域含身份文件与 root 域同源（GUI 显示 ID = 注册 ID），--server 为实际注册者（GUI 会话在位时 service 退化 IPC-only）
 
     secrets:                     # 密钥文件（agenix 加密入库）
 
