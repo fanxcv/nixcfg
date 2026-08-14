@@ -99,3 +99,71 @@
 - macOS tar 会混入 ._* AppleDouble 文件 → 传输用 git push/pull，不用 tar
 - LVM label 在 sector 1（512B 偏移），恢复时别复制到 sector 0
 - 目标机源码目录直接用 git clone（comin 同仓库），不要 tar 解压
+
+## Cloud-init 重部署复盘（2026-08-14）
+
+> 场景：重置 VM 101，用 cloud-init 方式从头部署（双盘法），全程记录耗时。
+> 结论：核心自动化（cloud-init 生效 ~2min + disko 5s + nixos-install ~16min + comin 接管）远快于
+> nixos-anywhere 方案；墙钟 6.5h 的大头在镜像准备踩坑与首次激活修复。
+
+### 新方法：双盘法（cloud-init 宿主 + 独立目标盘）
+
+```
+阶段1  cloud-init 引导（SeaBIOS + 10G cloud image 宿主盘）
+         ├─ VM101: scsi0=10G cloud镜像（宿主, /dev/sda）, virtio0=128G（目标, /dev/vda）
+         ├─ cloud-init 注入: nixos用户/SSH key/密码/DHCP（PVE cidata NoCloud seed）
+         └─ 验证: hostname/用户/sudo/authorized_keys 全部生效（boot→SSH ~2min）
+阶段2  disko + nixos-install（SSH 内执行, ~16min）
+         ├─ /root/.config/nix/nix.conf 配 USTC substituters
+         ├─ disko 分区 /dev/vda（LVM: boot 1G/nix 48G/persist 40G, 5s）
+         ├─ age 私钥 → /mnt/persist/home/fan/.secrets/age-keys.txt（agenix 激活必需）
+         ├─ git clone 仓库（git.fan-x.fun 凭据）→ /persist/etc/nixos
+         └─ HTTPS_PROXY=10.2.236.20:7890 nixos-install --flake .#nix-pve --root /mnt
+             闭包走 USTC（~2.5GB），github inputs（nixpkgs/agenix/comin）走代理
+阶段3  换盘启动（PVE 操作）
+         ├─ shutdown → detach scsi0 → bios=ovmf + efidisk0 → boot order=virtio0
+         └─ 128G 盘（virtio-blk, /dev/vda）与仓库 disks.nix 完全一致，零配置修改
+阶段4  comin 接管（自动验证）
+         └─ push 修复 commit → comin 自动 build+switch → Deployment succeeded
+```
+
+### 本次新问题（按发生顺序）
+
+1. **官方 cloud image 已不可得**：channels.nixos.org 的 qcow2 404、hydra release-26.05 的
+   openstack_image job 已移除、nix-community/nixos-images 只发 netboot/kexec/iso
+   → PVE 装 Determinate Nix（Debian 13 支持），用 nixpkgs 源码（USTC 通道 rev 恰与
+   flake.lock 同 commit 9f78f44a8794）自建 openstack 镜像（make-disk-image, ~13min）
+2. **官方 openstack 镜像不用 cloud-init**：openstack-config.nix 是自家 metadata fetcher
+   （OpenStack JSON 格式），不认 PVE 的 NoCloud cidata → 自建时去掉 openstack-config.nix，
+   换成 services.cloud-init.enable = true + default_user=nixos + NixOS DHCP
+3. **镜像 initrd 缺 virtio 驱动**：没导入 qemu-guest profile → 盘认不出 → systemd
+   emergency（Timed out waiting for /dev/disk/by-label/nixos）→ 补
+   boot.initrd.availableKernelModules = [virtio_pci virtio_scsi virtio_blk virtio_net]
+4. **home-manager 首次激活失败**：/persist/home/fan 是 root 所有（scp 注入 age 私钥时
+   创建的），hm-activate 写 /home/fan/.nix-profile.lock Permission denied
+   → VM 停止后 qemu-nbd + vgchange -ay 挂 /persist，chown -R 1000:100（本次仅此一处
+   home-manager 失败，无上次的 nix-daemon/oh-my-zsh/ssh 覆盖连锁）
+5. **nix-pve 配置暴露 bug**：shells.nix envExtra 写死 . /nix/var/nix/profiles/default/
+   etc/profile.d/nix.sh（darwin/容器路径），NixOS 无此路径 → zsh 每次启动报错
+   → 按 platform 跳过（commit 23346af，comin 自动部署修复）
+
+### 关键经验
+
+1. **virtio-scsi → /dev/sdX，virtio-blk → /dev/vdX**：目标盘挂 virtio0 可零修改复用
+   仓库 disks.nix；宿主盘用 scsi0 避免盘名冲突
+2. **nixos-install 的闭包直进 /mnt/nix**（--store 语义），宿主 /nix 只需放工具，
+   宿主盘 10G 足够，无需预热构建
+3. **age 私钥必须在 nixos-install 前放进 /mnt/persist/home/fan/.secrets/**，且 owner
+   要是 fan（root 会导致 hm 激活失败）
+4. **USTC nix-channels 的 git-revision 与 flake.lock 对齐时可零网络风险拉源码**：
+   nixexprs.tar.xz（40MB）即 nixpkgs 完整源码
+5. **flake inputs 走 HTTPS_PROXY 代理**（github tarball），闭包走 USTC——nixos-install
+   前 export 即可，无需改系统配置
+6. cloud-init 镜像自建路径：nixpkgs/nixos/maintainers/scripts/openstack/ 下仿
+   openstack-image.nix + make-disk-image，构建机在 PVE（/root/nixpkgs + cloud-init-image.nix）
+
+### 遗留项
+
+- tailscale 重新登录（全新系统 Logged out）
+- 镜像构建产物留存：/root/cloud-img-result2/（PVE），后续重置可直接复用
+- PVE 已装 Determinate Nix（以后构建/复用镜像用）
