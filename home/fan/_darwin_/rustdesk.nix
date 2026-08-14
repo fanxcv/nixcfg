@@ -24,22 +24,20 @@ in
   home.activation.setupRustDeskServer = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_rustdesk_server() {
       local dir="$HOME/Library/Preferences/com.carriez.RustDesk"
-      # service 以 root 跑（LaunchDaemon），配置域是 /var/root；GUI 会话是 admin（tart VM 登录用户），
+      # service 以 root 跑（LaunchDaemon），配置域是 /var/root；GUI/--server 会话是 admin（tart VM 登录用户，uid 501），
       # 配置域是 /Users/admin。仅注入 fan 域时 service/GUI 仍读默认值 → ID 注册到官方服务器。
-      # 三域全部注入：fan（HM 用户）/ root（service 权威）/ admin（GUI 会话）
+      # 实测（1.4.9）：GUI 会话在位时 service 退化为 IPC-only，注册者是 admin 的 --server（LaunchAgent KeepAlive 常驻），
+      #   故 admin 域必须与 root 域完全一致（含身份文件 RustDesk.toml，enc_id 同源 → GUI 显示的 ID = 注册的 ID）
       local root_dir="/var/root/Library/Preferences/com.carriez.RustDesk"
       local admin_dir="/Users/admin/Library/Preferences/com.carriez.RustDesk"
       mkdir -p "$dir"
       sudo -n mkdir -p "$root_dir" "$admin_dir" 2>/dev/null || true
 
-      # 1. 停所有 RustDesk 进程：先 user 进程（GUI/--server），再 root service（bootout）
-      #    root service 退出时会写回内存旧配置，所以注入必须在 bootout 之后
-      pkill -9 -f "RustDesk.app/Contents/MacOS" 2>/dev/null || true
-      sleep 1
+      # 1. 停 root service（退出时会写回内存旧配置，注入必须在 bootout 之后）
       sudo -n launchctl bootout system/com.carriez.RustDesk_service 2>/dev/null || true
       sleep 1
 
-      # 2. 注入脚本落盘（三域共用；顶层字段替换/补开头，[options] 段字段替换/补段，其余原样保留）
+      # 2. 注入脚本落盘（fan/root 域共用；顶层字段替换/补开头，[options] 段字段替换/补段，其余行原样保留）
       INJECT="/tmp/rustdesk_inject.py"
       cat > "$INJECT" <<'PYEOF'
 import re
@@ -121,19 +119,28 @@ apply_updates(
 )
 PYEOF
 
-      # 3. 注入三域（先 fan 后 root/admin；sudo -n 依赖 sudoers NOPASSWD，激活环境已验证可用）
+      # 3. 注入 fan + root 域（sudo -n 依赖 sudoers NOPASSWD，激活环境已验证可用）
       python3 "$INJECT" "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
       chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
       sudo -n python3 "$INJECT" "$root_dir/RustDesk2.toml" "$root_dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
       sudo -n chmod 600 "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml
-      sudo -n python3 "$INJECT" "$admin_dir/RustDesk2.toml" "$admin_dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
-      sudo -n chown admin:staff "$admin_dir"/RustDesk2.toml "$admin_dir"/RustDesk_local.toml 2>/dev/null || true
-      sudo -n chmod 600 "$admin_dir"/RustDesk2.toml "$admin_dir"/RustDesk_local.toml
       rm -f "$INJECT"
 
-      # 4. 重启：root service（读注入后的文件）+ GUI（连带拉起 --server）
+      # 4. admin 域直接复制 root 域结果（配置 + 身份文件统一 → GUI 显示 ID = --server 注册 ID）；
+      #    chown/chmod 用 sudo sh -c 展开 glob（fan 的 shell 无权读 admin 目录，直接 glob 会展开失败）
+      sudo -n cp "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml "$root_dir"/RustDesk.toml "$admin_dir"/ 2>/dev/null || true
+      sudo -n sh -c "chown admin:staff '$admin_dir'/*.toml && chmod 600 '$admin_dir'/*.toml" 2>/dev/null || true
+
+      # 5. 重启全部进程：sudo pkill（root 权限，fan 版 pkill 杀不掉 admin 的 --server）；
+      #    --server 由 LaunchAgent KeepAlive 自动拉起并读取刚注入的 admin 域配置；
+      #    清理残留 ipc socket，避免 service 误判已有实例退化为 IPC-only（不影响 --server 注册，仅求干净）
+      sudo -n pkill -9 -f "RustDesk.app/Contents/MacOS" 2>/dev/null || true
+      sudo -n rm -rf /tmp/RustDesk-0 /tmp/RustDesk-501 2>/dev/null || true
+      sleep 1
       sudo -n launchctl bootstrap system /Library/LaunchDaemons/com.carriez.RustDesk_service.plist 2>/dev/null || true
-      open -a RustDesk 2>/dev/null || true
+
+      # 6. GUI（admin 会话拉起，UID 501 为 tart VM 登录用户；--server 由 LaunchAgent 管理）
+      sudo -n launchctl asuser 501 open -a RustDesk 2>/dev/null || true
     }
     setup_rustdesk_server
   '';
