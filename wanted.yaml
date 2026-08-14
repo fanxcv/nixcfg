@@ -280,7 +280,9 @@ nixos:
     platform: qemu-vm            # PVE 虚拟机（virtio 磁盘 / GRUB EFI / OVMF，见 hosts/nix-pve/hardware.nix）
     disk: 128G                   # LVM：boot 1G + nix 48G + persist 40G + tmpfs 根（余量 lvextend 可扩）
     desktop: plasma6             # KDE Plasma 6 + SDDM（Wayland）+ 中文输入（fcitx5 拼音）
-    apps: [edge, bitwarden, vscode]  # GUI 应用（对齐 mac；rustdesk/clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install；vscode 走 unstable 包 → modules/home/vscode.nix）
+    theme: catppuccin-latte + papirus  # Catppuccin 主题（latte 亮色 + blue 强调）+ Papirus 亮色图标 + konsole 终端（mocha 配色，→ home/fan/_nixos_/gui/plasma.nix；配色包 nixpkgs 无，固定 rev 自打包 → packages/catppuccin/konsole.nix）
+    ui_lang: zh_CN                    # KDE 界面中文（plasma-localerc，只影响界面；终端/SSH 保持 en_US，与 mac 的 AppleLanguages 策略一致）
+    apps: [edge, bitwarden, vscode, rustdesk]  # GUI 应用（对齐 mac；rustdesk 走官方 GitHub release 二进制包，免源码编译 → packages/rustdesk-bin.nix，hbbs 配置注入 → home/fan/nix-pve/rustdesk.nix；clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install；vscode 走 unstable 包 → modules/home/vscode.nix）
     comin: true                  # git 驱动自动部署（git.fan-x.fun 私有仓库，凭据走 /root/.git-credentials agenix）
     tailscale: 安装+服务           # 仅安装与启用（headscale/登录用户手动处理，state 就绪后再分机器声明式管理，→ hosts/nix-pve/services/tailscale.nix）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）

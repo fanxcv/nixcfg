@@ -242,10 +242,11 @@
       nixosConfigurations.nix-pve = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         # 与 mkHomeConfig 同款 pkgs：overlay 注入 + unfree 放行（unfreeAllowlist + microsoft-edge / libsciter[clash-verge-rev]）
+        # 本地包（packages/，catppuccin-konsole 等）以 overlay 并入（home 层 useGlobalPkgs 直接用）
         pkgs = import nixpkgs {
           system = "x86_64-linux";
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) (unfreeAllowlist ++ [ "microsoft-edge" "libsciter" ]);
-          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay ];
+          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay (final: prev: import ./packages prev) ];
         };
         modules = [ ./hosts/nix-pve ];
         specialArgs = {
