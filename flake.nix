@@ -1,7 +1,7 @@
 {
   description = "fan 的 Nix 配置仓库（多机共用，结构参考 tsln1998/nixcfg）";
 
-  # 二进制缓存默认走国内镜像（与 install.sh 生成的 /etc/nix/nix.conf 一致）
+  # 二进制缓存默认走国内镜像（与 Dockerfile 生成的 /root/.config/nix/nix.conf 一致）
   # 优先级：命令行 --option > 环境变量 NIX_CONFIG > /etc/nix/nix.conf > 这里的 nixConfig
   # 临时跳过：nix run --option substituters https://cache.nixos.org/ ...
   nixConfig = {
