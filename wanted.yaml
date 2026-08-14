@@ -205,6 +205,7 @@ macos:
       - node@24                 # 本机 node 主版本（config.local.toml 已废弃删除，各机器自行声明）
       - python@3
     android_emulator: 声明式   # 模拟器（java/android-sdk 由 mise 补装、emulator/镜像由 sdkmanager 自动安装，均幂等；AVD 就位后创建，→ home/fan/mini-m4/android-emulator.nix）
+    skemate: 包+配置            # 终端复用服务（→ home/fan/mini-m4/skemate.nix）：包走 overlays/skemate.nix；tunnel.yaml/config.json 由 nix 管理（密钥走 agenix，secrets/hosts/mini-m4/），其余运行时文件不管；服务手工启动
     power:                       # 电源策略（pmset，→ hosts/mini-m4/power.nix）
       ac_sleep: 0                # 永不睡眠
       ac_display_sleep: 10       # 10 分钟关屏
