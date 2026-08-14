@@ -21,8 +21,9 @@
       : > "$keys_tmp"
       if ${pkgs.curl}/bin/curl -sfL https://github.com/fanxcv.keys -o "$keys_tmp" \
         && [ -s "$keys_tmp" ]; then
-        # 追加本机 mac id_rsa（github 集合可能不含最新 key，防激活覆盖锁死）
-        printf '%s\n' '${builtins.readFile ../../../mac-pub.pub}' >> "$keys_tmp"
+        # 追加本机 mac 身份公钥（secrets/hosts/mini-m4/ssh_id_rsa.pub，即原 mac-pub.pub；
+        # github 集合可能不含最新 key，防激活覆盖锁死）
+        printf '%s\n' '${builtins.readFile ../../../secrets/hosts/mini-m4/ssh_id_rsa.pub}' >> "$keys_tmp"
         mv -f "$keys_tmp" "$HOME/.ssh/authorized_keys"
         chmod 600 "$HOME/.ssh/authorized_keys"
       else
