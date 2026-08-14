@@ -26,15 +26,14 @@ services:
       - ./mise/state:/root/.local/state/mise
       - ./mise/config:/root/.config/mise
       - ./mise/cache:/root/.cache/mise
-      - ./skemate:/root/.config/skemate
+      - ./go:/root/go
       - ./vsc:/root/.vscode-server
-      - ~/.config/uv:/root/.config/uv
+      - ./skemate:/root/.config/skemate
       - ~/.claude.json:/root/.claude.json
       - ~/.claude:/root/.claude
       - ~/.codex:/root/.codex
       - ~/.pi:/root/.pi
       - ./.m2:/root/.m2
-      - ./go:/root/go
       - /ficc:/ficc
       # nix 配置仓库：compose 位于仓库内 docker/ide/，挂载仓库根（../../）；容器内不 clone
       - ./nixcfg:/root/nixcfg
