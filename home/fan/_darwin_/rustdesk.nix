@@ -109,17 +109,30 @@ apply_updates(
     },
 )
 
-# RustDesk_local.toml：只写顶层 kb_layout_type（[options] 交给 GUI 自管，写入会被清空）
+# RustDesk_local.toml：也写 [options] 全键——1.4.9 的 get_udp_punch_enabled/get_local_option 读 local，
+# 且 local 无值 + 自建服务器时强制返回 N（即使 RustDesk2.toml 有 Y）；实测 local [options] 注入后不被 GUI 清空
 apply_updates(
     rdlocal,
     {
         "kb_layout_type": "'''",                      # 常规：键盘布局
     },
-    {},
+    {
+        "enable-udp-punch": "'Y'",                   # 网络：UDP 打洞（读 local！）
+        "enable-ipv6-punch": "'Y'",                  # 网络：IPv6 打洞（读 local！）
+        "direct-server": "'Y'",                      # 网络：直连优先
+        "allow-remote-config-modification": "'Y'",   # 安全：允许远程改配置
+        "keep-awake-during-incoming-sessions": "'N'",  # 常规：来连时防睡眠
+        "keep-awake-during-outgoing-sessions": "'Y'",  # 常规：外连时防睡眠
+        "use-texture-render": "'Y'",                 # 常规：纹理渲染
+        "enable-check-update": "'N'",                # 常规：不检查更新
+        "av1-test": "'Y'",                           # 常规：AV1 测试
+    },
 )
 PYEOF
 
-      # 3. 注入 fan + root 域（sudo -n 依赖 sudoers NOPASSWD，激活环境已验证可用）
+      # 3. 注入 fan + root 域（sudo -n 依赖 sudoers NOPASSWD，激活环境已验证可用）；
+      #    local 与 RustDesk2 双写：1.4.9 的 enable-udp-punch/enable-ipv6-punch 读 RustDesk_local.toml 的
+      #    [options]，自建服务器时 local 无值强制 N（即使 RustDesk2.toml 有 Y）
       python3 "$INJECT" "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
       chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
       sudo -n python3 "$INJECT" "$root_dir/RustDesk2.toml" "$root_dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
