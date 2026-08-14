@@ -5,9 +5,12 @@
 #   useChinaMirror=false（NixOS 真机国外直连场景）→ 直连 GitHub 原始地址
 # 注意：clone 的 origin 即安装地址，oh-my-zsh 自动更新 / omz update 天然走同一通道
 
-{ pkgs, lib, self, useChinaMirror ? true, ... }:
+{ pkgs, lib, self, platform ? "container", useChinaMirror ? true, ... }:
 let
   useProxy = if useChinaMirror then "https://gh-proxy.com/" else "";
+  # NixOS 的 nix 由系统 profile 提供（/run/current-system/sw），无 /nix/var/nix/profiles/default；
+  # 仅容器/darwin 单用户 nix 需要 source nix.sh 加载 PATH
+  nixShSource = lib.optionalString (platform != "nixos") ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n";
   # 安装 + 后期更新的仓库地址（对应脚本 REMOTE=...ohmyzsh.git）
   ohMyZshRepo = useProxy + "https://github.com/ohmyzsh/ohmyzsh.git";
   themeSource = "${self}/home/fan/_common_/themes/fishy.zsh-theme";
@@ -21,7 +24,7 @@ in
     # nix.sh 加载由 HM 接管（Dockerfile 不再写 ~/.zshenv ~/.zshrc，避免 clobber）：
     #   envExtra → ~/.zshenv（zsh 所有模式，含 ssh 远程命令）
     #   initContent 末尾再 source 一次 → ~/.zshrc 双保险（原 Dockerfile 同款语义）
-    envExtra = ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n";
+    envExtra = nixShSource;
     initContent = ''
       # ---- oh-my-zsh（git clone 方式，安装/更新见下方 home.activation）----
       plugins=(git zsh-syntax-highlighting zsh-autosuggestions mise)
@@ -39,8 +42,8 @@ in
       alias la='ls -A'
       alias untar='tar -xzf'
 
-      # nix 双保险（envExtra 已 source 过，此处幂等）
-      . /nix/var/nix/profiles/default/etc/profile.d/nix.sh
+      # nix 双保险（envExtra 已 source 过，此处幂等；NixOS 无该路径，跳过）
+      ${lib.optionalString (platform != "nixos") ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh"}
     '';
   };
 
