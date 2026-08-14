@@ -161,7 +161,9 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = lib.mkMerge [
+    # 客户端（vscode.enable）：mac/nixos 平台层启用
+    (lib.mkIf cfg.enable {
     programs.vscode = {
       enable = true;
       package = cfg.package;
@@ -189,27 +191,29 @@ in
         };
       };
     };
+    })
 
-    # vscode-server（容器远程开发）：server 端扩展由 nix 锁定，目录链接到 store
-    home.file.".vscode-server/extensions" = lib.mkIf cfg.server.enable {
-      source = pkgs.buildEnv {
-        name = "vscode-server-extensions";
-        paths = serverExtensions ++ cfg.server.extensions;
-        pathsToLink = [ "/share/vscode/extensions" ];
-        postBuild = ''
-          ln -s $out/share/vscode/extensions/* $out/ 2>/dev/null || true
-          rm -rf $out/share
-        '';
+    # vscode-server（容器远程开发）：独立于 vscode.enable——容器只开 server 不开客户端
+    # （vscode-server.nix 仅设 server.enable = true；若挂在 cfg.enable 下链接永远不会生成）
+    (lib.mkIf cfg.server.enable {
+      home.file.".vscode-server/extensions" = {
+        source = pkgs.buildEnv {
+          name = "vscode-server-extensions";
+          paths = serverExtensions ++ cfg.server.extensions;
+          pathsToLink = [ "/share/vscode/extensions" ];
+          postBuild = ''
+            ln -s $out/share/vscode/extensions/* $out/ 2>/dev/null || true
+            rm -rf $out/share
+          '';
+        };
+        recursive = true;
       };
-      recursive = true;
-    };
-    # 清掉客户端手装的旧扩展目录（nix 接管后目录只读；不清理时 ln 会失败）
-    home.activation.vscodeServerExtensions = lib.mkIf cfg.server.enable (
-      lib.hm.dag.entryBefore [ "linkGeneration" ] ''
+      # 清掉客户端手装的旧扩展目录（nix 接管后目录只读；不清理时 ln 会失败）
+      home.activation.vscodeServerExtensions = lib.hm.dag.entryBefore [ "linkGeneration" ] ''
         if [ -d "$HOME/.vscode-server/extensions" ] && [ ! -L "$HOME/.vscode-server/extensions" ]; then
           rm -rf "$HOME/.vscode-server/extensions"
         fi
-      ''
-    );
-  };
+      '';
+    })
+  ];
 }

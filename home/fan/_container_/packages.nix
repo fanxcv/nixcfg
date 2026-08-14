@@ -16,11 +16,13 @@
     # libatomic1 关联 maven：config.toml（../mise.nix 声明，激活顺序 writeBoundary 之后已就位）有 maven 才装
     if grep -q '^maven' /root/.config/mise/config.toml 2>/dev/null; then
       if ! dpkg -s libatomic1 >/dev/null 2>&1; then
-        apt-get update -qq >/dev/null 2>&1 || true
-        if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libatomic1 >/dev/null 2>&1; then
+        APT_LOG=/tmp/container-apt.log
+        apt-get update -qq >"$APT_LOG" 2>&1 || true
+        if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libatomic1 >>"$APT_LOG" 2>&1; then
           echo "[container-apt] libatomic1 已安装（maven 依赖）"
         else
-          echo "警告: libatomic1 安装失败（下次激活重试）"
+          echo "警告: libatomic1 安装失败（下次激活重试；日志 /tmp/container-apt.log，尾部）："
+          tail -n 6 "$APT_LOG" 2>/dev/null | sed 's/^/  /'
         fi
       fi
     fi

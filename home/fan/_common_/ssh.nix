@@ -66,10 +66,15 @@
        rm -f "$sshd_config.hm-bak"
       if [ "$before" != "$after" ]; then
         echo "===> sshd_config 已变更，重启 sshd"
-         rc-service sshd restart 2>/dev/null \
-          ||  systemctl restart ssh 2>/dev/null \
-          ||  systemctl restart sshd 2>/dev/null \
-          || echo "警告: sshd 重启失败，请手动重启"
+        # failed 状态会让 restart 直接报错（如上次重启中断），先清状态
+        systemctl reset-failed ssh 2>/dev/null || true
+        if ! (rc-service sshd restart 2>/dev/null \
+          || systemctl restart ssh 2>/dev/null \
+          || systemctl restart sshd 2>/dev/null); then
+          echo "警告: sshd 重启失败，请手动重启；诊断信息（status/journal 尾部）："
+          systemctl status ssh --no-pager 2>/dev/null | tail -n 8 | sed 's/^/  /'
+          journalctl -u ssh -n 10 --no-pager 2>/dev/null | tail -n 10 | sed 's/^/  /'
+        fi
       fi
     }
     configure_ssh
