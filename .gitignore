@@ -8,6 +8,7 @@
 secrets/source/
 secrets/*.env
 secrets/**/*.env
+secrets/age-keys.txt.age
 *.env
 *.pem
 *.key

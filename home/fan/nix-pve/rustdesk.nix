@@ -114,12 +114,13 @@ apply_updates(
 )
 PYEOF
 
-      python3 "$INJECT" "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
+      ${pkgs.python3}/bin/python3 "$INJECT" "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
       chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
       rm -f "$INJECT"
 
       # 进程在跑则重启（KDE 自动启动/手动拉起；桌面会话不在则跳过）
-      pkill -x rustdesk 2>/dev/null || true
+      # 绝对路径：hm 激活 PATH 无 python3/pkill（_common_/path.nix 只补系统路径）
+      ${pkgs.procps}/bin/pkill -x rustdesk 2>/dev/null || true
       echo "[rustdesk] 配置已注入 ~/.config/rustdesk（nix-pve，hbbs ${rendezvousServer}；进程已重启或待手动启动）"
     }
     setup_rustdesk

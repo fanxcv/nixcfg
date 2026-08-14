@@ -11,6 +11,7 @@
     configure_ssh() {
       # macOS 跳过（无 sshd_config 管理需求）
       [ "$(uname -s)" = "Linux" ] || return 0
+      # 系统 PATH 由 _common_/path.nix 统一补（activatePathFix，writeBoundary 前置）
 
       # 1) 拉取授权公钥（对应脚本 ssh_config() 的 curl 部分）
       #    注意：file.fan-x.fun 的 mac.pub 曾返回 OneDrive HTML（非公钥），不再作为源；
@@ -73,8 +74,9 @@
           || systemctl restart ssh 2>/dev/null \
           || systemctl restart sshd 2>/dev/null); then
           echo "警告: sshd 重启失败，请手动重启；诊断信息（status/journal 尾部）："
-          systemctl status ssh --no-pager 2>/dev/null | tail -n 8 | sed 's/^/  /'
-          journalctl -u ssh -n 10 --no-pager 2>/dev/null | tail -n 10 | sed 's/^/  /'
+          # || true：activate 是 set -eu + pipefail，systemctl status 对 failed/不存在 unit 返回非零会中断激活
+          systemctl status ssh --no-pager 2>/dev/null | tail -n 8 | sed 's/^/  /' || true
+          journalctl -u ssh -n 10 --no-pager 2>/dev/null | tail -n 10 | sed 's/^/  /' || true
         fi
       fi
     }

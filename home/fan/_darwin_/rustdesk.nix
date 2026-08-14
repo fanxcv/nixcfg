@@ -15,7 +15,7 @@
 #   - 1.4.9 的 enable-udp-punch/enable-ipv6-punch 读 RustDesk_local.toml 的 [options]，自建服务器时
 #     local 无值强制 N → 两文件 [options] 全键双写
 
-{ lib, ... }:
+{ pkgs, lib, ... }:
 let
   # 自建 hbbs 服务器（与 hbbr 同机，RustDesk 自动推断 relay）
   rendezvousServer = "120.55.164.147:21116";
@@ -30,11 +30,17 @@ in
       #   无 GUI 会话时 service 全功能注册的配置源）。GUI 会话在位时 service 退化 IPC-only，
       #   注册者是 --server（LaunchAgent KeepAlive 常驻，读登录用户域）
       local root_dir="/var/root/Library/Preferences/com.carriez.RustDesk"
+      # 系统工具绝对路径：hm 激活 PATH 纯 nix store（_common_/path.nix 只补 /usr/bin），
+      # sudo/launchctl/pkill 用系统绝对路径，python3 用 nix 包（不依赖 CLT）
+      SUDO="/usr/bin/sudo -n"
+      LAUNCHCTL="/bin/launchctl"
+      PKILL="/usr/bin/pkill"
+      PYTHON3="${pkgs.python3}/bin/python3"
       mkdir -p "$dir"
-      sudo -n mkdir -p "$root_dir" 2>/dev/null || true
+      $SUDO mkdir -p "$root_dir" 2>/dev/null || true
 
       # 1. 停 root service（退出时会写回内存旧配置，注入必须在 bootout 之后）
-      sudo -n launchctl bootout system/com.carriez.RustDesk_service 2>/dev/null || true
+      $SUDO $LAUNCHCTL bootout system/com.carriez.RustDesk_service 2>/dev/null || true
       sleep 1
 
       # 2. 注入脚本落盘（fan/root 域共用；顶层字段替换/补开头，[options] 段字段替换/补段，其余行原样保留）
@@ -133,19 +139,19 @@ PYEOF
       # 3. 注入 fan + root 域（sudo -n 依赖 sudoers NOPASSWD，激活环境已验证可用）；
       #    local 与 RustDesk2 双写：1.4.9 的 enable-udp-punch/enable-ipv6-punch 读 RustDesk_local.toml 的
       #    [options]，自建服务器时 local 无值强制 N（即使 RustDesk2.toml 有 Y）
-      python3 "$INJECT" "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
+      $PYTHON3 "$INJECT" "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
       chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
-      sudo -n python3 "$INJECT" "$root_dir/RustDesk2.toml" "$root_dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
-      sudo -n chmod 600 "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml
+      $SUDO $PYTHON3 "$INJECT" "$root_dir/RustDesk2.toml" "$root_dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
+      $SUDO chmod 600 "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml
       rm -f "$INJECT"
 
       # 4. 重启全部进程：sudo pkill（root 权限，fan 版 pkill 杀不掉其他用户的进程）；
       #    --server 由 LaunchAgent KeepAlive 自动拉起并读取刚注入的登录用户域配置；
       #    清理残留 ipc socket，避免 service 误判已有实例退化为 IPC-only（不影响 --server 注册，仅求干净）
-      sudo -n pkill -9 -f "RustDesk.app/Contents/MacOS" 2>/dev/null || true
-      sudo -n rm -rf /tmp/RustDesk-0 /tmp/RustDesk-501 2>/dev/null || true
+      $SUDO $PKILL -9 -f "RustDesk.app/Contents/MacOS" 2>/dev/null || true
+      $SUDO rm -rf /tmp/RustDesk-0 /tmp/RustDesk-501 2>/dev/null || true
       sleep 1
-      sudo -n launchctl bootstrap system /Library/LaunchDaemons/com.carriez.RustDesk_service.plist 2>/dev/null || true
+      $SUDO $LAUNCHCTL bootstrap system /Library/LaunchDaemons/com.carriez.RustDesk_service.plist 2>/dev/null || true
 
       # 5. GUI 由用户自行打开（登录用户桌面）；--server 由 LaunchAgent 管理
     }
