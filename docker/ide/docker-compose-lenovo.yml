@@ -14,6 +14,7 @@ services:
       - LC_ALL=C.UTF-8
       - LANG=C.UTF-8
       - USER=root   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
+      - IDE_MACHINE=ide-lenovo   # entrypoint 首次激活用的 flake 机器名（nix run .#<机器>）
     volumes:
       - ./vsc:/root/.vscode-server
       - ./JetBrains/cache:/root/.cache/JetBrains

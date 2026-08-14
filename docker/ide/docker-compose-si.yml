@@ -15,6 +15,7 @@ services:
       - LC_ALL=C.UTF-8
       - LANG=C.UTF-8
       - USER=root   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
+      - IDE_MACHINE=ide-si   # entrypoint 首次激活用的 flake 机器名（nix run .#<机器>）
     # 代理变量 + extra_hosts 已由 nix 接管（home/fan/ide-si/sysenv.nix，nix run 激活即生效）：
     #   环境变量 → /etc/environment.d + ~/.ssh/environment（PermitUserEnvironment）+ .zshenv + JAVA_TOOL_OPTIONS
     #   hosts → 激活幂等追加 + ide-extra-hosts oneshot 服务启动自动恢复；下次重建容器后此处不再需要
