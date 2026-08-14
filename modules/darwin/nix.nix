@@ -1,5 +1,6 @@
 # nix 配置（系统级）：国内镜像 substituters + cachix 补充（与 flake.nix 的 nixConfig 一致）
 # nix-darwin 激活时写入 /etc/nix/nix.conf；全新部署无需手动配置即可走镜像
+# 自 hosts/_darwin_/base/nix.nix 迁入（modules/darwin 模块库）
 {
   nix.settings = {
     substituters = [

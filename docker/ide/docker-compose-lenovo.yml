@@ -20,19 +20,18 @@ services:
       - ./JetBrains/config:/root/.config/JetBrains
       - ./JetBrains/share:/root/.local/share/JetBrains
       - ./skemate:/root/.config/skemate
-      - /root/.local/share/mise:/root/.local/share/mise
-      - /root/.local/state/mise:/root/.local/state/mise
-      - /root/.config/opencode:/root/.config/opencode
-      - /root/.config/mise:/root/.config/mise
-      - /root/.cache/mise:/root/.cache/mise
-      - /root/.claude.json:/root/.claude.json
-      - /root/.claude:/root/.claude
-      - /root/.codex:/root/.codex
-      - /root/.pi:/root/.pi
-      - /root/.m2:/root/.m2
+      - ~/.local/state/mise:/root/.local/state/mise
+      - ~/.local/share/mise:/root/.local/share/mise
+      - ~/.config/mise:/root/.config/mise
+      - ~/.cache/mise:/root/.cache/mise
+      - ~/.claude.json:/root/.claude.json
+      - ~/.claude:/root/.claude
+      - ~/.codex:/root/.codex
+      - ~/.pi:/root/.pi
+      - ~/.m2:/root/.m2
       - /mnt:/mnt
       # nix 配置仓库：compose 位于仓库内 docker/ide/，挂载仓库根（../../）；容器内不 clone
-      - ../../:/root/nixcfg
+      - ./nixcfg:/root/nixcfg
       # AI 密钥等敏感环境变量（chmod 600，不进 nix 配置）
       - ./.secrets:/root/.secrets
       # nix store 持久化：容器重建后不重新下载（named volume 首次创建自动拷贝镜像内 /nix）

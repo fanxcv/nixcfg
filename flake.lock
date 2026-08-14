@@ -389,7 +389,9 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-darwin": "nixpkgs-darwin",
         "plasma-manager": "plasma-manager",
-        "treefmt-nix": "treefmt-nix"
+        "treefmt-nix": "treefmt-nix",
+        "unstable": "unstable",
+        "vscode-extensions": "vscode-extensions"
       }
     },
     "systems": {
@@ -427,6 +429,45 @@
         "shallow": true,
         "type": "git",
         "url": "https://gh-proxy.com/https://github.com/numtide/treefmt-nix.git"
+      }
+    },
+    "unstable": {
+      "locked": {
+        "lastModified": 1786534138,
+        "narHash": "sha256-fBJMdnKUTUDtfi/BYLr71HLaC9dG382arxLF2Egg2uo=",
+        "ref": "nixpkgs-unstable",
+        "rev": "044bfe75bfe4c7bbe043dc17b5e42ea823b84a09",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+      },
+      "original": {
+        "ref": "nixpkgs-unstable",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+      }
+    },
+    "vscode-extensions": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786674499,
+        "narHash": "sha256-BaOwIPt78vGE5Gju7DduQzYYBnBvSdZkPBRaJESis7s=",
+        "ref": "master",
+        "rev": "e175b5a56f828415b9e273e37fc15d780dcec8a0",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gh-proxy.com/https://github.com/nix-community/nix-vscode-extensions.git"
+      },
+      "original": {
+        "ref": "master",
+        "shallow": true,
+        "type": "git",
+        "url": "https://gh-proxy.com/https://github.com/nix-community/nix-vscode-extensions.git"
       }
     }
   },

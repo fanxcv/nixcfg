@@ -32,6 +32,19 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # --- unstable 通道：仅个别需要新版本的包使用（vscode 本体 + 扩展市场，→ pkgs.repos.unstable）---
+    # 锁 rev（flake.lock）+ 周级 nix flake update：unstable 滚动快、二进制保留期短于稳定分支，长时间不更新会掉缓存
+    # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix）
+    unstable = {
+      url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&shallow=1";
+    };
+
+    # vscode 扩展补充市场（nixpkgs 缺失的扩展，→ pkgs.repos.vscode.vscode-marketplace-release）
+    vscode-extensions = {
+      url = "git+https://gh-proxy.com/https://github.com/nix-community/nix-vscode-extensions.git?ref=master&shallow=1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # secrets 加密（agenix）：secrets/*.age 激活时自动解密，见 _common_/secrets.nix 与 secrets/README.md
     agenix = {
       url = "git+https://gh-proxy.com/https://github.com/ryantm/agenix.git?ref=main&shallow=1";
@@ -117,6 +130,20 @@
       # overlay 无法在 home 模块层注册（pkgs 先于模块构造），只能在此注入
       claudeOverlay = import ./overlays/claude-code.nix { inherit lib; };
       skemateOverlay = import ./overlays/skemate.nix { inherit lib; };
+      # unstable/vscode 市场 overlay（pkgs.repos.unstable / pkgs.repos.vscode，定义见 overlays/）
+      # unstable 只服务 vscode：包本体（nixos）+ 扩展市场（mac/nixos），命中面压到最小
+      unstableOverlay = import ./overlays/unstable.nix { inherit inputs; };
+      vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
+      # unfree 白名单：claude-code（镜像包）+ vscode 本体/扩展（unstable 通道，见 modules/home/vscode.nix；
+      # pylance 为微软专有 license，remote-ssh 同理）
+      unfreeAllowlist = [
+        "claude-code"
+        "vscode"
+        "vscode-extension-ms-vscode-remote-remote-ssh"
+        "vscode-extension-MS-python-vscode-pylance"
+        "vscode-extension-ms-ceintl-vscode-language-pack-zh-hans"
+        "vscode-extension-mhutchie-git-graph"
+      ];
       # 每个 system 生成一套可运行包（nix run 一步 build+activate）
       forAllSystems = lib.genAttrs [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       # 生成指定机器上的 home 配置（用户由 home/fan/default.nix 决定：Linux=root / darwin=fan）
@@ -134,8 +161,8 @@
           # claude-code 在 nixpkgs 标记 unfree，用 predicate 只放行它（import 重新求值带 config 的 pkgs）
           pkgs = import nixpkgs {
             inherit system;
-            config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
-            overlays = [ claudeOverlay skemateOverlay ];
+            config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
+            overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay ];
           };
           modules = [
             ./home/fan
@@ -156,8 +183,8 @@
         # mac 用 nixpkgs-26.05-darwin channel（darwin 闭包完整，镜像命中）；与 nix-darwin-26.05 分支配套
         pkgs = import inputs."nixpkgs-darwin" {
           inherit system;
-          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" ];
-          overlays = [ claudeOverlay skemateOverlay ];
+          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
+          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay ];
         };
         modules = [
           ./hosts/${hostName}
@@ -175,6 +202,14 @@
       };
     in
     {
+      # --- 自建模块库（tsln 思路）：平台 base 层引用 ---
+      # darwin 系统层：hosts/_darwin_/base → modules/darwin（nix 配置等）
+      # nixos 系统层：hosts/_nixos_/base → modules/nixos（当前空）
+      # home 用户层：home/fan/_common_ → modules/home（vscode 封装等；容器同吃但默认关闭）
+      nixosModules.default = import ./modules/nixos;
+      darwinModules.default = import ./modules/darwin;
+      homeModules.default = import ./modules/home;
+
       homeConfigurations = {
         # Docker 开发容器（Ubuntu，ide-si / ide-lenovo）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
         # 代理：仅 ide-si 走（sysenv.nix 接管环境变量+hosts，与 compose 无关）；lenovo 国内直连
@@ -206,11 +241,11 @@
       # 部署：nixos-rebuild switch --flake .#nix-pve（手动；comin 自动部署未启用）
       nixosConfigurations.nix-pve = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        # 与 mkHomeConfig 同款 pkgs：claude-code 镜像 overlay + unfree 放行（claude-code / microsoft-edge / libsciter[clash-verge-rev]）
+        # 与 mkHomeConfig 同款 pkgs：overlay 注入 + unfree 放行（unfreeAllowlist + microsoft-edge / libsciter[clash-verge-rev]）
         pkgs = import nixpkgs {
           system = "x86_64-linux";
-          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "claude-code" "microsoft-edge" "libsciter" ];
-          overlays = [ claudeOverlay skemateOverlay ];
+          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) (unfreeAllowlist ++ [ "microsoft-edge" "libsciter" ]);
+          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay ];
         };
         modules = [ ./hosts/nix-pve ];
         specialArgs = {
@@ -227,9 +262,10 @@
       # --- 一步到位：nix run .#<机器名>（构建 + activate 一条命令）---
       # ide 容器可能跑在不同架构服务器（lenovo/si-11 等），激活配置必须按当前 system 构建：
       # 不能引用固定架构的 homeConfigurations（会 platform mismatch，如 x86_64 机器拿到 aarch64 配置）
+      # 本地包集合（packages/ 目录）与机器别名合并导出：nix build .#<包名> 或 nix run .#<机器名>
       packages = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
-        in {
+        in (import ./packages pkgs) // {
           # 机器专属别名：mise 组件按机器目录声明（home/fan/ide-si/mise.nix / ide-lenovo/mise.nix），si/lenovo 各一份
           # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
           ide-si = pkgs.writeShellScriptBin "ide-activate"

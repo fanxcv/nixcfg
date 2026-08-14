@@ -1,0 +1,141 @@
+# ────────────────────────────────────────────────────────────────────────────
+# tsln1998/nixcfg 的 VSCode 配置参考（插件清单 + 设置 + 键位）
+# 抓取日期: 2026-08-14
+# 来源文件:
+#   - home/tsln/_nixos_/gui/apps/vscode.nix   (NixOS, 包用 unstable.vscode)
+#   - home/tsln/_darwin_/gui/apps/vscode.nix  (macOS, 包用系统安装版)
+#   - home/tsln/_common_/dev/editors/vscode/  (语言 profile: python/go/rust/cxx)
+# ────────────────────────────────────────────────────────────────────────────
+meta:
+  source_repo: tsln1998/nixcfg
+  fetched_at: 2026-08-14
+  nixos_file: home/tsln/_nixos_/gui/apps/vscode.nix
+  darwin_file: home/tsln/_darwin_/gui/apps/vscode.nix
+  profile_dir: home/tsln/_common_/dev/editors/vscode/
+
+# 插件来源（双市场策略）
+extension_markets:
+  market_1: nixpkgs-unstable-vscode-extensions   # pkgs.repos.unstable.vscode-extensions, 主市场
+  market_2: nix-vscode-extensions-marketplace-release  # pkgs.repos.vscode.vscode-marketplace-release, 补 nixpkgs 缺失
+
+# 包与版本管理策略
+package:
+  nixos: pkgs.repos.unstable.vscode
+  darwin: system-installed   # package = null, 用商店安装版
+  mutable_extensions_dir: false   # 扩展由 Nix 锁定, 编辑器内不可增删
+  enable_update_check: false
+  enable_extension_update_check: false
+
+# ── 插件清单 ────────────────────────────────────────────────────────────────
+extensions:
+  # default profile（三平台公共，macOS 与 NixOS 一致）
+  base:
+    - { id: ms-ceintl.vscode-language-pack-zh-hans, category: 中文语言包, market: market_1 }
+    - { id: github.github-vscode-theme, category: 主题(GitHub Light/Dark), market: market_1 }
+    - { id: pkief.material-icon-theme, category: 图标主题, market: market_1 }
+    - { id: miguelsolorio.fluent-icons, category: 产品图标, market: market_1 }
+    - { id: oderwat.indent-rainbow, category: 缩进彩虹, market: market_1 }
+    - { id: codezombiech.gitignore, category: Git, market: market_1 }
+    - { id: waderyan.gitblame, category: Git/blame 行内标注, market: market_1 }
+    - { id: mhutchie.git-graph, category: Git/提交图, market: market_1 }
+    - { id: jnoortheen.nix-ide, category: Nix 语言, market: market_1 }
+    - { id: mkhl.direnv, category: direnv 集成, market: market_1 }
+    - { id: editorconfig.editorconfig, category: 通用/editorconfig, market: market_1 }
+    - { id: gruntfuggly.todo-tree, category: 通用/TODO 树, market: market_1 }
+    - { id: tamasfe.even-better-toml, category: 通用/TOML, market: market_1 }
+    - { id: redhat.vscode-yaml, category: 通用/YAML, market: market_1 }
+    - { id: usernamehw.errorlens, category: 通用/错误内联显示, market: market_1 }
+    - { id: humao.rest-client, category: 通用/API 调试, market: market_1 }
+    - { id: yzhang.markdown-all-in-one, category: 通用/Markdown, market: market_1 }
+    - { id: ms-vscode-remote.remote-ssh, category: 远程 SSH, market: market_1 }
+
+  # 语言 profile
+  profiles:
+    Python:
+      - { id: ms-python.python, market: market_1 }
+      - { id: ms-python.debugpy, market: market_1 }
+      - { id: ms-python.isort, market: market_1 }
+      - { id: ms-python.vscode-pylance, market: market_1 }
+      - { id: ms-python.autopep8, market: market_2 }   # 仅 marketplace-release 有
+    Go:
+      - { id: golang.go, market: market_1 }
+      - { id: bufbuild.vscode-buf, market: market_2 }  # 仅 marketplace-release 有
+
+# ── 用户设置（默认值 mkDefault, 机器可覆盖）─────────────────────────────────
+settings:
+  # 仅 NixOS（macOS 无标题栏设置）
+  window.titleBarStyle: native
+  window.menuStyle: custom
+
+  # AI / 遥测
+  chat.disableAIFeatures: true
+  redhat.telemetry.enabled: false
+
+  # 窗口
+  window.commandCenter: false
+  window.autoDetectColorScheme: false
+  window.openFilesInNewWindow: off
+  window.openFoldersInNewWindow: on
+  window.title: ${rootName}${separator}${appName}
+
+  # Workbench
+  workbench.startupEditor: none
+  workbench.editor.useModal: off
+  workbench.settings.editor: json
+  workbench.iconTheme: material-icon-theme
+  workbench.productIconTheme: fluent-icons
+  workbench.preferredLightColorTheme: GitHub Light
+  workbench.preferredDarkColorTheme: GitHub Dark
+
+  # 文件
+  files.autoSaveWhenNoErrors: true          # 无错误时自动保存
+  files.autoSaveWorkspaceFilesOnly: true    # 仅工作区文件
+  files.eol: "\n"
+  files.enableTrash: false
+
+  # 编辑器
+  editor.fontLigatures: true
+  editor.cursorSmoothCaretAnimation: on
+  editor.cursorBlinking: phase
+  editor.inlineSuggest.enabled: true
+  editor.acceptSuggestionOnCommitCharacter: false
+  editor.guides.bracketPairs: true
+  editor.formatOnSave: false
+  editor.largeFileOptimizations: false
+  editor.inlineSuggest.showToolbar: always
+  editor.minimap.autohide: scroll
+
+  # 终端
+  terminal.integrated.cursorStyle: line
+  terminal.integrated.cursorStyleInactive: underline
+
+  # 资源管理器
+  explorer.autoReveal: true
+  explorer.autoRevealExclude:
+    "**/node_modules": true
+
+  # Git
+  git.autofetch: true
+  git.fetchOnPull: true
+  git.enableSmartCommit: true              # 输入即暂存全部并提交
+
+  # GitBlame
+  gitblame.delayBlame: 500                 # 悬停 500ms 显示
+  gitblame.ignoreWhitespace: true
+
+  # Nix
+  nix.enableLanguageServer: true
+  nix.serverPath: nixd
+  nix.formatterPath: nixfmt
+
+  # 安全
+  security.workspace.trust.enabled: false  # 关工作区信任弹窗
+
+  # 更新
+  update.showReleaseNotes: false
+
+# 语言 profile 专属设置
+profile_settings:
+  Go:
+    go.showWelcome: false
+    go.diagnostic.vulncheck: Off

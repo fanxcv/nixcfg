@@ -4,8 +4,11 @@
 #   当前清单：base.nix / ai.nix / codex.nix / container.nix / mise.nix /
 #   pi.nix / secrets.nix / shells.nix / ssh.nix / tmux.nix
 #   （docker.nix 已迁至 ../_linux_/）
+# 另引入自建 home 模块库（modules/home/：vscode 封装等；容器同吃但模块默认关闭，平台层按需启用）
 
-{ tools, ... }:
+{ tools, outputs, ... }:
 {
-  imports = tools.scan ./.;
+  imports = (tools.scan ./.) ++ [
+    outputs.homeModules.default
+  ];
 }

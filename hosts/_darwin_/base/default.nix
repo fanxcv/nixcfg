@@ -5,11 +5,13 @@
 
 {
   inputs,
+  outputs,
   tools,
   ...
 }:
 {
   imports = (tools.scan ./.) ++ [
+    outputs.darwinModules.default                 # 自建 darwin 系统模块库（modules/darwin/：nix 配置等）
     inputs.agenix.darwinModules.default        # secrets 解密（身份见 hosts/_common_/base/agenix.nix）
     inputs.home-manager.darwinModules.home-manager  # home-manager 内嵌（用户见 users/fan）
     inputs.nix-homebrew.darwinModules.nix-homebrew  # homebrew 声明式管理

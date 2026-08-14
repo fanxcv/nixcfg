@@ -55,6 +55,11 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       uv: 清华 TUNA            # uv 机器：.config/uv/uv.toml
       go: goproxy.cn           # 装过 go 的机器：.config/go/env GOPROXY
       flutter: flutter-io.cn   # flutter 机器：PUB_HOSTED_URL/FLUTTER_STORAGE_BASE_URL（环境变量，mise SDK 下载源不受影响）
+    vscode:                    # 配置/扩展/语言 profile 由 nix 声明（→ modules/home/vscode.nix；清单参考 docs/tsln-vscode.yaml）
+      package: mac=商店版 / nixos=unstable   # 包本体策略：mac 用 brew cask 商店版，nixos 走 unstable 通道（pkgs.repos.unstable.vscode）
+      extensions: 公共 18（含 remote-ssh）+ python/go profile  # 主市场 unstable.vscode-extensions；autopep8/vscode-buf 用补市场（eval 时 IFD 拉清单）；server 端不装客户端 UI 类（remote-ssh）
+      server: 容器启用（→ home/fan/_container_/vscode-server.nix）  # ~/.vscode-server/extensions 链接 nix store，扩展=base+语言 profile；vscode-server 本体由客户端自动下载
+      unstable_update: 周级 nix flake update    # unstable 锁 rev（flake.lock），滚动快需定期跟进以免掉二进制缓存
 
   secrets:                     # 密钥约定（跨平台，→ home/fan/_common_/secrets.nix agenix）
     ai_env: agenix             # AI key（secrets/ai.env.age 激活时解密到 ~/.secrets/ai.env；mac=launchd、容器=激活期兜底解密）
@@ -71,6 +76,7 @@ macos:
       - bitwarden
       - tailscale-app           # 组网（App 版；旧名 tailscale 已被 homebrew 重命名）
       - clash-verge-rev
+      - visual-studio-code      # vscode（商店版；扩展/设置/键位由 nix 声明 → modules/home/vscode.nix）
 
     formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix；autoMigrate 已开：全新部署自动接管已有 Homebrew）
       # 当前 39 个手动安装的公式未声明，激活（zap）会卸载；要保留就取消注释
@@ -206,8 +212,7 @@ macos:
       ac_wake_on_lan: true       # 局域网唤醒
 
   mba_m5:                       # ← mba-m5 专属（实机导入草案，待你调整）
-    apps:                        # 本机 GUI 应用（共享层已声明 orbstack/iterm2/edge/rustdesk/lemon，不重复）
-      - visual-studio-code       # 本机已装
+    apps:                        # 本机 GUI 应用（共享层已声明 orbstack/iterm2/edge/rustdesk/lemon/vscode，不重复）
       - wechat                   # 本机已装
       - jetbrains-toolbox        # 本机已装（仅本机声明，mini-m4 不要）
       - microsoft-remote-desktop # Windows App（微软远程桌面），本机已装
@@ -275,7 +280,7 @@ nixos:
     platform: qemu-vm            # PVE 虚拟机（virtio 磁盘 / GRUB EFI / OVMF，见 hosts/nix-pve/hardware.nix）
     disk: 128G                   # LVM：boot 1G + nix 48G + persist 40G + tmpfs 根（余量 lvextend 可扩）
     desktop: plasma6             # KDE Plasma 6 + SDDM（Wayland）+ 中文输入（fcitx5 拼音）
-    apps: [edge, bitwarden]              # GUI 应用（对齐 mac；rustdesk/clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install）
+    apps: [edge, bitwarden, vscode]  # GUI 应用（对齐 mac；rustdesk/clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install；vscode 走 unstable 包 → modules/home/vscode.nix）
     comin: true                  # git 驱动自动部署（git.fan-x.fun 私有仓库，凭据走 /root/.git-credentials agenix）
     tailscale: 安装+服务           # 仅安装与启用（headscale/登录用户手动处理，state 就绪后再分机器声明式管理，→ hosts/nix-pve/services/tailscale.nix）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）

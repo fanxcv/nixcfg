@@ -59,6 +59,7 @@
 | linux.container 公共（skemate/部署） | home/fan/_container_/、home/fan/_linux_/ |
 | linux.container.ide-si / ide-lenovo | home/fan/ide-si/、home/fan/ide-lenovo/ |
 | nixos.pending | hosts/_nixos_/ |
+| 自建模块库（modules/）、本地包（packages/）、unstable/vscode 市场（overlays/） | modules/home/vscode.nix（vscode 封装：包源/扩展/设置）、modules/darwin/nix.nix（darwin nix 配置）、packages/default.nix、overlays/unstable.nix、overlays/vscode.nix；flake.nix（unstable input 锁 rev，周级 nix flake update） |
 
 ## 强制动作清单
 
