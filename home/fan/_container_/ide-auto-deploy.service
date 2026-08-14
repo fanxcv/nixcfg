@@ -9,6 +9,10 @@ User=root
 Environment=HOME=/root
 # systemd 默认 PATH 不含 nix bin；单用户 nix 装在 /nix/var/nix/profiles/default
 Environment=PATH=/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# 代理：/etc/environment.d 只对 user 实例生效（systemd-environment-d-generator 不服务系统服务），
+#   系统服务必须显式 EnvironmentFile；文件仅 ide-si 存在（sysenv.nix 写入），
+#   - 前缀容忍缺失（lenovo 无此文件时忽略）；nix 下载走 libcurl，尊重 http_proxy/all_proxy
+EnvironmentFile=-/etc/environment.d/zz-ide-proxy.conf
 ExecStart=/usr/local/bin/ide-auto-deploy.sh
 
 [Install]

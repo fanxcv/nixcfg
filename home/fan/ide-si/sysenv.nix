@@ -1,7 +1,8 @@
 # ide-si 容器系统环境接管：环境变量 + 外部 hosts —— 替代 docker-compose 的 environment / extra_hosts
 # 背景：compose 注入的变量/hosts 修改必须重建容器；nix 激活直接写入，免重建，nix run 即生效
 # 通道（全覆盖）：
-#   systemd 系统服务 → /etc/environment.d/*.conf（新启动服务生效；已运行服务 restart 后生效）
+#   systemd 系统服务 → EnvironmentFile 显式引用 /etc/environment.d/zz-ide-proxy.conf（environment.d 只对
+#     user 实例生效，系统服务不读；需要代理的系统服务（如 ide-auto-deploy.service）在 unit 里 EnvironmentFile 引用）
 #   shell            → home.sessionVariables（.zshenv）
 #   SSH 会话         → ~/.ssh/environment（PermitUserEnvironment，sshd 无需重启，覆盖同名变量）
 #   JVM 进程         → JAVA_TOOL_OPTIONS（tb-cli 等 JVM 不读 shell 代理，注入 JVM 系统属性）
