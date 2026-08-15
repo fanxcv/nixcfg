@@ -21,7 +21,9 @@ if [ "$HEAD" = "$LAST" ]; then
 fi
 
 echo "===> [ide-auto-deploy] HEAD 变更 ${LAST:+$LAST → }$HEAD，激活 .#@hostName@"
-if nix run .#@hostName@; then
+# claude-code overlay 构建期联网下载（__noChroot，见 overlays/claude-code.nix）；nix 禁止 __noChroot 与 sandbox 并存 → 本次构建关沙箱
+# --accept-flake-config：接受 flake.nix 的 nixConfig（USTC/TUNA/SJTU 镜像），保存到 trusted-settings.json 后永久生效
+if nix run --accept-flake-config --option sandbox false .#@hostName@; then
   echo "$HEAD" > "$STATE/last"
   echo "===> [ide-auto-deploy] 激活成功（$HEAD）"
 else
