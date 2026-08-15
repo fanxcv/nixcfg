@@ -21,12 +21,12 @@
     AVDMANAGER="$(ls "$MISE_ASDK"/cmdline-tools/*/bin/avdmanager 2>/dev/null | head -1)"
     SETUP_LOG="/tmp/android-emulator-setup.log"
     if ! command -v java >/dev/null 2>&1 && [ ! -x "$JAVA_HOME/bin/java" ]; then
-      echo "[android-emulator] 未找到 java，尝试 mise install java@oracle-25（首次部署自动补装）..."
-      if command -v mise >/dev/null 2>&1 && mise install java@oracle-25 >/dev/null 2>&1; then
+      echo "[android-emulator] 未找到 java，尝试 mise install java@oracle-21（首次部署自动补装）..."
+      if command -v mise >/dev/null 2>&1 && mise install java@oracle-21 >/dev/null 2>&1; then
         eval "$(mise env)"
-        echo "[android-emulator] java 已装（mise oracle-25）；其余组件请手动 mise install"
+        echo "[android-emulator] java 已装（mise oracle-21）；其余组件请手动 mise install"
       else
-        echo "警告: mise install java@oracle-25 失败，安卓模拟器声明跳过（先手动 mise install 再重跑激活）"
+        echo "警告: mise install java@oracle-21 失败，安卓模拟器声明跳过（先手动 mise install 再重跑激活）"
         exit 0
       fi
     fi

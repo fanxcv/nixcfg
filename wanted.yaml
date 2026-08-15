@@ -24,7 +24,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     - tmux                     # 终端复用（gpakosz 配置自动装）
     - beads                    # AI 记忆（bd）
     - dolt                     # 数据库（beads 的存储后端，随 beads 一并安装，→ home/fan/_common_/ai.nix）
-    - claude-code              # Claude Code CLI（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/claude.nix）
+    - claude-code              # Claude Code CLI（unstable 通道，周级 flake update 跟随；构建时从 npmmirror 下载 npm 平台包，不校验 hash 免手动维护 → overlays/claude-code.nix、home/fan/_common_/claude.nix）
     - ccline                   # claude statusline
     - codex                    # OpenAI Codex CLI（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/codex.nix）
     - pi-coding-agent          # pi agent（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/pi.nix）
@@ -229,7 +229,7 @@ macos:
       - dart                     # 自定义下载源（storage.flutter-io.cn 镜像，版本探测留官方）
       - flutter                  # 自定义下载源（storage.flutter-io.cn 镜像）
       - go@1.25
-      - java@oracle-25
+      - java@oracle-21          # 默认 21（LTS）：Gradle 8.x Kotlin DSL 解析不了 25（IllegalArgumentException: 25.0.4），AGP 8.9 官方兼容 17-21；25 已装不默认
       - node@24                 # 本机 node 主版本（config.local.toml 已废弃删除，各机器自行声明）
       - python@3
     android_emulator: 声明式   # 模拟器（java/android-sdk 由 mise 补装、platform-tools/emulator/镜像由 sdkmanager 自动安装，均幂等；AVD 就位后创建，→ home/fan/mini-m4/android-emulator.nix；镜像用 android-36 ps16k——android-37.0 不存在，sdkmanager 定位优先 latest 避免旧版残留）
