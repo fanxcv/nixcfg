@@ -53,13 +53,40 @@
 | macos.all_macs.locale | hosts/_darwin_/i18n/locale.nix |
 | macos.all_macs.user_pkgs | home/fan/_common_/*.nix |
 | macos.all_macs.app_configs | home/fan/_darwin_/gui/apps/*.nix、home/fan/_common_/*.nix |
-| macos.all_macs.secrets | hosts/_common_/base/agenix.nix、hosts/_darwin_/base/rustdesk.nix、secrets/ |
+| macos.all_macs.secrets | hosts/_darwin_/base/rustdesk.nix（系统层）、home/fan/_common_/secrets.nix（fan 域解密）、secrets/ |
 | macos.mini_m4 | hosts/mini-m4/*.nix、home/fan/mini-m4/*.nix |
 | linux.ubuntu 公共（pkgs） | home/fan/_ubuntu_/、home/fan/_linux_/ |
-| linux.container 公共（skemate/部署） | home/fan/_container_/、home/fan/_linux_/ |
-| linux.container.ide-si / ide-lenovo | home/fan/ide-si/、home/fan/ide-lenovo/ |
+| linux.container 公共（skemate/部署/mise） | home/fan/_container_/、home/fan/_linux_/ |
+| linux.container.ide-si / ide-lenovo | home/fan/ide-si/、home/fan/ide-lenovo/（mise 已上提 _container_/mise.nix） |
 | nixos.pending | hosts/_nixos_/ |
 | 自建模块库（modules/）、本地包（packages/）、unstable/vscode 市场（overlays/） | modules/home/vscode.nix（vscode 封装：包源/扩展/设置）、modules/darwin/nix.nix（darwin nix 配置）、packages/default.nix、overlays/unstable.nix、overlays/vscode.nix；flake.nix（unstable input 锁 rev，周级 nix flake update） |
+
+## 架构约定（2025-08 整理，新增/修改模块必须遵守）
+
+### secrets 架构（无兑底链，单一机制）
+
+- **fan 域 secrets**（ai.env / git-credentials / tailscale authkey / ssh 私钥 / keystore / skemate 配置）：
+  统一由 `home.activation` 解密——`${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o <目标> <secrets/*.age>`，
+  模式见 home/fan/_common_/secrets.nix 与各模块。**失败即部署失败**（无 if 无 || true）。
+- **系统域 secrets**（NixOS host keys、nix-pve comin 等）：走 agenix 系统层（hosts/ 下声明，root 激活解密）。
+- **禁止**：HM 层 age.secrets 声明（agenix homeManagerModules 已整体移除）、
+  agenixContainerFallback 类兑底链、条件跳过解密。
+- 密钥维护：明文放 secrets/source/ → `./secrets/encrypt.sh` 生成 .age（git 可公开），私钥 $HOME/.secrets/age-keys.txt。
+
+### 激活脚本规范
+
+- **系统工具**（sudo/launchctl/pkill/open/pgrep/sleep/cat/find/readlink）：裸命令即可——
+  activatePathFix（home/fan/_common_/path.nix）已把系统 PATH 追加进 HM 激活环境，无需绝对路径 local。
+- **nix 工具**（python3/age/git/curl/gnused/...）：必须 `${pkgs.xxx}/bin/xxx` 绝对路径（不在系统 PATH）。
+- **失败策略**：
+  - 禁止静默吞错（`2>/dev/null` 后无输出无处理）；
+  - `|| true` 只允许幂等检查（服务未注册/文件不存在等预期失败），必须注释原因；
+  - 非关键失败 → 显式 `echo "警告: ..."`（部署继续）；
+  - 前置步骤失败导致当前步骤无法进行 → 当前步骤直接失败（exit 1，部署中止，暴露问题）。
+- **root 操作归系统层**：涉及 root 域/LaunchDaemon/跨用户进程的操作放 system.activationScripts
+  （root 直跑，无 sudo 桥接）——例：RustDesk 注入（hosts/_darwin_/base/rustdesk.nix）。
+- **变量引用**：`$var` 后紧跟全角标点（，。）会被 bash 按 UTF-8 字节吸进变量名（isalnum locale 陷阱）→
+  unbound variable；必须加空格（`$var ，跳过`）。
 
 ## 强制动作清单
 

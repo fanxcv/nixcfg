@@ -23,11 +23,13 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     - rtk                      # RTK 工具
     - tmux                     # 终端复用（gpakosz 配置自动装）
     - beads                    # AI 记忆（bd）
+    - dolt                     # 数据库（beads 的存储后端，随 beads 一并安装，→ home/fan/_common_/ai.nix）
     - claude-code              # Claude Code CLI（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/claude.nix）
     - ccline                   # claude statusline
     - codex                    # OpenAI Codex CLI（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/codex.nix）
     - pi-coding-agent          # pi agent（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/pi.nix）
     - btop                     # 系统监控（所有机器）
+    - nodejs                   # Node.js LTS（nix 管理，替代原全局默认 mise node@lts；机器级 mise node 经 shims 覆盖全局，→ home/fan/_common_/base.nix）
 
   app_configs:                 # 跨平台应用级配置
     git:                       # git 全局配置
@@ -40,28 +42,31 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       disable_compfix: true    # nix store 目录 compaudit 误报不安全，跳过补全安全检查（→ shells.nix ZSH_DISABLE_COMPFIX）
       enable_completion: false # HM 不生成自带 compinit（omz 接管）；模板 compinit 无 -u 会触发安全检查询问（→ shells.nix）
     tmux:                      # gpakosz 配置（mouse on + base-index 1）
-    codex:                     # codex 通用段（机器手动段自动合并）
+    codex:                     # codex 默认模板（→ home/fan/_common_/codex.nix；存在跳过——config.toml 已存在不覆盖，不存在才生成默认模板；实体文件非 symlink，codex 可写回信任/状态；机器特定配置由用户直接维护在 config.toml）
       model: gpt-5.6-sol
       provider: fan
-    claude:                    # claude code
+    claude:                    # claude code（settings.json 默认模板：存在跳过，不存在生成 → home/fan/_common_/claude/settings.json；启动 wrapper cc_claude 仍由 nix 声明）
       proxy: https://ai.qksxin.com
     pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
       token_env: PI_CONFIG_GIT_TOKEN  # 全局环境变量：从 ~/.secrets/ai.env 读取（global.secrets.ai_env），clone 后清 origin
-    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器没指定 config.toml 时默认 node@lts，指定了整体覆盖，不引入 local.toml）
-      - node@lts
+    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器级 config.toml（mini-m4/ide 容器）声明组件，无 config.toml 的机器不再装默认组件；node@lts 默认已改由 nix 管理，见 global.pkgs.nodejs）
     mirrors:                   # 开发工具国内镜像（→ home/fan/_common_/mirrors.nix，所有机器；useChinaMirror=false 时不写，默认官方源）
       npm: npmmirror           # 装过 node 的机器：.npmrc registry
       pip: 清华 TUNA           # python 机器：.config/pip/pip.conf
       uv: 清华 TUNA            # uv 机器：.config/uv/uv.toml
       go: goproxy.cn           # 装过 go 的机器：.config/go/env GOPROXY
       flutter: flutter-io.cn   # flutter 机器：PUB_HOSTED_URL/FLUTTER_STORAGE_BASE_URL（环境变量，mise SDK 下载源不受影响）
+    nix:                       # nix 二进制缓存/源码拉取（→ flake.nix nixConfig、modules/darwin/nix.nix、hosts/nix-pve、docker/ide/ubuntu/Dockerfile，4 处一致）
+      substituters: [USTC, TUNA, SJTU, cache.nixos.org]  # 国内镜像优先：中科大/清华/上海交大，官方兜底；另有 numtide/nix-community cachix 补充
+      inputs_proxy: ghfast.top  # GitHub 源码（全部 15 个 inputs）走加速前缀（git+https 无法配镜像，URL 前置代理最稳）；前缀由 tools/github-proxy.nix 集中管理，换代理跑 scripts/switch-github-proxy.sh <新域名>（同时替换 flake.nix/flake.lock 并重锁）；已验证 ghfast.top（HTTP 7MB/s + git 协议）
     vscode:                    # 配置/扩展/语言 profile 由 nix 声明（→ modules/home/vscode.nix；清单参考 docs/tsln-vscode.yaml）
       package: mac=商店版 / nixos=unstable   # 包本体策略：mac 用 brew cask 商店版，nixos 走 unstable 通道（pkgs.repos.unstable.vscode）
       extensions: 公共 18（含 remote-ssh）+ python/go profile  # 主市场 unstable.vscode-extensions；autopep8/vscode-buf 用补市场（eval 时 IFD 拉清单）；server 端不装客户端 UI 类（remote-ssh）
       server: 容器启用（→ home/fan/_container_/vscode-server.nix）  # ~/.vscode-server/extensions 链接 nix store，扩展=base+语言 profile；vscode-server 本体由客户端自动下载
+      keybindings: cmd/ctrl+d → 删除当前行  # 唯一非默认键位（editor.action.deleteLines，平台分支 mac=cmd/linux=ctrl，其余全默认；→ modules/home/vscode.nix profiles.default）
       unstable_update: 周级 nix flake update    # unstable 锁 rev（flake.lock），滚动快需定期跟进以免掉二进制缓存
 
-  secrets:                     # 密钥约定（跨平台，→ home/fan/_common_/secrets.nix agenix）
+  secrets:                     # 密钥约定（fan 域统一 activation 解密：age -d 直解 secrets/*.age，失败即部署失败；系统域走 agenix。→ home/fan/_common_/secrets.nix）
     ai_env: agenix             # AI key（secrets/ai.env.age 激活时解密到 ~/.secrets/ai.env；mac=launchd、容器=激活期兜底解密）
     git_credentials: agenix    # git 凭据（secrets/git-credentials.age → ~/.git-credentials）
 
@@ -79,18 +84,16 @@ macos:
       - visual-studio-code      # vscode（商店版；扩展/设置/键位由 nix 声明 → modules/home/vscode.nix）
 
     formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix；autoMigrate 已开：全新部署自动接管已有 Homebrew）
-      # 当前 39 个手动安装的公式未声明，激活（zap）会卸载；要保留就取消注释
-      # - dolt                    # 数据库
-      # - ollama                  # 本地大模型
-      # - mlx                     # Apple ML 工具
-      # - mlx-c                   # Apple ML C 接口
-      # - beads                   # AI 记忆（与下方 pkg 重复，不建议）
-      # - tmux                    # 终端复用（与下方 pkg 重复，不建议）
-      # - zsh                     # 系统自带，不建议
-      # - ffmpeg                  # 音视频（含 x264/x265/lame 等依赖）
+      # 决策（2025-08-15）：旧手动公式全部 zap 清空，无保留（zsh 插件走 git clone，见 shells.nix cloneOhMyZsh）
+      # - ollama                  # 本地大模型（需时再声明）
+      # - mlx / mlx-c             # Apple ML 工具（需时再声明）
+      # - ffmpeg                  # 音视频（含 x264/x265/lame 等依赖，需时再声明）
+      # beads/tmux/zsh 有 nix 替代，不声明；zsh-syntax-highlighting/zsh-autosuggestions 走 git clone 不依赖 brew
       # 依赖库（openssl/python/readline 等）由公式自动带，无需手动声明
 
     brew_mirror: true            # bottles 走 USTC 镜像（HOMEBREW_BOTTLE_DOMAIN，三台 Mac 全部生效，→ hosts/_darwin_/base/homebrew.nix）
+    hm_backup_extension: backup  # HM 遇手配文件自动备份 .backup 再接管（→ hosts/_darwin_/base/default.nix；环境变量经 sudo 会丢，故用配置项）
+    hm_launchd_fix: true         # HM 内置 setupLaunchAgents 的 readlink -m 在 darwin 报错三连（同源）→ mkForce 覆盖官方实现（GNU readlink 绝对路径），LaunchAgent 功能完整保留（→ home/fan/_darwin_/launchd-fix.nix）
 
     settings:                    # 系统设置（→ hosts/_darwin_/gui/ 与 kernel/）
       # --- Dock ---
@@ -138,7 +141,7 @@ macos:
       windowmanager.auto_hide: true      # 侧栏自动隐藏
       windowmanager.tiled_margins: false  # 分屏间距
       # --- 外观 ---
-      appearance.style: Dark      # 固定深色（不自动切换）
+      appearance.style: Dark      # 固定深色（不自动切换；写入链依赖 fan→fan sudo 免密，见 hosts/_darwin_/base/sudo.nix——asuser 无 tty + 缓存过期会静默失败）
       appearance.auto_dark: false # 不自动切换
       appearance.icon_tint: MultiColour   # 主题色（多色）
       appearance.glass_diffusion: 0       # Liquid Glass 扩散（0=透明）
@@ -167,9 +170,25 @@ macos:
     user_pkgs:                   # 已上提至 global.pkgs（跨平台，→ home/fan/_common_/）
 
     app_configs:                 # mac 专属应用级配置（跨平台项在 global.app_configs）
+      orbstack:                  # OrbStack 容器运行时配置（→ home/fan/_darwin_/gui/apps/orbstack.nix + orbstack/apply.py，激活期 JSON 幂等注入；改后 orb stop/restart docker 生效）
+        use_china_mirror: true   # 挂全局 useChinaMirror 开关（flake.nix 注入，与 mirrors.nix 同语义；false 时跳过下方镜像注入）
+        memory_mib: 8192         # VM 内存上限 8G（vmconfig.json；实机 orb config show 对照——唯一落盘的非默认设置，其余项均默认）
+        auto_update: false       # 关闭自动下载更新（defaults dev.kdrag0n.MacVirt SUAutomaticallyUpdate=0，Sparkle 键）
+        registry_mirrors:        # Docker 镜像加速（config/docker.json，daemon.json 风格）
+          - https://docker.xuanyuan.me
+          - https://docker.1ms.run
+          - https://docker.m.daocloud.io
+      clash_verge:                # Clash Verge Rev 代理客户端声明式配置（→ home/fan/_darwin_/gui/apps/clash-verge.nix + clash-verge/apply.py，激活期幂等注入，App 重启生效）
+        subscription: https://xx.fan-x.eu.org/api/v1/client/subscribe?token=eaa63ab248c016278df7f8f6d2847757  # 订阅地址（注入 profiles.yaml 设为 current + 下载订阅内容；token 属订阅凭据，已明文入库）
+        mixed_port: 7890          # 混合代理端口（verge.yaml verge_mixed_port + clash-verge.yaml mixed-port 双写）
+        auto_launch: true         # 开机自启（enable_auto_launch）
+        silent_start: true        # 静默启动（enable_silent_start）
+        allow_lan: true           # 允许局域网连接（clash-verge.yaml allow-lan）
+        dns_override: false       # 关闭 DNS 覆写（enable_dns_settings=false，不应用 dns_config.yaml）
+        ipv6: false               # 关闭 IPv6（clash-verge.yaml ipv6）
       iterm2:                    # 终端（已移除 alacritty，iTerm2 暂无深度配置）
       edge_extensions: []        # Edge 扩展（External Extensions 机制就绪，填 ID 即装）
-      rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效）
+      rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效；注入在系统层 root 激活 hosts/_darwin_/base/rustdesk.nix，无 sudo 桥接）
         rendezvous: 120.55.164.147:21116   # 网络：ID 服务器（hbbs）
         key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 网络：加密公钥
         network:                 # 网络块（RustDesk2.toml 注入；1.4.9 全键归 RustDesk2，local 的 [options] 会被 GUI 清空）
@@ -186,27 +205,37 @@ macos:
           use_texture_render: true     # 纹理渲染
           av1_test: true         # AV1 测试
           check_update: false    # 不检查更新
+      tailscale_headscale:        # Tailscale App 版 headscale 登录（声明式，激活幂等 → home/fan/_darwin_/tailscale.nix）
+        server: https://headscale.fan-x.fun  # 自建 headscale 服务器（无子路径）
+        authkey: agenix           # pre-auth key（secrets/headscale-auth-key.txt.age，headscale preauthkeys create -r 生成）
+        hostname: 系统 LocalHostName  # 节点名取 scutil --get LocalHostName（mkDarwinConfig 注入 networking.hostName = mba-m5/mbp-m1/mini-m4，login/set --hostname）
+        accept_routes: true       # 接受子网路由（login/set --accept-routes=true）
+        accept_dns: true          # 接受 headscale 下发的 MagicDNS 配置（login/set --accept-dns=true，App 接管系统 DNS，后端 nameserver 在 headscale 服务端配 119.29.29.29/223.5.5.5）
+        check_update: false       # 关闭自动检查更新（defaults SUEnableAutomaticChecks=0 + SUScheduledCheckInterval=0）
+        hide_dock_icon: true      # 隐藏 Dock 图标（defaults HideDockIcon=1）
 
-    secrets:                     # 密钥文件（agenix 加密入库）
+    secrets:                     # 密钥文件（加密入库 secrets/*.age；activation 解密，无 agenix 服务依赖）
+      tailscale_headscale_authkey:  # headscale pre-auth key（→ home/fan/_darwin_/tailscale.nix 解密 activation）
 
   mini_m4:                       # ← mini-m4 专属（→ hosts/mini-m4/ + home/fan/mini-m4/）
     apps:                        # 专属 GUI 应用（cask，追加到共享清单）
       - blender                  # 3D 建模
     formulae:                    # 专属 brew 公式
       - tart                     # macOS 虚拟机
-    mise:                        # mise 运行时组件（→ home/fan/mini-m4/mise.nix）
-      - android-sdk              # env 注入 ANDROID_HOME + platform-tools/emulator 到 PATH
+    mise:                        # mise 运行时组件（→ home/fan/mini-m4/mise.nix；ANDROID_HOME/cmdline-tools 由插件自动注入，platform-tools/emulator 由 [env] 显式声明（tools=true 跟随版本），交互 shell 经 omz mise 插件 activate，非交互显式 eval mise env）
+      - android-sdk@22.0         # 插件注入 ANDROID_HOME + cmdline-tools PATH；[env] 注入 platform-tools（adb/fastboot）/emulator；显式 22.0：latest 解析 bug 落 1.0（老 sdkmanager 丢 emulator 包，2025-08 实测）
       - bun@latest
       - cocoapods
-      - dart                     # 自定义下载源（googleapis）
-      - flutter                  # 自定义下载源（googleapis）
+      - dart                     # 自定义下载源（storage.flutter-io.cn 镜像，版本探测留官方）
+      - flutter                  # 自定义下载源（storage.flutter-io.cn 镜像）
       - go@1.25
       - java@oracle-25
       - node@24                 # 本机 node 主版本（config.local.toml 已废弃删除，各机器自行声明）
       - python@3
-    android_emulator: 声明式   # 模拟器（java/android-sdk 由 mise 补装、emulator/镜像由 sdkmanager 自动安装，均幂等；AVD 就位后创建，→ home/fan/mini-m4/android-emulator.nix）
-    skemate: 包+配置            # 终端复用服务（→ home/fan/mini-m4/skemate.nix）：包走 overlays/skemate.nix；tunnel.yaml/config.json 由 nix 管理（密钥走 agenix，secrets/hosts/mini-m4/），其余运行时文件不管；服务手工启动
+    android_emulator: 声明式   # 模拟器（java/android-sdk 由 mise 补装、platform-tools/emulator/镜像由 sdkmanager 自动安装，均幂等；AVD 就位后创建，→ home/fan/mini-m4/android-emulator.nix；镜像用 android-36 ps16k——android-37.0 不存在，sdkmanager 定位优先 latest 避免旧版残留）
+    skemate: 包+配置+自启        # 终端复用服务（→ home/fan/mini-m4/skemate.nix）：包走 overlays/skemate.nix；tunnel.yaml/config.json 由 nix 管理（age 加密，secrets/hosts/mini-m4/，解密先于 agent 加载）；LaunchAgent 自启（RunAtLoad+KeepAlive，改配置后 launchctl kickstart -k 重启）
     ssh_keys: agenix（身份密钥） # id_rsa 对由 nix 管理（→ home/fan/mini-m4/ssh.nix）：私钥加密入库激活自动解密到 ~/.ssh/id_rsa；公钥明文入库（secrets/hosts/mini-m4/ssh_id_rsa.pub，原 mac-pub.pub 退役，_common_/ssh.nix 的 authorized_keys 追加源改引用此文件）
+    keystore: agenix            # bill-app 签名密钥（→ home/fan/mini-m4/keystore.nix）：source 名 bill-app-android-release.p12 加密入库，激活解密到 ~/.config/bill-app-android-release.p12（与 Makefile 的 RELEASE_KEYSTORE_PATH 默认值一致）
     power:                       # 电源策略（pmset，→ hosts/mini-m4/power.nix）
       ac_sleep: 0                # 永不睡眠
       ac_display_sleep: 10       # 10 分钟关屏
@@ -257,7 +286,7 @@ linux:
     ide-si:                      # ← 机器（原 si-11-ide 更名，hostname=ide-si；激活：nix run .#ide-si）
       proxy: true                # 走代理（已由 nix 接管：compose 原代理变量/extra_hosts 已删 → home/fan/ide-si/sysenv.nix，nix run 激活即生效；JVM 不读 shell 代理，JAVA_TOOL_OPTIONS 注入）
       sysenv: 接管环境变量+hosts  # 替代 compose environment/extra_hosts，免重建容器：代理/NO_PROXY/JAVA_TOOL_OPTIONS → /etc/environment.d + .zshenv + ~/.ssh/environment；内网 hosts（gitlab/maven.hzdev.cn → 10.1.0.30）→ 激活幂等追加 + oneshot 启动恢复（仅本机）
-      mise:                      # mise 运行时组件（→ home/fan/ide-si/mise.nix，激活自动 mise install 缺失组件）
+      mise:                      # mise 运行时组件（→ home/fan/_container_/mise.nix 共享，hostName 分支差异，激活自动 mise install 缺失组件）
         - bun@latest
         - go@1.25
         - java@zulu-8
@@ -286,6 +315,12 @@ nixos:
     ui_lang: zh_CN                    # KDE 界面中文（plasma-localerc，只影响界面；终端/SSH 保持 en_US，与 mac 的 AppleLanguages 策略一致）
     apps: [edge, bitwarden, vscode, rustdesk]  # GUI 应用（对齐 mac；rustdesk 走官方 GitHub release 二进制包，免源码编译 → packages/rustdesk-bin.nix，hbbs 配置注入 → home/fan/nix-pve/rustdesk.nix；clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install；vscode 走 unstable 包 → modules/home/vscode.nix）
     comin: true                  # git 驱动自动部署（git.fan-x.fun 私有仓库，凭据走 /root/.git-credentials agenix）
-    tailscale: 安装+服务           # 仅安装与启用（headscale/登录用户手动处理，state 就绪后再分机器声明式管理，→ hosts/nix-pve/services/tailscale.nix）
+    use_china_mirror: true       # 挂全局 useChinaMirror 开关（flake.nix specialArgs 注入，与 mac orbstack/mirrors.nix 同语义；false 时不设镜像，→ hosts/nix-pve/services/docker.nix daemon.settings）
+    registry_mirrors:            # Docker 镜像列表（三镜像与 mac 一致）
+      - https://docker.xuanyuan.me
+      - https://docker.1ms.run
+      - https://docker.m.daocloud.io
+    dns: [119.29.29.29, 223.5.5.5]  # MagicDNS 后端 resolver（headscale 服务端 dns.nameservers 下发，客户端只 accept-dns）
+    tailscale: 安装+服务（hostname=nix-pve，accept-routes，MagicDNS）  # 注册时指定机器名（--hostname）+ 接受子网路由（useRoutingFeatures=client）+ 接受 headscale DNS（tailscaled 默认，经 systemd-resolved 应用，→ hosts/nix-pve/services/tailscale.nix、networking.nix）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）
     user_password: agenix        # fan 登录密码 hash（secrets/fan-password.age，→ hosts/_nixos_/base/password.nix；SSH 走公钥，密码仅 SDDM 图形登录）

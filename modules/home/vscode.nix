@@ -175,6 +175,14 @@ in
             userSettings = cfg.settings;
           })
           // {
+            # 键位：仅 cmd/ctrl+d → 删除当前行（editor.action.deleteLines）；其余全部默认
+            # 平台分支：mac=cmd+d，linux=ctrl+d（VSCode 键位不含平台自动映射，需显式声明）；
+            # 放 profiles.default 而非顶层：顶层旧选项名会触发 HM rename，未启用 vscode 的平台报错
+            keybindings = lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
+              { key = "cmd+d"; command = "editor.action.deleteLines"; }
+            ] ++ lib.optionals (!pkgs.stdenv.hostPlatform.isDarwin) [
+              { key = "ctrl+d"; command = "editor.action.deleteLines"; }
+            ];
             enableUpdateCheck = false;
             enableExtensionUpdateCheck = false;
           };

@@ -1,13 +1,14 @@
 # shell 环境：zsh + oh-my-zsh + 定制 fishy 主题
 # 对应 alpine-init.sh 的 install_oh_my_zsh()：git clone 方式（不用 Nix 包，可 omz update）
-# 镜像开关（对应脚本的 use_proxy="https://gh-proxy.com/"）：
-#   useChinaMirror=true（默认，所有 ide 容器）→ 安装/更新地址加 https://gh-proxy.com/ 前缀
+# 镜像开关（对应脚本的 use_proxy="${tools.githubProxy}"）：
+#   useChinaMirror=true（默认，所有 ide 容器）→ 安装/更新地址加 GitHub 加速前缀
 #   useChinaMirror=false（NixOS 真机国外直连场景）→ 直连 GitHub 原始地址
+#   前缀由 tools/github-proxy.nix 集中管理（换代理只改一处 + 跑 scripts/switch-github-proxy.sh）
 # 注意：clone 的 origin 即安装地址，oh-my-zsh 自动更新 / omz update 天然走同一通道
 
-{ pkgs, lib, self, platform ? "container", useChinaMirror ? true, ... }:
+{ pkgs, lib, self, tools ? { githubProxy = "https://ghfast.top/"; }, platform ? "container", useChinaMirror ? true, ... }:
 let
-  useProxy = if useChinaMirror then "https://gh-proxy.com/" else "";
+  useProxy = if useChinaMirror then tools.githubProxy else "";
   # NixOS 的 nix 由系统 profile 提供（/run/current-system/sw），无 /nix/var/nix/profiles/default；
   # 仅容器/darwin 单用户 nix 需要 source nix.sh 加载 PATH
   nixShSource = lib.optionalString (platform != "nixos") ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n";

@@ -8,6 +8,7 @@
     substituters = [
       "https://mirrors.ustc.edu.cn/nix-channels/store"
       "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+      "https://mirror.sjtu.edu.cn/nix-channels/store"
       "https://cache.nixos.org/"
     ];
     # 补充 cachix（treefmt-nix / nix-community 等项目的预构建缓存，显著提速）
@@ -22,13 +23,14 @@
   };
 
   inputs = {
-    # git+https 走 gh-proxy（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
+    # git+https 走 GitHub 加速前缀（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
+    # 前缀由 tools/github-proxy.nix 集中管理（flake 解析器限制 inputs.url 必须字符串字面量），换代理：scripts/switch-github-proxy.sh
     # 稳定版 nixos-26.05：闭包二进制在镜像/官方永久缓存 → 构建命中 USTC/TUNA；
     # 不锁 rev：分支点更新慢（几周一次），nix flake update 自动跟随（升级=全量 nix flake update）
-    nixpkgs.url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixos-26.05&shallow=1";
+    nixpkgs.url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixos-26.05&shallow=1";
     home-manager = {
       # 与 nixpkgs 26.05 配套的 release 分支（master 要求更新的 nixpkgs）
-      url = "git+https://gh-proxy.com/https://github.com/nix-community/home-manager.git?ref=release-26.05&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/nix-community/home-manager.git?ref=release-26.05&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -36,48 +38,49 @@
     # 锁 rev（flake.lock）+ 周级 nix flake update：unstable 滚动快、二进制保留期短于稳定分支，长时间不更新会掉缓存
     # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix、home/fan/_common_/{claude,codex,pi}.nix）
     unstable = {
-      url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&shallow=1";
     };
 
     # vscode 扩展补充市场（nixpkgs 缺失的扩展，→ pkgs.repos.vscode.vscode-marketplace-release）
     vscode-extensions = {
-      url = "git+https://gh-proxy.com/https://github.com/nix-community/nix-vscode-extensions.git?ref=master&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/nix-community/nix-vscode-extensions.git?ref=master&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # secrets 加密（agenix）：secrets/*.age 激活时自动解密，见 _common_/secrets.nix 与 secrets/README.md
     agenix = {
-      url = "git+https://gh-proxy.com/https://github.com/ryantm/agenix.git?ref=main&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/ryantm/agenix.git?ref=main&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # 代码格式化（nix fmt）：nixfmt + statix，配置见 formatter.nix
     treefmt-nix = {
-      url = "git+https://gh-proxy.com/https://github.com/numtide/treefmt-nix.git?ref=main&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/numtide/treefmt-nix.git?ref=main&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # git 驱动的自动部署（服务器轮询仓库自动 nixos-rebuild），等真机接入后启用
     comin = {
-      url = "git+https://gh-proxy.com/https://github.com/nlewo/comin.git?ref=refs/tags/v0.14.0&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/nlewo/comin.git?ref=refs/tags/v0.14.0&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
       # comin 内部自带的 treefmt-nix 整体跟随（否则它解析 github 旧版 + 旧 nixpkgs，lock 残留双节点）
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
 
     # --- NixOS 真机（nix-pve，PVE 上的虚拟机）：声明式磁盘 / 不可变系统 / Plasma 桌面 ---
-    # 注意：新增 input 用直连 GitHub（走代理拉取；gh-proxy 限流时锁不动），已有 input 保持 gh-proxy
+    # 注意：input 全部走 gh-proxy（与 nixpkgs/home-manager 一致）；若 gh-proxy 限流导致 lock 拉不动，
+    # 可临时用 --override-input 直连 GitHub 或换 ghfast.top 前缀（见下方 URL 格式）
     disko = {
-      url = "git+https://github.com/nix-community/disko.git?ref=master&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/nix-community/disko.git?ref=master&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     impermanence = {
-      url = "git+https://github.com/nix-community/impermanence.git?ref=master&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/nix-community/impermanence.git?ref=master&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # Plasma 面板/字体/KWin 声明式定制（home 层，见 home/fan/_nixos_/gui/plasma.nix）
     plasma-manager = {
-      url = "git+https://github.com/nix-community/plasma-manager.git?ref=trunk&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/nix-community/plasma-manager.git?ref=trunk&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
@@ -86,33 +89,33 @@
     # nix-darwin 用配套分支：nix-darwin-26.05 ↔ nixpkgs-26.05-darwin（checkRelease 强制匹配）
     nixpkgs-darwin = {
       # darwin 专属 channel（闭包含完整 darwin 构建，镜像同步）；不锁 rev，跟随分支
-      url = "git+https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-26.05-darwin&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-26.05-darwin&shallow=1";
     };
     nix-darwin = {
-      url = "git+https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git?ref=nix-darwin-26.05&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/nix-darwin/nix-darwin.git?ref=nix-darwin-26.05&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
 
     # homebrew 声明式管理（casks 清单见 hosts/_darwin_/base/apps.nix）
     nix-homebrew = {
-      url = "git+https://gh-proxy.com/https://github.com/zhaofengli/nix-homebrew.git?ref=main&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/zhaofengli/nix-homebrew.git?ref=main&shallow=1";
       inputs.brew-src.follows = "homebrew";
     };
     homebrew = {
-      url = "git+https://gh-proxy.com/https://github.com/Homebrew/brew.git?ref=main&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/Homebrew/brew.git?ref=main&shallow=1";
       flake = false;
     };
     homebrew-core = {
-      url = "git+https://gh-proxy.com/https://github.com/homebrew/homebrew-core.git?ref=main&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/homebrew/homebrew-core.git?ref=main&shallow=1";
       flake = false;
     };
     homebrew-cask = {
-      url = "git+https://gh-proxy.com/https://github.com/homebrew/homebrew-cask.git?ref=main&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/homebrew/homebrew-cask.git?ref=main&shallow=1";
       flake = false;
     };
     # tart 等公式的 tap（mini-m4 的 hosts/mini-m4/homebrew.nix 声明）
     cirruslabs-cli = {
-      url = "git+https://gh-proxy.com/https://github.com/cirruslabs/homebrew-cli.git?ref=master&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/cirruslabs/homebrew-cli.git?ref=master&shallow=1";
       flake = false;
     };
   };
@@ -213,7 +216,7 @@
       homeConfigurations = {
         # Docker 开发容器（Ubuntu，ide-si / ide-lenovo）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
         # 代理：仅 ide-si 走（sysenv.nix 接管环境变量+hosts，与 compose 无关）；lenovo 国内直连
-        # 机器专属：mise 组件按机器目录声明（home/fan/ide-si/mise.nix / ide-lenovo/mise.nix），容器内 nix run .#ide-si / .#ide-lenovo
+        # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异），容器内 nix run .#ide-si / .#ide-lenovo
         # 容器平台层（_container_，继承 _ubuntu_ 系统基础）：Ubuntu 层留给服务器/真机，_nixos_ 仅 NixOS 真机
         "fan@ide-si" = mkHomeConfig { hostName = "ide-si"; platform = "container"; isContainer = true; };
         "fan@ide-lenovo" = mkHomeConfig { hostName = "ide-lenovo"; platform = "container"; isContainer = true; };
@@ -267,19 +270,19 @@
       packages = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
         in (import ./packages pkgs) // {
-          # 机器专属别名：mise 组件按机器目录声明（home/fan/ide-si/mise.nix / ide-lenovo/mise.nix），si/lenovo 各一份
+          # 机器专属别名：mise 组件共享 _container_/mise.nix（hostName 分支差异），si/lenovo 各一份
           # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
           ide-si = pkgs.writeShellScriptBin "ide-activate"
             "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide-si"; system = system; platform = "container"; isContainer = true; }).activationPackage}/activate";
           ide-lenovo = pkgs.writeShellScriptBin "ide-activate"
             "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide-lenovo"; system = system; platform = "container"; isContainer = true; }).activationPackage}/activate";
-          # Mac 一次性构建+激活别名：nix run .#darwin-mba-m5 等
-          "darwin-mba-m5" = pkgs.writeShellScriptBin "darwin-mba-m5"
-            "exec ${self.darwinConfigurations.mba-m5.system}/activate";
-          "darwin-mbp-m1" = pkgs.writeShellScriptBin "darwin-mbp-m1"
-            "exec ${self.darwinConfigurations.mbp-m1.system}/activate";
-          "darwin-mini-m4" = pkgs.writeShellScriptBin "darwin-mini-m4"
-            "exec ${self.darwinConfigurations.mini-m4.system}/activate";
+          # Mac 一次性构建+激活别名：nix run .#mba-m5 等（activate 必须 root，内置 sudo）
+          "mba-m5" = pkgs.writeShellScriptBin "mba-m5"
+            "exec sudo ${self.darwinConfigurations.mba-m5.system}/activate";
+          "mbp-m1" = pkgs.writeShellScriptBin "mbp-m1"
+            "exec sudo ${self.darwinConfigurations.mbp-m1.system}/activate";
+          "mini-m4" = pkgs.writeShellScriptBin "mini-m4"
+            "exec sudo ${self.darwinConfigurations.mini-m4.system}/activate";
         });
 
       # --- 多台 ide 部署的别名同规则：nix build .#ide-si / .#ide-lenovo（packages 块内各一行）---

@@ -50,7 +50,7 @@ RUN groupadd -r nixbld && useradd -g nixbld nixbld \
 #      不写用户文件避免 HM clobber 冲突
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.nix-profile/bin:/nix/var/nix/profiles/default/bin"
 RUN mkdir -p /root/.config/nix \
-    && printf 'substituters = https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/\nexperimental-features = nix-command flakes\n' > /root/.config/nix/nix.conf \
+    && printf 'substituters = https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://mirror.sjtu.edu.cn/nix-channels/store https://cache.nixos.org/\nexperimental-features = nix-command flakes\n' > /root/.config/nix/nix.conf \
     && mkdir -p /etc/zsh \
     && printf '. /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n' > /etc/zsh/zshenv
 

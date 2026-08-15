@@ -1,0 +1,42 @@
+# codex 通用段（nix 声明，激活期写为实体文件 ~/.codex/config.toml）
+# 机器特定配置（blender/pencil MCP、项目信任、hooks 指纹）走 config.machine.toml 合并，nix 不管理
+model_provider = "fan"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "xhigh"
+service_tier = "default"
+approvals_reviewer = "user"
+
+[model_providers.fan]
+name = "fan"
+base_url = "https://ai.qksxin.com/v1"
+wire_api = "responses"
+temp_env_key = "AI_FAN_CODEX"
+requires_openai_auth = true
+model = "gpt-5.4"
+
+[features]
+multi_agent = true
+
+[features.multi_agent_v2]
+enabled = true
+hide_spawn_agent_metadata = false
+tool_namespace = "agents"
+max_concurrent_threads_per_session = 8
+min_wait_timeout_ms = 10000
+default_wait_timeout_ms = 30000
+max_wait_timeout_ms = 120000
+
+[agents]
+max_threads = 8
+
+[mcp_servers.context7]
+command = "npx"
+args = [ "-y", "@upstash/context7-mcp@latest" ]
+startup_timeout_sec = 30
+
+[plugins."ficc-coding-standards@ficc-coding-standards"]
+enabled = true
+
+[marketplaces.ficc-coding-standards]
+source_type = "git"
+source = "https://hc-git.qksxin.com/hc/ai-plugins.git"

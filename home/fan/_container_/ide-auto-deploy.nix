@@ -37,6 +37,6 @@
       echo "警告: systemctl start ide-auto-deploy.timer 失败，错误如上"
     fi
     state=$(/usr/bin/systemctl is-active ide-auto-deploy.timer 2>/dev/null || echo unknown)
-    echo "[ide-auto-deploy] timer 状态: $state（每 60s 轮询 /root/nixcfg，HEAD 变更自动 nix run .#${hostName}）"
+    echo "[ide-auto-deploy] timer 状态: $state （每 60s 轮询 /root/nixcfg，HEAD 变更自动 nix run .#${hostName}）"
   '';
 }

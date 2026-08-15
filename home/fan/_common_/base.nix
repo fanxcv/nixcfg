@@ -16,6 +16,9 @@
     jq
     rtk
     btop
+    # 默认 node 由 nix 管理（替代原全局默认 mise node@lts，pkgs.nodejs 跟随 nixpkgs LTS）；
+    # 机器级 mise node（mini-m4@24 / ide 容器@22）经 shims 覆盖全局，见 mise.nix
+    nodejs
   ];
 
   programs.git = {

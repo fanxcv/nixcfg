@@ -3,13 +3,13 @@
 #   .tmux.conf 软链 + .tmux.conf.local 首次复制 + 追加定制（mouse / base-index）
 # 全平台生效（macOS 同样使用）
 
-{ pkgs, lib, useChinaMirror ? true, ... }:
+{ pkgs, lib, tools ? { githubProxy = "https://ghfast.top/"; }, useChinaMirror ? true, ... }:
 {
   home.packages = [ pkgs.tmux ];
 
   home.activation.setupTmux = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_tmux() {
-      useProxy="${if useChinaMirror then "https://gh-proxy.com/" else ""}"
+      useProxy="${if useChinaMirror then tools.githubProxy else ""}"
 
       # 对应 Dockerfile：git clone gpakosz/.tmux
       if [ ! -e "$HOME/.tmux/.git" ]; then

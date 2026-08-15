@@ -16,13 +16,13 @@
         "rev": "b027ee29d959fda4b60b57566d64c98a202e0feb",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/ryantm/agenix.git"
+        "url": "https://ghfast.top/https://github.com/ryantm/agenix.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/ryantm/agenix.git"
+        "url": "https://ghfast.top/https://github.com/ryantm/agenix.git"
       }
     },
     "cirruslabs-cli": {
@@ -34,13 +34,13 @@
         "rev": "4fef6a32df31b4c51bf745ae2d86b53a037a1a6c",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/cirruslabs/homebrew-cli.git"
+        "url": "https://ghfast.top/https://github.com/cirruslabs/homebrew-cli.git"
       },
       "original": {
         "ref": "master",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/cirruslabs/homebrew-cli.git"
+        "url": "https://ghfast.top/https://github.com/cirruslabs/homebrew-cli.git"
       }
     },
     "comin": {
@@ -60,13 +60,13 @@
         "rev": "ed92afc48978fb15a2535ebd5c5f63b3010e3b78",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/nlewo/comin.git"
+        "url": "https://ghfast.top/https://github.com/nlewo/comin.git"
       },
       "original": {
         "ref": "refs/tags/v0.14.0",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/nlewo/comin.git"
+        "url": "https://ghfast.top/https://github.com/nlewo/comin.git"
       }
     },
     "darwin": {
@@ -104,13 +104,13 @@
         "rev": "ff8702b4de27f72b4c78573dfb89ec74e36abdf1",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/nix-community/disko.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/disko.git"
       },
       "original": {
         "ref": "master",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/nix-community/disko.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/disko.git"
       }
     },
     "flake-compat": {
@@ -163,13 +163,13 @@
         "rev": "d4fd24667c8cbef124bb70a20380cab75ec8474d",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/nix-community/home-manager.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/home-manager.git"
       },
       "original": {
         "ref": "release-26.05",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/nix-community/home-manager.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/home-manager.git"
       }
     },
     "home-manager_3": {
@@ -196,55 +196,55 @@
     "homebrew": {
       "flake": false,
       "locked": {
-        "lastModified": 1786551636,
-        "narHash": "sha256-6Di/xahANPxP/izGYulo+E2kUjDEqln3lvsar78/7D4=",
+        "lastModified": 1786716413,
+        "narHash": "sha256-xa/9GreuFDfeOpS+wwpRGHcIVkSYQpkasEbBjnu+1Ig=",
         "ref": "main",
-        "rev": "ec55b2e3f893467a8c7c1952a724907797a3b8d0",
+        "rev": "d64f1cfcb117d4279e8c0c9241b395cbf46401d0",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/Homebrew/brew.git"
+        "url": "https://ghfast.top/https://github.com/Homebrew/brew.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/Homebrew/brew.git"
+        "url": "https://ghfast.top/https://github.com/Homebrew/brew.git"
       }
     },
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1786601492,
-        "narHash": "sha256-5RoqoH+RKCR9VaP8SYRPCxHKaU/Bmurs+nW8yMwVOq0=",
+        "lastModified": 1786722830,
+        "narHash": "sha256-9SP7gb92/W5Z+J/Ov4GL8rsUGPMJis5/NOEKtVMPN44=",
         "ref": "main",
-        "rev": "e4bb8d515e67b3cd915c32578b949c1af03d673b",
+        "rev": "f70fea0651b96db87511a4369d76093acf18a939",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/homebrew/homebrew-cask.git"
+        "url": "https://ghfast.top/https://github.com/homebrew/homebrew-cask.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/homebrew/homebrew-cask.git"
+        "url": "https://ghfast.top/https://github.com/homebrew/homebrew-cask.git"
       }
     },
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1786601707,
-        "narHash": "sha256-Oau7k636w5u7FLCoEKzXhRc4s1oFUXDGUTTadaz0IsA=",
+        "lastModified": 1786722556,
+        "narHash": "sha256-j4AdCPmk9wUJyGhm2QxoU6D0PRAQVmVuGX4EBT8wbjQ=",
         "ref": "main",
-        "rev": "6fafcb009abd788098ba6da8e5c2805073297ad6",
+        "rev": "2d2f51cec9372e1fdf0fac3bc15bf8303e9d9a99",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/homebrew/homebrew-core.git"
+        "url": "https://ghfast.top/https://github.com/homebrew/homebrew-core.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/homebrew/homebrew-core.git"
+        "url": "https://ghfast.top/https://github.com/homebrew/homebrew-core.git"
       }
     },
     "impermanence": {
@@ -261,13 +261,13 @@
         "rev": "7b1d382faf603b6d264f58627330f9faa5cba149",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/nix-community/impermanence.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/impermanence.git"
       },
       "original": {
         "ref": "master",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/nix-community/impermanence.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/impermanence.git"
       }
     },
     "nix-darwin": {
@@ -283,13 +283,13 @@
         "rev": "c3e90c89649b07d1a96e4b9dd6cd0d6e44b91a74",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git"
+        "url": "https://ghfast.top/https://github.com/nix-darwin/nix-darwin.git"
       },
       "original": {
         "ref": "nix-darwin-26.05",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/nix-darwin/nix-darwin.git"
+        "url": "https://ghfast.top/https://github.com/nix-darwin/nix-darwin.git"
       }
     },
     "nix-homebrew": {
@@ -299,19 +299,19 @@
         ]
       },
       "locked": {
-        "lastModified": 1786580329,
-        "narHash": "sha256-/8cBGYJ+Cj2bSdXv7+B+DFIU+s5u/iKouWUZUvFz32E=",
+        "lastModified": 1786686423,
+        "narHash": "sha256-8q3WdB8o3VUI7rOz1OXfioXIaaWbFTAxRJAkWLlfc0s=",
         "ref": "main",
-        "rev": "7be2ffcda4d9632edb7150b263ee081abba5e984",
+        "rev": "ccabf79a6b9845eb72b51ea1d9c7ce3446350df3",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/zhaofengli/nix-homebrew.git"
+        "url": "https://ghfast.top/https://github.com/zhaofengli/nix-homebrew.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/zhaofengli/nix-homebrew.git"
+        "url": "https://ghfast.top/https://github.com/zhaofengli/nix-homebrew.git"
       }
     },
     "nixpkgs": {
@@ -322,13 +322,13 @@
         "rev": "9f78f44a87948854445dae0b6bf82b2e87e4efb5",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
       },
       "original": {
         "ref": "nixos-26.05",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
       }
     },
     "nixpkgs-darwin": {
@@ -339,13 +339,13 @@
         "rev": "e0c84f9d0ad137f076dc957494f5b39885597d4f",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
       },
       "original": {
         "ref": "nixpkgs-26.05-darwin",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
       }
     },
     "plasma-manager": {
@@ -364,13 +364,13 @@
         "rev": "a19a2a029fa180911bd89c554dca1616e10f4c1d",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/nix-community/plasma-manager.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/plasma-manager.git"
       },
       "original": {
         "ref": "trunk",
         "shallow": true,
         "type": "git",
-        "url": "https://github.com/nix-community/plasma-manager.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/plasma-manager.git"
       }
     },
     "root": {
@@ -422,30 +422,30 @@
         "rev": "ae7910970dddc408fe6ab1c8e4b277bb21d72dc0",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/numtide/treefmt-nix.git"
+        "url": "https://ghfast.top/https://github.com/numtide/treefmt-nix.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/numtide/treefmt-nix.git"
+        "url": "https://ghfast.top/https://github.com/numtide/treefmt-nix.git"
       }
     },
     "unstable": {
       "locked": {
-        "lastModified": 1786534138,
-        "narHash": "sha256-fBJMdnKUTUDtfi/BYLr71HLaC9dG382arxLF2Egg2uo=",
+        "lastModified": 1786593342,
+        "narHash": "sha256-smTKQXMLLStzc8zJevMCckbk3My7SvbbLmPYZUJJKW4=",
         "ref": "nixpkgs-unstable",
-        "rev": "044bfe75bfe4c7bbe043dc17b5e42ea823b84a09",
+        "rev": "6b5e5b7a6631f065bf6908986990b37d845f847f",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
       },
       "original": {
         "ref": "nixpkgs-unstable",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
       }
     },
     "vscode-extensions": {
@@ -461,13 +461,13 @@
         "rev": "e175b5a56f828415b9e273e37fc15d780dcec8a0",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/nix-community/nix-vscode-extensions.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/nix-vscode-extensions.git"
       },
       "original": {
         "ref": "master",
         "shallow": true,
         "type": "git",
-        "url": "https://gh-proxy.com/https://github.com/nix-community/nix-vscode-extensions.git"
+        "url": "https://ghfast.top/https://github.com/nix-community/nix-vscode-extensions.git"
       }
     }
   },

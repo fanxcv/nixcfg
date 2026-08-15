@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS0": "1",
+    "MCP_TIMEOUT": "60000",
+    "ENABLE_LSP_TOOL": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash", "BashOutput", "Edit", "Glob", "Grep", "KillShell", "NotebookEdit",
+      "Read", "SlashCommand", "Task", "TodoWrite", "WebFetch", "WebSearch", "Write",
+      "List", "LS", "Agent", "MultiEdit", "NotebookRead",
+      "mcp__ide", "mcp__jetbrains", "mcp__pencil"
+    ],
+    "deny": []
+  },
+  "hooks": {},
+  "statusLine": {
+    "type": "command",
+    "command": "ccline",
+    "padding": 0
+  },
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "jdtls-lsp@claude-plugins-official": false,
+    "kotlin-lsp@claude-plugins-official": false,
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": false,
+    "frontend-design@claude-plugins-official": true,
+    "ficc-coding-standards@ficc-coding-standards": true,
+    "beads@beads-marketplace": true,
+    "skill-creator@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "ficc-coding-standards": {
+      "source": {
+        "source": "git",
+        "url": "https://hc-git.qksxin.com/hc/ai-plugins.git"
+      }
+    },
+    "beads-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "gastownhall/beads"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": true,
+  "tui": "fullscreen",
+  "teammateMode": "in-process",
+  "permission_mode": "default"
+}

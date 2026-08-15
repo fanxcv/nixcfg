@@ -2,10 +2,10 @@
 # beads（bd）→ Go 单二进制，官方 release 直接分发（fetchurl，不经 npm/编译）
 # 其他 AI 工具各归各文件：claude-code + ccline → claude.nix，codex → codex.nix，pi → pi.nix
 
-{ pkgs, useChinaMirror ? true, ... }:
+{ pkgs, tools ? { githubProxy = "https://ghfast.top/"; }, useChinaMirror ? true, ... }:
 let
-  # 国内网络开关（flake.nix 传入）：GitHub 下载走 gh-proxy（与 shells.nix/tmux.nix 同一开关）
-  proxy = if useChinaMirror then "https://gh-proxy.com/" else "";
+  # GitHub 加速前缀（tools/github-proxy.nix 集中管理，换代理只改一处；与 useChinaMirror 联动）
+  proxy = if useChinaMirror then tools.githubProxy else "";
 
   # 平台标识：nix 的 isx86_64/isAarch64 对应官方分发后缀 x64/arm64（beads 的 Go 命名是 amd64）
   os = if pkgs.stdenv.hostPlatform.isLinux then "linux"

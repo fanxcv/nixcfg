@@ -18,4 +18,9 @@
   ];
 
   system.stateVersion = 7;
+
+  # 部署遇已存在手配文件（.zshrc/.npmrc/.claude 等）自动备份为 <file>.backup 再接管
+  # （不能用环境变量 HOME_MANAGER_BACKUP_EXT：别名脚本经 sudo env_reset 会清掉；
+  #   此选项由 nix-darwin 在 launchctl asuser 激活链内注入，见 home-manager 模块源码）
+  home-manager.backupFileExtension = "backup";
 }

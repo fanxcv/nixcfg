@@ -37,7 +37,7 @@
         if [ "$state" = "active" ]; then
           echo "===> skemate.service 已重新拉起"
         else
-          echo "警告: skemate.service 拉起后未存活（当前状态 $state，可能崩溃循环），最近日志："
+          echo "警告: skemate.service 拉起后未存活（当前状态 $state ，可能崩溃循环），最近日志："
           /usr/bin/journalctl -u skemate.service -n 10 --no-pager 2>/dev/null || true
         fi
       else
