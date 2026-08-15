@@ -49,7 +49,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       proxy: https://ai.qksxin.com
     pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取）
       token_env: PI_CONFIG_GIT_TOKEN  # 全局环境变量：从 ~/.secrets/ai.env 读取（global.secrets.ai_env），clone 后清 origin
-    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器级 config.toml（mini-m4/ide 容器）声明组件，无 config.toml 的机器不再装默认组件；node@lts 默认已改由 nix 管理，见 global.pkgs.nodejs）
+    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器级 config.toml（mini-m4/ide 容器）声明组件，无 config.toml 的机器不再装默认组件；config.toml 策略：不存在→模板创建默认，存在→补齐 nix 指定但缺失的键、已存在键保留用户版本，实体文件可写（→ _common_/mise/apply.py）；node@lts 默认已改由 nix 管理，见 global.pkgs.nodejs）
     mirrors:                   # 开发工具国内镜像（→ home/fan/_common_/mirrors.nix，所有机器；useChinaMirror=false 时不写，默认官方源）
       npm: npmmirror           # 装过 node 的机器：.npmrc registry
       pip: 清华 TUNA           # python 机器：.config/pip/pip.conf
@@ -222,7 +222,7 @@ macos:
       - blender                  # 3D 建模
     formulae:                    # 专属 brew 公式
       - tart                     # macOS 虚拟机
-    mise:                        # mise 运行时组件（→ home/fan/mini-m4/mise.nix；ANDROID_HOME/cmdline-tools 由插件自动注入，platform-tools/emulator 由 [env] 显式声明（tools=true 跟随版本），交互 shell 经 omz mise 插件 activate，非交互显式 eval mise env）
+    mise:                        # mise 运行时组件（→ home/fan/mini-m4/mise.nix；ANDROID_HOME/cmdline-tools 由插件自动注入，platform-tools/emulator 由 [env] 显式声明（tools=true 跟随版本），交互 shell 经 omz mise 插件 activate，非交互显式 eval mise env；config.toml 策略：不存在→模板创建，存在→补齐缺失键、保留用户版本，实体可写 → _common_/mise/apply.py）
       - android-sdk@22.0         # 插件注入 ANDROID_HOME + cmdline-tools PATH；[env] 注入 platform-tools（adb/fastboot）/emulator；显式 22.0：latest 解析 bug 落 1.0（老 sdkmanager 丢 emulator 包，2025-08 实测）
       - bun@latest
       - cocoapods
@@ -249,6 +249,10 @@ macos:
       - microsoft-remote-desktop # Windows App（微软远程桌面），本机已装
       - ryujinx                  # Switch 模拟器，本机已装
       - bilibili                 # 本机已装
+    ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（含 OrbStack Include 行，本机有 OrbStack；→ home/fan/mba-m5/ssh-config.nix）
+
+  mbp_m1:                        # ← mbp-m1 专属（→ hosts/mbp-m1/ + home/fan/mbp-m1/）
+    ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（含 OrbStack Include 行，本机有 OrbStack；→ home/fan/mbp-m1/ssh-config.nix）
 
 linux:
   common:                        # Linux 系公共（NixOS/Ubuntu/Alpine 共用，→ home/fan/_linux_/）
@@ -286,7 +290,7 @@ linux:
     ide-si:                      # ← 机器（原 si-11-ide 更名，hostname=ide-si；激活：nix run .#ide-si）
       proxy: true                # 走代理（已由 nix 接管：compose 原代理变量/extra_hosts 已删 → home/fan/ide-si/sysenv.nix，nix run 激活即生效；JVM 不读 shell 代理，JAVA_TOOL_OPTIONS 注入）
       sysenv: 接管环境变量+hosts  # 替代 compose environment/extra_hosts，免重建容器：代理/NO_PROXY/JAVA_TOOL_OPTIONS → /etc/environment.d + .zshenv + ~/.ssh/environment；内网 hosts（gitlab/maven.hzdev.cn → 10.1.0.30）→ 激活幂等追加 + oneshot 启动恢复（仅本机）
-      mise:                      # mise 运行时组件（→ home/fan/_container_/mise.nix 共享，hostName 分支差异，激活自动 mise install 缺失组件）
+      mise:                      # mise 运行时组件（→ home/fan/_container_/mise.nix 共享，hostName 分支差异，激活自动 mise install 缺失组件；config.toml 同 mini-m4 策略：存在补齐缺失键/保留用户版本，实体可写）
         - bun@latest
         - go@1.25
         - java@zulu-8
@@ -323,4 +327,5 @@ nixos:
     dns: [119.29.29.29, 223.5.5.5]  # MagicDNS 后端 resolver（headscale 服务端 dns.nameservers 下发，客户端只 accept-dns）
     tailscale: 安装+服务（hostname=nix-pve，accept-routes，MagicDNS）  # 注册时指定机器名（--hostname）+ 接受子网路由（useRoutingFeatures=client）+ 接受 headscale DNS（tailscaled 默认，经 systemd-resolved 应用，→ hosts/nix-pve/services/tailscale.nix、networking.nix）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）
+    ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（本机无 OrbStack，解密后删除 Include ~/.orbstack/ssh/config 行；→ home/fan/nix-pve/ssh-config.nix）
     user_password: agenix        # fan 登录密码 hash（secrets/fan-password.age，→ hosts/_nixos_/base/password.nix；SSH 走公钥，密码仅 SDDM 图形登录）

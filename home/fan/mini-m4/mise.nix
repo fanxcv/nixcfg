@@ -3,10 +3,13 @@
 #   dart 的 version_list_url（GCS JSON API）无镜像，保留官方直连（仅版本探测，低频小流量）
 # 注意：接管 config.toml 后，age/fd/ripgrep/rtk/ruby/uv 不再由 mise 管理
 #   （fd/ripgrep/rtk 已由 nix 包管理；已安装目录不会被卸载，可 mise uninstall 清理）
+# config.toml 策略（→ _common_/mise/apply.py，实体文件可写）：
+#   不存在 → nix 模板创建默认；已存在 → 补齐 nix 指定但缺失的键，已存在键（含版本不同）
+#   保留用户版本；用户内容/注释原样；旧 symlink 自动实体化
 
-{ ... }:
-{
-  home.file.".config/mise/config.toml".text = ''
+{ pkgs, lib, ... }:
+let
+  template = pkgs.writeText "mise-config.toml" ''
     [tools]
     android-sdk = "22.0"   # 显式版本："latest" 解析 bug 落 1.0（2024 老 sdkmanager 解析新仓库丢 emulator 包，2025-08 实测）
     bun = "latest"
@@ -24,5 +27,11 @@
     [env]
     _.path = { path = ["{{ tools['android-sdk'].path }}/platform-tools", "{{ tools['android-sdk'].path }}/emulator"], tools = true }
     # 交互 shell 由 omz mise 插件 activate 引入，非交互场景显式 eval mise env
+  '';
+in
+{
+  home.activation.setupMiseConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ${pkgs.python3}/bin/python3 ${./../_common_/mise/apply.py} \
+      "$HOME/.config/mise/config.toml" "${template}"
   '';
 }
