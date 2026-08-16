@@ -67,6 +67,9 @@ settings:
   window.titleBarStyle: native
   window.menuStyle: custom
 
+  # 界面语言（写 ~/.vscode/argv.json 的 locale，非 settings.json——新版 locale 键已失效）
+  locale: zh-cn
+
   # AI / 遥测
   chat.disableAIFeatures: true
   redhat.telemetry.enabled: false

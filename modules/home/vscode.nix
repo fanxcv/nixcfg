@@ -175,12 +175,18 @@ in
     (lib.mkIf cfg.enable {
     # 界面语言中文：argv.json 的 locale（新版 VSCode 已不读 settings.json 的 locale 键）
     # 语言包在 baseCommonExtensions（ms-ceintl.vscode-language-pack-zh-hans）；改后需重启 VSCode
-    # 注意：整个文件由 nix 接管，手动改过的其它 runtime 参数会被覆盖
-    home.file.".vscode/argv.json".text = ''
+    # 不能用 home.file：它生成指向 nix store 只读文件的 symlink，而 VSCode 启动校验 argv.json
+    # 时会尝试写入（补 crash-reporter-id 等），写失败即判定文件无效并弹 "argv.json contains errors"
+    # （nix-community/home-manager#8724）。改由 activation 写真实文件：VSCode 可自行补写字段，locale 不受影响
+    home.activation.writeVscodeArgvJson = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      mkdir -p "$HOME/.vscode"
+      rm -f "$HOME/.vscode/argv.json"
+      cat > "$HOME/.vscode/argv.json" <<'JSON'
       {
-        // Display language of VSCode（nix 声明；如需改语言，改这里后重启）
         "locale": "zh-cn"
       }
+      JSON
+      chmod 644 "$HOME/.vscode/argv.json"
     '';
     programs.vscode = {
       enable = true;
