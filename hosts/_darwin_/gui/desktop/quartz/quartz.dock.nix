@@ -1,5 +1,6 @@
 # Dock 声明（system.defaults.dock）
 # persistent-apps 是 Dock 固定应用清单，与 homebrew casks（apps.nix）保持一致，按需增删
+# 注意：mba-m5/mbp-m1 用机器层 lib.mkForce 覆盖本清单（hosts/<host>/dock.nix），本文件仅 mini-m4 直接生效
 {
   system.defaults.dock = {
     # Dock 在屏幕左侧
@@ -26,6 +27,7 @@
     wvous-br-corner = 14;
 
     # Dock 固定应用（与 apps.nix casks 对齐；Apps.app 为 macOS 26 Tahoe 启动器）
+    # mba-m5/mbp-m1 覆盖为 iTerm+WeChat+QQ+Edge（hosts/<host>/dock.nix）；本清单 = mini-m4 实际生效
     persistent-apps = [
       {
         app = "/System/Applications/Apps.app";
