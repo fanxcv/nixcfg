@@ -164,6 +164,15 @@ in
   config = lib.mkMerge [
     # 客户端（vscode.enable）：mac/nixos 平台层启用
     (lib.mkIf cfg.enable {
+    # 界面语言中文：argv.json 的 locale（新版 VSCode 已不读 settings.json 的 locale 键）
+    # 语言包在 baseCommonExtensions（ms-ceintl.vscode-language-pack-zh-hans）；改后需重启 VSCode
+    # 注意：整个文件由 nix 接管，手动改过的其它 runtime 参数会被覆盖
+    home.file.".vscode/argv.json".text = ''
+      {
+        // Display language of VSCode（nix 声明；如需改语言，改这里后重启）
+        "locale": "zh-cn"
+      }
+    '';
     programs.vscode = {
       enable = true;
       package = cfg.package;
@@ -210,7 +219,10 @@ in
           paths = serverExtensions ++ cfg.server.extensions;
           pathsToLink = [ "/share/vscode/extensions" ];
           postBuild = ''
-            ln -s $out/share/vscode/extensions/* $out/ 2>/dev/null || true
+            # buildEnv 把各扩展链接到 $out/share/vscode/extensions（链接→源包 store 路径）；
+            # 提升到 $out 根必须用 mv（保持链接目标有效）：ln -s + rm -rf share 会留下指向已删子路径的断链，
+            # vscode-server 读取 package.json 失败 → 扩展全部不加载（Linux/mac 均复现）
+            mv $out/share/vscode/extensions/* $out/
             rm -rf $out/share
           '';
         };
