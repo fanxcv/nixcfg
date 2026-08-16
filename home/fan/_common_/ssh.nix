@@ -22,9 +22,13 @@
       : > "$keys_tmp"
       if ${pkgs.curl}/bin/curl -sfL https://github.com/fanxcv.keys -o "$keys_tmp" \
         && [ -s "$keys_tmp" ]; then
-        # 追加本机 mac 身份公钥（secrets/hosts/mini-m4/ssh_id_rsa.pub，即原 mac-pub.pub；
+        # 追加 mac 身份公钥（各台自己的 id_rsa：mini-m4 / mba-m5 / mbp-m1，即原 mac-pub.pub；
         # github 集合可能不含最新 key，防激活覆盖锁死）
+        # 注意 mba-m5 与 mbp-m1 共用同一套 id_rsa（secrets/hosts/<host>/ssh_id_rsa.pub 同内容，
+        #   authorized_keys 重复行无害，ssh 按 key 去重）
         printf '%s\n' '${builtins.readFile ../../../secrets/hosts/mini-m4/ssh_id_rsa.pub}' >> "$keys_tmp"
+        printf '%s\n' '${builtins.readFile ../../../secrets/hosts/mba-m5/ssh_id_rsa.pub}' >> "$keys_tmp"
+        printf '%s\n' '${builtins.readFile ../../../secrets/hosts/mbp-m1/ssh_id_rsa.pub}' >> "$keys_tmp"
         mv -f "$keys_tmp" "$HOME/.ssh/authorized_keys"
         chmod 600 "$HOME/.ssh/authorized_keys"
       else

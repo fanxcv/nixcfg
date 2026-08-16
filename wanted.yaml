@@ -244,15 +244,17 @@ macos:
 
   mba_m5:                       # ← mba-m5 专属（实机导入草案，待你调整）
     apps:                        # 本机 GUI 应用（共享层已声明 orbstack/iterm2/edge/rustdesk/lemon/vscode，不重复）
+      - qq
       - wechat                   # 本机已装
       - jetbrains-toolbox        # 本机已装（仅本机声明，mini-m4 不要）
       - microsoft-remote-desktop # Windows App（微软远程桌面），本机已装
-      - ryujinx                  # Switch 模拟器，本机已装
       - bilibili                 # 本机已装
     ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（含 OrbStack Include 行，本机有 OrbStack；→ home/fan/mba-m5/ssh-config.nix）
+    ssh_id_rsa: SSH 身份密钥      # secrets/hosts/mba-m5/ssh_id_rsa.age 激活解密到 ~/.ssh/id_rsa（mba-m5/mbp-m1 共用；pub 明文 secrets/hosts/mba-m5/ssh_id_rsa.pub，兼作服务器 authorized_keys 追加源 → home/fan/mba-m5/ssh.nix + home/fan/_common_/ssh.nix）
 
   mbp_m1:                        # ← mbp-m1 专属（→ hosts/mbp-m1/ + home/fan/mbp-m1/）
     ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（含 OrbStack Include 行，本机有 OrbStack；→ home/fan/mbp-m1/ssh-config.nix）
+    ssh_id_rsa: SSH 身份密钥      # secrets/hosts/mbp-m1/ssh_id_rsa.age 激活解密到 ~/.ssh/id_rsa（mba-m5/mbp-m1 共用；pub 明文 secrets/hosts/mbp-m1/ssh_id_rsa.pub，兼作服务器 authorized_keys 追加源 → home/fan/mbp-m1/ssh.nix + home/fan/_common_/ssh.nix）
 
 linux:
   common:                        # Linux 系公共（NixOS/Ubuntu/Alpine 共用，→ home/fan/_linux_/）
