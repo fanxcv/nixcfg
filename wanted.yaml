@@ -187,7 +187,21 @@ macos:
         dns_override: false       # 关闭 DNS 覆写（enable_dns_settings=false，不应用 dns_config.yaml）
         ipv6: false               # 关闭 IPv6（clash-verge.yaml ipv6）
       iterm2:                    # 终端（已移除 alacritty，iTerm2 暂无深度配置）
-      edge_extensions: []        # Edge 扩展（External Extensions 机制就绪，填 ID 即装）
+      edge_extensions:            # Edge 扩展（→ home/fan/_darwin_/gui/apps/edge.nix；External Extensions 机制，激活期写实体 JSON；纯增量安装，不删不覆盖应用内已手动装的扩展；外部安装的扩展不可在 edge://extensions 内卸载，从清单移除即卸载）
+        # store: edge=Edge 商店 / chrome=Chrome 商店（crxid API 实测归属，update_url 据此生成）
+        aapbdbdomjkkjkaonfhkkikfgjllcleb: { store: chrome }  # Google 翻译
+        bhghoamapcdpbohphigoooaddinpkbai: { store: chrome }  # 身份验证器（TOTP 密钥，数据备份）
+        dbheplacgeefjnhdacijldhfliehnhka: { store: chrome }  # 琉神转
+        dlknjglebgomjjfaijjnebecgjbfjihk: { store: chrome }  # 超级拖拽
+        eeagobfjdenkkddmbclomhiblgggliao: { store: edge }    # 暴力猴
+        hihblcmlaaademjlakdpicchbjnnnkbo: { store: chrome }  # Proxy SwitchyOmega V3（代理配置，数据备份）
+        jbkfoedolllekgbhcbcoahefnbanhhlh: { store: edge }    # Bitwarden
+        mpkodccbngfoacfalldjimigbofkhgjn: { store: chrome }  # Aria2 Explorer
+        nmddeihindhodaigflchmkmechmjjjbc: { store: edge }    # QR码生成与识别
+        odfafepnkmbhccpbejgmiehpchacaeak: { store: edge }    # uBlock Origin
+      edge_extension_backups:     # 扩展数据备份（Local Extension Settings/<id> → ~/.secrets/edge-ext/<id>.tar.age，age 加密；本地目录缺失且有备份时激活自动恢复；需退出 Edge 后部署）
+        - bhghoamapcdpbohphigoooaddinpkbai   # 身份验证器（TOTP 密钥）
+        - hihblcmlaaademjlakdpicchbjnnnkbo    # SwitchyOmega V3（代理配置）
       rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效；注入在系统层 root 激活 hosts/_darwin_/base/rustdesk.nix，无 sudo 桥接）
         rendezvous: 120.55.164.147:21116   # 网络：ID 服务器（hbbs）
         key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 网络：加密公钥
