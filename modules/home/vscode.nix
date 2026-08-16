@@ -129,11 +129,16 @@ let
       userSettings = baseSettings // (p.userSettings or { });
     };
 
-  # vscode-server 扩展集合（容器远程开发）：公共（不含客户端 UI 类 + 剔除 fluent-icons）+ 语言扩展平铺
-  # 主题/图标类扩展 server 端无 UI 意义，但保留可避免两份清单；remote-ssh 等客户端扩展不装 server 端
-  # fluent-icons（product icon theme）纯客户端 UI，server 端不装（用户要求）
+  # vscode-server 扩展集合（容器远程开发）：公共（剔除客户端 UI 类）+ 语言扩展平铺
+  # 主题/图标/状态栏类扩展 server 端无 UI 意义，但保留可避免两份清单；remote-ssh 等客户端扩展不装 server 端
+  # 客户端 UI 类剔除：fluent-icons（product icon）、errorlens（编辑器 UI）、github-theme、material-icon-theme（文件图标）
   serverExtensions =
-    (lib.remove market.miguelsolorio.fluent-icons baseCommonExtensions)
+    (lib.subtractLists [
+      market.miguelsolorio.fluent-icons
+      market.usernamehw.errorlens
+      market.github.github-vscode-theme
+      market.pkief.material-icon-theme
+    ] baseCommonExtensions)
     ++ pythonExtensions
     ++ goExtensions;
 in
