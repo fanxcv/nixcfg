@@ -129,9 +129,13 @@ let
       userSettings = baseSettings // (p.userSettings or { });
     };
 
-  # vscode-server 扩展集合（容器远程开发）：公共（不含客户端 UI 类）+ 语言扩展平铺
+  # vscode-server 扩展集合（容器远程开发）：公共（不含客户端 UI 类 + 剔除 fluent-icons）+ 语言扩展平铺
   # 主题/图标类扩展 server 端无 UI 意义，但保留可避免两份清单；remote-ssh 等客户端扩展不装 server 端
-  serverExtensions = baseCommonExtensions ++ pythonExtensions ++ goExtensions;
+  # fluent-icons（product icon theme）纯客户端 UI，server 端不装（用户要求）
+  serverExtensions =
+    (lib.remove market.miguelsolorio.fluent-icons baseCommonExtensions)
+    ++ pythonExtensions
+    ++ goExtensions;
 in
 {
   options.vscode = {

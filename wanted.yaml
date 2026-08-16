@@ -62,7 +62,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     vscode:                    # 配置/扩展/语言 profile 由 nix 声明（→ modules/home/vscode.nix；清单参考 docs/tsln-vscode.yaml）
       package: mac=商店版 / nixos=unstable   # 包本体策略：mac 用 brew cask 商店版，nixos 走 unstable 通道（pkgs.repos.unstable.vscode）
       extensions: 公共 18（含 remote-ssh）+ python/go profile  # 主市场 unstable.vscode-extensions；autopep8/vscode-buf 用补市场（eval 时 IFD 拉清单）；server 端不装客户端 UI 类（remote-ssh）
-      server: 容器 + mini-m4 启用（→ home/fan/_container_/vscode-server.nix、home/fan/mini-m4/vscode-server.nix）  # ~/.vscode-server/extensions 链接 nix store，扩展=base+语言 profile；vscode-server 本体由客户端自动下载
+      server: 容器 + mini-m4 启用（→ home/fan/_container_/vscode-server.nix、home/fan/mini-m4/vscode-server.nix）  # ~/.vscode-server/extensions 链接 nix store，扩展=base（剔除 fluent-icons）+ 语言 profile；vscode-server 本体由客户端自动下载
       keybindings: cmd/ctrl+d → 删除当前行  # 唯一非默认键位（editor.action.deleteLines，平台分支 mac=cmd/linux=ctrl，其余全默认；→ modules/home/vscode.nix profiles.default）
       locale: zh-cn                   # 界面中文（zh-hans 语言包 + ~/.vscode/argv.json 的 locale，→ modules/home/vscode.nix）
       unstable_update: 周级 nix flake update    # unstable 锁 rev（flake.lock），滚动快需定期跟进以免掉二进制缓存
