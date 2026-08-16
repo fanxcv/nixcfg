@@ -20,20 +20,14 @@ let
     # 主题/图标
     market.github.github-vscode-theme
     market.pkief.material-icon-theme
-    market.miguelsolorio.fluent-icons
     # 高亮
     market.oderwat.indent-rainbow
     # Git
     market.codezombiech.gitignore
     market.waderyan.gitblame
     market.mhutchie.git-graph
-    # Nix / direnv
-    market.jnoortheen.nix-ide
-    market.mkhl.direnv
     # 通用
     market.editorconfig.editorconfig
-    market.gruntfuggly.todo-tree
-    market.tamasfe.even-better-toml
     market.redhat.vscode-yaml
     market.usernamehw.errorlens
     market.humao.rest-client
@@ -43,7 +37,7 @@ let
   clientOnlyExtensions = [
     market.ms-vscode-remote.remote-ssh
   ];
-  # 客户端扩展（default profile）＝公共 18 个
+  # 客户端扩展（default profile）＝公共 13 个
   baseExtensions = baseCommonExtensions ++ clientOnlyExtensions;
 
   # 公共设置（docs/tsln-vscode.yaml settings，mac/nixos 通用部分）
@@ -60,7 +54,6 @@ let
     "workbench.editor.useModal" = "off";
     "workbench.settings.editor" = "json";
     "workbench.iconTheme" = "material-icon-theme";
-    "workbench.productIconTheme" = "fluent-icons";
     "workbench.preferredLightColorTheme" = "GitHub Light";
     "workbench.preferredDarkColorTheme" = "GitHub Dark";
 
@@ -95,11 +88,6 @@ let
     "gitblame.delayBlame" = 500;
     "gitblame.ignoreWhitespace" = true;
 
-    # nix-ide 语言服务（nixd/nixfmt 需在 PATH，需要时加 home.packages）
-    "nix.enableLanguageServer" = true;
-    "nix.serverPath" = "nixd";
-    "nix.formatterPath" = "nixfmt";
-
     "security.workspace.trust.enabled" = false;
 
     "redhat.telemetry.enabled" = false;
@@ -131,10 +119,9 @@ let
 
   # vscode-server 扩展集合（容器远程开发）：公共（剔除客户端 UI 类）+ 语言扩展平铺
   # 主题/图标/状态栏类扩展 server 端无 UI 意义，但保留可避免两份清单；remote-ssh 等客户端扩展不装 server 端
-  # 客户端 UI 类剔除：fluent-icons（product icon）、errorlens（编辑器 UI）、github-theme、material-icon-theme（文件图标）
+  # 客户端 UI 类剔除：errorlens（编辑器 UI）、github-theme、material-icon-theme（文件图标）
   serverExtensions =
     (lib.subtractLists [
-      market.miguelsolorio.fluent-icons
       market.usernamehw.errorlens
       market.github.github-vscode-theme
       market.pkief.material-icon-theme

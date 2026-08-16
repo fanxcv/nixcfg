@@ -33,16 +33,11 @@ extensions:
     - { id: ms-ceintl.vscode-language-pack-zh-hans, category: 中文语言包, market: market_1 }
     - { id: github.github-vscode-theme, category: 主题(GitHub Light/Dark), market: market_1 }
     - { id: pkief.material-icon-theme, category: 图标主题, market: market_1 }
-    - { id: miguelsolorio.fluent-icons, category: 产品图标, market: market_1 }
     - { id: oderwat.indent-rainbow, category: 缩进彩虹, market: market_1 }
     - { id: codezombiech.gitignore, category: Git, market: market_1 }
     - { id: waderyan.gitblame, category: Git/blame 行内标注, market: market_1 }
     - { id: mhutchie.git-graph, category: Git/提交图, market: market_1 }
-    - { id: jnoortheen.nix-ide, category: Nix 语言, market: market_1 }
-    - { id: mkhl.direnv, category: direnv 集成, market: market_1 }
     - { id: editorconfig.editorconfig, category: 通用/editorconfig, market: market_1 }
-    - { id: gruntfuggly.todo-tree, category: 通用/TODO 树, market: market_1 }
-    - { id: tamasfe.even-better-toml, category: 通用/TOML, market: market_1 }
     - { id: redhat.vscode-yaml, category: 通用/YAML, market: market_1 }
     - { id: usernamehw.errorlens, category: 通用/错误内联显示, market: market_1 }
     - { id: humao.rest-client, category: 通用/API 调试, market: market_1 }
@@ -86,7 +81,6 @@ settings:
   workbench.editor.useModal: off
   workbench.settings.editor: json
   workbench.iconTheme: material-icon-theme
-  workbench.productIconTheme: fluent-icons
   workbench.preferredLightColorTheme: GitHub Light
   workbench.preferredDarkColorTheme: GitHub Dark
 
@@ -125,11 +119,6 @@ settings:
   # GitBlame
   gitblame.delayBlame: 500                 # 悬停 500ms 显示
   gitblame.ignoreWhitespace: true
-
-  # Nix
-  nix.enableLanguageServer: true
-  nix.serverPath: nixd
-  nix.formatterPath: nixfmt
 
   # 安全
   security.workspace.trust.enabled: false  # 关工作区信任弹窗
