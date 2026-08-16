@@ -28,11 +28,18 @@
         cp "$HOME/.tmux/.tmux.conf.local" "$HOME/.tmux.conf.local"
       fi
 
-      # 对应 Dockerfile 追加的两行定制（幂等：已存在不重复追加）
+      # 定制行追加到 .tmux.conf.local（幂等：已存在不重复追加）
+      # 注意：只能加 local——gpakosz 主文件 .tmux.conf 末尾是管道协议行 '# "$@"'
+      # （cut -c3- 去注释后喂 sh 激活函数），在其后追加任何非注释配置行（如 set -g extended-keys）
+      # 会变成 sh 的非法命令（t: command not found → tmux 报 returned 127）；local 只被 tmux source，安全
       grep -q '^set -g mouse on$' "$HOME/.tmux.conf.local" \
         || echo 'set -g mouse on' >> "$HOME/.tmux.conf.local"
       grep -q '^set -g base-index 1$' "$HOME/.tmux.conf.local" \
         || echo 'set -g base-index 1' >> "$HOME/.tmux.conf.local"
+      grep -q '^set -g extended-keys on$' "$HOME/.tmux.conf.local" \
+        || echo 'set -g extended-keys on' >> "$HOME/.tmux.conf.local"
+      grep -q '^set -g extended-keys-format csi-u$' "$HOME/.tmux.conf.local" \
+        || echo 'set -g extended-keys-format csi-u' >> "$HOME/.tmux.conf.local"
     }
     setup_tmux
   '';
