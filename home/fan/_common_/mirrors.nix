@@ -11,11 +11,16 @@
 { lib, useChinaMirror ? true, ... }:
 {
   # ~/.npmrc：mise 装的 node 的 npm/pnpm/yarn 均读此文件
+  # better-sqlite3 预编译二进制默认从 GitHub releases 下载（国内不可达），
+  #   改走 npmmirror 的 binary 镜像（/-/binary/<pkg>，npm config 键 → npm_config_better_sqlite3_binary_host 环境变量）
   # ~/.config/pip/pip.conf：pip 用户级配置（XDG 路径，https 源证书有效无需 trusted-host）
   # ~/.config/uv/uv.toml：uv 用户级配置（index-url 键自 uv 0.1 起均支持）
   # ~/.config/go/env：go env 持久化文件（go 自动读取，等价 go env -w）
   home.file = lib.mkIf useChinaMirror {
-    ".npmrc".text = "registry=https://registry.npmmirror.com\n";
+    ".npmrc".text = ''
+      registry=https://registry.npmmirror.com
+      better_sqlite3_binary_host=https://registry.npmmirror.com/-/binary/better-sqlite3
+    '';
     ".config/pip/pip.conf".text = ''
       [global]
       index-url = https://pypi.tuna.tsinghua.edu.cn/simple

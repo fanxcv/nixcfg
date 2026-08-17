@@ -51,7 +51,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       token_env: PI_CONFIG_GIT_TOKEN  # 全局环境变量：从 ~/.secrets/ai.env 读取（global.secrets.ai_env），clone 后清 origin
     mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器级 config.toml（mini-m4/ide 容器）声明组件，无 config.toml 的机器不再装默认组件；config.toml 策略：不存在→模板创建默认，存在→补齐 nix 指定但缺失的键、已存在键保留用户版本，实体文件可写（→ _common_/mise/apply.py）；node@lts 默认已改由 nix 管理，见 global.pkgs.nodejs）
     mirrors:                   # 开发工具国内镜像（→ home/fan/_common_/mirrors.nix，所有机器；useChinaMirror=false 时不写，默认官方源）
-      npm: npmmirror           # 装过 node 的机器：.npmrc registry
+      npm: npmmirror           # 装过 node 的机器：.npmrc registry + better_sqlite3_binary_host（better-sqlite3 预编译二进制从 GitHub 改走 npmmirror 的 /-/binary 镜像，国内可下载）
       pip: 清华 TUNA           # python 机器：.config/pip/pip.conf
       uv: 清华 TUNA            # uv 机器：.config/uv/uv.toml
       go: goproxy.cn           # 装过 go 的机器：.config/go/env GOPROXY
