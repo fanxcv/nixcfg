@@ -207,7 +207,7 @@ macos:
         - bhghoamapcdpbohphigoooaddinpkbai   # 身份验证器（TOTP 密钥）
         - hihblcmlaaademjlakdpicchbjnnnkbo    # SwitchyOmega V3（代理配置）
       edge_updater: 禁用拆卸      # Edge 自动更新服务（→ home/fan/_darwin_/gui/apps/edge.nix）：bootout + 杀 updater 进程 + 删 plist + launchctl disable 持久标记（Edge 重建 plist 也无法复活）+ 删 EdgeUpdater 组件目录（无条件删除，Edge 运行中也拆；Edge 重新下载组件时下次部署再删）
-      rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效；注入在系统层 root 激活 hosts/_darwin_/base/rustdesk.nix，无 sudo 桥接；收敛式：fan 配置已是自建服务器则跳过一切操作，需注入时重启全家后先拉起 GUI——GUI 在位 root service 才退化为 IPC-only，注入才不会被官方默认覆盖）
+      rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效；注入在系统层 root 激活 hosts/_darwin_/base/rustdesk.nix，无 sudo 桥接）
         rendezvous: 120.55.164.147:21116   # 网络：ID 服务器（hbbs）
         key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 网络：加密公钥
         network:                 # 网络块（RustDesk2.toml 注入；1.4.9 全键归 RustDesk2，local 的 [options] 会被 GUI 清空）
