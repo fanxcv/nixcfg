@@ -16,6 +16,8 @@
     jq
     rtk
     btop
+    # TUI 版 git（lazygit，所有机器；配置文件 ~/.config/lazygit/config.yml 用户自管）
+    lazygit
     # 默认 node 由 nix 管理（替代原全局默认 mise node@lts，pkgs.nodejs 跟随 nixpkgs LTS）；
     # 机器级 mise node（mini-m4@24 / ide 容器@22）经 shims 覆盖全局，见 mise.nix
     nodejs

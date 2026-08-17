@@ -29,6 +29,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     - codex                    # OpenAI Codex CLI（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/codex.nix）
     - pi-coding-agent          # pi agent（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/pi.nix）
     - btop                     # 系统监控（所有机器）
+    - lazygit                  # TUI 版 git（所有机器；配置 ~/.config/lazygit/config.yml 用户自管，→ home/fan/_common_/base.nix）
     - nodejs                   # Node.js LTS（nix 管理，替代原全局默认 mise node@lts；机器级 mise node 经 shims 覆盖全局，→ home/fan/_common_/base.nix）
 
   app_configs:                 # 跨平台应用级配置
