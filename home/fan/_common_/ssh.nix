@@ -5,7 +5,7 @@
 #   或给 sudo 配 NOPASSWD；macOS 上 uname 守卫自动跳过
 # 安全闭环：改完先 sshd -t 验证，失败自动回滚，防止 sshd 起不来把自己锁在门外
 
-{ pkgs, lib, ... }:
+{ pkgs, lib, tools, ... }:   # GitHub 加速/例外由集中配置 tools/config.nix 控制（tools.githubUrl）
 {
   home.activation.sshConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     configure_ssh() {
@@ -16,11 +16,12 @@
       # 1) 拉取授权公钥（对应脚本 ssh_config() 的 curl 部分）
       #    注意：file.fan-x.fun 的 mac.pub 曾返回 OneDrive HTML（非公钥），不再作为源；
       #    改为 github 的 keys + 内置本机 id_rsa（声明式，不依赖外部文件服务）
+      #    URL 用 tools.githubUrl：github.com/<user>.keys 端点 ghfast 不支持，已在集中配置 withoutProxy 例外，自动直连
       mkdir -p "$HOME/.ssh"
       chmod 700 "$HOME/.ssh"
       keys_tmp="$HOME/.ssh/authorized_keys.tmp"
       : > "$keys_tmp"
-      if ${pkgs.curl}/bin/curl -sfL https://github.com/fanxcv.keys -o "$keys_tmp" \
+      if ${pkgs.curl}/bin/curl -sfL "${tools.githubUrl "https://github.com/fanxcv.keys"}" -o "$keys_tmp" \
         && [ -s "$keys_tmp" ]; then
         # 追加 mac 身份公钥（各台自己的 id_rsa：mini-m4 / mba-m5 / mbp-m1，即原 mac-pub.pub；
         # github 集合可能不含最新 key，防激活覆盖锁死）

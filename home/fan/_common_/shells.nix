@@ -1,19 +1,16 @@
 # shell 环境：zsh + oh-my-zsh + 定制 fishy 主题
 # 对应 alpine-init.sh 的 install_oh_my_zsh()：git clone 方式（不用 Nix 包，可 omz update）
-# 镜像开关（对应脚本的 use_proxy="${tools.githubProxy}"）：
-#   useChinaMirror=true（默认，所有 ide 容器）→ 安装/更新地址加 GitHub 加速前缀
-#   useChinaMirror=false（NixOS 真机国外直连场景）→ 直连 GitHub 原始地址
-#   前缀由 tools/github-proxy.nix 集中管理（换代理只改一处 + 跑 scripts/switch-github-proxy.sh）
+# 镜像/加速开关：统一由 tools/config.nix 集中配置（tools.githubUrl，含 withoutProxy 例外）
+#   前缀由 tools/config.nix 的 githubProxy 声明（换代理只改一处 + 跑 scripts/switch-github-proxy.sh 同步 flake inputs）
 # 注意：clone 的 origin 即安装地址，oh-my-zsh 自动更新 / omz update 天然走同一通道
 
-{ pkgs, lib, self, tools ? { githubProxy = "https://ghfast.top/"; }, platform ? "container", useChinaMirror ? true, ... }:
+{ pkgs, lib, self, tools, platform ? "container", ... }:
 let
-  useProxy = if useChinaMirror then tools.githubProxy else "";
   # NixOS 的 nix 由系统 profile 提供（/run/current-system/sw），无 /nix/var/nix/profiles/default；
   # 仅容器/darwin 单用户 nix 需要 source nix.sh 加载 PATH
   nixShSource = lib.optionalString (platform != "nixos") ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n";
   # 安装 + 后期更新的仓库地址（对应脚本 REMOTE=...ohmyzsh.git）
-  ohMyZshRepo = useProxy + "https://github.com/ohmyzsh/ohmyzsh.git";
+  ohMyZshRepo = tools.githubUrl "https://github.com/ohmyzsh/ohmyzsh.git";
   themeSource = "${self}/home/fan/_common_/themes/fishy.zsh-theme";
 in
 {
@@ -66,7 +63,7 @@ in
     for plugin in zsh-syntax-highlighting zsh-autosuggestions; do
       if [ ! -d "$HOME/.oh-my-zsh/custom/plugins/$plugin/.git" ]; then
         find "$HOME/.oh-my-zsh/custom/plugins/$plugin" -mindepth 1 -delete 2>/dev/null || true
-        ${pkgs.git}/bin/git clone --quiet "${useProxy}https://github.com/zsh-users/$plugin.git" \
+        ${pkgs.git}/bin/git clone --quiet "${tools.githubUrl "https://github.com/zsh-users/$plugin.git"}" \
           "$HOME/.oh-my-zsh/custom/plugins/$plugin" \
           || echo "警告: 插件 $plugin clone 失败"
       fi

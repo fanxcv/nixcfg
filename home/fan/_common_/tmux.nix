@@ -1,20 +1,18 @@
 # tmux + gpakosz 配置（对应 docker/ide/ubuntu/Dockerfile 里的 .tmux clone + 定制）
-# 与 oh-my-zsh 同套路：activation git clone（gh-proxy 镜像开关由 useChinaMirror 控制），
+# 与 oh-my-zsh 同套路：activation git clone（GitHub 加速由 tools/config.nix 的 githubUrl 统一控制（含例外）），
 #   .tmux.conf 软链 + .tmux.conf.local 首次复制 + 追加定制（mouse / base-index）
 # 全平台生效（macOS 同样使用）
 
-{ pkgs, lib, tools ? { githubProxy = "https://ghfast.top/"; }, useChinaMirror ? true, ... }:
+{ pkgs, lib, tools, ... }:
 {
   home.packages = [ pkgs.tmux ];
 
   home.activation.setupTmux = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_tmux() {
-      useProxy="${if useChinaMirror then tools.githubProxy else ""}"
-
       # 对应 Dockerfile：git clone gpakosz/.tmux
       if [ ! -e "$HOME/.tmux/.git" ]; then
         rm -rf "$HOME/.tmux"
-        ${pkgs.git}/bin/git clone --quiet "''${useProxy}https://github.com/gpakosz/.tmux.git" "$HOME/.tmux" \
+        ${pkgs.git}/bin/git clone --quiet "${tools.githubUrl "https://github.com/gpakosz/.tmux.git"}" "$HOME/.tmux" \
           || echo "警告: .tmux clone 失败，下次 switch 重试"
       fi
 

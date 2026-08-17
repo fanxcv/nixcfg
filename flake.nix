@@ -24,7 +24,8 @@
 
   inputs = {
     # git+https 走 GitHub 加速前缀（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
-    # 前缀由 tools/github-proxy.nix 集中管理（flake 解析器限制 inputs.url 必须字符串字面量），换代理：scripts/switch-github-proxy.sh
+    # 前缀由 tools/config.nix 的 githubProxy 声明（flake 解析器限制 inputs.url 必须字符串字面量，
+    # 换代理：改 tools/config.nix + 跑 scripts/switch-github-proxy.sh 同步 inputs/lock）
     # 稳定版 nixos-26.05：闭包二进制在镜像/官方永久缓存 → 构建命中 USTC/TUNA；
     # 不锁 rev：分支点更新慢（几周一次），nix flake update 自动跟随（升级=全量 nix flake update）
     nixpkgs.url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixos-26.05&shallow=1";
@@ -128,6 +129,8 @@
       lib = nixpkgs.lib;
       # 目录扫描/相对路径工具（模块自动导入，见 tools/scan.nix、tools/relative.nix）
       tools = import ./tools { inherit lib self; };
+      # 全局镜像/代理集中配置（tools/config.nix，唯一配置入口）—— useChinaMirror 注入默认值取自这里
+      netConfig = tools.config;
       # claude-code 分发镜像（npm 平台包走 npmmirror），定义见 overlays/claude-code.nix
       # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
       # overlay 无法在 home 模块层注册（pkgs 先于模块构造），只能在此注入
@@ -159,7 +162,7 @@
       #   isContainer:     是否容器环境（容器里 docker daemon 起不来，不安装 docker 全家桶；
       #                     容器用户覆盖为 root，见 _common_/container.nix）
       mkHomeConfig =
-        { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? true, isContainer ? false }:
+        { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? netConfig.useChinaMirror, isContainer ? false }:
         home-manager.lib.homeManagerConfiguration {
           # claude-code 在 nixpkgs 标记 unfree，用 predicate 只放行它（import 重新求值带 config 的 pkgs）
           pkgs = import nixpkgs {
@@ -197,8 +200,8 @@
         ];
         specialArgs = {
           inherit self inputs outputs tools;
-          # darwin 固定值（与 mkHomeConfig 的注入对齐，home 层模块统一取用）
-          useChinaMirror = true;
+          # darwin 固定值（与 mkHomeConfig 的注入对齐，home 层模块统一取用；默认取集中配置 tools/config.nix）
+          useChinaMirror = netConfig.useChinaMirror;
           isContainer = false;
           platform = "darwin";
         };
@@ -249,12 +252,12 @@
         pkgs = import nixpkgs {
           system = "x86_64-linux";
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) (unfreeAllowlist ++ [ "microsoft-edge" "libsciter" ]);
-          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay (final: prev: import ./packages prev) ];
+          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
         };
         modules = [ ./hosts/nix-pve ];
         specialArgs = {
           inherit self inputs outputs tools;
-          useChinaMirror = true;
+          useChinaMirror = netConfig.useChinaMirror;
           isContainer = false;
           platform = "nixos";
         };
@@ -269,7 +272,7 @@
       # 本地包集合（packages/ 目录）与机器别名合并导出：nix build .#<包名> 或 nix run .#<机器名>
       packages = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system};
-        in (import ./packages pkgs) // {
+        in (import ./packages { inherit pkgs; githubFetchBase = tools.githubFetchBase; }) // {
           # 机器专属别名：mise 组件共享 _container_/mise.nix（hostName 分支差异），si/lenovo 各一份
           # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
           ide-si = pkgs.writeShellScriptBin "ide-activate"

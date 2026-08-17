@@ -51,6 +51,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       token_env: PI_CONFIG_GIT_TOKEN  # 全局环境变量：从 ~/.secrets/ai.env 读取（global.secrets.ai_env），clone 后清 origin
     mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器级 config.toml（mini-m4/ide 容器）声明组件，无 config.toml 的机器不再装默认组件；config.toml 策略：不存在→模板创建默认，存在→补齐 nix 指定但缺失的键、已存在键保留用户版本，实体文件可写（→ _common_/mise/apply.py）；node@lts 默认已改由 nix 管理，见 global.pkgs.nodejs）
     mirrors:                   # 开发工具国内镜像（→ home/fan/_common_/mirrors.nix，所有机器；useChinaMirror=false 时不写，默认官方源）
+      use_china_mirror: true   # 全局镜像/加速总开关 + GitHub 加速域名集中配置（→ tools/config.nix 唯一配置入口；useChinaMirror 注入所有机器默认值、githubProxy 供 ai/tmux/shells/ssh 模块与 packages 构建读，withoutProxy 例外清单——ghfast 不支持的 URL 直连，如 github.com/fanxcv.keys；换加速域名改这里后跑 scripts/switch-github-proxy.sh 同步 flake inputs）
       npm: npmmirror           # 装过 node 的机器：.npmrc registry + better_sqlite3_binary_host（better-sqlite3 预编译二进制从 GitHub 改走 npmmirror 的 /-/binary 镜像，国内可下载）
       pip: 清华 TUNA           # python 机器：.config/pip/pip.conf
       uv: 清华 TUNA            # uv 机器：.config/uv/uv.toml
@@ -58,7 +59,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       flutter: flutter-io.cn   # flutter 机器：PUB_HOSTED_URL/FLUTTER_STORAGE_BASE_URL（环境变量，mise SDK 下载源不受影响）
     nix:                       # nix 二进制缓存/源码拉取（→ flake.nix nixConfig、modules/darwin/nix.nix、hosts/nix-pve、docker/ide/ubuntu/Dockerfile，4 处一致）
       substituters: [USTC, TUNA, SJTU, cache.nixos.org]  # 国内镜像优先：中科大/清华/上海交大，官方兜底；另有 numtide/nix-community cachix 补充
-      inputs_proxy: ghfast.top  # GitHub 源码（全部 15 个 inputs）走加速前缀（git+https 无法配镜像，URL 前置代理最稳）；前缀由 tools/github-proxy.nix 集中管理，换代理跑 scripts/switch-github-proxy.sh <新域名>（同时替换 flake.nix/flake.lock 并重锁）；已验证 ghfast.top（HTTP 7MB/s + git 协议）
+      inputs_proxy: ghfast.top  # GitHub 源码（全部 15 个 inputs）走加速前缀（git+https 无法配镜像，URL 前置代理最稳）；域名由 tools/config.nix 的 githubProxy 声明，换代理跑 scripts/switch-github-proxy.sh <新域名>（同时替换 flake.nix/flake.lock 并重锁）；已验证 ghfast.top（HTTP 7MB/s + git 协议）
     vscode:                    # 配置/扩展/语言 profile 由 nix 声明（→ modules/home/vscode.nix；清单参考 docs/tsln-vscode.yaml）
       package: mac=商店版 / nixos=unstable   # 包本体策略：mac 用 brew cask 商店版，nixos 走 unstable 通道（pkgs.repos.unstable.vscode）
       extensions: 公共 13（含 remote-ssh）+ python/go profile  # 主市场 unstable.vscode-extensions；autopep8/vscode-buf 用补市场（eval 时 IFD 拉清单）；server 端不装客户端 UI 类（remote-ssh）；direnv/even-better-toml/fluent-icons/nix-ide/todo-tree 已移除
@@ -303,7 +304,7 @@ linux:
       - inetutils
   container:                     # ← 容器平台层（→ home/fan/_container_/，继承 _ubuntu_ 系统基础；当前 ide-si / ide-lenovo）
     ssh_host_key: agenix         
-    ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证
+    ssh_keys: true               # 授权公钥拉取 + sshd 禁密码认证（公钥从 github.com 拉，挂 useChinaMirror：true 时加 ghfast.top 前缀）
     file_backup: ".backup"       # 激活时手配文件冲突自动备份再覆盖（flake 入口注入 HOME_MANAGER_BACKUP_EXT）
     secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
     skemate:                     # 自研终端复用服务（→ overlays/skemate.nix + home/fan/_container_/skemate.nix，两台共用一份）

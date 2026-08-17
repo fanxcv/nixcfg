@@ -16,8 +16,8 @@ let
   serverKey = "biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=";
 in
 {
-  # 官方二进制包（packages/ 本地包集合，github release deb 解包）
-  home.packages = [ (import ../../../packages pkgs).rustdesk-bin ];
+  # 官方二进制包（packages/ 本地包集合，github release deb 解包；githubFetchBase 用默认=直连，包内主 URL 自带镜像不受影响）
+  home.packages = [ (import ../../../packages { inherit pkgs; }).rustdesk-bin ];
 
   home.activation.setupRustDesk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_rustdesk() {
