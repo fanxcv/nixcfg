@@ -202,6 +202,7 @@ macos:
       edge_extension_backups:     # 扩展数据备份（Local Extension Settings/<id> → ~/.secrets/edge-ext/<id>.tar.age，age 加密；本地目录缺失且有备份时激活自动恢复；需退出 Edge 后部署）
         - bhghoamapcdpbohphigoooaddinpkbai   # 身份验证器（TOTP 密钥）
         - hihblcmlaaademjlakdpicchbjnnnkbo    # SwitchyOmega V3（代理配置）
+      edge_updater: 禁用拆卸      # Edge 自动更新服务（→ home/fan/_darwin_/gui/apps/edge.nix）：bootout + 删 plist + launchctl disable 持久标记（Edge 重建 plist 也无法复活）+ 删 EdgeUpdater 组件目录（Edge 退出后部署才执行，运行中警告跳过）
       rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效；注入在系统层 root 激活 hosts/_darwin_/base/rustdesk.nix，无 sudo 桥接）
         rendezvous: 120.55.164.147:21116   # 网络：ID 服务器（hbbs）
         key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 网络：加密公钥
