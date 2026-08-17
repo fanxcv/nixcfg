@@ -1,38 +1,18 @@
-# Microsoft Edge 扩展声明式安装 + 指定扩展数据备份（三台 Mac 共享，清单 ↔ wanted.yaml edge_extensions/edge_extension_backups）
-# 安装机制：macOS External Extensions —— 激活期向
-#   ~/Library/Application Support/Microsoft Edge/External Extensions/<CRX-ID>.json 写实体 JSON
-#   （home.file 默认 symlink 到 nix store，Edge 存在不识别风险 → 统一实体文件，写入失败即中断部署）
-#   external_update_url（Edge 键名，Chrome 的 update_url 键 Edge 不识别，曾导致 10 个 JSON 全部被忽略）：
-#     Edge 商店扩展 = edge.microsoft.com/extensionwebstorebase/v1/crx；
-#   Chrome 商店扩展 = clients2.google.com/service/update2/crx（6 个 Chrome-only 已用 crxid API 实测 404）
-# 合并语义：该机制纯增量安装——只负责装上声明的扩展，从不删除/覆盖应用内已手动安装的扩展
-# 副作用：外部安装的扩展在 edge://extensions 显示"由你的组织安装"，无法应用内卸载，改本清单（删 JSON）即移除
-# 数据备份：Local Extension Settings/<id>（leveldb，含代理配置/TOTP 密钥）→ tar | age 加密
-#   → ~/.secrets/edge-ext/<id>.tar.age；本地目录缺失且有备份时激活自动恢复（重建机器场景）
-#   前提：Edge 未运行（运行中拷 leveldb 会损坏）；在跑则警告跳过，退出后重跑部署生效
-{ pkgs, lib, ... }:
+# Microsoft Edge 扩展数据备份 + 更新服务禁用（三台 Mac 共享；清单 ↔ wanted.yaml edge_extensions/edge_extension_backups）
+# 安装机制：Edge 129+ 已禁用 External Extensions JSON（disable_reasons=8192，见 hosts/_darwin_/base/edge-policy.nix），
+#   扩展安装由系统层 ExtensionSettings 策略接管（edge-policy.nix，root 写 Managed Preferences）
+# 本文件职责：
+#   1. 清理遗留 External Extensions JSON 目录（旧机制残留，避免 Edge 扫描）
+#   2. 数据备份：Local Extension Settings/<id>（leveldb，含代理配置/TOTP 密钥）→ tar | age 加密
+#      → ~/.secrets/edge-ext/<id>.tar.age；本地目录缺失且有备份时激活自动恢复（重建机器场景）
+#      前提：Edge 未运行（运行中拷 leveldb 会损坏）；在跑则警告跳过，退出后重跑部署生效
+#   3. 禁用/拆卸 Edge 自动更新服务（EdgeUpdater）
+{ pkgs, lib, tools, ... }:
 let
-  # 声明式安装清单：ID -> store（edge=Edge 商店 / chrome=Chrome 商店，crxid API 实测归属）
-  extensions = {
-    aapbdbdomjkkjkaonfhkkikfgjllcleb = "chrome";  # Google 翻译
-    bhghoamapcdpbohphigoooaddinpkbai = "chrome";  # 身份验证器（数据备份）
-    dbheplacgeefjnhdacijldhfliehnhka = "chrome";  # 琉神转
-    dlknjglebgomjjfaijjnebecgjbfjihk = "chrome";  # 超级拖拽
-    eeagobfjdenkkddmbclomhiblgggliao = "edge";    # 暴力猴
-    hihblcmlaaademjlakdpicchbjnnnkbo = "chrome";  # Proxy SwitchyOmega V3（数据备份）
-    jbkfoedolllekgbhcbcoahefnbanhhlh = "edge";    # Bitwarden
-    mpkodccbngfoacfalldjimigbofkhgjn = "chrome";  # Aria2 Explorer
-    nmddeihindhodaigflchmkmechmjjjbc = "edge";    # QR码生成与识别
-    odfafepnkmbhccpbejgmiehpchacaeak = "edge";    # uBlock Origin
-  };
-  # 数据备份扩展（Local Extension Settings/<id> → ~/.secrets/edge-ext/<id>.tar.age）
-  backups = [ "bhghoamapcdpbohphigoooaddinpkbai" "hihblcmlaaademjlakdpicchbjnnnkbo" ];
+  ext = import ./edge-ext/data.nix;
   # 本仓库统一 age 公钥（secrets/keys.nix 同源，各机器一把）
   agePubkey = "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204";
-  edgeStoreUrl = "https://edge.microsoft.com/extensionwebstorebase/v1/crx";
-  chromeStoreUrl = "https://clients2.google.com/service/update2/crx";
-  updateUrl = store: if store == "chrome" then chromeStoreUrl else edgeStoreUrl;
-  extIds = builtins.attrNames extensions;
+  backups = ext.backups;
 in
 {
   home.activation.edgeExtensions = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -41,16 +21,14 @@ in
     ext_dir="$edge_root/External Extensions"
     storage_dir="$edge_root/Default/Local Extension Settings"
     backup_dir="$HOME/.secrets/edge-ext"
-    mkdir -p "$ext_dir" "$backup_dir"
+    mkdir -p "$backup_dir"
 
-    # 1. 声明式安装：写实体 JSON（先写临时文件再 mv，避免 Edge 读到半截内容）
-    ${builtins.concatStringsSep "\n" (map (id: ''
-      url="${updateUrl extensions.${id}}"
-      tmp="$(mktemp "$ext_dir/.edge-ext.XXXXXX")"
-      printf '{"external_update_url":"%s"}' "$url" > "$tmp"
-      chmod 644 "$tmp"
-      mv "$tmp" "$ext_dir/${id}.json"
-    '') extIds)}
+    # 1. 清理旧机制遗留（External Extensions JSON 已被 Edge 129+ 禁用，删除避免无谓扫描）
+    if [ -d "$ext_dir" ]; then
+      rm -f "$ext_dir"/*.json
+      # 目录空了则连目录一起删（Edge 启动扫描目录不存在时跳过）
+      rmdir "$ext_dir" 2>/dev/null || true # 目录非空（用户自留文件）时保留，属预期
+    fi
 
     # 2. 数据备份/恢复（仅 Edge 未运行时；leveldb 运行中拷贝会损坏，跳过属预期并提示）
     if pgrep -f "Microsoft Edge.app/Contents/MacOS" > /dev/null 2>&1; then

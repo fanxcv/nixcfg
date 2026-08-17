@@ -188,7 +188,10 @@ macos:
         dns_override: false       # 关闭 DNS 覆写（enable_dns_settings=false，不应用 dns_config.yaml）
         ipv6: false               # 关闭 IPv6（clash-verge.yaml ipv6）
       iterm2:                    # 终端（已移除 alacritty，iTerm2 暂无深度配置）
-      edge_extensions:            # Edge 扩展（→ home/fan/_darwin_/gui/apps/edge.nix；External Extensions 机制，激活期写实体 JSON；纯增量安装，不删不覆盖应用内已手动装的扩展；外部安装的扩展不可在 edge://extensions 内卸载，从清单移除即卸载）
+      edge_extensions:            # Edge 扩展（清单 → home/fan/_darwin_/gui/apps/edge-extensions.nix；安装 → hosts/_darwin_/base/edge-policy.nix 的 ExtensionSettings 策略 force_installed，root 写 Managed Preferences；数据备份 → edge.nix）
+        # 背景：Edge 129+ 已禁用 External Extensions JSON 机制（disable_reasons=8192，扩展装上也不显示）→ 必须走企业策略
+        # 副作用：策略安装的扩展不可在 edge://extensions 内禁用/卸载（显示"由你的组织管理"），从清单移除即卸载
+        # 注意：Chrome 商店扩展（store: chrome）国内直连不可达，依赖 clash 系统代理（clash-verge 常驻，开系统代理后重启 Edge 即装）
         # store: edge=Edge 商店 / chrome=Chrome 商店（crxid API 实测归属，update_url 据此生成）
         aapbdbdomjkkjkaonfhkkikfgjllcleb: { store: chrome }  # Google 翻译
         bhghoamapcdpbohphigoooaddinpkbai: { store: chrome }  # 身份验证器（TOTP 密钥，数据备份）
@@ -204,7 +207,7 @@ macos:
         - bhghoamapcdpbohphigoooaddinpkbai   # 身份验证器（TOTP 密钥）
         - hihblcmlaaademjlakdpicchbjnnnkbo    # SwitchyOmega V3（代理配置）
       edge_updater: 禁用拆卸      # Edge 自动更新服务（→ home/fan/_darwin_/gui/apps/edge.nix）：bootout + 杀 updater 进程 + 删 plist + launchctl disable 持久标记（Edge 重建 plist 也无法复活）+ 删 EdgeUpdater 组件目录（无条件删除，Edge 运行中也拆；Edge 重新下载组件时下次部署再删）
-      rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效；注入在系统层 root 激活 hosts/_darwin_/base/rustdesk.nix，无 sudo 桥接）
+      rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效；注入在系统层 root 激活 hosts/_darwin_/base/rustdesk.nix，无 sudo 桥接；收敛式：fan 配置已是自建服务器则跳过一切操作，需注入时重启全家后先拉起 GUI——GUI 在位 root service 才退化为 IPC-only，注入才不会被官方默认覆盖）
         rendezvous: 120.55.164.147:21116   # 网络：ID 服务器（hbbs）
         key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 网络：加密公钥
         network:                 # 网络块（RustDesk2.toml 注入；1.4.9 全键归 RustDesk2，local 的 [options] 会被 GUI 清空）
