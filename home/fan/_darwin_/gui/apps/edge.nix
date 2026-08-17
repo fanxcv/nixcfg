@@ -82,9 +82,10 @@ in
     fi
   '';
   # 禁用/拆卸 Edge 自动更新服务（EdgeUpdater）
-  # 组件：~/Library/LaunchAgents/com.microsoft.EdgeUpdater.wake.plist（每小时 --wake-all 检查更新）
-  # 拆法：bootout 卸载 → 删 plist → launchctl disable 持久标记（xpc 数据库，Edge 重建 plist 也无法复活）
-  #   → 删 EdgeUpdater 组件目录（Edge 主程序会自行拉起 updater，仅删 plist 不彻底；Edge 运行中跳过并警告）
+  # 痕迹三处：~/Library/LaunchAgents/com.microsoft.EdgeUpdater.wake.plist（每小时 --wake-all 检查更新）、
+  #   ~/Library/Application Support/Microsoft/EdgeUpdater/（组件本体，Edge 主程序会自行拉起 updater）、launchctl 状态
+  # 拆法：bootout 卸载 → kill updater 进程 → 删 plist → launchctl disable 持久标记（xpc 数据库，Edge 重建 plist 也无法复活）
+  #   → 删 EdgeUpdater 组件目录（macOS 允许 unlink 运行中文件，Edge 运行中也直接删；Edge 重新下载组件时下次部署再删）
   home.activation.disableEdgeUpdater = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     label="com.microsoft.EdgeUpdater.wake"
     agent_file="$HOME/Library/LaunchAgents/$label.plist"
@@ -93,17 +94,16 @@ in
     # 1. 卸载当前加载的服务（未加载属预期失败）
     launchctl bootout "gui/$uid/$label" 2>/dev/null || true # 服务未加载时 bootout 报错，属预期
 
-    # 2. 删除 plist（Edge 可能重建，第 3 步 disable 标记兜底）
+    # 2. 杀掉可能运行的 updater 进程（无则忽略）
+    pkill -f "EdgeUpdater" 2>/dev/null || true # 无进程时 pkill 返回 1，属预期
+
+    # 3. 删除 plist（Edge 可能重建，第 4 步 disable 标记兜底）
     rm -f "$agent_file"
 
-    # 3. 持久禁用标记：即使 plist 被 Edge 重建也无法运行（launchctl enable 可恢复）
+    # 4. 持久禁用标记：即使 plist 被 Edge 重建也无法运行（launchctl enable 可恢复）
     launchctl disable "gui/$uid/$label"
 
-    # 4. 删除更新组件目录（Edge 主程序会自行拉起 updater，需移除本体；Edge 运行中文件被占用/可能重建）
-    if pgrep -f "EdgeUpdater" > /dev/null 2>&1 || pgrep -f "Microsoft Edge.app/Contents/MacOS" > /dev/null 2>&1; then
-      echo "警告: Edge 正在运行，跳过 EdgeUpdater 组件删除（退出 Edge 后重新部署生效）"
-    else
-      rm -rf "$HOME/Library/Application Support/Microsoft/EdgeUpdater"
-    fi
+    # 5. 删除更新组件目录（Edge 主程序会自行拉起 updater，必须拆本体；Edge 运行中删除安全）
+    rm -rf "$HOME/Library/Application Support/Microsoft/EdgeUpdater"
   '';
 }
