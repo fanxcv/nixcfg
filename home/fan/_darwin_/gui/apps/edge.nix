@@ -2,7 +2,8 @@
 # 安装机制：macOS External Extensions —— 激活期向
 #   ~/Library/Application Support/Microsoft Edge/External Extensions/<CRX-ID>.json 写实体 JSON
 #   （home.file 默认 symlink 到 nix store，Edge 存在不识别风险 → 统一实体文件，写入失败即中断部署）
-#   update_url：Edge 商店扩展 = edge.microsoft.com/extensionwebstorebase/v1/crx；
+#   external_update_url（Edge 键名，Chrome 的 update_url 键 Edge 不识别，曾导致 10 个 JSON 全部被忽略）：
+#     Edge 商店扩展 = edge.microsoft.com/extensionwebstorebase/v1/crx；
 #   Chrome 商店扩展 = clients2.google.com/service/update2/crx（6 个 Chrome-only 已用 crxid API 实测 404）
 # 合并语义：该机制纯增量安装——只负责装上声明的扩展，从不删除/覆盖应用内已手动安装的扩展
 # 副作用：外部安装的扩展在 edge://extensions 显示"由你的组织安装"，无法应用内卸载，改本清单（删 JSON）即移除
@@ -46,7 +47,7 @@ in
     ${builtins.concatStringsSep "\n" (map (id: ''
       url="${updateUrl extensions.${id}}"
       tmp="$(mktemp "$ext_dir/.edge-ext.XXXXXX")"
-      printf '{"update_url":"%s"}' "$url" > "$tmp"
+      printf '{"external_update_url":"%s"}' "$url" > "$tmp"
       chmod 644 "$tmp"
       mv "$tmp" "$ext_dir/${id}.json"
     '') extIds)}
