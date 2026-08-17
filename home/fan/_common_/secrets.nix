@@ -25,7 +25,7 @@
     # AI key 映射：ai.env 的 AI_FAN_* → 各工具环境变量（未定义为无害空值）
     export ANTHROPIC_AUTH_TOKEN="$AI_FAN_CLAUDE"   # claude code（cc_claude 内也有独立派生）
     export PIPI_CLAUDE_KEY="$AI_FAN_CLAUDE"        # pi
-    export IPI_CODEX_KEY="$AI_FAN_CODEX"           # pi
+    export PIPI_CODEX_KEY="$AI_FAN_CODEX"          # pi
     export PIPI_CHAT_KEY="$AI_FAN_CHAT"            # pi
   '';
 
