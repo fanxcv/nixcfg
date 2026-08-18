@@ -121,6 +121,10 @@ let
   '';
 in
 {
+  # import comin 模块以提供 services.comin.machineId 属性（comin eval 必读，缺失则新 commit 永不被部署）。
+  # enable 保持默认 false：官方 launchd.daemons 不启用，自管理 plist 不受影响，仅借用 options 定义。
+  imports = [ inputs.comin.darwinModules.comin ];
+
   # comin 拉取私有仓库的 token（go-git 认证，非 credential.helper）
   age.secrets."comin-token" = {
     file = tools.relative "secrets/comin-token.age";
