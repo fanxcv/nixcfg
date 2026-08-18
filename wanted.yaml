@@ -261,7 +261,7 @@ macos:
       ac_display_sleep: 10       # 10 分钟关屏
       ac_powernap: true          # 睡眠跑维护
       ac_wake_on_lan: true       # 局域网唤醒
-    comin: 实验（自动部署）      # git 驱动自动部署（→ hosts/mini-m4/comin.nix）：root LaunchDaemon 60s 轮询 git.fan-x.fun，darwinConfigurations.mini-m4 变更自动 activate（同 nix-pve 机制，mac 实验）；包自建（nixpkgs 无）、token 走 agenix（secrets/comin-token.age → /run/agenix/comin-token）
+    comin: 实验（自动部署）      # git 驱动自动部署（→ hosts/mini-m4/comin.nix）：root LaunchDaemon 180s 轮询 git.fan-x.fun，darwinConfigurations.mini-m4 变更自动 activate（同 nix-pve 机制，mac 实验）；包自建（nixpkgs 无）、token 走 agenix（secrets/comin-token.age → /run/agenix/comin-token）
 
   mba_m5:                       # ← mba-m5 专属（实机导入草案，待你调整）
     apps:                        # 本机 GUI 应用（共享层已声明 orbstack/iterm2/edge/rustdesk/lemon/vscode，不重复）

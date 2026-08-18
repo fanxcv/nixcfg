@@ -65,6 +65,8 @@ in
           access_token_path = "/run/agenix/comin-token";
         };
         branches.main.name = "main";
+        # 轮询周期 180s（默认 60s；无人值守 Mac 不需那么频繁，降低对 git 服务器的打扰）
+        poller.period = 180;
       }
     ];
   };
