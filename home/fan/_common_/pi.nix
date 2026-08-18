@@ -55,6 +55,19 @@
       if [ -e "$PI_DIR/.git" ]; then
         ${pkgs.git}/bin/git -C "$PI_DIR" pull --ff-only --quiet 2>/dev/null || true
       fi
+
+      # 拉取/已存在后运行 fpi-install 更新 pi 配置（合成人格 → 合并 settings → 落盘 goal/hermes → 补装 skills → 自检）。
+      # 激活 PATH 精简，需补入 nix profile（node/git/pi 等）供 fpi-install 内部裸命令使用；
+      # 非关键失败仅警告（部署继续），缺 node 时跳过——绝不触发 fpi-install 的 mise 安装分支。
+      if [ -e "$PI_DIR/bin/fpi-install" ]; then
+        if ( export PATH="$HOME/.nix-profile/bin:$PATH"; command -v node >/dev/null 2>&1 ); then
+          ( export PATH="$HOME/.nix-profile/bin:$PATH"
+            bash "$PI_DIR/bin/fpi-install" ) \
+            || echo "警告: fpi-install 更新失败，可稍后手动运行 $PI_DIR/bin/fpi-install"
+        else
+          echo "警告: node 不在激活 PATH，跳过 fpi-install（pi 配置未更新）"
+        fi
+      fi
     }
     setup_pi
   '';
