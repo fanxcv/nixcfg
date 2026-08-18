@@ -1,10 +1,10 @@
-# AI 工具二进制（全平台）：beads
+# AI 工具二进制模块（从 _common_/ai.nix 迁入，加 softwares.ai.enable 门控）：beads
 # beads（bd）→ Go 单二进制，官方 release 直接分发（fetchurl，不经 npm/编译）
 # 其他 AI 工具各归各文件：claude-code + ccline → claude.nix，codex → codex.nix，pi → pi.nix
+# 启用：common 默认 enable=true；某台不装 → 机器层 softwares.ai.enable = lib.mkForce false
 
-{ pkgs, tools, ... }:                       # GitHub 加速前缀/开关从集中配置 tools/config.nix 读（tools.githubUrl）
+{ config, lib, pkgs, tools, ... }:   # GitHub 加速前缀/开关从集中配置 tools/config.nix 读（tools.githubUrl）
 let
-
   # 平台标识：nix 的 isx86_64/isAarch64 对应官方分发后缀 x64/arm64（beads 的 Go 命名是 amd64）
   os = if pkgs.stdenv.hostPlatform.isLinux then "linux"
     else if pkgs.stdenv.hostPlatform.isDarwin then "darwin"
@@ -47,6 +47,10 @@ let
   };
 in
 {
-  # beads 以 Dolt 为存储后端（嵌入式/独立 server 均需 dolt CLI 管理），随 beads 一并安装
-  home.packages = [ beads pkgs.dolt ];
+  options.softwares.ai.enable = lib.mkEnableOption "AI 工具二进制（beads + dolt）";
+
+  config = lib.mkIf config.softwares.ai.enable {
+    # beads 以 Dolt 为存储后端（嵌入式/独立 server 均需 dolt CLI 管理），随 beads 一并安装
+    home.packages = [ beads pkgs.dolt ];
+  };
 }

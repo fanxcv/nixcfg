@@ -1,4 +1,4 @@
-# claude-code + ccline（包与配置，全平台）
+# claude-code + ccline 配置模块（从 _common_/claude.nix 迁入，加 softwares.claude.enable 门控）
 # 包：
 #   claude-code → nixpkgs 原生二进制（官方 CDN 国内不可达，src 由 overlays/claude-code.nix 改 npmmirror）
 #   ccline      → claude 的 statusline 配件（Rust 二进制，npm 平台包即裸二进制，fetchurl 分发）
@@ -8,8 +8,10 @@
 #   ficc-coding-standards 等插件市场声明在 settings.json，插件内容由 claude 自行拉取
 #   statusLine 用 "ccline" 命令名（不嵌 store 路径）：由本文件 home.packages 装入
 #   ~/.nix-profile/bin，claude 从 shell 启动时 PATH 可解析（从 GUI 启动时需手动加 PATH）
+#
+# 启用：common 默认 enable=true；某台不装 → 机器层 softwares.claude.enable = lib.mkForce false
 
-{ pkgs, lib, useChinaMirror ? true, ... }:
+{ config, lib, pkgs, useChinaMirror ? true, ... }:
 let
   # 国内网络开关（flake.nix 传入）：npm registry 走 npmmirror（与 ai.nix/mise.nix 同一开关）
   npmRegistry = if useChinaMirror then "https://registry.npmmirror.com" else "https://registry.npmjs.org";
@@ -52,42 +54,46 @@ let
   };
 in
 {
-  home.packages = [
-    # 关 installCheck：claude --version 在 nixbld（无 HOME）环境会死循环（99% CPU），
-    # 构建本身没问题（npmmirror 裸二进制，见 overlays/claude-code.nix）
-    # unstable 通道（周级 flake update 跟随，与 vscode 同机制；claudeOverlay 已应用到 unstable 实例）
-    (pkgs.repos.unstable.claude-code.overrideAttrs { doInstallCheck = false; })
-    ccline
-  ];
+  options.softwares.claude.enable = lib.mkEnableOption "claude-code + ccline（配置默认模板由 nix 声明）";
 
-  # ---- claude code 全局配置默认模板（~/.claude/settings.json）----
-  # 存在跳过：文件已存在（用户自管）不覆盖；不存在才写默认模板（实体文件，可写回）
-  # 本机用户已存在时 nix 不再干涉；如需回归 nix 默认，删除文件后部署一次即可
-  home.activation.setupClaudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if [ -f "$HOME/.claude/settings.json" ]; then
-      echo "claude: settings.json 已存在，跳过（不覆盖用户配置）"
-    else
-      mkdir -p "$HOME/.claude"
-      ${pkgs.coreutils}/bin/install -m 644 ${./claude/settings.json} "$HOME/.claude/settings.json"
-      echo "claude: settings.json 不存在，已生成默认模板"
-    fi
-  '';
+  config = lib.mkIf config.softwares.claude.enable {
+    home.packages = [
+      # 关 installCheck：claude --version 在 nixbld（无 HOME）环境会死循环（99% CPU），
+      # 构建本身没问题（npmmirror 裸二进制，见 overlays/claude-code.nix）
+      # unstable 通道（周级 flake update 跟随，与 vscode 同机制；claudeOverlay 已应用到 unstable 实例）
+      (pkgs.repos.unstable.claude-code.overrideAttrs { doInstallCheck = false; })
+      ccline
+    ];
 
-  # ---- claude 启动 wrapper（本机 ~/.claude/bin/cc_claude 的 nix 化）----
-  # 代理地址 + token 注入（token 从 ai.env 读 ANTHROPIC_AUTH_TOKEN）+ root 下过滤危险参数
-  # claude 由 nix 提供（原生二进制），不再依赖 mise node@22 / npm 版 claude
-  home.file.".local/bin/cc_claude" = {
-    executable = true;
-    text = ''
-      #!/usr/bin/env zsh
-      # 由 nix 管理（claude.nix）；key 从密钥文件派生（AI_FAN_CLAUDE）
-
-      [ -f "$HOME/.secrets/ai.env" ] && source "$HOME/.secrets/ai.env"
-
-      export ANTHROPIC_BASE_URL=https://ai.qksxin.com
-      export ANTHROPIC_AUTH_TOKEN="''${AI_FAN_CLAUDE:-}"
-
-      exec claude $@
+    # ---- claude code 全局配置默认模板（~/.claude/settings.json）----
+    # 存在跳过：文件已存在（用户自管）不覆盖；不存在才写默认模板（实体文件，可写回）
+    # 本机用户已存在时 nix 不再干涉；如需回归 nix 默认，删除文件后部署一次即可
+    home.activation.setupClaudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if [ -f "$HOME/.claude/settings.json" ]; then
+        echo "claude: settings.json 已存在，跳过（不覆盖用户配置）"
+      else
+        mkdir -p "$HOME/.claude"
+        ${pkgs.coreutils}/bin/install -m 644 ${./claude/settings.json} "$HOME/.claude/settings.json"
+        echo "claude: settings.json 不存在，已生成默认模板"
+      fi
     '';
+
+    # ---- claude 启动 wrapper（本机 ~/.claude/bin/cc_claude 的 nix 化）----
+    # 代理地址 + token 注入（token 从 ai.env 读 ANTHROPIC_AUTH_TOKEN）+ root 下过滤危险参数
+    # claude 由 nix 提供（原生二进制），不再依赖 mise node@22 / npm 版 claude
+    home.file.".local/bin/cc_claude" = {
+      executable = true;
+      text = ''
+        #!/usr/bin/env zsh
+        # 由 nix 管理（claude.nix）；key 从密钥文件派生（AI_FAN_CLAUDE）
+
+        [ -f "$HOME/.secrets/ai.env" ] && source "$HOME/.secrets/ai.env"
+
+        export ANTHROPIC_BASE_URL=https://ai.qksxin.com
+        export ANTHROPIC_AUTH_TOKEN="''${AI_FAN_CLAUDE:-}"
+
+        exec claude $@
+      '';
+    };
   };
 }

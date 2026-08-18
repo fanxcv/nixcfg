@@ -23,11 +23,11 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     - rtk                      # RTK 工具
     - tmux                     # 终端复用（gpakosz 配置自动装）
     - beads                    # AI 记忆（bd）
-    - dolt                     # 数据库（beads 的存储后端，随 beads 一并安装，→ home/fan/_common_/ai.nix）
-    - claude-code              # Claude Code CLI（unstable 通道，周级 flake update 跟随；构建时从 npmmirror 下载 npm 平台包，不校验 hash 免手动维护 → overlays/claude-code.nix、home/fan/_common_/claude.nix）
+    - dolt                     # 数据库（beads 的存储后端，随 beads 一并安装，→ modules/home/ai.nix）
+    - claude-code              # Claude Code CLI（unstable 通道，周级 flake update 跟随；构建时从 npmmirror 下载 npm 平台包，不校验 hash 免手动维护 → overlays/claude-code.nix、modules/home/claude.nix）
     - ccline                   # claude statusline
-    - codex                    # OpenAI Codex CLI（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/codex.nix）
-    - pi-coding-agent          # pi agent（unstable 通道，周级 flake update 跟随，→ home/fan/_common_/pi.nix）
+    - codex                    # OpenAI Codex CLI（unstable 通道，周级 flake update 跟随，→ modules/home/codex.nix）
+    - pi-coding-agent          # pi agent（unstable 通道，周级 flake update 跟随，→ modules/home/pi.nix）
     - btop                     # 系统监控（所有机器）
     - lazygit                  # TUI 版 git（所有机器；配置 ~/.config/lazygit/config.yml 用户自管，→ home/fan/_common_/base.nix）
     - nodejs                   # Node.js LTS（nix 管理，替代原全局默认 mise node@lts；机器级 mise node 经 shims 覆盖全局，→ home/fan/_common_/base.nix）
@@ -42,15 +42,15 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]
       disable_compfix: true    # nix store 目录 compaudit 误报不安全，跳过补全安全检查（→ shells.nix ZSH_DISABLE_COMPFIX）
       enable_completion: false # HM 不生成自带 compinit（omz 接管）；模板 compinit 无 -u 会触发安全检查询问（→ shells.nix）
-    tmux:                      # gpakosz 配置（mouse on + base-index 1）
-    codex:                     # codex 默认模板（→ home/fan/_common_/codex.nix；存在跳过——config.toml 已存在不覆盖，不存在才生成默认模板；实体文件非 symlink，codex 可写回信任/状态；机器特定配置由用户直接维护在 config.toml）
+    tmux:                      # gpakosz 配置（mouse on + base-index 1，→ modules/home/tmux.nix）
+    codex:                     # codex 默认模板（→ modules/home/codex.nix；存在跳过——config.toml 已存在不覆盖，不存在才生成默认模板；实体文件非 symlink，codex 可写回信任/状态；机器特定配置由用户直接维护在 config.toml）
       model: gpt-5.6-sol
       provider: fan
-    claude:                    # claude code（settings.json 默认模板：存在跳过，不存在生成 → home/fan/_common_/claude/settings.json；启动 wrapper cc_claude 仍由 nix 声明）
+    claude:                    # claude code（settings.json 默认模板：存在跳过，不存在生成 → modules/home/claude.nix；启动 wrapper cc_claude 仍由 nix 声明）
       proxy: https://ai.qksxin.com
-    pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取；每次 switch 拉取后自动运行 bin/fpi-install 更新配置（合成人格/settings/skills/自检），见 → home/fan/_common_/pi.nix）
+    pi:                        # pi agent（~/.pi/agent 从 git.fan-x.fun 拉取；每次 switch 拉取后自动运行 bin/fpi-install 更新配置（合成人格/settings/skills/自检）；~/.pi/agent/bin 入 sessionPath（lib.mkAfter 排 ~/.local/bin 后，fpi 优先用 nix wrapper，仅补 fpi-install 等），见 → modules/home/pi.nix）
       token_env: PI_CONFIG_GIT_TOKEN  # 全局环境变量：从 ~/.secrets/ai.env 读取（global.secrets.ai_env），clone 后清 origin
-    mise:                      # 运行时管理器（→ home/fan/_common_/mise.nix；机器级 config.toml（mini-m4/ide 容器）声明组件，无 config.toml 的机器不再装默认组件；config.toml 策略：不存在→模板创建默认，存在→补齐 nix 指定但缺失的键、已存在键保留用户版本，实体文件可写（→ _common_/mise/apply.py）；node@lts 默认已改由 nix 管理，见 global.pkgs.nodejs）
+    mise:                      # 运行时管理器（→ modules/home/mise.nix；机器级 config.toml（mini-m4/ide 容器）声明组件，无 config.toml 的机器不再装默认组件；config.toml 策略：不存在→模板创建默认，存在→补齐 nix 指定但缺失的键、已存在键保留用户版本，实体文件可写（→ _common_/mise/apply.py）；node@lts 默认已改由 nix 管理，见 global.pkgs.nodejs）
     mirrors:                   # 开发工具国内镜像（→ home/fan/_common_/mirrors.nix，所有机器；useChinaMirror=false 时不写，默认官方源）
       use_china_mirror: true   # 全局镜像/加速总开关 + GitHub 加速域名集中配置（→ tools/config.nix 唯一配置入口；useChinaMirror 注入所有机器默认值、githubProxy 供 ai/tmux/shells/ssh 模块与 packages 构建读，withoutProxy 例外清单——ghfast 不支持的 URL 直连，如 github.com/fanxcv.keys；换加速域名改这里后跑 scripts/switch-github-proxy.sh 同步 flake inputs）
       npm: npmmirror           # 装过 node 的机器：.npmrc registry + better_sqlite3_binary_host（better-sqlite3 预编译二进制从 GitHub 改走 npmmirror 的 /-/binary 镜像，国内可下载）
@@ -254,14 +254,14 @@ macos:
       - python@3
     android_emulator: 声明式   # 模拟器（java/android-sdk 由 mise 补装、platform-tools/emulator/镜像由 sdkmanager 自动安装，均幂等；AVD 就位后创建，→ home/fan/mini-m4/android-emulator.nix；镜像用 android-36 ps16k——android-37.0 不存在，sdkmanager 定位优先 latest 避免旧版残留）
     skemate: 包+配置+自启        # 终端复用服务（→ home/fan/mini-m4/skemate.nix）：包走 overlays/skemate.nix；tunnel.yaml/config.json 由 nix 管理（age 加密，secrets/hosts/mini-m4/，解密先于 agent 加载）；LaunchAgent 自启（RunAtLoad+KeepAlive，改配置后 launchctl kickstart -k 重启）
-    ssh_keys: agenix（身份密钥） # id_rsa 对由 nix 管理（→ home/fan/mini-m4/ssh.nix）：私钥加密入库激活自动解密到 ~/.ssh/id_rsa；公钥明文入库（secrets/hosts/mini-m4/ssh_id_rsa.pub，原 mac-pub.pub 退役，_common_/ssh.nix 的 authorized_keys 追加源改引用此文件）
+    ssh_keys: agenix（身份密钥） # id_rsa 对由 nix 管理（→ modules/home/ssh.nix，三台 Mac 统一，age 路径按 hostName 参数化）：私钥加密入库激活自动解密到 ~/.ssh/id_rsa；公钥明文入库（secrets/hosts/mini-m4/ssh_id_rsa.pub，原 mac-pub.pub 退役，modules/home/ssh.nix 的 authorized_keys 追加源改引用此文件）
     keystore: agenix            # bill-app 签名密钥（→ home/fan/mini-m4/keystore.nix）：source 名 bill-app-android-release.p12 加密入库，激活解密到 ~/.config/bill-app-android-release.p12（与 Makefile 的 RELEASE_KEYSTORE_PATH 默认值一致）
     power:                       # 电源策略（pmset，→ hosts/mini-m4/power.nix）
       ac_sleep: 0                # 永不睡眠
       ac_display_sleep: 10       # 10 分钟关屏
       ac_powernap: true          # 睡眠跑维护
       ac_wake_on_lan: true       # 局域网唤醒
-    comin: 实验（自动部署）      # git 驱动自动部署（→ hosts/mini-m4/comin.nix）：root LaunchDaemon 180s 轮询 git.fan-x.fun，darwinConfigurations.mini-m4 变更自动 activate（同 nix-pve 机制，mac 实验）；包自建（nixpkgs 无）、token 走 agenix（secrets/comin-token.age → /run/agenix/comin-token）；LaunchDaemon 自管理安装（不进 launchd.daemons，避免 comin 自我部署时 activate reload 自身死锁）；import comin darwinModules 仅借 options 定义（machineId 属性默认 null，comin eval 必读，缺失会挡掉新 commit 自动部署；enable=false 官方 daemon 不启用）
+    comin: 实验（自动部署）      # git 驱动自动部署（→ hosts/mini-m4/comin.nix）：root LaunchDaemon 180s 轮询 git.fan-x.fun，darwinConfigurations.mini-m4 变更自动 activate（同 nix-pve 机制，mac 实验）；包共享构建（overlays/comin.nix，与 nixos 共用一份，消除重复）、token 走 agenix（secrets/comin-token.age → /run/agenix/comin-token）；LaunchDaemon 自管理安装（不进 launchd.daemons，避免 comin 自我部署时 activate reload 自身死锁）；import comin darwinModules 仅借 options 定义（machineId 属性默认 null，comin eval 必读，缺失会挡掉新 commit 自动部署；enable=false 官方 daemon 不启用）
 
   mba_m5:                       # ← mba-m5 专属（实机导入草案，待你调整）
     apps:                        # 本机 GUI 应用（共享层已声明 orbstack/iterm2/edge/rustdesk/lemon/vscode，不重复）
@@ -275,8 +275,8 @@ macos:
       - wechat
       - qq
       - Microsoft Edge
-    ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（含 OrbStack Include 行，本机有 OrbStack；→ home/fan/mba-m5/ssh-config.nix）
-    ssh_id_rsa: SSH 身份密钥      # secrets/hosts/mba-m5/ssh_id_rsa.age 激活解密到 ~/.ssh/id_rsa（mba-m5/mbp-m1 共用；pub 明文 secrets/hosts/mba-m5/ssh_id_rsa.pub，兼作服务器 authorized_keys 追加源 → home/fan/mba-m5/ssh.nix + home/fan/_common_/ssh.nix）
+    ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（含 OrbStack Include 行，本机有 OrbStack；→ modules/home/ssh.nix）
+    ssh_id_rsa: SSH 身份密钥      # secrets/hosts/mba-m5/ssh_id_rsa.age 激活解密到 ~/.ssh/id_rsa（mba-m5/mbp-m1 共用；pub 明文 secrets/hosts/mba-m5/ssh_id_rsa.pub，兼作服务器 authorized_keys 追加源 → modules/home/ssh.nix）
 
   mbp_m1:                        # ← mbp-m1 专属（→ hosts/mbp-m1/ + home/fan/mbp-m1/）
     apps:                        # 本机 GUI 应用（追加到共享清单，dock 固定应用需要）
@@ -287,8 +287,8 @@ macos:
       - wechat
       - qq
       - Microsoft Edge
-    ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（含 OrbStack Include 行，本机有 OrbStack；→ home/fan/mbp-m1/ssh-config.nix）
-    ssh_id_rsa: SSH 身份密钥      # secrets/hosts/mbp-m1/ssh_id_rsa.age 激活解密到 ~/.ssh/id_rsa（mba-m5/mbp-m1 共用；pub 明文 secrets/hosts/mbp-m1/ssh_id_rsa.pub，兼作服务器 authorized_keys 追加源 → home/fan/mbp-m1/ssh.nix + home/fan/_common_/ssh.nix）
+    ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（含 OrbStack Include 行，本机有 OrbStack；→ modules/home/ssh.nix）
+    ssh_id_rsa: SSH 身份密钥      # secrets/hosts/mbp-m1/ssh_id_rsa.age 激活解密到 ~/.ssh/id_rsa（mba-m5/mbp-m1 共用；pub 明文 secrets/hosts/mbp-m1/ssh_id_rsa.pub，兼作服务器 authorized_keys 追加源 → modules/home/ssh.nix）
 
 linux:
   common:                        # Linux 系公共（NixOS/Ubuntu/Alpine 共用，→ home/fan/_linux_/）

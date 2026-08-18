@@ -59,7 +59,7 @@ in
   # home-manager 的 user submodule 不继承系统层 specialArgs，
   # 必须注入顶层 extraSpecialArgs（tools.scan / ${self} 主题路径 / inputs 都要用）
   home-manager.extraSpecialArgs = {
-    inherit self inputs outputs tools useChinaMirror isContainer platform;
+    inherit self inputs outputs tools useChinaMirror isContainer platform hostName;
   };
 
   home-manager.users."${userName}" = tools.relative "home/fan/${toLower hostName}";

@@ -7,6 +7,7 @@
 { pkgs, ... }:
 {
   # 所有平台统一加入 ~/.local/bin（用户本地脚本目录；mise shims 见 mise.nix）
+  # ~/.pi/agent/bin 由 pi.nix 用 lib.mkAfter 追加（见 home/fan/_common_/pi.nix）
   home.sessionPath = [ "$HOME/.local/bin" ];
 
   # CLI 工具统一由 nix 管理（rg/fd/jq/rtk 原由 mise 安装，改回 nix 包）

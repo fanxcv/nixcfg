@@ -139,6 +139,8 @@
       # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ claude-code/codex/pi（_common_）
       unstableOverlay = import ./overlays/unstable.nix { inherit inputs claudeOverlay; };
       vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
+      # comin 包共享构建（消除 nixos/mini-m4 两处 buildGoModule 重复，见 overlays/comin.nix）
+      cominOverlay = import ./overlays/comin.nix { inherit lib inputs; };
       # unfree 白名单：claude-code（镜像包）+ vscode 本体/扩展（unstable 通道，见 modules/home/vscode.nix；
       # pylance 为微软专有 license，remote-ssh 同理）
       unfreeAllowlist = [
@@ -167,7 +169,7 @@
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
-            overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay ];
+            overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay ];
           };
           modules = [
             ./home/fan
@@ -189,7 +191,7 @@
         pkgs = import inputs."nixpkgs-darwin" {
           inherit system;
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
-          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay ];
+          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay ];
         };
         modules = [
           ./hosts/${hostName}
@@ -251,7 +253,7 @@
         pkgs = import nixpkgs {
           system = "x86_64-linux";
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) (unfreeAllowlist ++ [ "microsoft-edge" "libsciter" ]);
-          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
+          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
         };
         modules = [ ./hosts/nix-pve ];
         specialArgs = {
