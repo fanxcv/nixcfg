@@ -59,7 +59,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       go: goproxy.cn           # 装过 go 的机器：.config/go/env GOPROXY
       flutter: flutter-io.cn   # flutter 机器：PUB_HOSTED_URL/FLUTTER_STORAGE_BASE_URL（环境变量，mise SDK 下载源不受影响）
     nix:                       # nix 二进制缓存/源码拉取（→ flake.nix nixConfig、modules/darwin/nix.nix、hosts/nix-pve、docker/ide/ubuntu/Dockerfile，4 处一致）
-      substituters: [USTC, TUNA, SJTU, cache.nixos.org]  # 国内镜像优先：中科大/清华/上海交大，官方兜底；另有 numtide/nix-community cachix 补充
+      substituters: [USTC, TUNA, cache.nixos.org]  # 国内镜像优先：中科大/清华（SJTU 已移除——2026-08 连接超时不可达，会拖死每次 build），官方兜底；另有 numtide/nix-community cachix 补充
       inputs_proxy: ghfast.top  # GitHub 源码（全部 15 个 inputs）走加速前缀（git+https 无法配镜像，URL 前置代理最稳）；域名由 tools/config.nix 的 githubProxy 声明，换代理跑 scripts/switch-github-proxy.sh <新域名>（同时替换 flake.nix/flake.lock 并重锁）；已验证 ghfast.top（HTTP 7MB/s + git 协议）
     vscode:                    # 配置/扩展/语言 profile 由 nix 声明（→ modules/home/vscode.nix；清单参考 docs/tsln-vscode.yaml）
       package: mac=商店版 / nixos=unstable   # 包本体策略：mac 用 brew cask 商店版，nixos 走 unstable 通道（pkgs.repos.unstable.vscode）
