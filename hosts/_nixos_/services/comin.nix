@@ -22,6 +22,7 @@ let
     src = inputs.comin;
     vendorHash = "sha256-M+0YUoMRnObCSUqnygPNiv1sKl3YB9Cb4nzK39zWwBg=";
     ldflags = [ "-X github.com/nlewo/comin/cmd.version=0.14.0" ];
+    meta.mainProgram = "comin"; # 消除 getExe 的 deprecated warning（与 mini-m4 对齐）
     nativeCheckInputs = [ pkgs.git ];
     doCheck = false;
     overrideModAttrs = _: prev: {
@@ -62,6 +63,8 @@ in
           access_token_path = "/run/agenix/comin-token";
         };
         branches.main.name = "main";
+        # 轮询周期 180s（默认 60s；与 mini-m4 对齐，降低对 git 服务器打扰）
+        poller.period = 180;
       }
     ];
 
