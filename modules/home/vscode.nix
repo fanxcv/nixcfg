@@ -249,7 +249,10 @@ in
                     metadata: {
                       id: (.uuid // ""),
                       installedTimestamp: 0,
-                      isApplicationScoped: false,
+                      # 必须 isApplicationScoped: true：server 对自定义 profile 合并应用级扩展时按
+                      # `isBuiltin || isApplicationScoped` 过滤（server-main.js scanProfileExtensions），
+                      # 两者皆 false 的扩展会被剔除 → 扩展面板空白。默认 profile 直接读则不受影响。
+                      isApplicationScoped: true,
                       isPreReleaseVersion: false,
                       preRelease: false,
                       publisherDisplayName: .publisher,
