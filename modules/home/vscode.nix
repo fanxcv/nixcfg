@@ -226,28 +226,6 @@ in
             # vscode-server 读取 package.json 失败 → 扩展全部不加载（Linux/mac 均复现）
             mv $out/share/vscode/extensions/* $out/
             rm -rf $out/share
-
-            # 生成 extensions.json：新版 vscode-server（1.9x+）以该文件为权威扩展枚举清单，
-            # 目录只读（nix store 链接）时 server 无法自行写入 → 无此文件则不扫描目录、扩展全部不加载。
-            # 08-16 启用 nix 管理前 extensions.json 由 vscode 自装可写目录生成；nix 接管 rm -rf 后丢失即复现。
-            # 遍历各扩展 package.json 提取 publisher/name/version，拼 server 所需结构。
-            rm -f "$out/extensions.json"
-            {
-              echo '['
-              first=1
-              for d in "$out"/*/; do
-                [ -f "$d/package.json" ] || continue
-                if [ "$first" -ne 1 ]; then echo ','; fi
-                first=0
-                dir_no_slash="''${d%/}"
-                ${pkgs.jq}/bin/jq -c \
-                  --arg dir "$dir_no_slash" --arg name "$(${pkgs.coreutils}/bin/basename "$dir_no_slash")" \
-                  '{ identifier: { id: (.publisher + "." + .name) }, version: .version, location: { scheme: "file", path: $dir }, relativeLocation: $name, metadata: { isApplicationScoped: false, isBuiltin: false, isMachineScoped: false, pinned: false, source: "nix" } }' \
-                  "$dir_no_slash/package.json"
-              done
-              echo ']'
-            } > "$out/extensions.json"
-            ${pkgs.coreutils}/bin/chmod 0644 "$out/extensions.json"
           '';
         };
         recursive = true;
