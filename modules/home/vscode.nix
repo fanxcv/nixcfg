@@ -226,6 +226,45 @@ in
             # vscode-server 读取 package.json 失败 → 扩展全部不加载（Linux/mac 均复现）
             mv $out/share/vscode/extensions/* $out/
             rm -rf $out/share
+
+            # 生成 extensions.json：vscode-server 1.13x 起以该文件为权威扩展枚举清单（1.129 之前直接扫目录）。
+            # 客户端自动更新下载新 server 后，无此文件则扩展全部空白（08-18 实盘 cache 证明 server 读它且能找到 16 个扩展；
+            # 精简格式缺 uuid/fsPath/$mid/完整 metadata 会被 1.133 扫描器拒绝）。目录只读，server 无法自写。
+            # 格式对齐 home-manager programs.vscode 客户端权威格式。遍历各扩展 package.json 生成。
+            {
+              echo '['
+              first=1
+              for d in "$out"/*/; do
+                [ -f "$d/package.json" ] || continue
+                if [ "$first" -ne 1 ]; then echo ','; fi
+                first=0
+                dir="''${d%/}"
+                # 解析出扩展真实 store 路径（$out/<name> 是 buildEnv 符号链接）：
+                # 与 home-manager 客户端 extensions.json 一致，location 指到可读的源包路径
+                real="$(${pkgs.coreutils}/bin/readlink -f "$dir")"
+                ${pkgs.jq}/bin/jq -c --arg real "$real" --arg rel "$(${pkgs.coreutils}/bin/basename "$dir")" '
+                  {
+                    identifier: { id: (.publisher + "." + .name), uuid: (.uuid // "") },
+                    location: { "$mid": 1, fsPath: $real, path: $real, scheme: "file" },
+                    metadata: {
+                      id: (.uuid // ""),
+                      installedTimestamp: 0,
+                      isApplicationScoped: false,
+                      isPreReleaseVersion: false,
+                      preRelease: false,
+                      publisherDisplayName: .publisher,
+                      publisherId: "",
+                      targetPlatform: "undefined",
+                      updated: false
+                    },
+                    relativeLocation: $rel,
+                    version: .version
+                  }
+                ' "$d/package.json"
+              done
+              echo ']'
+            } > "$out/extensions.json"
+            ${pkgs.coreutils}/bin/chmod 0644 "$out/extensions.json"
           '';
         };
         recursive = true;
