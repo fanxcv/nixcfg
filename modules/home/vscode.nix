@@ -32,12 +32,13 @@ let
     market.usernamehw.errorlens
     market.humao.rest-client
     market.yzhang.markdown-all-in-one
+    pkgs.csv-grid-editor # CSV/TSV 网格查看编辑（官方 vsix 直链自打包 1.18.4，见 packages/csv-grid-editor.nix；补市场缓存滞后）
   ];
   # 仅客户端 UI 类扩展（base 公共，但 server 端不装：remote-ssh 是客户端侧远程连接器）
   clientOnlyExtensions = [
     market.ms-vscode-remote.remote-ssh
   ];
-  # 客户端扩展（default profile）＝公共 13 个
+  # 客户端扩展（default profile）＝公共 14 个
   baseExtensions = baseCommonExtensions ++ clientOnlyExtensions;
 
   # 公共设置（docs/tsln-vscode.yaml settings，mac/nixos 通用部分）

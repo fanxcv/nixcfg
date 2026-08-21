@@ -42,6 +42,7 @@ extensions:
     - { id: usernamehw.errorlens, category: 通用/错误内联显示, market: market_1 }
     - { id: humao.rest-client, category: 通用/API 调试, market: market_1 }
     - { id: yzhang.markdown-all-in-one, category: 通用/Markdown, market: market_1 }
+    - { id: robinreiche.csv-grid-editor, category: 通用/CSV TSV 网格查看编辑, market: local }  # 本地自打包（官方 vsix 直链 1.18.4；补市场缓存滞后 → packages/csv-grid-editor.nix）
     - { id: ms-vscode-remote.remote-ssh, category: 远程 SSH, market: market_1 }
 
   # 语言 profile

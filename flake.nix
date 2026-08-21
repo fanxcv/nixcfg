@@ -169,7 +169,7 @@
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
-            overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay ];
+            overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
           };
           modules = [
             ./home/fan
@@ -191,7 +191,7 @@
         pkgs = import inputs."nixpkgs-darwin" {
           inherit system;
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
-          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay ];
+          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
         };
         modules = [
           ./hosts/${hostName}
