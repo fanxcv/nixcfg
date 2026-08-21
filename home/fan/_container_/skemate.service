@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=simple
 User=root
 Environment=HOME=/root
+Environment=SHELL=/bin/zsh
 ExecStart=@skemate@/bin/skemate serve
 Restart=always
 RestartSec=3

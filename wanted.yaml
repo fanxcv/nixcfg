@@ -314,7 +314,7 @@ linux:
     secrets: agenix              # 密钥进容器：docker/ide/.secrets/age-keys.txt（私钥）→ 激活时解密 ai.env/git-credentials
     skemate:                     # 自研终端复用服务（→ overlays/skemate.nix + home/fan/_container_/skemate.nix，两台共用一份）
       version: 0.5.72            # latest.json 最新版（linux-amd64 / darwin-arm64）
-      service: systemd           # 自启：serve 前台 + Restart=always（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
+      service: systemd           # 自启：serve 前台 + Restart=always + SHELL=/bin/zsh（容器 PID1 即 systemd；激活检查存活，挂了自动重启并输出 journalctl）
       config: 宿主机挂载           # 配置不管理：docker/ide/skemate/ → /root/.config/skemate（compose 挂载）
     lazygit: true                # 终端 Git UI（→ home/fan/_container_/lazygit.nix，参考 tsln1998/nixcfg；只装 lazygit 不带 gitflow）
     container_pkgs:              # 容器专属工具（→ home/fan/_container_/packages.nix）
