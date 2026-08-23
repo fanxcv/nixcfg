@@ -270,6 +270,7 @@ macos:
       - jetbrains-toolbox        # 本机已装（仅本机声明，mini-m4 不要）
       - microsoft-remote-desktop # Windows App（微软远程桌面），本机已装
       - bilibili                 # 本机已装
+      - steam                     # Steam 游戏平台
     dock.persistent_apps:        # Dock 固定应用（mkForce 覆盖共享层 quartz.dock.nix；mini-m4 仍用共享层清单 Apps.app+iTerm+Edge）
       - iterm2
       - wechat
