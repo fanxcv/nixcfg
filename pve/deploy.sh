@@ -8,7 +8,7 @@ HOST="${1:-ds2}"
 FILES="@FILES@"
 APPLY="@APPLY@"
 
-echo "==> [1/5] bootstrap：检查/安装 nix（root@$HOST）"
+echo "==> [1/5] bootstrap: 检查/安装 nix on root@$HOST"
 ssh root@$HOST 'bash -s' <<'BOOTSTRAP'
 set -euo pipefail
 if ! command -v nix >/dev/null 2>&1; then
