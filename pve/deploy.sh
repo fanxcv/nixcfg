@@ -11,7 +11,8 @@ APPLY="@APPLY@"
 echo "==> [1/5] bootstrap: 检查/安装 nix on root@$HOST"
 ssh root@$HOST 'bash -s' <<'BOOTSTRAP'
 set -euo pipefail
-if ! command -v nix >/dev/null 2>&1; then
+# 检查 nix 二进制存在性而非 PATH 命令（非交互 ssh 的 PATH 无 nix，但已装机器不应重跑 installer）
+if [ ! -x /nix/var/nix/profiles/default/bin/nix ]; then
   echo "nix 未安装，官方 installer 安装中（--daemon，国内网络慢属正常）..."
   curl -L https://nixos.org/nix/install | sh -s -- --daemon
 fi
