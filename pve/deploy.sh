@@ -23,6 +23,10 @@ substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://mirrors.tu
 experimental-features = nix-command flakes
 NIXCONF
 fi
+# claude-code 等 derivation 带 __noChroot（构建时需网络/特权），relaxed 允许其非沙箱构建
+if ! grep -q "^sandbox" /etc/nix/nix.conf; then
+  echo 'sandbox = relaxed' >> /etc/nix/nix.conf
+fi
 BOOTSTRAP
 
 echo "==> [2/5] 推送 git 凭据 + 拉取仓库 → /tmp/nixcfg（git clone/pull）"
