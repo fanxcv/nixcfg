@@ -40,11 +40,10 @@ in
     deb ${mirror}/proxmox/debian/pve ${suite} pve-no-subscription
     EOF
 
-    # DNS（systemd-resolved；PVE 9 默认启用）
-    cat > $out/resolved.conf <<EOF
-    [Resolve]
-    DNS=${builtins.concatStringsSep " " dns}
-    FallbackDNS=${builtins.concatStringsSep " " (lib.lists.reverseList dns)}
+    # DNS（/etc/resolv.conf 直写；PVE 9 无 systemd-resolved，resolv.conf 由安装器/网络模块生成，部署时覆盖）
+    cat > $out/resolv.conf <<EOF
+    # 由 nixcfg pve/ds2 渲染（公共 DNS，见 pve/default.nix）；网络重启若覆盖，请在 /etc/network/interfaces 配置 dns-nameservers
+    ${builtins.concatStringsSep "\n" (map (d: "nameserver " + d) dns)}
     EOF
 
     # GRUB（/etc/default/grub；GRUB_CMDLINE_LINUX_DEFAULT 含公共参数）

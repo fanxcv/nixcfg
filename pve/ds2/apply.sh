@@ -35,11 +35,13 @@ cp -a /etc/apt/sources.list.d/. "$BACKUP/" 2>/dev/null || true
 install -m 0644 debian.sources /etc/apt/sources.list.d/debian.sources
 install -m 0644 debian-security.sources /etc/apt/sources.list.d/debian-security.sources
 install -m 0644 pve-no-subscription.list /etc/apt/sources.list.d/pve-no-subscription.list
-# enterprise 源是「仓库黄色提示」根源（未订阅），备份后移除
-if [ -f /etc/apt/sources.list.d/pve-enterprise.list ]; then
-  mv /etc/apt/sources.list.d/pve-enterprise.list "$BACKUP/"
-  echo "pve-enterprise.list 已禁用（备份于 $BACKUP ）"
-fi
+# enterprise 源是「仓库黄色提示」根源（未订阅），备份后移除（PVE 8=.list，PVE 9=deb822 .sources）
+for f in /etc/apt/sources.list.d/pve-enterprise.list /etc/apt/sources.list.d/pve-enterprise.sources; do
+  if [ -f "$f" ]; then
+    mv "$f" "$BACKUP/"
+    echo "$f 已禁用（备份于 $BACKUP ）"
+  fi
+done
 # ceph 源（可选组件，本机未用）备份禁用
 for f in /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources; do
   if [ -f "$f" ]; then
@@ -48,13 +50,9 @@ for f in /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources;
   fi
 done
 
-echo "==> [4/6] DNS（systemd-resolved）"
-install -m 0644 resolved.conf /etc/systemd/resolved.conf
-if systemctl is-enabled systemd-resolved >/dev/null 2>&1; then
-  systemctl restart systemd-resolved
-else
-  echo "警告: systemd-resolved 未启用，resolved.conf 已写入但未生效"
-fi
+echo "==> [4/6] DNS（/etc/resolv.conf 直写；PVE 9 无 systemd-resolved）"
+cp -a /etc/resolv.conf "$BACKUP/" 2>/dev/null || true
+install -m 0644 resolv.conf /etc/resolv.conf
 
 echo "==> [5/6] apt update + 安装 pve-assist + 去订阅 nag"
 apt-get update
@@ -74,8 +72,8 @@ if grep -rq "enterprise" /etc/apt/sources.list.d/ 2>/dev/null; then
 else
   echo "enterprise 源已清除"
 fi
-# resolvectl 无输出（resolved 未启用）属预期，仅提示
-resolvectl status 2>/dev/null | grep -E "Current DNS|DNS Servers" || echo "（resolved 未启用，DNS 见 /etc/systemd/resolved.conf）"
+echo "--- DNS（/etc/resolv.conf）---"
+cat /etc/resolv.conf
 zsh --version
 [ -d /root/.oh-my-zsh ] && echo "oh-my-zsh OK"
 ls -l /usr/local/bin/pve-assist
