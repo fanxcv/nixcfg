@@ -31,6 +31,7 @@ scp "$HOME/.git-credentials" root@$HOST:/root/.git-credentials
 ssh root@$HOST 'bash -s' <<'REPO'
 set -euo pipefail
 chmod 600 /root/.git-credentials
+command -v git >/dev/null 2>&1 || apt-get install -y git
 git config --global credential.helper store
 if [ -d /tmp/nixcfg/.git ]; then
   git -C /tmp/nixcfg pull --ff-only

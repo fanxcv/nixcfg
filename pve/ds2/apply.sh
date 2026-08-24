@@ -38,13 +38,13 @@ install -m 0644 pve-no-subscription.list /etc/apt/sources.list.d/pve-no-subscrip
 # enterprise 源是「仓库黄色提示」根源（未订阅），备份后移除
 if [ -f /etc/apt/sources.list.d/pve-enterprise.list ]; then
   mv /etc/apt/sources.list.d/pve-enterprise.list "$BACKUP/"
-  echo "pve-enterprise.list 已禁用（备份于 $BACKUP）"
+  echo "pve-enterprise.list 已禁用（备份于 $BACKUP ）"
 fi
 # ceph 源（可选组件，本机未用）备份禁用
 for f in /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources; do
   if [ -f "$f" ]; then
     mv "$f" "$BACKUP/"
-    echo "$f 已禁用（备份于 $BACKUP）"
+    echo "$f 已禁用（备份于 $BACKUP ）"
   fi
 done
 
