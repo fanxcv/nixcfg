@@ -15,6 +15,9 @@ if ! command -v nix >/dev/null 2>&1; then
   echo "nix 未安装，官方 installer 安装中（--daemon，国内网络慢属正常）..."
   curl -L https://nixos.org/nix/install | sh -s -- --daemon
 fi
+# 非交互 ssh 不 source /etc/profile.d，后续 [4/5] 远程 nix build 需要 nix 在 PATH（幂等）
+ln -sf /nix/var/nix/profiles/default/bin/nix /usr/local/bin/nix
+ln -sf /nix/var/nix/profiles/default/bin/nix-store /usr/local/bin/nix-store
 # 镜像 substituters（幂等；与仓库 flake.nix nixConfig 一致）
 if [ ! -f /etc/nix/nix.conf ] || ! grep -q "mirrors.ustc.edu.cn" /etc/nix/nix.conf; then
   mkdir -p /etc/nix
