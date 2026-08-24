@@ -58,6 +58,9 @@ scp "$HOME/.secrets/age-keys.txt" root@$HOST:/root/.secrets/age-keys.txt
 echo "==> [4/5] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具）"
 ssh root@$HOST 'bash -s' <<'HM'
 set -euo pipefail
+# 非交互 ssh 的 PATH 不含 nix（/etc/profile.d 不加载），显式补全
+# （BOOTSTRAP 已软链 /usr/local/bin，此处双保险）
+export PATH="/usr/local/bin:/nix/var/nix/profiles/default/bin:$PATH"
 cd /tmp/nixcfg
 nix build .#homeConfigurations."fan@@HOST@".activationPackage
 USER=root HOME_MANAGER_BACKUP_EXT=backup ./result/activate
