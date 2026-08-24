@@ -58,7 +58,9 @@ COPY entrypoint.sh /usr/local/bin/
 
 RUN chmod a+x /usr/local/bin/entrypoint.sh \
     && systemctl enable ssh \
-    && chsh -s /bin/zsh
+    && chsh -s /bin/zsh \
+    && mkdir -p /etc/systemd/journald.conf.d \
+    && printf '[Journal]\nSystemMaxUse=100M\nSystemMaxFileSize=10M\nMaxRetentionSec=1week\n' > /etc/systemd/journald.conf.d/zz-limits.conf
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD []
