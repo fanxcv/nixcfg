@@ -196,10 +196,10 @@
     "homebrew": {
       "flake": false,
       "locked": {
-        "lastModified": 1787402085,
-        "narHash": "sha256-GSr0ONvR3LyyA2U/WdOjVwixmCEPOrf0KcGIozYPcV8=",
+        "lastModified": 1787526284,
+        "narHash": "sha256-WznXtpZNCghY+CJDcI/9nOAlqiIuLEMIzc31S9vCsC0=",
         "ref": "main",
-        "rev": "aad366ffaf6a8c94c66d35e4b990d42ac4195305",
+        "rev": "0942cac2eda7648d4857f4e5da60f1de303b6818",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/Homebrew/brew.git"
@@ -214,10 +214,10 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1787440788,
-        "narHash": "sha256-szhcG76sqKLRJ1FKyUkiwfuIwfcaNkDA+ROkfEg91Zw=",
+        "lastModified": 1787534173,
+        "narHash": "sha256-nbj07PYORjLB6P71jpzvt5exMbCio76hLp7R/fX2ktM=",
         "ref": "main",
-        "rev": "a4b8751265bbe2fb2a20168992c2862bc72a3af4",
+        "rev": "09c3724976788f7acbf3225887ebbcc216aa8ae1",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/homebrew/homebrew-cask.git"
@@ -232,10 +232,10 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1787445542,
-        "narHash": "sha256-o/tpW77Z3lmEZzaWLF3qZSknD8SuFG7Ti53h5EjqRCc=",
+        "lastModified": 1787532808,
+        "narHash": "sha256-bT9EdJT10RyoFMdSjmrpAhkMunMfWQmHCsrn/SVqG60=",
         "ref": "main",
-        "rev": "61fa2cebc75e0a6f04212a7a4323776eeebdd1bf",
+        "rev": "55466099c74e5303987f6a63c9ba0670771d28f8",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/homebrew/homebrew-core.git"
@@ -316,10 +316,10 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1787204541,
-        "narHash": "sha256-OURZPknrTjQrlNyxPdqzyqmU/81Wes1CUP/Ft1Rv/YI=",
+        "lastModified": 1787414105,
+        "narHash": "sha256-WncT27+3BOkgTaJZLnCsf3LcYf9RXMuR9ONSN4rzQ7s=",
         "ref": "nixos-26.05",
-        "rev": "5880666fd9eb563038431edb35c2d0aa595884e6",
+        "rev": "a9e6d84f9c2f9012f5fe7d964a7851352300e61a",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
@@ -433,10 +433,10 @@
     },
     "unstable": {
       "locked": {
-        "lastModified": 1787209939,
-        "narHash": "sha256-WvvHR4kSQLAbtouMC/ruZ5UpLwlUcY3K4FAllMN+yGk=",
+        "lastModified": 1787364730,
+        "narHash": "sha256-NcYt9QJfpJiF1lAyN8BDPB4EeScbPU+EwQqPiBElrpU=",
         "ref": "nixpkgs-unstable",
-        "rev": "391b592eb44808b3bd0cb80bb71b63a5a118b8bb",
+        "rev": "a831408e6378bc02ebf8cc09b52c96ca86f6bab4",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
@@ -455,10 +455,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1787362606,
-        "narHash": "sha256-KRs7IfccMjEd8RKRG0fbiZhLTvloXCCWDUC9m4MkV8M=",
+        "lastModified": 1787449828,
+        "narHash": "sha256-wyaotmjCE/HcAjXJ6+Pxn3fzrrIO7r/QrIza7h1ZtSg=",
         "ref": "master",
-        "rev": "f77d5bd7712b61e4831a5104221d4e0b98d74f86",
+        "rev": "95b3cd9ae6526964fe9d5b01fb28cbe4cca16cca",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-community/nix-vscode-extensions.git"

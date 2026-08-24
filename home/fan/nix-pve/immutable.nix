@@ -52,6 +52,10 @@ _: {
         mode = "0755";
       }
       {
+        directory = "sync"; # syncthing 同步目录（与三台 Mac 组网）
+        mode = "0755";
+      }
+      {
         directory = "downloads";
         mode = "0755";
       }

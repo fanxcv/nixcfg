@@ -17,6 +17,13 @@
     jq
     rtk
     btop
+    # 终端工作流：模糊搜索/智能 cd/环境加载/高亮 cat/现代 ls/yaml 处理
+    fzf
+    zoxide
+    direnv
+    bat
+    eza
+    yq
     # TUI 版 git（lazygit，所有机器；配置文件 ~/.config/lazygit/config.yml 用户自管）
     lazygit
     # 默认 node 由 nix 管理（替代原全局默认 mise node@lts，pkgs.nodejs 跟随 nixpkgs LTS）；
@@ -36,6 +43,9 @@
       credential.helper = "store";
       init.defaultBranch = "main";
       pull.rebase = true;
+      push.autoSetupRemote = true; # 新分支首次 push 自动建远端跟踪
+      fetch.prune = true;          # fetch 时清理已删远端分支
+      rerere.enabled = true;        # 冲突解决记忆（同冲突只解一次）
       # 配置仓库挂载自宿主机，owner 可能与容器用户不同，避免 dubious ownership 报错
       safe.directory = "/root/nixcfg";
     };

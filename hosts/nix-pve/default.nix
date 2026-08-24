@@ -27,6 +27,17 @@
     "https://cache.nixos.org/"
   ];
 
+  # store 自动 GC（128G 盘，30 天保留）+ 定期硬链接优化
+  nix.gc.automatic = true;
+  nix.gc.options = "--delete-older-than 30d";
+  nix.optimise.automatic = true;
+
+  # virtio 盘定期 trim（SSD 寿命/性能）
+  services.fstrim = {
+    enable = true;
+    interval = "weekly";
+  };
+
   # fan sudo 免密（日常维护/手动 rebuild 用）
   security.sudo.wheelNeedsPassword = false;
 
@@ -42,6 +53,16 @@
   age.secrets."comin-token" = {
     file = tools.relative "secrets/comin-token.age";
     path = "/run/agenix/comin-token";
+    mode = "0400";
+  };
+
+  # syncthing GUI 密码（syncthing 服务以 fan 用户跑，owner 必须 fan 才能读；
+  # 模块 guiPasswordFile 自动 bcrypt 后经 REST API 注入，不覆盖 config.xml 配对状态）
+  age.secrets."syncthing-gui-password" = {
+    file = tools.relative "secrets/syncthing-gui-password.age";
+    path = "/run/agenix/syncthing-gui-password";
+    owner = "fan";
+    group = "users";
     mode = "0400";
   };
 

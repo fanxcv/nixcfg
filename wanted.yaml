@@ -30,6 +30,12 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     - pi-coding-agent          # pi agent（unstable 通道，周级 flake update 跟随，→ modules/home/pi.nix）
     - btop                     # 系统监控（所有机器）
     - lazygit                  # TUI 版 git（所有机器；配置 ~/.config/lazygit/config.yml 用户自管，→ home/fan/_common_/base.nix）
+    - fzf                      # 模糊搜索（Ctrl-R 历史/Ctrl-T 文件，配 fd 管道，→ home/fan/_common_/base.nix）
+    - zoxide                   # 智能 cd（高频目录记忆，→ home/fan/_common_/base.nix）
+    - direnv                   # 目录环境自动加载（.envrc / nix develop，→ home/fan/_common_/base.nix）
+    - bat                      # cat 高亮替代（→ home/fan/_common_/base.nix）
+    - eza                      # 现代 ls（图标/树形，→ home/fan/_common_/base.nix）
+    - yq                       # YAML 处理（wanted.yaml 同族，→ home/fan/_common_/base.nix）
     - nodejs                   # Node.js LTS（nix 管理，替代原全局默认 mise node@lts；机器级 mise node 经 shims 覆盖全局，→ home/fan/_common_/base.nix）
 
   app_configs:                 # 跨平台应用级配置
@@ -37,6 +43,10 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
       user: fan
       email: fan@fan-x.fun
       pull_rebase: true
+      init_default_branch: main # 新仓库默认 main
+      push_auto_setup_remote: true  # 新分支首次 push 自动建远端跟踪
+      fetch_prune: true        # fetch 时清理已删远端分支
+      rerere_enabled: true     # 冲突解决记忆（同冲突只解一次）
     zsh:                       # shell（oh-my-zsh 自动 clone）
       theme: fishy-custom
       plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]
@@ -88,6 +98,7 @@ macos:
 
     formulae:                    # brew 命令行公式（→ hosts/_darwin_/base/homebrew.nix；autoMigrate 已开：全新部署自动接管已有 Homebrew）
       # 决策（2025-08-15）：旧手动公式全部 zap 清空，无保留（zsh 插件走 git clone，见 shells.nix cloneOhMyZsh）
+      - syncthing                # P2P 文件同步（三台 Mac + nix-pve 组网，~/sync；LaunchAgent 自启 → home/fan/_darwin_/syncthing.nix）
       # - ollama                  # 本地大模型（需时再声明）
       # - mlx / mlx-c             # Apple ML 工具（需时再声明）
       # - ffmpeg                  # 音视频（含 x264/x265/lame 等依赖，需时再声明）
@@ -158,6 +169,7 @@ macos:
       # --- 其他 ---
       startup.chime: false      # 关开机音
       softwareupdate.auto_macos: false  # 不自动装 macOS 更新
+      softwareupdate.auto_security_updates: true  # 安全补丁/关键更新自动装（→ hosts/_darwin_/kernel/software.nix CriticalUpdateInstall）
       # 电源策略：共享不声明（三台各自按需，mini-m4 见下方专属段）
 
     locale:                      # 语言环境（系统级 env；GUI 界面语言由 AppleLocale=zh_CN 决定，见 settings.locale.zh_CN）
@@ -166,6 +178,7 @@ macos:
 
     services:                    # 系统服务
       # tailscale 用 App（三台已装，IP 保持稳定）；nix 服务会换 IP，不启用
+      syncthing: LaunchAgent 自启（brew formula，用户级）  # ~/sync 多机同步（三台 Mac 互 + nix-pve；GUI 密码 activation 幂等注入 → home/fan/_darwin_/syncthing.nix）
 
     fonts:                        # 字体（Monaspace 已全部移除）
 
@@ -356,6 +369,10 @@ nixos:
     ui_lang: zh_CN                    # KDE 界面中文（plasma-localerc，只影响界面；终端/SSH 保持 en_US，与 mac 的 AppleLanguages 策略一致）
     apps: [edge, bitwarden, vscode, rustdesk]  # GUI 应用（对齐 mac；rustdesk 走官方 GitHub release 二进制包，免源码编译 → packages/rustdesk-bin.nix，hbbs 配置注入 → home/fan/nix-pve/rustdesk.nix；clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install；vscode 走 unstable 包 → modules/home/vscode.nix）
     comin: true                  # git 驱动自动部署（git.fan-x.fun 私有仓库，凭据走 /root/.git-credentials agenix；轮询 180s 与 mini-m4 对齐）
+    syncthing: true              # P2P 文件同步（系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384；~/sync 与三台 Mac 组网，目录已持久化；GUI 密码走 agenix（secrets/syncthing-gui-password.age，owner=fan）→ hosts/nix-pve/services/syncthing.nix + home/fan/nix-pve/immutable.nix）
+    nix_gc: 30 天自动清理       # store 自动 GC（128G 盘，--delete-older-than 30d，→ hosts/nix-pve/default.nix）
+    nix_optimise: 自动          # 定期硬链接优化（→ hosts/nix-pve/default.nix）
+    fstrim: weekly              # virtio 盘定期 trim（SSD 寿命/性能，→ hosts/nix-pve/default.nix）
     use_china_mirror: true       # 挂全局 useChinaMirror 开关（flake.nix specialArgs 注入，与 mac orbstack/mirrors.nix 同语义；false 时不设镜像，→ hosts/nix-pve/services/docker.nix daemon.settings）
     registry_mirrors:            # Docker 镜像列表（三镜像与 mac 一致）
       - https://docker.xuanyuan.me

@@ -55,6 +55,10 @@ in
       "homebrew/homebrew-cask"
       "cirruslabs/homebrew-cli"
     ];
+    # brew 命令行公式（三台 Mac 公共；自启走 launchd.agents → home/fan/_darwin_/syncthing.nix）
+    brews = [
+      "syncthing" # P2P 文件同步（多机组网，~/sync）
+    ];
     onActivation = {
       # 未声明的包/cask 自动卸载（从声明清单里移除即删除）
       cleanup = "zap";
