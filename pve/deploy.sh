@@ -54,7 +54,7 @@ echo "==> [4/5] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具�
 ssh root@$HOST 'bash -s' <<'HM'
 set -euo pipefail
 cd /tmp/nixcfg
-nix build .#homeConfigurations."fan@HOST@".activationPackage
+nix build .#homeConfigurations."fan@@HOST@".activationPackage
 USER=root HOME_MANAGER_BACKUP_EXT=backup ./result/activate
 HM
 
