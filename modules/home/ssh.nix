@@ -23,22 +23,43 @@
         #    URL 用 tools.githubUrl：github.com/<user>.keys 端点 ghfast 不支持，已在集中配置 withoutProxy 例外，自动直连
         mkdir -p "$HOME/.ssh"
         chmod 700 "$HOME/.ssh"
-        keys_tmp="$HOME/.ssh/authorized_keys.tmp"
-        : > "$keys_tmp"
-        if ${pkgs.curl}/bin/curl -sfL "${tools.githubUrl "https://github.com/fanxcv.keys"}" -o "$keys_tmp" \
-          && [ -s "$keys_tmp" ]; then
-          # 追加 mac 身份公钥（各台自己的 id_rsa：mini-m4 / mba-m5 / mbp-m1，即原 mac-pub.pub；
-          # github 集合可能不含最新 key，防激活覆盖锁死）
-          # 注意 mba-m5 与 mbp-m1 共用同一套 id_rsa（secrets/hosts/<host>/ssh_id_rsa.pub 同内容，
-          #   authorized_keys 重复行无害，ssh 按 key 去重）
-          printf '%s\n' '${builtins.readFile ../../secrets/hosts/mini-m4/ssh_id_rsa.pub}' >> "$keys_tmp"
-          printf '%s\n' '${builtins.readFile ../../secrets/hosts/mba-m5/ssh_id_rsa.pub}' >> "$keys_tmp"
-          printf '%s\n' '${builtins.readFile ../../secrets/hosts/mbp-m1/ssh_id_rsa.pub}' >> "$keys_tmp"
-          mv -f "$keys_tmp" "$HOME/.ssh/authorized_keys"
-          chmod 600 "$HOME/.ssh/authorized_keys"
+
+        # 1.5) PVE 集群节点分支：~/.ssh/authorized_keys 是 /etc/pve/priv/authorized_keys 的软链（pmxcfs 集群分发），
+        #      mv 覆盖会毁集群互信（web shell 跨节点 Permission denied）——改为合并进集群共享文件（幂等追加），并恢复软链
+        if [ -f /etc/pve/priv/authorized_keys ]; then
+          if [ ! -L "$HOME/.ssh/authorized_keys" ]; then
+            rm -f "$HOME/.ssh/authorized_keys"
+            ln -s /etc/pve/priv/authorized_keys "$HOME/.ssh/authorized_keys"
+            echo "PVE: authorized_keys 已恢复集群软链（pmxcfs）"
+          fi
+          pve_keys=/etc/pve/priv/authorized_keys
+          add_key() {
+            [ -n "$1" ] || return 0
+            grep -qF "$1" "$pve_keys" 2>/dev/null || { echo "$1" >> "$pve_keys"; echo "PVE: 公钥已并入集群信任（$(echo "$1" | cut -c1-40)…）"; }
+          }
+          ${pkgs.curl}/bin/curl -sfL "${tools.githubUrl "https://github.com/fanxcv.keys"}" 2>/dev/null | while read -r line; do add_key "$line"; done
+          add_key "$(cat ${toString ../../secrets/hosts/mini-m4/ssh_id_rsa.pub} 2>/dev/null)"
+          add_key "$(cat ${toString ../../secrets/hosts/mba-m5/ssh_id_rsa.pub} 2>/dev/null)"
+          add_key "$(cat ${toString ../../secrets/hosts/mbp-m1/ssh_id_rsa.pub} 2>/dev/null)"
+          # 合并后转普通分支的 sshd 加固（PasswordAuthentication no 等）
         else
-          rm -f "$keys_tmp"
-          echo "警告: 公钥拉取失败，保留现有 ~/.ssh/authorized_keys"
+          keys_tmp="$HOME/.ssh/authorized_keys.tmp"
+          : > "$keys_tmp"
+          if ${pkgs.curl}/bin/curl -sfL "${tools.githubUrl "https://github.com/fanxcv.keys"}" -o "$keys_tmp" \
+            && [ -s "$keys_tmp" ]; then
+            # 追加 mac 身份公钥（各台自己的 id_rsa：mini-m4 / mba-m5 / mbp-m1，即原 mac-pub.pub；
+            # github 集合可能不含最新 key，防激活覆盖锁死）
+            # 注意 mba-m5 与 mbp-m1 共用同一套 id_rsa（secrets/hosts/<host>/ssh_id_rsa.pub 同内容，
+            #   authorized_keys 重复行无害，ssh 按 key 去重）
+            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mini-m4/ssh_id_rsa.pub}' >> "$keys_tmp"
+            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mba-m5/ssh_id_rsa.pub}' >> "$keys_tmp"
+            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mbp-m1/ssh_id_rsa.pub}' >> "$keys_tmp"
+            mv -f "$keys_tmp" "$HOME/.ssh/authorized_keys"
+            chmod 600 "$HOME/.ssh/authorized_keys"
+          else
+            rm -f "$keys_tmp"
+            echo "警告: 公钥拉取失败，保留现有 ~/.ssh/authorized_keys"
+          fi
         fi
 
         # 2) sshd 禁用密码认证（公钥未就位则跳过，防止禁密码后无法登录）
