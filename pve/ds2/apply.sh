@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# ds2 系统层 apply（root 远程执行；幂等；失败即退出暴露问题，无静默吞错）
+# 占位符 @PVE_ASSIST_BASE@ 由 pve/deploy.nix 构建时替换
+# 由 nix run .#ds2 推送至 /tmp/ds2-deploy/ 后执行（HM activate 已在 deploy.sh 完成）
+set -euo pipefail
+cd /tmp/ds2-deploy
+BACKUP=/root/ds2-backup/$(date +%Y%m%d-%H%M%S)
+mkdir -p "$BACKUP"
+
+echo "==> [1/5] root 默认 shell → zsh"
+ZSH_BIN=/root/.nix-profile/bin/zsh
+if [ -x "$ZSH_BIN" ]; then
+  grep -qxF "$ZSH_BIN" /etc/shells || echo "$ZSH_BIN" >> /etc/shells
+  if [ "$(getent passwd root | cut -d: -f7)" != "$ZSH_BIN" ]; then
+    chsh -s "$ZSH_BIN" root
+    echo "root shell 已切换为 zsh（新登录生效）"
+  fi
+else
+  echo "警告: $ZSH_BIN 不存在，跳过 chsh（HM activate 未装 zsh？）"
+fi
+
+echo "==> [2/5] apt 换源（中科大）+ 禁用 enterprise/ceph"
+cp -a /etc/apt/sources.list.d/. "$BACKUP/" 2>/dev/null || true
+install -m 0644 debian.sources /etc/apt/sources.list.d/debian.sources
+install -m 0644 debian-security.sources /etc/apt/sources.list.d/debian-security.sources
+install -m 0644 pve-no-subscription.list /etc/apt/sources.list.d/pve-no-subscription.list
+# enterprise 源是「仓库黄色提示」根源（未订阅），备份后移除
+if [ -f /etc/apt/sources.list.d/pve-enterprise.list ]; then
+  mv /etc/apt/sources.list.d/pve-enterprise.list "$BACKUP/"
+  echo "pve-enterprise.list 已禁用（备份于 $BACKUP）"
+fi
+# ceph 源（可选组件，本机未用）备份禁用
+for f in /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources; do
+  if [ -f "$f" ]; then
+    mv "$f" "$BACKUP/"
+    echo "$f 已禁用（备份于 $BACKUP）"
+  fi
+done
+
+echo "==> [3/5] DNS（systemd-resolved）"
+install -m 0644 resolved.conf /etc/systemd/resolved.conf
+if systemctl is-enabled systemd-resolved >/dev/null 2>&1; then
+  systemctl restart systemd-resolved
+else
+  echo "警告: systemd-resolved 未启用，resolved.conf 已写入但未生效"
+fi
+
+echo "==> [4/5] apt update + 安装 pve-assist + 去订阅 nag"
+apt-get update
+# pve-assist 安装（install.sh 同款：gz 下载 + SHA256 校验，失败即退出）
+curl -fsSL "@PVE_ASSIST_BASE@/SHA256SUMS" -o /tmp/pa-sha256
+curl -fsSL "@PVE_ASSIST_BASE@/pve-assist-linux-amd64.gz" | gzip -dc > /tmp/pa-bin
+EXPECTED=$(awk '$2 == "pve-assist-linux-amd64" || $2 == "*pve-assist-linux-amd64" {print $1; exit}' /tmp/pa-sha256)
+echo "$EXPECTED  /tmp/pa-bin" | sha256sum -c - >/dev/null
+install -m 0755 /tmp/pa-bin /usr/local/bin/pve-assist
+# 去订阅 nag（pve-assist 自带 marker 补丁，stale 时自动修复；失败即退出暴露）
+pve-assist --repair-subscription-if-stale
+
+echo "==> [5/5] 验证"
+pveversion
+if grep -rq "enterprise" /etc/apt/sources.list.d/ 2>/dev/null; then
+  echo "警告: 仍有 enterprise 源残留" >&2
+else
+  echo "enterprise 源已清除"
+fi
+# resolvectl 无输出（resolved 未启用）属预期，仅提示
+resolvectl status 2>/dev/null | grep -E "Current DNS|DNS Servers" || echo "（resolved 未启用，DNS 见 /etc/systemd/resolved.conf）"
+zsh --version
+[ -d /root/.oh-my-zsh ] && echo "oh-my-zsh OK"
+ls -l /usr/local/bin/pve-assist
+echo "完成。新开终端生效（root shell 已切 zsh）。"

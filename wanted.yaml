@@ -383,3 +383,13 @@ nixos:
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）
     ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（本机无 OrbStack，解密后删除 Include ~/.orbstack/ssh/config 行；→ home/fan/nix-pve/ssh-config.nix）
     user_password: agenix        # fan 登录密码 hash（secrets/fan-password.age，→ hosts/_nixos_/base/password.nix；SSH 走公钥，密码仅 SDDM 图形登录）
+
+pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户层走 HM standalone，系统层走 nix 渲染+推送，→ pve/ 目录）
+  ds2:                         # PVE 9.2 宿主机（Debian 13 trixie，root 用户）
+    platform: pve-9.2
+    dns: [119.29.29.29, 223.5.5.5]   # 腾讯/阿里公共 DNS（→ pve/ds2/default.nix，写 /etc/systemd/resolved.conf）
+    mirror: ustc               # apt 换中科大（debian + debian-security + pve no-subscription，→ pve/ds2/default.nix）
+    pve_assist: true           # 装 pve-assist 到 /usr/local/bin（去订阅 nag 自动 repair，→ pve/ds2/apply.sh）
+    ohmyzsh: true              # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/ds2/）
+    default_shell: zsh         # root 默认 shell 切 zsh（/etc/shells + chsh，→ pve/ds2/apply.sh）
+    deploy: nix run .#ds2      # 部署：bootstrap nix → rsync 推仓库 → 远程构建 HM + activate → 系统层 apply（→ pve/deploy.nix）

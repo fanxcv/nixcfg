@@ -232,6 +232,10 @@
         # --- 以后加真机：一行注册 + 对应目录，例如 ---
         # "fan@macbook" = mkHomeConfig { hostName = "macbook"; system = "aarch64-darwin"; platform = "darwin"; };
         # "fan@laptop"  = mkHomeConfig { hostName = "laptop"; system = "x86_64-linux"; };
+
+        # --- PVE 宿主机（Debian 底，非 NixOS）：用户层 HM standalone（root），系统层见 pve/（渲染+推送）---
+        # 部署：nix run .#ds2（bootstrap nix → nix copy → 系统层 apply，见 pve/deploy.nix）
+        "fan@ds2" = mkHomeConfig { hostName = "ds2"; system = "x86_64-linux"; platform = "pve"; };
       };
 
       # --- macOS：三台 nix-darwin（home-manager 内嵌，darwin-rebuild switch --flake .#<机器>）---
@@ -287,6 +291,9 @@
             "exec sudo ${self.darwinConfigurations.mbp-m1.system}/activate";
           "mini-m4" = pkgs.writeShellScriptBin "mini-m4"
             "exec sudo ${self.darwinConfigurations.mini-m4.system}/activate";
+          # PVE 宿主机部署（ds2）：bootstrap nix → rsync 推仓库 → 远程构建 HM + activate → 系统层 apply
+          # （apt 源/DNS/去 nag/pve-assist，见 pve/ 目录）
+          ds2 = import ./pve/deploy.nix { inherit pkgs lib; };
         });
 
       # --- 多台 ide 部署的别名同规则：nix build .#ide-si / .#ide-lenovo（packages 块内各一行）---
