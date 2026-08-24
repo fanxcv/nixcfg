@@ -237,6 +237,7 @@
         # 部署：nix run .#ds2 / .#desktop（bootstrap nix → nix copy → 系统层 apply，见 pve/deploy.nix）
         "fan@ds2" = mkHomeConfig { hostName = "ds2"; system = "x86_64-linux"; platform = "pve"; };
         "fan@desktop" = mkHomeConfig { hostName = "desktop"; system = "x86_64-linux"; platform = "pve"; };
+        "fan@fan" = mkHomeConfig { hostName = "fan"; system = "x86_64-linux"; platform = "pve"; };
       };
 
       # --- macOS：三台 nix-darwin（home-manager 内嵌，darwin-rebuild switch --flake .#<机器>）---
@@ -296,6 +297,7 @@
           # （apt 源/DNS/去 nag/pve-assist，见 pve/ 目录；host 参数决定机器层）
           ds2 = import ./pve/deploy.nix { inherit pkgs lib; host = "ds2"; };
           desktop = import ./pve/deploy.nix { inherit pkgs lib; host = "desktop"; };
+          fan = import ./pve/deploy.nix { inherit pkgs lib; host = "fan"; };
         });
 
       # --- 多台 ide 部署的别名同规则：nix build .#ide-si / .#ide-lenovo（packages 块内各一行）---

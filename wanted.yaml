@@ -405,3 +405,12 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     grub: 公共                  # quiet consoleblank=60 intel_iommu=on iommu=pt（原只有 quiet intel_iommu=on）
     modprobe: 不动              # N100 核显 vfio（8086:3185）+ zfs arc 限制为机器专属，apply 不触碰（→ /etc/modprobe.d/）
     deploy: nix run .#desktop  # 同 ds2 管线（→ pve/deploy.nix，host 参数化）
+  fan:                         # PVE 9.2 宿主机（10.2.241.88；原 8.4.1 大版本升级至 9.2.11；LXC 111 HC-Prod-2 + 112 hermes 生产）
+    platform: pve-9.2          # 升级路径：8.4.1 → 8.4.21 → trixie dist-upgrade → 9.2.11（备份 111/112 到 nas 后执行）
+    dns: 公共                  # 10.21.1.1 优先（→ pve/default.nix）
+    mirror: ustc               # apt 中科大（原 sources.list 旧格式，nix 接管后统一 deb822 渲染）
+    pve_assist: true           # 装 pve-assist（→ pve/apply.sh）
+    ohmyzsh: true              # 已有 oh-my-zsh，HM 接管（→ home/fan/_pve_/ + home/fan/fan/）
+    grub: 公共 + video=efifb:off,vesafb:off   # 核显直通专属参数（Iris Plus 655，→ pve/fan/default.nix）
+    modprobe: 不动              # kvm ignore_msrs / vfio 8086:3ea5 / 声卡黑名单为机器现状（apply 不触碰）
+    deploy: nix run .#fan     # 同 ds2 管线（→ pve/deploy.nix，host=fan）
