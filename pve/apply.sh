@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# ds2 系统层 apply（root 远程执行；幂等；失败即退出暴露问题，无静默吞错）
+# PVE 系统层 apply（root 远程执行；幂等；失败即退出暴露问题，无静默吞错）
 # 占位符 @PVE_ASSIST_BASE@ 由 pve/deploy.nix 构建时替换
-# 由 nix run .#ds2 推送至 /tmp/ds2-deploy/ 后执行（HM activate 已在 deploy.sh 完成）
+# 由 nix run .#<host> 推送至部署目录后执行（HM activate 已在 deploy.sh 完成）
 set -euo pipefail
-cd /tmp/ds2-deploy
-BACKUP=/root/ds2-backup/$(date +%Y%m%d-%H%M%S)
+cd "$(dirname "$0")"
+BACKUP=/root/pve-backup/$(date +%Y%m%d-%H%M%S)
 mkdir -p "$BACKUP"
 
 echo "==> [1/6] root 默认 shell → zsh"

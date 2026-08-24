@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# ds2 部署编排（flake packages.ds2：nix run .#ds2 [host]）
+# PVE 部署编排（flake packages.<host>：nix run .#<host> [ip]）
 # 流程：bootstrap nix → 推 git 凭据 + clone/pull 仓库 → 远程构建 HM + activate → 推送系统配置 → 远程 apply
 # 前置：ssh root@<host> 可达（密钥或密码）；mac 侧 ~/.secrets/age-keys.txt 存在（HM secrets 解密必需）
 # 占位符 @FILES@ / @APPLY@ 由 pve/deploy.nix 构建时替换
 set -euo pipefail
-HOST="${1:-ds2}"
+HOST="${1:-@HOST@}"
 FILES="@FILES@"
 APPLY="@APPLY@"
 
@@ -54,14 +54,14 @@ echo "==> [4/5] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具�
 ssh root@$HOST 'bash -s' <<'HM'
 set -euo pipefail
 cd /tmp/nixcfg
-nix build .#homeConfigurations."fan@ds2".activationPackage
+nix build .#homeConfigurations."fan@HOST".activationPackage
 USER=root HOME_MANAGER_BACKUP_EXT=backup ./result/activate
 HM
 
 echo "==> [5/5] 推送系统配置 + apply 脚本"
-ssh root@$HOST 'mkdir -p /tmp/ds2-deploy'
-scp -r "$FILES"/. root@$HOST:/tmp/ds2-deploy/
-scp "$APPLY" root@$HOST:/tmp/ds2-deploy/apply.sh
+ssh root@$HOST 'mkdir -p /tmp/@HOST@-deploy'
+scp -r "$FILES"/. root@$HOST:/tmp/@HOST@-deploy/
+scp "$APPLY" root@$HOST:/tmp/@HOST@-deploy/apply.sh
 
 echo "==> 远程 apply（系统层：chsh / GRUB / apt 源 / DNS / pve-assist / 去 nag）"
-ssh root@$HOST 'bash /tmp/ds2-deploy/apply.sh'
+ssh root@$HOST 'bash /tmp/@HOST@-deploy/apply.sh'

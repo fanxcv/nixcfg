@@ -396,3 +396,12 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     ohmyzsh: true              # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/ds2/）
     default_shell: zsh         # root 默认 shell 切 zsh（/etc/shells + chsh，→ pve/ds2/apply.sh）
     deploy: nix run .#ds2      # 部署：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply（→ pve/deploy.nix）
+  desktop:                     # PVE 9.x 宿主机（N100 迷你机，Debian 13 trixie；VM 101 nix-pve + LXC 105 lenovo-ubuntu）
+    platform: pve-9.2          # 接入时 9.0.3，升级至 9.2.x（pve 源原被注释，nix 接管补 no-subscription）
+    dns: 公共                  # 10.21.1.1 优先（→ pve/default.nix）
+    mirror: ustc               # apt 换中科大（原 tuna；debian/pve no-subscription，→ pve/desktop/default.nix）
+    pve_assist: true           # 装 pve-assist（→ pve/apply.sh）
+    ohmyzsh: true              # 原无 oh-my-zsh，HM 接管后补装（→ home/fan/_pve_/ + home/fan/desktop/）
+    grub: 公共                  # quiet consoleblank=60 intel_iommu=on iommu=pt（原只有 quiet intel_iommu=on）
+    modprobe: 不动              # N100 核显 vfio（8086:3185）+ zfs arc 限制为机器专属，apply 不触碰（→ /etc/modprobe.d/）
+    deploy: nix run .#desktop  # 同 ds2 管线（→ pve/deploy.nix，host 参数化）
