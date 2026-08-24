@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ds2 部署编排（flake packages.ds2：nix run .#ds2 [host]）
-# 流程：bootstrap nix → rsync 推仓库 → 远程构建 HM + activate → 推送系统配置 → 远程 apply
+# 流程：bootstrap nix → 推 git 凭据 + clone/pull 仓库 → 远程构建 HM + activate → 推送系统配置 → 远程 apply
 # 前置：ssh root@<host> 可达（密钥或密码）；mac 侧 ~/.secrets/age-keys.txt 存在（HM secrets 解密必需）
 # 占位符 @FILES@ / @APPLY@ 由 pve/deploy.nix 构建时替换
 set -euo pipefail
@@ -25,9 +25,21 @@ NIXCONF
 fi
 BOOTSTRAP
 
-echo "==> [2/5] 推送仓库 → /tmp/nixcfg（含 .git，flake 需要 git 树）"
-ssh root@$HOST 'rm -rf /tmp/nixcfg && mkdir -p /tmp/nixcfg'
-rsync -a --delete --exclude 'result*' ./ root@$HOST:/tmp/nixcfg/
+echo "==> [2/5] 推送 git 凭据 + 拉取仓库 → /tmp/nixcfg（git clone/pull）"
+ssh root@$HOST 'mkdir -p /root/.secrets'
+scp "$HOME/.git-credentials" root@$HOST:/root/.git-credentials
+ssh root@$HOST 'bash -s' <<'REPO'
+set -euo pipefail
+chmod 600 /root/.git-credentials
+git config --global credential.helper store
+if [ -d /tmp/nixcfg/.git ]; then
+  git -C /tmp/nixcfg pull --ff-only
+  echo "仓库已存在，pull 完成"
+else
+  git clone http://git.fan-x.fun/fan/nixcfg.git /tmp/nixcfg
+  echo "仓库 clone 完成"
+fi
+REPO
 
 echo "==> [3/5] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具）"
 ssh root@$HOST 'bash -s' <<'HM'

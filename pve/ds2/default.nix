@@ -3,13 +3,15 @@
 # 去订阅 nag 走 pve-assist 的 --repair-subscription-if-stale（自带 marker 补丁，见 apply.sh）
 { pkgs, lib, ... }:
 let
-  dns = [ "119.29.29.29" "223.5.5.5" ];          # 腾讯/阿里公共 DNS
-  mirror = "https://mirrors.ustc.edu.cn";        # 中科大镜像
+  common = import ../default.nix;             # PVE 公共层（DNS/mirror/pveAssistBase/grubCmdline）
+  dns = common.dns;                          # 内网 10.21.1.1 优先 + 公共 DNS 兜底
+  mirror = common.mirror;
   suite = "trixie";                              # PVE 9 = Debian 13
-  pveAssistBase = "https://help.quanshan.cn/pve-assist";
+  pveAssistBase = common.pveAssistBase;
+  grubCmdline = common.grubCmdline;         # 公共：quiet + consoleblank=60（机器专属参数在此追加）
 in
 {
-  inherit dns mirror suite pveAssistBase;
+  inherit dns mirror suite pveAssistBase grubCmdline;
 
   # 渲染 /tmp/ds2-deploy/ 下的系统配置文件（scp 推送后 apply.sh 引用）
   files = pkgs.runCommand "ds2-sysfiles" { } ''
@@ -43,6 +45,15 @@ in
     [Resolve]
     DNS=${builtins.concatStringsSep " " dns}
     FallbackDNS=${builtins.concatStringsSep " " (lib.lists.reverseList dns)}
+    EOF
+
+    # GRUB（/etc/default/grub；GRUB_CMDLINE_LINUX_DEFAULT 含公共参数）
+    cat > $out/grub <<EOF
+    GRUB_DEFAULT=0
+    GRUB_TIMEOUT=5
+    GRUB_DISTRIBUTOR=\`lsb_release -i -s 2> /dev/null || echo Debian\`
+    GRUB_CMDLINE_LINUX_DEFAULT="${builtins.concatStringsSep " " grubCmdline}"
+    GRUB_CMDLINE_LINUX=""
     EOF
   '';
 }

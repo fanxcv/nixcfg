@@ -7,7 +7,7 @@ cd /tmp/ds2-deploy
 BACKUP=/root/ds2-backup/$(date +%Y%m%d-%H%M%S)
 mkdir -p "$BACKUP"
 
-echo "==> [1/5] root 默认 shell → zsh"
+echo "==> [1/6] root 默认 shell → zsh"
 ZSH_BIN=/root/.nix-profile/bin/zsh
 if [ -x "$ZSH_BIN" ]; then
   grep -qxF "$ZSH_BIN" /etc/shells || echo "$ZSH_BIN" >> /etc/shells
@@ -19,7 +19,18 @@ else
   echo "警告: $ZSH_BIN 不存在，跳过 chsh（HM activate 未装 zsh？）"
 fi
 
-echo "==> [2/5] apt 换源（中科大）+ 禁用 enterprise/ceph"
+echo "==> [2/6] GRUB 内核参数（公共：consoleblank=60；机器专属见渲染 grub 文件）"
+cp -a /etc/default/grub "$BACKUP/" 2>/dev/null || true
+install -m 0644 grub /etc/default/grub
+update-grub
+if grep -q "consoleblank=60" /etc/default/grub; then
+  echo "consoleblank=60 已写入 GRUB_CMDLINE_LINUX_DEFAULT"
+else
+  echo "错误: GRUB 参数写入失败" >&2
+  exit 1
+fi
+
+echo "==> [3/6] apt 换源（中科大）+ 禁用 enterprise/ceph"
 cp -a /etc/apt/sources.list.d/. "$BACKUP/" 2>/dev/null || true
 install -m 0644 debian.sources /etc/apt/sources.list.d/debian.sources
 install -m 0644 debian-security.sources /etc/apt/sources.list.d/debian-security.sources
@@ -37,7 +48,7 @@ for f in /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources;
   fi
 done
 
-echo "==> [3/5] DNS（systemd-resolved）"
+echo "==> [4/6] DNS（systemd-resolved）"
 install -m 0644 resolved.conf /etc/systemd/resolved.conf
 if systemctl is-enabled systemd-resolved >/dev/null 2>&1; then
   systemctl restart systemd-resolved
@@ -45,7 +56,7 @@ else
   echo "警告: systemd-resolved 未启用，resolved.conf 已写入但未生效"
 fi
 
-echo "==> [4/5] apt update + 安装 pve-assist + 去订阅 nag"
+echo "==> [5/6] apt update + 安装 pve-assist + 去订阅 nag"
 apt-get update
 # pve-assist 安装（install.sh 同款：gz 下载 + SHA256 校验，失败即退出）
 curl -fsSL "@PVE_ASSIST_BASE@/SHA256SUMS" -o /tmp/pa-sha256
@@ -56,7 +67,7 @@ install -m 0755 /tmp/pa-bin /usr/local/bin/pve-assist
 # 去订阅 nag（pve-assist 自带 marker 补丁，stale 时自动修复；失败即退出暴露）
 pve-assist --repair-subscription-if-stale
 
-echo "==> [5/5] 验证"
+echo "==> [6/6] 验证"
 pveversion
 if grep -rq "enterprise" /etc/apt/sources.list.d/ 2>/dev/null; then
   echo "警告: 仍有 enterprise 源残留" >&2

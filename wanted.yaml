@@ -337,6 +337,8 @@ linux:
       git-lfs: nix 包            # git 大文件（git lfs 命令在用）
       libatomic1: maven 关联     # GCC runtime 库（apt 专属，nixpkgs 无对应包；激活脚本 grep config.toml 有 maven 才 apt 装，dpkg 判断幂等）
     auto_deploy: timer 轮询 60s  # 配置自动部署（→ home/fan/_container_/ide-auto-deploy.{nix,sh,service,timer}）：git pull --ff-only → HEAD 变更才 nix run .#<机器>；状态 /var/lib/ide-auto-deploy/last（重建后清空→首轮自动激活）；不用 comin（只认 nixos/darwin 输出且需 NixOS 系统）
+    journald_limits: 100M 保留 1 周  # journald 日志限额（SystemMaxUse=100M / 文件 10M / 保留 1 周；容器内 journal 不归 docker logging 管，不限额会无限涨；→ docker/ide/ubuntu/Dockerfile）
+    login_shell: /bin/zsh            # root 登录 shell（Dockerfile 构建期 chsh + entrypoint 幂等兜底，两容器共用；nix 的 zsh 在 store 路径不稳定不做登录 shell）
     ide-si:                      # ← 机器（原 si-11-ide 更名，hostname=ide-si；激活：nix run .#ide-si）
       proxy: true                # 走代理（已由 nix 接管：compose 原代理变量/extra_hosts 已删 → home/fan/ide-si/sysenv.nix，nix run 激活即生效；JVM 不读 shell 代理，JAVA_TOOL_OPTIONS 注入）
       sysenv: 接管环境变量+hosts  # 替代 compose environment/extra_hosts，免重建容器：代理/NO_PROXY/JAVA_TOOL_OPTIONS → /etc/environment.d + .zshenv + ~/.ssh/environment；内网 hosts（gitlab/maven.hzdev.cn → 10.1.0.30）→ 激活幂等追加 + oneshot 启动恢复（仅本机）
@@ -387,9 +389,10 @@ nixos:
 pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户层走 HM standalone，系统层走 nix 渲染+推送，→ pve/ 目录）
   ds2:                         # PVE 9.2 宿主机（Debian 13 trixie，root 用户）
     platform: pve-9.2
-    dns: [119.29.29.29, 223.5.5.5]   # 腾讯/阿里公共 DNS（→ pve/ds2/default.nix，写 /etc/systemd/resolved.conf）
+    dns: [10.21.1.1, 119.29.29.29, 223.5.5.5]   # 内网 DNS 优先 + 公共 DNS 兜底（所有 PVE 机器统一，→ pve/default.nix）
     mirror: ustc               # apt 换中科大（debian + debian-security + pve no-subscription，→ pve/ds2/default.nix）
+    grub: quiet consoleblank=60 intel_iommu=on iommu=pt   # 公共 GRUB 参数（三台实况交集，→ pve/default.nix；apply 时 update-grub）
     pve_assist: true           # 装 pve-assist 到 /usr/local/bin（去订阅 nag 自动 repair，→ pve/ds2/apply.sh）
     ohmyzsh: true              # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/ds2/）
     default_shell: zsh         # root 默认 shell 切 zsh（/etc/shells + chsh，→ pve/ds2/apply.sh）
-    deploy: nix run .#ds2      # 部署：bootstrap nix → rsync 推仓库 → 远程构建 HM + activate → 系统层 apply（→ pve/deploy.nix）
+    deploy: nix run .#ds2      # 部署：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply（→ pve/deploy.nix）
