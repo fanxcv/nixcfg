@@ -46,7 +46,11 @@ else
 fi
 REPO
 
-echo "==> [3/5] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具）"
+echo "==> [3/5] 推送 age 私钥（HM secrets 解密必需：ai.env / git-credentials）"
+ssh root@$HOST 'mkdir -p /root/.secrets'
+scp "$HOME/.secrets/age-keys.txt" root@$HOST:/root/.secrets/age-keys.txt
+
+echo "==> [4/5] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具）"
 ssh root@$HOST 'bash -s' <<'HM'
 set -euo pipefail
 cd /tmp/nixcfg
@@ -54,11 +58,10 @@ nix build .#homeConfigurations."fan@ds2".activationPackage
 USER=root HOME_MANAGER_BACKUP_EXT=backup ./result/activate
 HM
 
-echo "==> [4/5] 推送系统配置 + apply 脚本 + age 私钥"
-ssh root@$HOST 'mkdir -p /tmp/ds2-deploy /root/.secrets'
+echo "==> [5/5] 推送系统配置 + apply 脚本"
+ssh root@$HOST 'mkdir -p /tmp/ds2-deploy'
 scp -r "$FILES"/. root@$HOST:/tmp/ds2-deploy/
 scp "$APPLY" root@$HOST:/tmp/ds2-deploy/apply.sh
-scp "$HOME/.secrets/age-keys.txt" root@$HOST:/root/.secrets/age-keys.txt
 
-echo "==> [5/5] 远程 apply（系统层：chsh / apt 源 / DNS / pve-assist / 去 nag）"
+echo "==> 远程 apply（系统层：chsh / GRUB / apt 源 / DNS / pve-assist / 去 nag）"
 ssh root@$HOST 'bash /tmp/ds2-deploy/apply.sh'
