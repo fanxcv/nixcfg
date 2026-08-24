@@ -409,6 +409,18 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     modprobe: nix 管           # vfio 8086:3185 + 声卡/i915 黑名单 + microcode + zfs arc（→ pve/desktop/default.nix modprobeHost，同名覆盖）
     fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
     deploy: nix run .#desktop  # 同 ds2 管线（→ pve/deploy.nix，host 参数化）
+  mi:                          # PVE 9.2 宿主机（10.2.241.92；原节点名 pve，改名 mi；8.4 大版本升级至 9.2；VM 100 LTSC + LXC 104/106/110 生产）
+    platform: pve-9.2          # 升级路径：8.4（bookworm）→ trixie dist-upgrade → 9.2（备份 /etc/pve/nodes/pve/ 后执行）
+    rename: pve→mi             # pvecm delnode + 改 hostname + pvecm add 重新入群（2026-08 执行，备份 /root/pve-backup-pre-migration.tar.gz）
+    dns: 公共                  # 10.21.1.1 优先（→ pve/default.nix）
+    mirror: ustc               # apt 中科大（bookworm→trixie 渲染切换，→ pve/mi/default.nix）
+    pve_assist: true           # 装 pve-assist（→ pve/apply.sh）
+    ohmyzsh: true              # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/mi/）
+    grub: 公共                 # quiet consoleblank=60 intel_iommu=on iommu=pt（原为 quiet intel_iommu=on，→ pve/mi/default.nix）
+    modprobe: nix 管           # kvm ignore_msrs + i915/声卡黑名单 + unsafe interrupts（→ pve/mi/default.nix modprobeHost，同名覆盖；公共 nvidiafb 在 pve/default.nix）
+    fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
+    tailscale: nix 管          # nix 包（HM profile）+ state 加密入 secrets/tailscale-mi-state.age（→ pve/mi/default.nix tailscaleState；恢复同 IP 10.1.0.25）
+    deploy: nix run .#mi      # 同 ds2 管线（→ pve/deploy.nix，host=mi）
   fan:                         # PVE 9.2 宿主机（10.2.241.88；原 8.4.1 大版本升级至 9.2.11；LXC 111 HC-Prod-2 + 112 hermes 生产）
     platform: pve-9.2          # 升级路径：8.4.1 → 8.4.21 → trixie dist-upgrade → 9.2.11（备份 111/112 到 nas 后执行）
     dns: 公共                  # 10.21.1.1 优先（→ pve/default.nix）
