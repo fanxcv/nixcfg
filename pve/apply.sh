@@ -67,6 +67,8 @@ else
   echo "订阅 nag patch 已存在或文件缺失，跳过"
 fi
 apt-get update
+# fuse（所有 PVE 机器统一安装；razer 原缺，补上）
+apt-get install -y fuse >/dev/null
 # pve-assist 安装（install.sh 同款：gz 下载 + SHA256 校验，失败即退出）
 curl -fsSL "@PVE_ASSIST_BASE@/SHA256SUMS" -o /tmp/pa-sha256
 curl -fsSL "@PVE_ASSIST_BASE@/pve-assist-linux-amd64.gz" | gzip -dc > /tmp/pa-bin
