@@ -29,6 +29,7 @@ global:                        # ← 所有平台生效（mac / linux 容器 / N
     - codex                    # OpenAI Codex CLI（unstable 通道，周级 flake update 跟随，→ modules/home/codex.nix）
     - pi-coding-agent          # pi agent（unstable 通道，周级 flake update 跟随，→ modules/home/pi.nix）
     - btop                     # 系统监控（所有机器）
+    - fastfetch                # 系统信息展示（所有机器；neofetch 已被 nixpkgs 移除，fastfetch 为社区标准替代）
     - lazygit                  # TUI 版 git（所有机器；配置 ~/.config/lazygit/config.yml 用户自管，→ home/fan/_common_/base.nix）
     - fzf                      # 模糊搜索（Ctrl-R 历史/Ctrl-T 文件，配 fd 管道，→ home/fan/_common_/base.nix）
     - zoxide                   # 智能 cd（高频目录记忆，→ home/fan/_common_/base.nix）
@@ -393,6 +394,7 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     mirror: ustc               # apt 换中科大（debian + debian-security + pve no-subscription，→ pve/ds2/default.nix）
     grub: quiet consoleblank=60 intel_iommu=on iommu=pt   # 公共 GRUB 参数（三台实况交集，→ pve/default.nix；apply 时 update-grub）
     modprobe: nix 管           # microcode 黑名单 + zfs arc 上限（→ pve/ds2/default.nix modprobeHost，同名覆盖；公共 nvidiafb 在 pve/default.nix）
+    fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
     pve_assist: true           # 装 pve-assist 到 /usr/local/bin（去订阅 nag 自动 repair，→ pve/ds2/apply.sh）
     ohmyzsh: true              # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/ds2/）
     default_shell: zsh         # root 默认 shell 切 zsh（/etc/shells + chsh，→ pve/ds2/apply.sh）
@@ -405,6 +407,7 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     ohmyzsh: true              # 原无 oh-my-zsh，HM 接管后补装（→ home/fan/_pve_/ + home/fan/desktop/）
     grub: 公共                  # quiet consoleblank=60 intel_iommu=on iommu=pt（原只有 quiet intel_iommu=on）
     modprobe: nix 管           # vfio 8086:3185 + 声卡/i915 黑名单 + microcode + zfs arc（→ pve/desktop/default.nix modprobeHost，同名覆盖）
+    fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
     deploy: nix run .#desktop  # 同 ds2 管线（→ pve/deploy.nix，host 参数化）
   fan:                         # PVE 9.2 宿主机（10.2.241.88；原 8.4.1 大版本升级至 9.2.11；LXC 111 HC-Prod-2 + 112 hermes 生产）
     platform: pve-9.2          # 升级路径：8.4.1 → 8.4.21 → trixie dist-upgrade → 9.2.11（备份 111/112 到 nas 后执行）
@@ -414,6 +417,7 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     ohmyzsh: true              # 已有 oh-my-zsh，HM 接管（→ home/fan/_pve_/ + home/fan/fan/）
     grub: 公共 + video=efifb:off,vesafb:off   # 核显直通专属参数（Iris Plus 655，→ pve/fan/default.nix）
     modprobe: nix 管           # kvm ignore_msrs / vfio 8086:3ea5 / 声卡黑名单（→ pve/fan/default.nix modprobeHost，同名覆盖；公共 nvidiafb 在 pve/default.nix）
+    fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
     tailscale: nix 管          # nix 包（HM profile）+ state 加密入 secrets/tailscale-fan-state.age（→ pve/fan/default.nix tailscaleState；换机/重建恢复同 IP 10.1.0.16）
     deploy: nix run .#fan     # 同 ds2 管线（→ pve/deploy.nix，host=fan）
   razer:                       # PVE 9.2 宿主机（10.2.241.80；8.4.1 大版本升级至 9.2.11；GTX 1660 Ti 直通机）
@@ -425,4 +429,5 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     ohmyzsh: true              # 已有 oh-my-zsh，HM 接管（→ home/fan/_pve_/ + home/fan/razer/）
     grub: 公共 + initcall_blacklist=sysfb_init + pcie_acs_override=downstream + video 双关  # N 卡直通专属（→ pve/razer/default.nix）
     modprobe: nix 管           # nvidia/nouveau 黑名单 + vfio ids + kvm/mdadm 参数（→ pve/razer/default.nix modprobeHost，同名覆盖）
+    fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
     deploy: nix run .#razer    # 同 ds2 管线（→ pve/deploy.nix，host=razer）
