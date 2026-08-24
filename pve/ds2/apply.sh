@@ -54,7 +54,18 @@ echo "==> [4/6] DNS（/etc/resolv.conf 直写；PVE 9 无 systemd-resolved）"
 cp -a /etc/resolv.conf "$BACKUP/" 2>/dev/null || true
 install -m 0644 resolv.conf /etc/resolv.conf
 
-echo "==> [5/6] apt update + 安装 pve-assist + 去订阅 nag"
+echo "==> [5/6] 去订阅 nag + apt update + 安装 pve-assist"
+# 去订阅 nag：patch proxmoxlib.js（社区通用法：订阅条件短路为 false）
+# 带 marker 幂等；PVE 升级覆盖文件后 marker 消失，下次部署重打；未命中即失败暴露
+NAG_FILE=/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+if [ -f "$NAG_FILE" ] && ! grep -q "nixcfg-nag-patch" "$NAG_FILE"; then
+  cp -a "$NAG_FILE" "$BACKUP/"
+  sed -i "s/res\.data\.status\.toLowerCase() !== 'active'/false \/\* nixcfg-nag-patch \*\//" "$NAG_FILE"
+  grep -q "nixcfg-nag-patch" "$NAG_FILE" || { echo "错误: 订阅 nag patch 未命中（PVE 版本可能已改代码）" >&2; exit 1; }
+  echo "订阅 nag 已 patch（备份于 $BACKUP ）"
+else
+  echo "订阅 nag patch 已存在或文件缺失，跳过"
+fi
 apt-get update
 # pve-assist 安装（install.sh 同款：gz 下载 + SHA256 校验，失败即退出）
 curl -fsSL "@PVE_ASSIST_BASE@/SHA256SUMS" -o /tmp/pa-sha256
