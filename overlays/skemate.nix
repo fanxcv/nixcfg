@@ -9,7 +9,7 @@
 final: prev: {
   skemate = final.stdenv.mkDerivation {
     pname = "skemate";
-    version = "0.5.72";
+    version = "0.5.73";
 
     # nix system → 官方下载文件名（latest.json 的 platforms 键）
     src = let
@@ -19,8 +19,8 @@ final: prev: {
       }.${final.stdenv.hostPlatform.system} or (throw
         "skemate: 平台 ${final.stdenv.hostPlatform.system} 无官方构建（latest.json 仅 linux-amd64 / darwin-arm64）");
       hashes = {
-        "linux-amd64" = "sha256-U3SSioHkOKJj57Ys2ge2o868FWxkOFFz610DuOXwkUs=";
-        "darwin-arm64" = "sha256-pA7DtpBqRNM3Qy70DmJWLJjsBJViyexzkHV6Fg6TVaI=";
+        "linux-amd64" = "sha256-rgj8OiVddT+8NmBADxZ5lEguaFvmAHoa7x4ieRS8a14=";
+        "darwin-arm64" = "sha256-/mUbw0SbC+sUpVqf4S3doKHjtUmCVDSc+M4uHR73m1E=";
       };
       # 用 builtins.fetchurl（eval 期 nix 下载器）而非 pkgs.fetchurl（构建期 curl builder）：
       # curl builder 带 --continue-at - 断点续传，网络中断时 Range 拼接会产出坏文件
