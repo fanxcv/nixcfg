@@ -392,6 +392,7 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     dns: [10.21.1.1, 119.29.29.29, 223.5.5.5]   # 内网 DNS 优先 + 公共 DNS 兜底（所有 PVE 机器统一，→ pve/default.nix）
     mirror: ustc               # apt 换中科大（debian + debian-security + pve no-subscription，→ pve/ds2/default.nix）
     grub: quiet consoleblank=60 intel_iommu=on iommu=pt   # 公共 GRUB 参数（三台实况交集，→ pve/default.nix；apply 时 update-grub）
+    modprobe: nix 管           # microcode 黑名单 + zfs arc 上限（→ pve/ds2/default.nix modprobeHost，同名覆盖；公共 nvidiafb 在 pve/default.nix）
     pve_assist: true           # 装 pve-assist 到 /usr/local/bin（去订阅 nag 自动 repair，→ pve/ds2/apply.sh）
     ohmyzsh: true              # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/ds2/）
     default_shell: zsh         # root 默认 shell 切 zsh（/etc/shells + chsh，→ pve/ds2/apply.sh）
@@ -403,7 +404,7 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     pve_assist: true           # 装 pve-assist（→ pve/apply.sh）
     ohmyzsh: true              # 原无 oh-my-zsh，HM 接管后补装（→ home/fan/_pve_/ + home/fan/desktop/）
     grub: 公共                  # quiet consoleblank=60 intel_iommu=on iommu=pt（原只有 quiet intel_iommu=on）
-    modprobe: 不动              # N100 核显 vfio（8086:3185）+ zfs arc 限制为机器专属，apply 不触碰（→ /etc/modprobe.d/）
+    modprobe: nix 管           # vfio 8086:3185 + 声卡/i915 黑名单 + microcode + zfs arc（→ pve/desktop/default.nix modprobeHost，同名覆盖）
     deploy: nix run .#desktop  # 同 ds2 管线（→ pve/deploy.nix，host 参数化）
   fan:                         # PVE 9.2 宿主机（10.2.241.88；原 8.4.1 大版本升级至 9.2.11；LXC 111 HC-Prod-2 + 112 hermes 生产）
     platform: pve-9.2          # 升级路径：8.4.1 → 8.4.21 → trixie dist-upgrade → 9.2.11（备份 111/112 到 nas 后执行）

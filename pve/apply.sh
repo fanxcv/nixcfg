@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 BACKUP=/root/pve-backup/$(date +%Y%m%d-%H%M%S)
 mkdir -p "$BACKUP"
 
-echo "==> [1/6] root 默认 shell → zsh"
+echo "==> [1/7] root 默认 shell → zsh"
 ZSH_BIN=/root/.nix-profile/bin/zsh
 if [ -x "$ZSH_BIN" ]; then
   grep -qxF "$ZSH_BIN" /etc/shells || echo "$ZSH_BIN" >> /etc/shells
@@ -19,7 +19,7 @@ else
   echo "警告: $ZSH_BIN 不存在，跳过 chsh（HM activate 未装 zsh？）"
 fi
 
-echo "==> [2/6] GRUB 内核参数（公共：consoleblank=60；机器专属见渲染 grub 文件）"
+echo "==> [2/7] GRUB 内核参数（公共：consoleblank=60；机器专属见渲染 grub 文件）"
 cp -a /etc/default/grub "$BACKUP/" 2>/dev/null || true
 install -m 0644 grub /etc/default/grub
 update-grub
@@ -30,7 +30,7 @@ else
   exit 1
 fi
 
-echo "==> [3/6] apt 换源（中科大）+ 禁用 enterprise/ceph"
+echo "==> [3/7] apt 换源（中科大）+ 禁用 enterprise/ceph"
 cp -a /etc/apt/sources.list.d/. "$BACKUP/" 2>/dev/null || true
 install -m 0644 debian.sources /etc/apt/sources.list.d/debian.sources
 install -m 0644 debian-security.sources /etc/apt/sources.list.d/debian-security.sources
@@ -50,11 +50,11 @@ for f in /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources;
   fi
 done
 
-echo "==> [4/6] DNS（/etc/resolv.conf 直写；PVE 9 无 systemd-resolved）"
+echo "==> [4/7] DNS（/etc/resolv.conf 直写；PVE 9 无 systemd-resolved）"
 cp -a /etc/resolv.conf "$BACKUP/" 2>/dev/null || true
 install -m 0644 resolv.conf /etc/resolv.conf
 
-echo "==> [5/6] 去订阅 nag + apt update + 安装 pve-assist"
+echo "==> [5/7] 去订阅 nag + apt update + 安装 pve-assist"
 # 去订阅 nag：patch proxmoxlib.js（社区通用法：订阅条件短路为 false）
 # 带 marker 幂等；PVE 升级覆盖文件后 marker 消失，下次部署重打；未命中即失败暴露
 NAG_FILE=/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
