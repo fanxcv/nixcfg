@@ -1,13 +1,26 @@
-# ds2（PVE 9.2 宿主机，Debian 13 trixie）系统层定义
-# 公共参数（DNS/mirror/grubCmdline）来自 pve/default.nix；渲染见 pve/render.nix
-# 机器专属（如 GRUB 直通参数）在此追加到 grubCmdline
+# ds2（10.2.241.104，PVE 9.2 宿主机，Debian 13 trixie）系统层定义
+# 机器专属：zfs_arc_max（zfs 缓存上限 3.1G）；公共 nvidiafb 见 common
+# 注意：modprobeHost 键含点必须引号
 { pkgs, lib, ... }:
 let
   common = import ../default.nix;
+  modprobeHost = {
+    "intel-microcode-blacklist.conf" = "blacklist microcode";
+    "zfs.conf" = "options zfs zfs_arc_max=3341811712";
+  };
 in
 {
-  inherit (common) dns mirror pveAssistBase;
+  inherit (common) dns mirror pveAssistBase modprobePublic;
   suite = "trixie";                              # PVE 9 = Debian 13
-  grubCmdline = common.grubCmdline;             # 公共：quiet consoleblank=60 intel_iommu=on iommu=pt
-  files = import ../render.nix { inherit pkgs lib; dns = common.dns; mirror = common.mirror; suite = "trixie"; grubCmdline = common.grubCmdline; };
+  grubCmdline = common.grubCmdline;
+  inherit modprobeHost;
+  files = import ../render.nix {
+    inherit pkgs lib;
+    dns = common.dns;
+    mirror = common.mirror;
+    suite = "trixie";
+    grubCmdline = common.grubCmdline;
+    modprobePublic = common.modprobePublic;
+    inherit modprobeHost;
+  };
 }

@@ -55,6 +55,8 @@ echo "==> [3/5] 推送 age 私钥（HM secrets 解密必需：ai.env / git-crede
 ssh root@$HOST 'mkdir -p /root/.secrets'
 scp "$HOME/.secrets/age-keys.txt" root@$HOST:/root/.secrets/age-keys.txt
 
+@TS_PUSH@
+
 echo "==> [4/5] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具）"
 ssh root@$HOST 'bash -s' <<'HM'
 set -euo pipefail

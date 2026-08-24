@@ -76,7 +76,31 @@ install -m 0755 /tmp/pa-bin /usr/local/bin/pve-assist
 # 去订阅 nag（pve-assist 自带 marker 补丁，stale 时自动修复；失败即退出暴露）
 pve-assist --repair-subscription-if-stale
 
-echo "==> [6/6] 验证"
+echo "==> [6/7] modprobe 收编（公共 nixcfg-public.conf + 机器专属，pve/ 渲染同名覆盖）"
+if [ -d modprobe ] && ls modprobe/*.conf >/dev/null 2>&1; then
+  CHANGED=0
+  for f in modprobe/*.conf; do
+    DEST="/etc/modprobe.d/$(basename "$f")"
+    if ! cmp -s "$f" "$DEST" 2>/dev/null; then
+      cp -a "$DEST" "$BACKUP/" 2>/dev/null || true
+      install -m 0644 "$f" "$DEST"
+      CHANGED=1
+      echo "modprobe 更新: $(basename "$f")"
+    fi
+  done
+  if [ "$CHANGED" = "1" ]; then
+    update-initramfs -u
+    echo "initramfs 已重建（直通黑名单进 initramfs）"
+  else
+    echo "modprobe 无变化，跳过 initramfs"
+  fi
+else
+  echo "警告: modprobe 渲染目录缺失（渲染异常？）"
+fi
+
+@TAILSCALE@
+
+echo "==> [7/7] 验证"
 pveversion
 if grep -rq "enterprise" /etc/apt/sources.list.d/ 2>/dev/null; then
   echo "警告: 仍有 enterprise 源残留" >&2

@@ -412,7 +412,8 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     pve_assist: true           # 装 pve-assist（→ pve/apply.sh）
     ohmyzsh: true              # 已有 oh-my-zsh，HM 接管（→ home/fan/_pve_/ + home/fan/fan/）
     grub: 公共 + video=efifb:off,vesafb:off   # 核显直通专属参数（Iris Plus 655，→ pve/fan/default.nix）
-    modprobe: 不动              # kvm ignore_msrs / vfio 8086:3ea5 / 声卡黑名单为机器现状（apply 不触碰）
+    modprobe: nix 管           # kvm ignore_msrs / vfio 8086:3ea5 / 声卡黑名单（→ pve/fan/default.nix modprobeHost，同名覆盖；公共 nvidiafb 在 pve/default.nix）
+    tailscale: nix 管          # nix 包（HM profile）+ state 加密入 secrets/tailscale-fan-state.age（→ pve/fan/default.nix tailscaleState；换机/重建恢复同 IP 10.1.0.16）
     deploy: nix run .#fan     # 同 ds2 管线（→ pve/deploy.nix，host=fan）
   razer:                       # PVE 9.2 宿主机（10.2.241.80；8.4.1 大版本升级至 9.2.11；GTX 1660 Ti 直通机）
     platform: pve-9.2          # 升级路径同 fan（8.4.1 → 8.4.21 → trixie dist-upgrade → 9.2.11；无运行负载，未备份）
@@ -422,5 +423,5 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     pve_assist: true           # 装 pve-assist（→ pve/apply.sh）
     ohmyzsh: true              # 已有 oh-my-zsh，HM 接管（→ home/fan/_pve_/ + home/fan/razer/）
     grub: 公共 + initcall_blacklist=sysfb_init + pcie_acs_override=downstream + video 双关  # N 卡直通专属（→ pve/razer/default.nix）
-    modprobe: 不动              # nvidia/nouveau 黑名单为机器现状（apply 不触碰）
+    modprobe: nix 管           # nvidia/nouveau 黑名单 + vfio ids + kvm/mdadm 参数（→ pve/razer/default.nix modprobeHost，同名覆盖）
     deploy: nix run .#razer    # 同 ds2 管线（→ pve/deploy.nix，host=razer）

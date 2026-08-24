@@ -1,7 +1,7 @@
 # PVE 系统层配置渲染（公共：所有 PVE 机器同一套文件，参数来自机器层）
-# 输出 /nix/store/...-pve-sysfiles/：apt 源（debian/security/pve-no-subscription）+ resolv.conf + grub
-# 机器层 pve/<host>/default.nix 提供：dns / mirror / suite / grubCmdline
-{ pkgs, lib, dns, mirror, suite, grubCmdline }:
+# 输出 /nix/store/...-pve-sysfiles/：apt 源（debian/security/pve-no-subscription）+ resolv.conf + grub + modprobe
+# 机器层 pve/<host>/default.nix 提供：dns / mirror / suite / grubCmdline / modprobePublic / modprobeHost
+{ pkgs, lib, dns, mirror, suite, grubCmdline, modprobePublic ? "", modprobeHost ? { } }:
 pkgs.runCommand "pve-sysfiles" { } ''
   mkdir -p $out
 
@@ -42,4 +42,15 @@ pkgs.runCommand "pve-sysfiles" { } ''
   GRUB_CMDLINE_LINUX_DEFAULT="${builtins.concatStringsSep " " grubCmdline}"
   GRUB_CMDLINE_LINUX=""
   EOF
+
+  # modprobe（公共：所有机器统一 nixcfg-public.conf；机器专属：同名覆盖原文件）
+  mkdir -p $out/modprobe
+  cat > $out/modprobe/nixcfg-public.conf <<'EOF'
+  ${modprobePublic}
+  EOF
+  ${builtins.concatStringsSep "\n" (lib.mapAttrsToList (fname: content: ''
+    cat > $out/modprobe/${fname} <<'CONF'
+    ${content}
+    CONF
+  '') modprobeHost)}
 ''

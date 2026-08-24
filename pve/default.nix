@@ -10,4 +10,9 @@
   # consoleblank=60：60s 无操作控制台黑屏（笔记本屏幕省电/防烧屏，lenovo 同款）
   # 注意：AMD 平台机器需改 amd_iommu=on（当前三台均 Intel）
   grubCmdline = [ "quiet" "consoleblank=60" "intel_iommu=on" "iommu=pt" ];
+  # 公共 modprobe（四台交集：nvidiafb 黑名单；机器专属在 pve/<host>/ 的 modprobeHost 里）
+  modprobePublic = ''
+    # 由 nixcfg 渲染（公共，见 pve/default.nix）；旧 pve-blacklist.conf 保留兼容
+    blacklist nvidiafb
+  '';
 }
