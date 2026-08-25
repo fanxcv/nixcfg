@@ -29,7 +29,7 @@ if [ "$SELF" = "1" ]; then
 fi
 
 echo "==> [1/4] bootstrap: 检查/安装 nix on root@$HOST"
-ssh root@$HOST 'bash -s' <<'BOOTSTRAP'
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST 'bash -s' <<'BOOTSTRAP'
 set -euo pipefail
 # 检查 nix 二进制存在性而非 PATH 命令（非交互 ssh 的 PATH 无 nix，但已装机器不应重跑 installer）
 if [ ! -x /nix/var/nix/profiles/default/bin/nix ]; then
@@ -69,10 +69,10 @@ BOOTSTRAP
 
 echo "==> [2/4] git 凭据 + 拉取仓库 → /root/nixcfg（git clone/pull）"
 if [ "$SELF" = "0" ]; then
-  ssh root@$HOST 'mkdir -p /root/.secrets'
+  ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST 'mkdir -p /root/.secrets'
   scp "$HOME/.git-credentials" root@$HOST:/root/.git-credentials
 fi
-ssh root@$HOST 'bash -s' <<'REPO'
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST 'bash -s' <<'REPO'
 set -euo pipefail
 chmod 600 /root/.git-credentials 2>/dev/null || true
 command -v git >/dev/null 2>&1 || apt-get install -y git
@@ -88,7 +88,7 @@ REPO
 
 echo "==> [3/4] age 私钥（HM secrets 解密必需；自部署模式跳过——已在本机）"
 if [ "$SELF" = "0" ]; then
-  ssh root@$HOST 'mkdir -p /root/.secrets'
+  ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST 'mkdir -p /root/.secrets'
   scp "$HOME/.secrets/age-keys.txt" root@$HOST:/root/.secrets/age-keys.txt
 fi
 
@@ -97,7 +97,7 @@ fi
 @LUCKY_PUSH@
 
 echo "==> [4/4] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具）"
-ssh root@$HOST 'bash -s' <<'HM'
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST 'bash -s' <<'HM'
 set -euo pipefail
 # 非交互 ssh 的 PATH 不含 nix（/etc/profile.d 不加载），显式补全
 # （BOOTSTRAP 已软链 /usr/local/bin，此处双保险）
@@ -108,13 +108,13 @@ USER=root HOME_MANAGER_BACKUP_EXT=backup ./result/activate
 HM
 
 # 推送系统配置 + apply 脚本 + self-deploy 入口（自部署后续由 /root/self-deploy.sh 承担）
-ssh root@$HOST 'mkdir -p /tmp/@HOST@-deploy'
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST 'mkdir -p /tmp/@HOST@-deploy'
 scp -r "$FILES"/. root@$HOST:/tmp/@HOST@-deploy/
 scp "$APPLY" root@$HOST:/tmp/@HOST@-deploy/apply.sh
-ssh root@$HOST "cat > /root/self-deploy.sh" <<'SELFDEPLOY'
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST "cat > /root/self-deploy.sh" <<'SELFDEPLOY'
 @SELF_DEPLOY@
 SELFDEPLOY
-ssh root@$HOST 'chmod +x /root/self-deploy.sh && echo self-deploy 入口已就位（/root/self-deploy.sh）'
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST 'chmod +x /root/self-deploy.sh && echo self-deploy 入口已就位（/root/self-deploy.sh）'
 
 echo "==> 远程 apply（系统层：chsh / GRUB / apt 源 / DNS / pve-assist / 去 nag）"
-ssh root@$HOST 'bash /tmp/@HOST@-deploy/apply.sh'
+ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=30 root@$HOST 'bash /tmp/@HOST@-deploy/apply.sh'
