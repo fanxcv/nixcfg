@@ -386,6 +386,7 @@ pve:
     pve_assist: true        # 去订阅 nag 自动 repair（→ pve/apply.sh）
     ohmyzsh: true           # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/<机>/）
     nix_gc: 30 天自动清理    # 周级 systemd timer nix-gc.timer + auto-optimise-store（→ pve/apply.sh [6.9/7]）
+    podman_mirror: 国内 3 域名  # docker.io → xuanyuan/1ms.run/daocloud（→ pve/apply.sh [6.8/7] registries.conf.d；lucky Image 走 mirror）
     deploy: nix run .#<机>  # 部署机只查环境+传文件（凭据/secrets 归档 .age，远端解密）；远程构建 HM + 系统层 apply；传参须与声明 ip 一致（→ pve/deploy.nix）
   machines:
     ds2:                    # PVE 9.2（Debian 13 trixie，→ pve/ds2/ + home/fan/ds2/）

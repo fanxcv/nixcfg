@@ -152,6 +152,24 @@ fi
 
 @LUCKY_APPLY@
 
+echo "==> [6.8/7] podman 镜像加速（registries.conf.d drop-in，与 docker daemon.json 同域名）"
+mkdir -p /etc/containers/registries.conf.d
+cat > /etc/containers/registries.conf.d/mirror.conf <<'MIRROR'
+[[registry]]
+prefix = "docker.io"
+location = "docker.io"
+
+[[registry.mirror]]
+location = "docker.xuanyuan.me"
+
+[[registry.mirror]]
+location = "docker.1ms.run"
+
+[[registry.mirror]]
+location = "docker.m.daocloud.io"
+MIRROR
+echo "podman registries.conf.d/mirror.conf 已写入（docker.io → 3 个国内 mirror）"
+
 echo "==> [6.9/7] nix 自动 GC（30 天保留 + 定期硬链接优化）"
 # 幂等：nix.conf 加 auto-optimise-store（store 硬链接去重），daemon 重启生效
 if [ -f /etc/nix/nix.conf ] && ! grep -q "auto-optimise-store" /etc/nix/nix.conf; then
