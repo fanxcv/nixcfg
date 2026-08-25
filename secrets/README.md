@@ -1,73 +1,73 @@
-# secrets/ —— agenix 加密 secrets
+# secrets/ —— age 加密 secrets 目录规约
 
-密钥用 age 加密入库（.age 文件可提交 git），激活时由 home-manager 的 agenix
-模块自动解密到目标路径。明文只存在于：加密时的源文件 + 解密后的目标路径。
-**已启用**：secrets.nix 的 agenix 块处于激活状态，激活时自动解密 ai.env →
-~/.secrets/ai.env、git-credentials → ~/.git-credentials。
+## 目录结构（公共 vs 机器独有）
 
-## 密钥对
+- **secrets/ 根**：公共/多机共享文件（所有机器、跨平台通用）
+- **secrets/hosts/<machine>/**：机器独有文件（一个机器/部署单元一个目录）
+  - 不只放公私钥：skemate 配置、lucky 归档、tailscale state 等一切机器独有物都进这里
+  - 当前机器清单：`ide-lenovo` `ide-si`（ide 容器）、`mba-m5` `mbp-m1` `mini-m4`（mac）、
+    `nix-pve`（NixOS 真机）、`fan` `mi`（PVE 宿主机，见 pve/）
+  - 跨机器共用而非常见文件（如 comin-token 被 mini-m4/nix-pve 共用）：
+    文件本体放主机器目录（nix-pve），其他机器跨引用并注释说明
 
-- 私钥：`$HOME/.secrets/age-keys.txt`（chmod 600，**永不提交 git**）
-  - 容器场景：compose 挂载 `./.secrets → /root/.secrets`（docker/ide/ 目录下，随仓库走）
-    ——把 age-keys.txt 放进 docker/ide/.secrets/ 即可，容器重建不丢
-  - 新增机器：把私钥拷到该机 `$HOME/.secrets/age-keys.txt`，公钥加入 `keys.nix`
-- 公钥：`age-keygen -y ~/.secrets/age-keys.txt`
-- 当前接收者见 `keys.nix`（本仓库当前仅一台 ide 容器）
+## 公私钥约定（统一）
+
+- **私钥**：`secrets/hosts/<host>/<key>.age` 加密入库（git 可提交）
+- **公钥**：`<key>.pub` **明文直接入库**（不加密、不入 source/、encrypt.sh 自动跳过）
+  - 消费方 nix 直接拷贝明文（如 hosts/_nixos_/base/keys.nix、home/fan/_container_/ssh-host-key.nix）
+- SSH 公钥 ≠ age 公钥：age 接收者公钥集合见 `keys.nix`（`age-keygen -y ~/.secrets/age-keys.txt`）
+
+## 当前文件清单
+
+```
+secrets/
+├── age-keys.txt.age              # age 私钥备份（公共：所有机共用一把私钥）
+├── ai.env.age                    # 各机激活解密（_common_/secrets.nix）
+├── git-credentials.age           # ~/.git-credentials（公共）
+├── headscale-auth-key.txt.age    # tailscale pre-auth key（三 mac，公共）
+├── ssh-config.age                # ~/.ssh/config（mba/mbp/nix-pve，公共）
+├── syncthing-gui-password.age    # syncthing GUI 密码（三 mac + nix-pve，公共）
+├── encrypt.sh / keys.nix / README.md
+└── hosts/
+    ├── ide-lenovo/  ssh_host_ed25519_key.age + .pub（明文）
+    ├── ide-si/      ssh_host_ed25519_key.age + .pub（明文）
+    ├── mba-m5/      ssh_id_rsa.age + .pub
+    ├── mbp-m1/      ssh_id_rsa.age + .pub
+    ├── mini-m4/     bill-app-android-release.p12.age（签名密钥）
+    │                skemate-config.json.age + skemate-tunnel.yaml.age
+    │                ssh_id_rsa.age + .pub
+    ├── nix-pve/     comin-token.age（mini-m4 共用）、fan-password.age
+    │                ssh_host_ed25519_key.age + .pub（明文）
+    ├── fan/         tailscale-fan-state.age
+    └── mi/          tailscale-mi-state.age、lucky-data.age
+```
 
 ## 加密新文件
 
-明文统一放 `source/`（已 gitignore），一键批量加密，接收者自动取 `keys.nix` 全部公钥：
+明文统一放 `source/`（已 gitignore，结构与 secrets/ 同构——机器独有放 `source/hosts/<host>/`），
+一键批量加密，接收者自动取 `keys.nix` 全部公钥：
 
 ```bash
 ./encrypt.sh           # 加密 source/ 下所有文件 → secrets/<同名>.age
 ./encrypt.sh --force   # 覆盖已存在的 .age
 ```
 
-例：git 凭据也走这套加密（`git-credentials.age` 位置与 secrets.nix 预留一致）：
-
-```bash
-cp ~/.secrets/git-credentials source/git-credentials
-./encrypt.sh           # → secrets/git-credentials.age，激活时解密到 ~/.git-credentials
-```
-
-单文件手写命令等价形式：
-
-```bash
-# 单接收者（-r 用 keys.nix 里的公钥）
-age -e -r age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204 \
-    -o secrets/ai.env.age /root/.secrets/ai.env
-
-# 多接收者（从 keys.nix 批量取）
-age -e -R <(nix eval --raw .#homeConfigurations."fan@ide-si".config.home.homeDirectory 2>/dev/null) \
-    -o secrets/xxx.age <明文源>
-```
+公钥 `.pub` 不加密：明文直接放 `secrets/hosts/<host>/`，encrypt.sh 自动跳过。
 
 ## 解密查看 / 更新
 
 ```bash
-# 解密到 stdout（不落盘）
-age -d -i ~/.secrets/age-keys.txt secrets/ai.env.age
-
-# 更新：解密到临时文件 → 改 → 重新加密 → 删临时文件
-age -d -i ~/.secrets/age-keys.txt -o /tmp/ai.env secrets/ai.env.age
-# ...编辑 /tmp/ai.env...
-age -e -r age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204 \
-    -o secrets/ai.env.age /tmp/ai.env && rm /tmp/ai.env
+age -d -i ~/.secrets/age-keys.txt secrets/hosts/nix-pve/fan-password.age
 ```
 
-## 启用（home-manager 侧）——当前状态：
+## 启用（home-manager 侧）
 
-1. ✅ 加密文件就位：secrets/ai.env.age、secrets/git-credentials.age（git 已跟踪）
-2. ✅ `home/fan/_common_/secrets.nix` agenix 块已启用（imports + age.* 已取消注释）
-3. ⚠️ 私钥就位：`docker/ide/.secrets/age-keys.txt`（容器内 /root/.secrets/age-keys.txt）
-   ——每个新部署的容器都要放；缺失会导致激活失败（agenix 不解密即报错）
-4. 容器内 `nix run .#ide-si`（lenovo 用 `.#ide-lenovo`）重新激活验证
-
-## RustDesk 身份（不再走 agenix）
-
-RustDesk 1.4.9 启动时会重置外部替换的身份文件（RustDesk.toml），agenix 身份注入已移除
-（2026-08 验证）：身份由各机 app 自生成，永久密码在各机 GUI 设置 → 安全 → 永久密码。
-服务器/中继配置（rendezvous/key/direct-server 等）见 home/fan/_darwin_/rustdesk.nix。
+1. 加密文件就位（.age 已入库）
+2. `home/fan/_common_/secrets.nix` agenix 块已启用（ai.env/git-credentials）
+3. 各模块自带解密：tailscale/ssh/keystore/skemate 等（见各自 .nix）
+4. 私钥就位：`$HOME/.secrets/age-keys.txt`（chmod 600，**永不提交 git**）
+   - 容器：compose 挂载 `./.secrets → /root/.secrets`（docker/ide/ 目录下）
+   - 新机器：把私钥拷到该机 + 公钥加入 `keys.nix`
 
 ## 轮换私钥
 

@@ -25,7 +25,7 @@ in
   grubCmdline = common.grubCmdline ++ extra;
   inherit modprobeHost;
   tailscaleForward = true;    # tailscale 网关转发规则（外部服务器经本机访问 10.1.0.0/24）
-  tailscaleState = ../../secrets/tailscale-fan-state.age;
+  tailscaleState = ../../secrets/hosts/fan/tailscale-fan-state.age;
   files = import ../render.nix {
     inherit pkgs lib;
     dns = common.dns;

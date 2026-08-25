@@ -42,7 +42,7 @@ in
     })
     // (lib.optionalAttrs isNixos {
       shell = "${pkgs.zsh}/bin/zsh"; # NixOS 无 /bin，必须 store 路径
-      # 登录密码 hash 走 agenix（secrets/fan-password.age，见 hosts/_nixos_/base/password.nix）；
+      # 登录密码 hash 走 agenix（secrets/hosts/nix-pve/fan-password.age，见 hosts/_nixos_/base/password.nix）；
       # SSH 登录走公钥（home 层 ssh.nix 拉取），密码仅 SDDM 图形登录用
       hashedPasswordFile = config.age.secrets."fan-password".path;
     });

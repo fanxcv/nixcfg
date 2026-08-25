@@ -50,8 +50,9 @@
   };
 
   # comin 的 go-git 认证 token（见 services/comin.nix 的 auth.access_token_path）
+  # 机器独有（mini-m4 实验机共用同一 token，跨引用此文件）
   age.secrets."comin-token" = {
-    file = tools.relative "secrets/comin-token.age";
+    file = tools.relative "secrets/hosts/nix-pve/comin-token.age";
     path = "/run/agenix/comin-token";
     mode = "0400";
   };

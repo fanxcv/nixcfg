@@ -3,7 +3,7 @@
 #   逻辑：comin 检测 darwinConfigurations.mini-m4 变更 → 自动 build + activate（root 直跑，免 sudo）
 #   包：nixpkgs 26.05 无 comin → 用 input 源码重写构建（同 hosts/_nixos_/services/comin.nix）
 #   认证：comin 用 go-git 库不走 git credential.helper → 显式 access_token_path
-#     （agenix 解密 secrets/comin-token.age → /run/agenix/comin-token）
+#     （agenix 解密 secrets/hosts/nix-pve/comin-token.age → /run/agenix/comin-token，与 nix-pve 共用同一 token）
 #   状态/日志：/var/lib/comin（仓库 clone + 部署状态）、/var/log/comin.log
 #   注：comin 自持 clone（/var/lib/comin），不复用 ~/nixcfg——手动改完必须 push 才生效
 #
@@ -102,8 +102,9 @@ in
   imports = [ inputs.comin.darwinModules.comin ];
 
   # comin 拉取私有仓库的 token（go-git 认证，非 credential.helper）
+  # token 文件与 nix-pve 共用（secrets/hosts/nix-pve/comin-token.age）
   age.secrets."comin-token" = {
-    file = tools.relative "secrets/comin-token.age";
+    file = tools.relative "secrets/hosts/nix-pve/comin-token.age";
     path = "/run/agenix/comin-token";
     mode = "0400";
   };

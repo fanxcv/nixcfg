@@ -9,6 +9,7 @@ command -v age >/dev/null || { echo "错误：未找到 age（nix shell nixpkgs#
 grep -qE 'age1[a-z0-9]{50,}' keys.nix || { echo "错误：keys.nix 中没有 age 公钥" >&2; exit 1; }
 
 count=0
+# 只加密私密文件：*.pub 公钥明文直接入库（secrets/hosts/<机>/），不入 source、不加密
 while IFS= read -r f; do
   # 保持 source/ 下的子目录结构（如 hosts/nix-pve/）
   rel="${f#source/}"
@@ -21,6 +22,6 @@ while IFS= read -r f; do
   age -e -R <(grep -oE 'age1[a-z0-9]{50,}' keys.nix | sort -u) -o "$out" "$f"
   echo "已加密: $f -> $out"
   count=$((count + 1))
-done < <(find source -type f | sort)
+done < <(find source -type f ! -name '*.pub' | sort)
 
 echo "完成：新加密 $count 个文件"
