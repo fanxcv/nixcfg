@@ -43,7 +43,8 @@ let
     Wants=network-online.target
 
     [Container]
-    Image=docker.io/gdy666/lucky:2.17.6  # 走 registries.conf.d mirror（docker.xuanyuan.me / 1ms.run / daocloud）
+    # 镜像走 registries.conf.d mirror（docker.xuanyuan.me / 1ms.run / daocloud）
+    Image=docker.io/gdy666/lucky:2.17.6
     Network=host
     Volume=/opt/lucky/data:/goodluck
 
