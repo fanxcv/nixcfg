@@ -21,6 +21,7 @@ in
   suite = "trixie";                              # 从 8.4（bookworm）升级至 9.2
   grubCmdline = common.grubCmdline;
   inherit modprobeHost;
+  tailscaleForward = true;    # tailscale 网关转发规则（外部转发经本机访问 10.1.0.0/24）
   tailscaleState = ../../secrets/tailscale-mi-state.age;
   files = import ../render.nix {
     inherit pkgs lib;
