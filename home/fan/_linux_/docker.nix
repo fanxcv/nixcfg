@@ -48,6 +48,7 @@
       #    NixOS 真机跳过（nix-pve 由系统层 virtualisation.docker.daemon.settings 声明式管，
       #    HM 写普通文件会覆盖其 symlink，rebuild 后丢失）
       if [ "${if useChinaMirror then "true" else "false"}" = true ] && [ "${platform}" != nixos ]; then
+        ''${SUDO} mkdir -p /etc/docker
         echo '{"registry-mirrors": ["https://docker.xuanyuan.me", "https://docker.1ms.run", "https://docker.m.daocloud.io"]}' \
           | ''${SUDO} tee /etc/docker/daemon.json > /dev/null
         echo "===> 已写入 /etc/docker/daemon.json（registry-mirrors 国内镜像）"
