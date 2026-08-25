@@ -49,6 +49,7 @@ let
 
     [Service]
     Restart=always
+    TimeoutStopSec=30
 
     [Install]
     WantedBy=multi-user.target
@@ -62,7 +63,12 @@ let
       echo "警告: quadlet 未生成 lucky unit（检查 lucky.container 语法）" >&2
     else
       systemctl enable "$LUCKY_UNIT" 2>/dev/null || true
-      systemctl restart "$LUCKY_UNIT"
+      # restart 容错：容器异常（stop 卡超时 SIGKILL 后残留）会致 restart 失败中断——强制清理后重试
+      if ! systemctl restart "$LUCKY_UNIT"; then
+        echo "警告: $LUCKY_UNIT restart 失败，强制清理容器后重试" >&2
+        podman rm -f systemd-lucky 2>/dev/null || true
+        systemctl restart "$LUCKY_UNIT" || echo "警告: 重试仍失败，手动 systemctl restart $LUCKY_UNIT" >&2
+      fi
       sleep 3
       if ss -tlnp | grep -qE ":338[0-9]|:339[0-9]"; then
         echo "lucky 已启动（$LUCKY_UNIT），转发端口监听正常"

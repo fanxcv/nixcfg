@@ -152,7 +152,34 @@ fi
 
 @LUCKY_APPLY@
 
-echo "==> [7/7] 验证"
+echo "==> [6.9/7] nix 自动 GC（30 天保留 + 定期硬链接优化）"
+# 幂等：nix.conf 加 auto-optimise-store（store 硬链接去重），daemon 重启生效
+if [ -f /etc/nix/nix.conf ] && ! grep -q "auto-optimise-store" /etc/nix/nix.conf; then
+  echo "auto-optimise-store = true" >> /etc/nix/nix.conf
+  systemctl restart nix-daemon 2>/dev/null || true  # || true：nix.conf 无变时不重启；daemon 不在也容错
+fi
+# systemd timer：每周 nix-collect-garbage --delete-older-than 30d（nix 二进制绝对路径，不在系统 PATH）
+cat > /etc/systemd/system/nix-gc.service <<'UNIT'
+[Unit]
+Description=Nix garbage collection
+After=network.target
+[Service]
+Type=oneshot
+ExecStart=/nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 30d
+UNIT
+cat > /etc/systemd/system/nix-gc.timer <<'UNIT'
+[Unit]
+Description=Weekly nix garbage collection
+[Timer]
+OnCalendar=weekly
+Persistent=true
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now nix-gc.timer >/dev/null 2>&1 || true  # || true：幂等（已启用）
+systemctl is-active nix-gc.timer
+
 pveversion
 if grep -rq "enterprise" /etc/apt/sources.list.d/ 2>/dev/null; then
   echo "警告: 仍有 enterprise 源残留" >&2

@@ -92,6 +92,7 @@ common:
   nix:                      # 二进制缓存/源码拉取（→ flake.nix nixConfig + modules/darwin/nix.nix + hosts/nix-pve + Dockerfile，4 处一致）
     substituters: [USTC, TUNA, cache.nixos.org]  # SJTU 已移除（2026-08 超时拖死 build）；另有 numtide/nix-community cachix
     inputs_proxy: ghfast.top  # 15 个 inputs 走加速前缀（换域名跑 scripts/switch-github-proxy.sh）
+    gc: 30 天自动清理 + 硬链接优化  # darwin 周级定时器（→ modules/darwin/nix.nix）；PVE 周级 systemd timer（→ pve/apply.sh）；容器重建即弃仅 auto-optimise（→ Dockerfile）
 
   vscode:                     # 配置/扩展/语言 profile（→ modules/home/vscode.nix）
     package: mac=商店版 / nixos=unstable   # nixos 走 unstable 通道（pkgs.repos.unstable.vscode）
@@ -384,6 +385,7 @@ pve:
     fuse: nix 包（fuse3）  # fusermount3 用户态工具（→ home/fan/_pve_/；内核模块由 PVE 内核自带）
     pve_assist: true        # 去订阅 nag 自动 repair（→ pve/apply.sh）
     ohmyzsh: true           # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/<机>/）
+    nix_gc: 30 天自动清理    # 周级 systemd timer nix-gc.timer + auto-optimise-store（→ pve/apply.sh [6.9/7]）
     deploy: nix run .#<机>  # 部署机只查环境+传文件（凭据/secrets 归档 .age，远端解密）；远程构建 HM + 系统层 apply；传参须与声明 ip 一致（→ pve/deploy.nix）
   machines:
     ds2:                    # PVE 9.2（Debian 13 trixie，→ pve/ds2/ + home/fan/ds2/）
