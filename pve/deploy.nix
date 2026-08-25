@@ -102,8 +102,8 @@ let
     fi
   '' else "";
   applySh = pkgs.writeShellScript "${host}-apply" (builtins.replaceStrings
-    [ "@PVE_ASSIST_BASE@" "@TAILSCALE@" "@HP_EXTRA@" "@TS_FWD@" "@LUCKY_APPLY@" ]
-    [ cfg.pveAssistBase tsApply (if cfg ? hpExtra then cfg.hpExtra else "") tsFwd luckyApply ]
+    [ "@PVE_ASSIST_BASE@" "@TAILSCALE@" "@HP_EXTRA@" "@MI_EXTRA@" "@TS_FWD@" "@LUCKY_APPLY@" ]
+    [ cfg.pveAssistBase tsApply (if cfg ? hpExtra then cfg.hpExtra else "") (if cfg ? miExtra then cfg.miExtra else "") tsFwd luckyApply ]
     (builtins.readFile ./apply.sh));
 in
 pkgs.writeShellScriptBin "${host}-deploy" (builtins.replaceStrings

@@ -14,7 +14,8 @@
   imports = [ ../_linux_ ] ++ tools.scan ./.;
 
   # age：自部署模式（--self）本地解密 ts-state/lucky 归档必需（secrets 推送原在 mac 侧解密）
-  home.packages = [ pkgs.age ];
+  # fuse3：fusermount3 用户态工具（原 apt 装，nix 化；内核模块 /dev/fuse 由 PVE 内核自带）
+  home.packages = [ pkgs.age pkgs.fuse3 ];
 
   # standalone 入口（home/fan/default.nix）不参与内嵌模式，这里补 stateVersion
   home.stateVersion = "25.05";

@@ -6,6 +6,8 @@
 { pkgs, lib, ... }:
 let
   common = import ../default.nix;
+  ip = "10.2.241.88/24";                        # 静态 IP（apply 写 vmbr0）
+  gateway = "10.2.241.254";
   extra = [ "video=efifb:off,vesafb:off" ];
   modprobeHost = {
     "kvm.conf" = "options kvm ignore_msrs=1";
@@ -24,6 +26,7 @@ in
   suite = "trixie";                              # PVE 9 = Debian 13
   grubCmdline = common.grubCmdline ++ extra;
   inherit modprobeHost;
+  inherit ip gateway;
   tailscaleForward = true;    # tailscale 网关转发规则（外部服务器经本机访问 10.1.0.0/24）
   tailscaleState = ../../secrets/hosts/fan/tailscale-fan-state.age;
   files = import ../render.nix {
@@ -35,5 +38,6 @@ in
     modprobePublic = common.modprobePublic;
     inherit modprobeHost;
     tailscaleForward = true;
+    inherit ip gateway;
   };
 }

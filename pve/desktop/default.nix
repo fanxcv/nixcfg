@@ -4,6 +4,8 @@
 { pkgs, lib, ... }:
 let
   common = import ../default.nix;
+  ip = "10.2.241.208/24";                        # 静态 IP（apply 写 vmbr0）
+  gateway = "10.2.241.254";
   modprobeHost = {
     "blacklist.conf" = ''
       # 由 nixcfg 渲染（desktop 专属）
@@ -21,6 +23,7 @@ in
   suite = "trixie";                              # PVE 9 = Debian 13
   grubCmdline = common.grubCmdline;             # 公共：quiet consoleblank=60 intel_iommu=on iommu=pt
   inherit modprobeHost;
+  inherit ip gateway;
   files = import ../render.nix {
     inherit pkgs lib;
     dns = common.dns;
@@ -29,5 +32,6 @@ in
     grubCmdline = common.grubCmdline;
     modprobePublic = common.modprobePublic;
     inherit modprobeHost;
+    inherit ip gateway;
   };
 }

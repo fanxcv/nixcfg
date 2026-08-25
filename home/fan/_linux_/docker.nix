@@ -8,7 +8,7 @@
 # 容器环境不安装：isContainer 由 flake.nix 传入（ide 容器 = true，真机默认 false），
 #   包与 activation 均 mkIf 跳过——容器里 docker daemon 起不来，连检测都不跑
 
-{ pkgs, lib, isContainer ? false, ... }:
+{ pkgs, lib, isContainer ? false, useChinaMirror ? true, platform ? "linux", ... }:
 {
   home.packages = lib.mkIf (!isContainer) (with pkgs; [
     docker
@@ -42,6 +42,15 @@
       if ! ${pkgs.docker}/bin/docker network ls --format '{{.Name}}' 2>/dev/null | grep -qx 'fan'; then
         ${pkgs.docker}/bin/docker network create --subnet 172.88.0.0/16 fan > /dev/null 2>&1 \
           || echo "警告: docker network fan 创建失败（daemon 未运行？）"
+      fi
+
+      # 4) 国内镜像加速（useChinaMirror 开关，与 mirrors.nix 同语义）：写 /etc/docker/daemon.json
+      #    NixOS 真机跳过（nix-pve 由系统层 virtualisation.docker.daemon.settings 声明式管，
+      #    HM 写普通文件会覆盖其 symlink，rebuild 后丢失）
+      if [ "${if useChinaMirror then "true" else "false"}" = true ] && [ "${platform}" != nixos ]; then
+        echo '{"registry-mirrors": ["https://docker.xuanyuan.me", "https://docker.1ms.run", "https://docker.m.daocloud.io"]}' \
+          | ''${SUDO} tee /etc/docker/daemon.json > /dev/null
+        echo "===> 已写入 /etc/docker/daemon.json（registry-mirrors 国内镜像）"
       fi
     }
     setup_docker

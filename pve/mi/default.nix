@@ -5,6 +5,8 @@
 { pkgs, lib, ... }:
 let
   common = import ../default.nix;
+  ip = "10.2.241.92/24";                        # 静态 IP（apply 写 vmbr0）
+  gateway = "10.2.241.254";
   modprobeHost = {
     "kvm.conf" = "options kvm ignore_msrs=1";
     "pve-blacklist.conf" = ''
@@ -15,12 +17,23 @@ let
       options vfio_iommu_type1 allow_unsafe_interrupts=1
     '';
   };
+  # podman nix 化：quadlet 依赖 systemd system-generator（apt 包装到 /usr/lib/systemd/），
+  # nix 包 podman 自带 generator → 链接到系统目录（幂等；luckyApply 的 daemon-reload 即生效）
+  miExtra = ''
+    echo "==> [6.6/7] podman system-generator 链接（nix 包 podman 的 quadlet 支持）"
+    mkdir -p /usr/lib/systemd/system-generators
+    ln -sf ${pkgs.podman}/lib/systemd/system-generators/podman-system-generator /usr/lib/systemd/system-generators/podman-system-generator
+    systemctl daemon-reload
+    echo "podman quadlet generator 已链接（${pkgs.podman.name}）"
+  '';
 in
 {
   inherit (common) dns mirror pveAssistBase modprobePublic;
   suite = "trixie";                              # 从 8.4（bookworm）升级至 9.2
   grubCmdline = common.grubCmdline;
   inherit modprobeHost;
+  inherit miExtra;
+  inherit ip gateway;
   tailscaleForward = true;    # tailscale 网关转发规则（外部转发经本机访问 10.1.0.0/24）
   tailscaleState = ../../secrets/hosts/mi/tailscale-mi-state.age;
   luckyData = ../../secrets/hosts/mi/lucky-data.age;    # lucky 配置归档（podman quadlet + age；web 面板改规则后重新导出）
@@ -33,5 +46,6 @@ in
     modprobePublic = common.modprobePublic;
     inherit modprobeHost;
     tailscaleForward = true;
+    inherit ip gateway;
   };
 }

@@ -1,7 +1,7 @@
 # PVE 系统层配置渲染（公共：所有 PVE 机器同一套文件，参数来自机器层）
-# 输出 /nix/store/...-pve-sysfiles/：apt 源（debian/security/pve-no-subscription）+ resolv.conf + grub + modprobe
-# 机器层 pve/<host>/default.nix 提供：dns / mirror / suite / grubCmdline / modprobePublic / modprobeHost
-{ pkgs, lib, dns, mirror, suite, grubCmdline, modprobePublic ? "", modprobeHost ? { }, tailscaleForward ? false }:
+# 输出 /nix/store/...-pve-sysfiles/：apt 源（debian/security/pve-no-subscription）+ resolv.conf + grub + modprobe + static-ip
+# 机器层 pve/<host>/default.nix 提供：dns / mirror / suite / grubCmdline / modprobePublic / modprobeHost / ip / gateway
+{ pkgs, lib, dns, mirror, suite, grubCmdline, modprobePublic ? "", modprobeHost ? { }, tailscaleForward ? false, ip ? "", gateway ? "" }:
 pkgs.runCommand "pve-sysfiles" { } ''
   mkdir -p $out
 
@@ -33,6 +33,15 @@ pkgs.runCommand "pve-sysfiles" { } ''
   # 由 nixcfg pve 渲染（公共 DNS，见 pve/default.nix）；网络重启若覆盖，请在 /etc/network/interfaces 配置 dns-nameservers
   ${builtins.concatStringsSep "\n" (map (d: "nameserver " + d) dns)}
   EOF
+
+  # 静态 IP（/etc/network/interfaces 的 vmbr0 段；apply 幂等替换 address/gateway，见 apply.sh）
+  ${lib.optionalString (ip != "") ''
+  cat > $out/static-ip.conf <<EOF
+  # 由 nixcfg pve 渲染（静态 IP，见 pve/<host>/default.nix）
+  ip=${ip}
+  gateway=${gateway}
+  EOF
+  ''}
 
   # GRUB（/etc/default/grub；GRUB_CMDLINE_LINUX_DEFAULT 含公共参数）
   cat > $out/grub <<EOF

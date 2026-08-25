@@ -50,9 +50,37 @@ for f in /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources;
   fi
 done
 
-echo "==> [4/7] DNS（/etc/resolv.conf 直写；PVE 9 无 systemd-resolved）"
+echo "==> [4/7] 网络（DNS 直写 + 固定 IP）"
 cp -a /etc/resolv.conf "$BACKUP/" 2>/dev/null || true
 install -m 0644 resolv.conf /etc/resolv.conf
+
+# 固定 IP（nix 声明：pve/<host>/default.nix 的 ip/gateway → 渲染 static-ip.conf）
+# 幂等：awk 替换/插入 vmbr0 段的 address/gateway（dhcp→static 自动转）；不自动重启网络——
+# IP 与现状一致时无需；不一致时提示手动 ifreload -a（避免 ssh 断连）
+if [ -f static-ip.conf ]; then
+  . ./static-ip.conf
+  if [ -n "${ip:-}" ] && [ -n "${gateway:-}" ]; then
+    cp -a /etc/network/interfaces "$BACKUP/" 2>/dev/null || true
+    awk -v ip="$ip" -v gw="$gateway" '
+      /^iface / { in_vmbr0 = ($2 == "vmbr0") }
+      in_vmbr0 && /^iface vmbr0/ { sub(/ inet dhcp/, " inet static"); print; next }
+      in_vmbr0 && /^[[:space:]]*address/ { print "    address " ip; printed_addr = 1; next }
+      in_vmbr0 && /^[[:space:]]*gateway/ { print "    gateway " gw; next }
+      in_vmbr0 && !printed_addr && /^[[:space:]]*bridge-ports/ { print "    address " ip; print "    gateway " gw; printed_addr = 1 }
+      { print }
+    ' /etc/network/interfaces > /tmp/interfaces.nixcfg
+    if grep -q "iface vmbr0" /tmp/interfaces.nixcfg && grep -q "address $ip" /tmp/interfaces.nixcfg; then
+      install -m 0644 /tmp/interfaces.nixcfg /etc/network/interfaces
+      echo "固定 IP 已写入（vmbr0: $ip ，网关 $gateway ）"
+      if ! grep -q "address $ip" /etc/network/interfaces; then
+        echo "警告: 写入后未匹配 address $ip（原配置无 vmbr0 静态段？）" >&2
+      fi
+    else
+      echo "警告: /etc/network/interfaces 无 vmbr0 段，固定 IP 跳过（请手动配置）" >&2
+    fi
+    rm -f /tmp/interfaces.nixcfg
+  fi
+fi
 
 # sysctl：99-pve.conf（IP 转发——PVE 9 不再自带，升级后转发默认关；tailscale 网关/VM NAT 需开）
 install -m 0644 99-pve.conf /etc/sysctl.d/99-pve.conf
@@ -76,8 +104,6 @@ else
   echo "订阅 nag patch 已存在或文件缺失，跳过"
 fi
 apt-get update
-# fuse（所有 PVE 机器统一安装；razer 原缺，补上）
-apt-get install -y fuse >/dev/null
 # pve-assist 安装（install.sh 同款：gz 下载 + SHA256 校验，失败即退出）
 curl -fsSL "@PVE_ASSIST_BASE@/SHA256SUMS" -o /tmp/pa-sha256
 curl -fsSL "@PVE_ASSIST_BASE@/pve-assist-linux-amd64.gz" | gzip -dc > /tmp/pa-bin
@@ -119,6 +145,8 @@ fi
 @TAILSCALE@
 
 @HP_EXTRA@
+
+@MI_EXTRA@
 
 @TS_FWD@
 

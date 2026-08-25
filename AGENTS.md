@@ -38,27 +38,35 @@
 | hosts/_nixos_/ | nixosConfigurations（当前未接入真机，暂无目标） |
 | secrets/、flake.nix、AGENTS.md、wanted.yaml | 按实际影响面判断；不确定时跑受影响平台的 eval |
 
-## 区段映射表
+## 区段映射表（wanted.yaml 层次 = 代码目录，2026-08 重组）
 
 | wanted.yaml 区段 | Nix 位置 |
 |---|---|
-| global.pkgs | home/fan/_common_/base.nix、ai.nix、claude.nix、codex.nix、pi.nix |
-| global.app_configs | home/fan/_common_/（base.nix、shells.nix、tmux.nix、codex.nix、claude.nix、pi.nix、mise.nix） |
-| global.secrets | home/fan/_common_/secrets.nix、secrets/ |
-| macos.all_macs.apps | hosts/_darwin_/base/apps.nix |
-| macos.all_macs.formulae | hosts/_darwin_/base/homebrew.nix |
-| macos.all_macs.settings | hosts/_darwin_/gui/desktop/quartz/*.nix、gui/display/*.nix、kernel/*.nix |
-| macos.all_macs.services | hosts/_darwin_/services/*.nix |
-| macos.all_macs.fonts | hosts/_darwin_/i18n/fonts.nix |
-| macos.all_macs.locale | hosts/_darwin_/i18n/locale.nix |
-| macos.all_macs.user_pkgs | home/fan/_common_/*.nix |
-| macos.all_macs.app_configs | home/fan/_darwin_/gui/apps/*.nix、home/fan/_common_/*.nix |
-| macos.all_macs.secrets | hosts/_darwin_/base/rustdesk.nix（系统层）、home/fan/_common_/secrets.nix（fan 域解密）、secrets/ |
-| macos.mini_m4 | hosts/mini-m4/*.nix、home/fan/mini-m4/*.nix |
-| linux.ubuntu 公共（pkgs） | home/fan/_ubuntu_/、home/fan/_linux_/ |
-| linux.container 公共（skemate/部署/mise） | home/fan/_container_/、home/fan/_linux_/ |
-| linux.container.ide-si / ide-lenovo | home/fan/ide-si/、home/fan/ide-lenovo/（mise 已上提 _container_/mise.nix） |
-| nixos.pending | hosts/_nixos_/ |
+| common.pkgs | home/fan/_common_/base.nix、modules/home/{tmux,ai,codex,pi}.nix |
+| common.git / zsh / tmux / codex / pi / mise / ai / ssh | home/fan/_common_/（base.nix、shells.nix）、modules/home/*.nix（git 含 credential.helper=store） |
+| common.mirrors | home/fan/_common_/mirrors.nix、tools/config.nix（useChinaMirror/githubProxy 唯一入口） |
+| common.nix | flake.nix nixConfig、modules/darwin/nix.nix、hosts/nix-pve、docker/ide/ubuntu/Dockerfile（4 处一致） |
+| common.vscode | modules/home/vscode.nix（包源/扩展/设置） |
+| common.secrets | home/fan/_common_/secrets.nix、secrets/ |
+| macos.system.apps | hosts/_darwin_/base/apps.nix |
+| macos.system.formulae / brew_mirror | hosts/_darwin_/base/homebrew.nix |
+| macos.system.settings | hosts/_darwin_/gui/desktop/quartz/*.nix、gui/display/*.nix（loginwindow）、kernel/*.nix |
+| macos.system.dns | hosts/_darwin_/base/networking.nix |
+| macos.system.services | home/fan/_darwin_/syncthing.nix（hosts/_darwin_/services/ 为空占位） |
+| macos.system.fonts | hosts/_darwin_/i18n/fonts.nix |
+| macos.system.locale | hosts/_darwin_/i18n/locale.nix |
+| macos.user.hm_launchd_fix | home/fan/_darwin_/launchd-fix.nix |
+| macos.user.apps | home/fan/_darwin_/gui/apps/*.nix（orbstack/clash-verge/edge/tailscale）、hosts/_darwin_/base/{rustdesk,edge-policy,edge-updater}.nix |
+| macos.user.secrets | home/fan/_darwin_/tailscale.nix、secrets/ |
+| macos.machines.<机> | hosts/<机>/*.nix、home/fan/<机>/*.nix |
+| linux.common | home/fan/_linux_/ |
+| linux.ubuntu | home/fan/_ubuntu_/ |
+| linux.alpine | home/fan/_alpine_/ |
+| linux.container | home/fan/_container_/ |
+| linux.container.machines.ide-si / ide-lenovo | home/fan/ide-si/、home/fan/ide-lenovo/（mise 共享 _container_/mise.nix，hostName 分支差异） |
+| nixos.nix-pve | hosts/nix-pve/、home/fan/nix-pve/ |
+| pve.common | pve/default.nix、pve/apply.sh |
+| pve.machines.<机> | pve/<机>/、home/fan/<机>/、home/fan/_pve_/ |
 | 自建模块库（modules/）、本地包（packages/）、unstable/vscode 市场（overlays/） | modules/home/vscode.nix（vscode 封装：包源/扩展/设置）、modules/darwin/nix.nix（darwin nix 配置）、packages/default.nix、overlays/unstable.nix、overlays/vscode.nix；flake.nix（unstable input 锁 rev，周级 nix flake update） |
 
 ## 架构约定（2025-08 整理，新增/修改模块必须遵守）
