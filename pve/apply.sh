@@ -120,6 +120,8 @@ fi
 
 @HP_EXTRA@
 
+@TS_FWD@
+
 echo "==> [7/7] 验证"
 pveversion
 if grep -rq "enterprise" /etc/apt/sources.list.d/ 2>/dev/null; then

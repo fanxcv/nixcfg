@@ -1,7 +1,7 @@
 # PVE 系统层配置渲染（公共：所有 PVE 机器同一套文件，参数来自机器层）
 # 输出 /nix/store/...-pve-sysfiles/：apt 源（debian/security/pve-no-subscription）+ resolv.conf + grub + modprobe
 # 机器层 pve/<host>/default.nix 提供：dns / mirror / suite / grubCmdline / modprobePublic / modprobeHost
-{ pkgs, lib, dns, mirror, suite, grubCmdline, modprobePublic ? "", modprobeHost ? { } }:
+{ pkgs, lib, dns, mirror, suite, grubCmdline, modprobePublic ? "", modprobeHost ? { }, tailscaleForward ? false }:
 pkgs.runCommand "pve-sysfiles" { } ''
   mkdir -p $out
 
@@ -59,4 +59,16 @@ pkgs.runCommand "pve-sysfiles" { } ''
     ${content}
     CONF
   '') modprobeHost)}
+
+  # tailscale 转发规则（iptables-restore 格式；仅 tailscale 网关机渲染，apply 段写 unit 持久化）
+  ${lib.optionalString tailscaleForward ''
+  cat > $out/tailscale-forward.rules <<'EOF'
+  *nat
+  -A POSTROUTING -o tailscale0 -j MASQUERADE
+  COMMIT
+  *filter
+  -A FORWARD -o tailscale0 -j ACCEPT
+  COMMIT
+  EOF
+  ''}
 ''

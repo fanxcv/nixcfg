@@ -30,5 +30,6 @@ in
     grubCmdline = common.grubCmdline;
     modprobePublic = common.modprobePublic;
     inherit modprobeHost;
+    tailscaleForward = true;
   };
 }

@@ -15,4 +15,9 @@
     # 由 nixcfg 渲染（公共，见 pve/default.nix）；旧 pve-blacklist.conf 保留兼容
     blacklist nvidiafb
   '';
+  # tailscale 转发规则（仅 fan/mi 两台 tailscale 网关机开）：
+  #   iptables -t nat -A POSTROUTING -o tailscale0 -j MASQUERADE
+  #   iptables -A FORWARD -o tailscale0 -j ACCEPT
+  # 供外部服务器（无 tailscale）经本机转发访问 10.1.0.0/24；systemd unit 持久化（重启自动恢复）
+  tailscaleForward = false;
 }

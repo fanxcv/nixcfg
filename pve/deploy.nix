@@ -20,9 +20,36 @@ let
     fi
   '' else "";
   tsApply = if tsState != "" then builtins.readFile ./tailscale-apply.sh else "";
+  # tailscale 转发规则（仅 fan/mi 网关机）：写 rules + systemd unit（幂等：先删后插，重启自动恢复）
+  tsFwd = if (cfg ? tailscaleForward && cfg.tailscaleForward) then ''
+    echo "==> [6.6/7] tailscale 转发规则（nix 管理：MASQUERADE + FORWARD ACCEPT）"
+    mkdir -p /etc/iptables
+    install -m 0644 tailscale-forward.rules /etc/iptables/tailscale-forward.rules
+    cat > /etc/systemd/system/tailscale-forward.service <<'EOF'
+    [Unit]
+    Description=Tailscale forward rules (nix 管理)
+    After=tailscaled.service
+    Wants=tailscaled.service
+    [Service]
+    Type=oneshot
+    ExecStartPre=/bin/sh -c '/usr/sbin/iptables-nft -t nat -D POSTROUTING -o tailscale0 -j MASQUERADE 2>/dev/null || true'
+    ExecStartPre=/bin/sh -c '/usr/sbin/iptables-nft -D FORWARD -o tailscale0 -j ACCEPT 2>/dev/null || true'
+    ExecStart=/usr/sbin/iptables-nft-restore --noflush /etc/iptables/tailscale-forward.rules
+    RemainAfterExit=yes
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+    systemctl daemon-reload
+    systemctl enable --now tailscale-forward.service
+    if iptables-nft -t nat -L POSTROUTING -n | grep -q "tailscale0"; then
+      echo "MASQUERADE 规则已生效（tailscale-forward.service）"
+    else
+      echo "警告: MASQUERADE 规则未生效" >&2
+    fi
+  '' else "";
   applySh = pkgs.writeShellScript "${host}-apply" (builtins.replaceStrings
-    [ "@PVE_ASSIST_BASE@" "@TAILSCALE@" "@HP_EXTRA@" ]
-    [ cfg.pveAssistBase tsApply (if cfg ? hpExtra then cfg.hpExtra else "") ]
+    [ "@PVE_ASSIST_BASE@" "@TAILSCALE@" "@HP_EXTRA@" "@TS_FWD@" ]
+    [ cfg.pveAssistBase tsApply (if cfg ? hpExtra then cfg.hpExtra else "") tsFwd ]
     (builtins.readFile ./apply.sh));
 in
 pkgs.writeShellScriptBin "${host}-deploy" (builtins.replaceStrings
