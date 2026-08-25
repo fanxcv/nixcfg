@@ -78,6 +78,13 @@ install -m 0755 /tmp/pa-bin /usr/local/bin/pve-assist
 # 去订阅 nag（pve-assist 自带 marker 补丁，stale 时自动修复；失败即退出暴露）
 pve-assist --repair-subscription-if-stale
 
+# ifupdown2 × python3.12 兼容修复（readfp 已移除 → read_file；某版本组合开机网络起不来，幂等）
+IFUPDOWN2_PARSER=/usr/lib/python3/dist-packages/ifupdown2/ifupdown2lib/ifupdown_parser.py
+if [ -f "$IFUPDOWN2_PARSER" ] && grep -q "readfp" "$IFUPDOWN2_PARSER"; then
+  sed -i "s/\.readfp(/.read_file(/" "$IFUPDOWN2_PARSER"
+  echo "警告: ifupdown2 readfp 已修复（python3.12 兼容），重启网络后生效"
+fi
+
 echo "==> [6/7] modprobe 收编（公共 nixcfg-public.conf + 机器专属，pve/ 渲染同名覆盖）"
 if [ -d modprobe ] && ls modprobe/*.conf >/dev/null 2>&1; then
   CHANGED=0
