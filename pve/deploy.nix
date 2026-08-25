@@ -25,7 +25,7 @@ let
     echo "==> [3.6/4] 推送 lucky 配置归档（age 解密 → scp）"
     if [ -f "${cfg.luckyData}" ]; then
       age -d -i "$HOME/.secrets/age-keys.txt" "${cfg.luckyData}" > /tmp/lucky-data.tar.gz
-      scp -q /tmp/lucky-data.tar.gz root@$HOST:/tmp/lucky-data.tar.gz
+      scp -q /tmp/lucky-data.tar.gz root@$HOST:/tmp/lucky-config.tar.gz
       rm -f /tmp/lucky-data.tar.gz
       echo "lucky 配置已推送"
     else
@@ -36,8 +36,8 @@ let
   luckyApply = if cfg ? luckyData then ''
     echo "==> [6.7/7] lucky 容器（Podman Quadlet：nix 宣言 + age 配置）"
     mkdir -p /opt/lucky
-    tar xzf /tmp/lucky-data.tar.gz -C /opt/lucky
-    rm -f /tmp/lucky-data.tar.gz
+    tar xzf /tmp/lucky-config.tar.gz -C /opt/lucky
+    rm -f /tmp/lucky-config.tar.gz
     mkdir -p /etc/containers/systemd
     cat > /etc/containers/systemd/lucky.container <<'EOF'
     [Unit]
