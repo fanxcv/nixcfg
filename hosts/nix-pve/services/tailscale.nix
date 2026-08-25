@@ -40,6 +40,7 @@
   # tmpfs 下登录态重启即丢；bind 挂载后 tailscaled 写 state 直接落 /persist，零 unit 改动）
   fileSystems."/var/lib/tailscale" = {
     device = "/persist/var/lib/tailscale";
+    fsType = "none";
     options = [ "bind" ];
   };
 }
