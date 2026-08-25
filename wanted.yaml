@@ -372,7 +372,7 @@ nixos:
     desktop: plasma6             # KDE Plasma 6 + SDDM（Wayland）+ 中文输入（fcitx5 拼音）
     theme: catppuccin-latte + papirus  # Catppuccin 主题（latte 亮色 + blue 强调）+ Papirus 亮色图标 + konsole 终端（mocha 配色，→ home/fan/_nixos_/gui/plasma.nix；配色包 nixpkgs 无，固定 rev 自打包 → packages/catppuccin/konsole.nix）
     ui_lang: zh_CN                    # KDE 界面中文（plasma-localerc，只影响界面；终端/SSH 保持 en_US，与 mac 的 AppleLanguages 策略一致）
-    apps: [edge, bitwarden, vscode, rustdesk]  # GUI 应用（对齐 mac；rustdesk 走官方 GitHub release 二进制包，免源码编译 → packages/rustdesk-bin.nix，hbbs 配置注入 → home/fan/nix-pve/rustdesk.nix；clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install；vscode 走 unstable 包 → modules/home/vscode.nix）
+    apps: [edge, bitwarden, vscode, rustdesk]  # GUI 应用（对齐 mac；rustdesk 走官方 GitHub release 二进制包，免源码编译 → packages/rustdesk-bin.nix，hbbs 配置注入 → home/fan/nix-pve/rustdesk.nix；2026-08 打包改 buildFHSEnv：Flutter AOT 禁 patchelf（重写 ELF 段崩 snapshot），deb 原样 + FHS 系统库；VM 需 virtio-gl 3D（vga: std 无 renderD128 → EGL 全灭）；clash-verge-rev 已移除——nixpkgs 无缓存拖慢部署，需要时真机单独 nix profile install；vscode 走 unstable 包 → modules/home/vscode.nix）
     comin: true                  # git 驱动自动部署（git.fan-x.fun 私有仓库，凭据走 /root/.git-credentials agenix；轮询 180s 与 mini-m4 对齐）
     syncthing: true              # P2P 文件同步（系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384；~/sync 与三台 Mac 组网，目录已持久化；GUI 密码走 agenix（secrets/syncthing-gui-password.age，owner=fan，改密码需重启 syncthing 服务）；设备互配由 syncthing-autoregister oneshot 自动完成（清单 tools/syncthingPeers.nix）→ hosts/nix-pve/services/syncthing.nix + home/fan/nix-pve/immutable.nix）
     rdp: krdp（Plasma 远程桌面，RDP 协议）  # Windows 远程桌面（mstsc）直连：kdePackages.krdp 提供 krdpserver（镜像当前 Plasma 会话，Wayland 原生）；系统设置→远程桌面→RDP 开启 + 设用户名/密码，防火墙放行 3389/TCP；首连需现场点一次 portal 授权确认（→ hosts/nix-pve/services/krdp.nix）
@@ -412,6 +412,7 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     modprobe: nix 管           # vfio 8086:3185 + 声卡/i915 黑名单 + microcode + zfs arc（→ pve/desktop/default.nix modprobeHost，同名覆盖）
     fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
     deploy: nix run .#desktop  # 同 ds2 管线（→ pve/deploy.nix，host 参数化）
+    vm101: nix-pve 显卡 virtio-gl  # VM 101 显示 std→virtio-gl（3D：VM 内出 /dev/dri/renderD128，EGL/Flutter 可用；qm set 101 -vga virtio-gl；宿主已装 libgl1/libegl1 支撑 virgl）
   hp:                          # PVE 9.0.11 宿主机（10.2.237.149；HP ProBook 450 G10 笔记本，独立节点未入群；接管后升 9.2.11）
     platform: pve-9.0          # trixie 底（清华源），255 包待升 → 接管后 dist-upgrade 至 9.2.11（同线升级）
     laptop: true               # 笔记本：盒盖不休眠（logind HandleLidSwitch=ignore drop-in，→ pve/hp/default.nix hpExtra）

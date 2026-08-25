@@ -118,6 +118,14 @@
       url = "git+https://ghfast.top/https://github.com/cirruslabs/homebrew-cli.git?ref=master&shallow=1";
       flake = false;
     };
+
+    # skemate 发布元数据（自研终端复用服务，官方 latest.json）：
+    # flake=false 纯文件 input，overlay 动态解析 version/sha256（见 overlays/skemate.nix），
+    # 无需手动改哈希；nix flake update 即自动跟随官方新版本
+    skemate-latest = {
+      url = "https://w-apis.qksxin.com/terminal/latest.json";
+      flake = false;
+    };
   };
 
   outputs =
@@ -134,7 +142,8 @@
       # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
       # overlay 无法在 home 模块层注册（pkgs 先于模块构造），只能在此注入
       claudeOverlay = import ./overlays/claude-code.nix { inherit lib; };
-      skemateOverlay = import ./overlays/skemate.nix { inherit lib; };
+      # skemate latest.json input（flake=false，锁在 flake.lock，nix flake update 自动跟随）
+      skemateOverlay = import ./overlays/skemate.nix { inherit lib; skemateLatest = inputs.skemate-latest; };
       # unstable/vscode 市场 overlay（pkgs.repos.unstable / pkgs.repos.vscode，定义见 overlays/）
       # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ claude-code/codex/pi（_common_）
       unstableOverlay = import ./overlays/unstable.nix { inherit inputs claudeOverlay; };
