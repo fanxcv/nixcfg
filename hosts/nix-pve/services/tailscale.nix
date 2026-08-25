@@ -19,6 +19,7 @@
   services.tailscale.authKeyFile = "/run/agenix/headscale-auth-key";
   services.tailscale.extraUpFlags = [
     "--hostname=nix-pve"
+    "--login-server=https://headscale.fan-x.fun" # 必须显式：autoconnect 默认连 tailscale.com，headscale key 必被拒
     "--accept-routes=true"
     "--accept-dns=true"
   ];
