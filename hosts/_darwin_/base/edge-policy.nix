@@ -37,6 +37,8 @@ let
       <dict>
     ${policyEntries}
       </dict>
+      <key>UpdateDefault</key>
+      <integer>2</integer>
     </dict>
     </plist>
   '';
@@ -44,8 +46,11 @@ in
 {
   # 注意：nix-darwin 26.05 起自定义 system.activationScripts.<名字> 条目不再自动执行
   #   （script.text 只内联内置条目），必须挂到内置入口 extraActivation/postActivation
+  # UpdateDefault=2：禁用 Edge 自动更新（EdgeUpdater 策略，macOS ≥89 支持，com.microsoft.Edge 域）
+  #   → Edge 主程序不再自行拉起 updater、不再下载 EdgeUpdater 组件（根治 edge.nix 删了又重建的问题）
+  #   只禁浏览器本体更新，不影响 ExtensionSettings force_installed 扩展的商店更新
   system.activationScripts.extraActivation.text = lib.mkAfter ''
-    # Edge 扩展策略（ExtensionSettings force_installed）：声明式覆盖，直接 install 覆盖旧文件
+    # Edge 扩展策略（ExtensionSettings force_installed）+ 更新禁用（UpdateDefault=2）：声明式覆盖，直接 install 覆盖旧文件
     # Managed Preferences 目录须 root:wheel 644（无 MDM 本地策略文件，Edge 启动时读取）
     install -d -m 755 /Library/Managed\ Preferences
     install -m 644 ${plistFile} /Library/Managed\ Preferences/com.microsoft.Edge.plist

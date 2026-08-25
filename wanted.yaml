@@ -221,7 +221,7 @@ macos:
       edge_extension_backups:     # 扩展数据备份（Local Extension Settings/<id> → ~/.secrets/edge-ext/<id>.tar.age，age 加密；本地目录缺失且有备份时激活自动恢复；需退出 Edge 后部署）
         - bhghoamapcdpbohphigoooaddinpkbai   # 身份验证器（TOTP 密钥）
         - hihblcmlaaademjlakdpicchbjnnnkbo    # SwitchyOmega V3（代理配置）
-      edge_updater: 禁用拆卸      # Edge 自动更新服务（→ home/fan/_darwin_/gui/apps/edge.nix）：bootout + 杀 updater 进程 + 删 plist + launchctl disable 持久标记（Edge 重建 plist 也无法复活）+ 删 EdgeUpdater 组件目录（无条件删除，Edge 运行中也拆；Edge 重新下载组件时下次部署再删）
+      edge_updater: 禁用拆卸      # Edge 自动更新服务（三层：① 策略 UpdateDefault=2 禁用更新 → hosts/_darwin_/base/edge-policy.nix（Edge 主程序不再拉起 updater，根治）；② 系统级 LaunchDaemon 清理 → hosts/_darwin_/base/edge-updater.nix（bootout system domain + launchctl disable 持久标记 + 删 /Library/LaunchDaemons/com.microsoft.EdgeUpdater.*.plist）；③ 用户级 → home/fan/_darwin_/gui/apps/edge.nix（bootout + 杀 updater 进程 + 删 plist + launchctl disable 持久标记 + 删 EdgeUpdater 组件目录））
       rustdesk_server:           # RustDesk 客户端默认配置（mini-m4 实机导出，所有 Mac 生效；注入在系统层 root 激活 hosts/_darwin_/base/rustdesk.nix，无 sudo 桥接）
         rendezvous: 120.55.164.147:21116   # 网络：ID 服务器（hbbs）
         key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 网络：加密公钥
@@ -297,6 +297,7 @@ macos:
     apps:                        # 本机 GUI 应用（追加到共享清单，dock 固定应用需要）
       - wechat
       - qq
+      - microsoft-remote-desktop # Windows App（微软远程桌面）
     dock.persistent_apps:        # Dock 固定应用（mkForce 覆盖共享层 quartz.dock.nix；mini-m4 仍用共享层清单 Apps.app+iTerm+Edge）
       - iterm2
       - wechat

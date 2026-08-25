@@ -7,5 +7,6 @@
   homebrew.casks = lib.mkAfter [
     { name = "wechat"; }                  # 微信（dock 固定应用需要）
     { name = "qq"; }                      # QQ 聊天（dock 固定应用需要）
+    { name = "microsoft-remote-desktop"; } # Windows App（微软远程桌面）
   ];
 }
