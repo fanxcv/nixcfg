@@ -41,7 +41,7 @@ let
     EOF
     systemctl daemon-reload
     systemctl enable --now tailscale-forward.service
-    if iptables-nft -t nat -L POSTROUTING -n | grep -q "tailscale0"; then
+    if iptables-nft-save -t nat 2>/dev/null | grep -q "tailscale0"; then
       echo "MASQUERADE 规则已生效（tailscale-forward.service）"
     else
       echo "警告: MASQUERADE 规则未生效" >&2
