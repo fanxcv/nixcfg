@@ -43,6 +43,12 @@ pkgs.runCommand "pve-sysfiles" { } ''
   GRUB_CMDLINE_LINUX=""
   EOF
 
+  # sysctl（99-pve.conf：IP 转发——PVE 9 不再自带该文件，升级后转发默认关，tailscale 网关/VM NAT 需开）
+  cat > $out/99-pve.conf <<EOF
+  net.ipv4.ip_forward=1
+  net.ipv6.conf.all.forwarding=1
+  EOF
+
   # modprobe（公共：所有机器统一 nixcfg-public.conf；机器专属：同名覆盖原文件）
   mkdir -p $out/modprobe
   cat > $out/modprobe/nixcfg-public.conf <<'EOF'

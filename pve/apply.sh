@@ -54,6 +54,15 @@ echo "==> [4/7] DNS（/etc/resolv.conf 直写；PVE 9 无 systemd-resolved）"
 cp -a /etc/resolv.conf "$BACKUP/" 2>/dev/null || true
 install -m 0644 resolv.conf /etc/resolv.conf
 
+# sysctl：99-pve.conf（IP 转发——PVE 9 不再自带，升级后转发默认关；tailscale 网关/VM NAT 需开）
+install -m 0644 99-pve.conf /etc/sysctl.d/99-pve.conf
+sysctl --system >/dev/null 2>&1 || sysctl -p /etc/sysctl.d/99-pve.conf
+if [ "$(sysctl -n net.ipv4.ip_forward)" = "1" ]; then
+  echo "IP 转发已开启（net.ipv4.ip_forward=1）"
+else
+  echo "警告: IP 转发未生效（net.ipv4.ip_forward=$(sysctl -n net.ipv4.ip_forward)）" >&2
+fi
+
 echo "==> [5/7] 去订阅 nag + apt update + 安装 pve-assist"
 # 去订阅 nag：patch proxmoxlib.js（社区通用法：订阅条件短路为 false）
 # 带 marker 幂等；PVE 升级覆盖文件后 marker 消失，下次部署重打；未命中即失败暴露
