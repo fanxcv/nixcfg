@@ -430,6 +430,7 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     modprobe: nix 管           # kvm ignore_msrs + i915/声卡黑名单 + unsafe interrupts（→ pve/mi/default.nix modprobeHost，同名覆盖；公共 nvidiafb 在 pve/default.nix）
     fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
     tailscale: nix 管          # nix 包（HM profile）+ state 加密入 secrets/tailscale-mi-state.age（→ pve/mi/default.nix tailscaleState；恢复同 IP 10.1.0.25）
+    lucky: podman quadlet     # 端口转发面板（3388/3390-3393 RDP 等）：quadlet 容器 + 配置 age 归档 secrets/lucky-data.age（web 面板改规则后重新导出）（→ pve/mi/default.nix luckyData + deploy.nix luckyPush/luckyApply）
     deploy: nix run .#mi      # 同 ds2 管线（→ pve/deploy.nix，host=mi）
   fan:                         # PVE 9.2 宿主机（10.2.241.88；原 8.4.1 大版本升级至 9.2.11；LXC 111 HC-Prod-2 + 112 hermes 生产）
     platform: pve-9.2          # 升级路径：8.4.1 → 8.4.21 → trixie dist-upgrade → 9.2.11（备份 111/112 到 nas 后执行）
