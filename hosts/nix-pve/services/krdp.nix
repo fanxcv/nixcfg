@@ -1,7 +1,8 @@
 # KDE Plasma RDP 远程桌面（krdp）：Windows 远程桌面（mstsc）直连 nix-pve
 # 机制：kdePackages.krdp 提供 krdpserver，镜像当前登录的 Plasma 会话（Wayland 原生，非独立登录会话）
-# 使用：系统设置 → 远程桌面 → RDP → 开启「远程桌面」+ 设置用户名/密码（首连需在桌面现场点一次 portal 授权确认框）
-# 连接：Windows mstsc 填 nix-pve 地址:3389（或 KCM 里改的端口），凭据即 KCM 里设的用户名/密码
+# 服务持久化在 home 层（home/fan/nix-pve/krdp.nix）：systemd user unit 自启 + 证书自动生成 + portal 预授权；
+# 本文件只负责：包安装 + 防火墙放行
+# 连接：Windows mstsc 填 nix-pve:3389（LAN 10.2.241.39 / tailnet 10.1.0.21），凭据见 home 层模块
 { pkgs, lib, ... }:
 {
   environment.systemPackages = [
