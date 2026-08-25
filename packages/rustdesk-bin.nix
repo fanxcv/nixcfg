@@ -74,8 +74,10 @@ stdenv.mkDerivation {
     cp ${fhs}/bin/rustdesk-bin $out/bin/rustdesk
     cp -r ${raw}/share/icons/* $out/share/icons/
     cp ${raw}/share/applications/*.desktop $out/share/applications/
+    # 空 desktop（官方 deb 的 rustdesk-link 占位）删掉；Exec 改指 FHS wrapper 绝对路径
+    find $out/share/applications -size 0 -delete
     substituteInPlace $out/share/applications/*.desktop \
-      --replace-fail "/usr/bin/rustdesk" "$out/bin/rustdesk"
+      --replace "Exec=rustdesk" "Exec=$out/bin/rustdesk"
     runHook postInstall
   '';
 
