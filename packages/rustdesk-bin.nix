@@ -9,8 +9,10 @@
 #   现方案：deb 原样解包（原始 RUNPATH=$ORIGIN/lib 自足）+ buildFHS 环境提供系统库，
 #   ELF 零改动。已验证：virtio-gl VM（renderD128）+ Wayland 会话正常启动。
 { lib, stdenv, fetchurl, xz, buildFHSEnv
-, gtk3, glib, libxcb, xorg, libxkbcommon, wayland, dbus
-, gst_all_1, pam, pulseaudio, libva, zlib, fontconfig, libepoxy
+, gtk3, glib, pango, cairo, gdk-pixbuf, atk, harfbuzz, freetype, fontconfig, expat
+, libpng, libjpeg, libtiff
+, libxcb, xorg, libxkbcommon, wayland, dbus
+, gst_all_1, pam, pulseaudio, libva, zlib, libepoxy
 , alsa-lib, systemdLibs, curl, xdotool, libnsl
 }:
 let
@@ -46,18 +48,23 @@ let
     '';
   };
 
-  # FHS 环境：NixOS 无 /usr/lib，提供系统库 + raw 的 deb 解释器（/lib64/ld-linux-x86-64.so.2）
+  # FHS 环境：只提供 deb 解释器（/lib64/ld-linux-x86-64.so.2，来自 glibc）；
+  # 系统库全走外层 wrapper 的 LD_LIBRARY_PATH（bwrap 挂载 /nix/store，store 库直接解析）
   fhs = buildFHSEnv {
     name = "rustdesk-bin";
     runScript = "rustdesk";
-    targetPkgs = pkgs: [
-      raw
-      gtk3 glib libxcb xorg.libX11 xorg.libXfixes xorg.libXtst libxkbcommon wayland
-      dbus gst_all_1.gstreamer gst_all_1.gst-plugins-base pam pulseaudio libva zlib
-      fontconfig libepoxy alsa-lib systemdLibs curl xdotool libnsl
-      stdenv.cc.cc.lib # libstdc++/libgcc_s（Flutter/rust 二进制必需）
-    ];
+    targetPkgs = pkgs: [ raw pkgs.glibc ];
   };
+
+  # GTK3 运行时全链（raw 的 NEEDED + dlopen 传递闭包：gtk3→pango/cairo/gdk-pixbuf/atk/harfbuzz/freetype）
+  libPaths = lib.makeLibraryPath [
+    gtk3 glib pango cairo gdk-pixbuf atk harfbuzz freetype fontconfig expat
+    libpng libjpeg libtiff libxcb xorg.libX11 xorg.libXfixes xorg.libXtst
+    xorg.libXcursor xorg.libXi xorg.libXrandr libxkbcommon wayland
+    dbus gst_all_1.gstreamer gst_all_1.gst-plugins-base pam pulseaudio libva zlib
+    libepoxy alsa-lib systemdLibs curl xdotool libnsl
+    stdenv.cc.cc.lib # libstdc++/libgcc_s（Flutter/rust 二进制必需）
+  ];
 in
 stdenv.mkDerivation {
   pname = "rustdesk-bin";
@@ -71,7 +78,12 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out/bin $out/share/applications $out/share/icons
-    cp ${fhs}/bin/rustdesk-bin $out/bin/rustdesk
+    cat > $out/bin/rustdesk <<EOF
+    #!${stdenv.shell}
+    export LD_LIBRARY_PATH="${libPaths}:\$LD_LIBRARY_PATH"
+    exec ${fhs}/bin/rustdesk-bin "\$@"
+    EOF
+    chmod +x $out/bin/rustdesk
     cp -r ${raw}/share/icons/* $out/share/icons/
     cp ${raw}/share/applications/*.desktop $out/share/applications/
     # 空 desktop（官方 deb 的 rustdesk-link 占位）删掉；Exec 改指 FHS wrapper 绝对路径
