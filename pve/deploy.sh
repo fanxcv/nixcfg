@@ -52,6 +52,11 @@ if [ ! -f /root/.ssh/id_ed25519 ]; then
 fi
 grep -qF "$(cat /root/.ssh/id_ed25519.pub)" /root/.ssh/authorized_keys 2>/dev/null || cat /root/.ssh/id_ed25519.pub >> /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys
+# 本机 ssh 免 hostkey 确认（自部署模式首次连 127.0.0.1 会 Host key verification failed）
+if ! grep -q "StrictHostKeyChecking accept-new" /root/.ssh/config 2>/dev/null; then
+  printf 'Host 127.0.0.1 localhost\n  StrictHostKeyChecking accept-new\n' >> /root/.ssh/config
+  chmod 600 /root/.ssh/config
+fi
 BOOTSTRAP
 
 echo "==> [2/4] git 凭据 + 拉取仓库 → /root/nixcfg（git clone/pull）"
