@@ -37,7 +37,7 @@
             [ -n "$1" ] || return 0
             grep -qF "$1" "$pve_keys" 2>/dev/null || { echo "$1" >> "$pve_keys"; echo "PVE: 公钥已并入集群信任（$(echo "$1" | cut -c1-40)…）"; }
           }
-          ${pkgs.curl}/bin/curl -sfL "${tools.githubUrl "https://github.com/fanxcv.keys"}" 2>/dev/null | while read -r line; do add_key "$line"; done
+          ${pkgs.curl}/bin/curl -sfL --max-time 15 "${tools.githubUrl "https://github.com/fanxcv.keys"}" 2>/dev/null | while read -r line; do add_key "$line"; done
           add_key "$(cat ${toString ../../secrets/hosts/mini-m4/ssh_id_rsa.pub} 2>/dev/null)"
           add_key "$(cat ${toString ../../secrets/hosts/mba-m5/ssh_id_rsa.pub} 2>/dev/null)"
           add_key "$(cat ${toString ../../secrets/hosts/mbp-m1/ssh_id_rsa.pub} 2>/dev/null)"
@@ -45,7 +45,7 @@
         else
           keys_tmp="$HOME/.ssh/authorized_keys.tmp"
           : > "$keys_tmp"
-          if ${pkgs.curl}/bin/curl -sfL "${tools.githubUrl "https://github.com/fanxcv.keys"}" -o "$keys_tmp" \
+          if ${pkgs.curl}/bin/curl -sfL --max-time 15 "${tools.githubUrl "https://github.com/fanxcv.keys"}" -o "$keys_tmp" \
             && [ -s "$keys_tmp" ]; then
             # 追加 mac 身份公钥（各台自己的 id_rsa：mini-m4 / mba-m5 / mbp-m1，即原 mac-pub.pub；
             # github 集合可能不含最新 key，防激活覆盖锁死）
