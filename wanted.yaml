@@ -384,7 +384,7 @@ pve:
     fuse: nix 包（fuse3）  # fusermount3 用户态工具（→ home/fan/_pve_/；内核模块由 PVE 内核自带）
     pve_assist: true        # 去订阅 nag 自动 repair（→ pve/apply.sh）
     ohmyzsh: true           # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/<机>/）
-    deploy: nix run .#<机>  # bootstrap nix → 推凭据 + clone → 远程构建 HM + 系统层 apply（→ pve/deploy.nix）
+    deploy: nix run .#<机>  # 部署机只查环境+传文件（凭据/secrets 归档 .age，远端解密）；远程构建 HM + 系统层 apply；传参须与声明 ip 一致（→ pve/deploy.nix）
   machines:
     ds2:                    # PVE 9.2（Debian 13 trixie，→ pve/ds2/ + home/fan/ds2/）
       platform: pve-9.2

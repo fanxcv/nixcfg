@@ -6,12 +6,13 @@ if dpkg -s tailscale >/dev/null 2>&1; then
   apt-get purge -y tailscale >/dev/null
   echo "apt tailscale 已卸载"
 fi
-# 2. state 落位（仅缺失时；deploy.sh 已从 secrets 解密推送 /tmp/tailscale-state）
-if [ ! -f /var/lib/tailscale/tailscaled.state ] && [ -f /tmp/tailscale-state ]; then
+# 2. state 落位（仅缺失时；归档 .age 由 deploy.sh 推送，本机 age 解密——失败即退出暴露）
+if [ ! -f /var/lib/tailscale/tailscaled.state ] && [ -f /tmp/tailscale-state.age ]; then
   mkdir -p /var/lib/tailscale
+  /root/.nix-profile/bin/age -d -i /root/.secrets/age-keys.txt /tmp/tailscale-state.age > /tmp/tailscale-state
   install -m 0600 -o root -g root /tmp/tailscale-state /var/lib/tailscale/tailscaled.state
-  rm -f /tmp/tailscale-state
-  echo "tailscale state 已从 secrets 归档落位"
+  rm -f /tmp/tailscale-state.age /tmp/tailscale-state
+  echo "tailscale state 已从 secrets 归档落位（本机解密）"
 fi
 # 3. systemd unit（nix 版 tailscaled，默认 state 路径 /var/lib/tailscale/tailscaled.state）
 cat > /etc/systemd/system/tailscaled.service <<'UNIT'

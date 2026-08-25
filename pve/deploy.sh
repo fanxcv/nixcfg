@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# PVE 部署编排（flake packages.<host>：nix run .#<host> [ip]）
-# 流程：bootstrap nix → 推 git 凭据 + clone/pull 仓库 → 远程构建 HM + activate → 推送系统配置 → 远程 apply
-# 前置：ssh root@<host> 可达（密钥或密码）；mac 侧 ~/.secrets/age-keys.txt 存在（HM secrets 解密必需）
-# 占位符 @FILES@ / @APPLY@ 由 pve/deploy.nix 构建时替换
+# PVE 部署编排（flake packages.<host>：nix run .#<host>）
+# 流程：bootstrap nix → 推 git 凭据 + secrets 归档 → clone/pull 仓库 → 远程构建 HM + activate → 推送系统配置 → 远程 apply
+# 部署机职责边界：只做「环境检查（ssh 探测 + 首次装 nix）+ 上传文件（凭据 / secrets 归档 / 渲染配置）」，
+# 其余全部在 PVE 侧执行：仓库同步、HM 构建/激活、系统层 apply（含 secrets 解密）
+# 地址守卫：目标地址唯一事实来源 = pve/<host>/default.nix 声明的 ip；传参仅允许与声明一致（防错配部署）
+# 前置：ssh root@<ip> 可达（密钥或密码）；mac 侧 ~/.secrets/age-keys.txt 存在（HM secrets 解密必需）
+# 占位符 @FILES@ / @APPLY@ / @HOST@ / @HOST_IP@ 由 pve/deploy.nix 构建时替换
 set -euo pipefail
 # --self：服务器本地自部署模式（跳过 mac 依赖段：凭据/私钥推送；git 用 /root/nixcfg 持久 clone）
 SELF=0
@@ -11,7 +14,12 @@ if [ "${1:-}" = "--self" ]; then
   HOST="127.0.0.1"
   shift
 else
-  HOST="${1:-@HOST@}"
+  HOST="${1:-@HOST_IP@}"
+  # 守卫：传入地址必须与 nix 声明一致（自部署模式 127.0.0.1 已在上方短路）
+  if [ "$HOST" != "@HOST_IP@" ]; then
+    echo "错误: 传入地址 $HOST 与 @HOST@ 声明地址 @HOST_IP@ 不符；目标由 nix 声明决定，无需传参（nix run .#@HOST@）" >&2
+    exit 1
+  fi
 fi
 FILES="@FILES@"
 APPLY="@APPLY@"

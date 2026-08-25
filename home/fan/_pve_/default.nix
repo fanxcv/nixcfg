@@ -13,7 +13,7 @@
 {
   imports = [ ../_linux_ ] ++ tools.scan ./.;
 
-  # age：自部署模式（--self）本地解密 ts-state/lucky 归档必需（secrets 推送原在 mac 侧解密）
+  # age：ts-state/lucky 归档在 PVE 侧解密（/root/.nix-profile/bin/age，secrets 归档 .age 原文件推送）
   # fuse3：fusermount3 用户态工具（原 apt 装，nix 化；内核模块 /dev/fuse 由 PVE 内核自带）
   home.packages = [ pkgs.age pkgs.fuse3 ];
 
