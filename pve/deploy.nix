@@ -9,7 +9,7 @@ let
   # fan 专属：tailscale state 从 secrets 解密推送（其他机器 tsState 为空 → 两段均为空）
   tsState = if cfg ? tailscaleState then toString cfg.tailscaleState else "";
   tsPush = if tsState != "" then ''
-    echo "==> [4.5/5] 推送 tailscale state（fan 专属：secrets 解密 → scp）"
+    echo "==> [3.5/4] 推送 tailscale state（fan 专属：secrets 解密 → scp）"
     if [ -f "${tsState}" ]; then
       age -d -i "$HOME/.secrets/age-keys.txt" "${tsState}" > /tmp/ts-state
       scp -q /tmp/ts-state root@$HOST:/tmp/tailscale-state
@@ -22,7 +22,7 @@ let
   tsApply = if tsState != "" then builtins.readFile ./tailscale-apply.sh else "";
   # lucky 容器（podman quadlet + age 归档；仅 mi）：mac 侧解密 → scp 推送
   luckyPush = if cfg ? luckyData then ''
-    echo "==> [4.6/5] 推送 lucky 配置归档（age 解密 → scp）"
+    echo "==> [3.6/4] 推送 lucky 配置归档（age 解密 → scp）"
     if [ -f "${cfg.luckyData}" ]; then
       age -d -i "$HOME/.secrets/age-keys.txt" "${cfg.luckyData}" > /tmp/lucky-data.tar.gz
       scp -q /tmp/lucky-data.tar.gz root@$HOST:/tmp/lucky-data.tar.gz
@@ -107,6 +107,6 @@ let
     (builtins.readFile ./apply.sh));
 in
 pkgs.writeShellScriptBin "${host}-deploy" (builtins.replaceStrings
-  [ "@FILES@" "@APPLY@" "@HOST@" "@TS_PUSH@" "@LUCKY_PUSH@" ]
-  [ "${cfg.files}" "${applySh}" host tsPush luckyPush ]
+  [ "@FILES@" "@APPLY@" "@HOST@" "@TS_PUSH@" "@LUCKY_PUSH@" "@SELF_DEPLOY@" ]
+  [ "${cfg.files}" "${applySh}" host tsPush luckyPush (builtins.readFile ./self-deploy.sh) ]
   (builtins.readFile ./deploy.sh))
