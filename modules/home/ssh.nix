@@ -37,7 +37,7 @@
             [ -n "$1" ] || return 0
             grep -qF "$1" "$pve_keys" 2>/dev/null || { echo "$1" >> "$pve_keys"; echo "PVE: 公钥已并入集群信任（$(echo "$1" | cut -c1-40)…）"; }
           }
-          ${pkgs.curl}/bin/curl -sfL --max-time 15 "${tools.githubUrl "https://github.com/fanxcv.keys"}" 2>/dev/null | while read -r line; do add_key "$line"; done
+          ${pkgs.curl}/bin/curl -sfL --max-time 15 "${tools.githubUrl "https://github.com/fanxcv.keys"}" 2>/dev/null | while read -r line; do add_key "$line"; done || true  # || true：pipefail 下 curl 超时/网络不通不中断 activate（公钥拉取失败容忍）
           add_key "$(cat ${toString ../../secrets/hosts/mini-m4/ssh_id_rsa.pub} 2>/dev/null)"
           add_key "$(cat ${toString ../../secrets/hosts/mba-m5/ssh_id_rsa.pub} 2>/dev/null)"
           add_key "$(cat ${toString ../../secrets/hosts/mbp-m1/ssh_id_rsa.pub} 2>/dev/null)"
