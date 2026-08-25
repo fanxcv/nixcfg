@@ -19,12 +19,23 @@ let
   };
   # podman nix 化：quadlet 依赖 systemd system-generator（apt 包装到 /usr/lib/systemd/），
   # nix 包 podman 自带 generator → 链接到系统目录（幂等；luckyApply 的 daemon-reload 即生效）
+  # 跨平台坑：deploy.nix 在 mac 构建，${pkgs.podman} 展开为 darwin store 路径，目标机（linux）不存在——
+  # 改 wrapper 从 /root/.nix-profile 解析实际 generator（HM 装的 podman，跨机路径一致）
   miExtra = ''
     echo "==> [6.6/7] podman system-generator 链接（nix 包 podman 的 quadlet 支持）"
     mkdir -p /usr/lib/systemd/system-generators
-    ln -sf ${pkgs.podman}/lib/systemd/system-generators/podman-system-generator /usr/lib/systemd/system-generators/podman-system-generator
+    cat > /usr/lib/systemd/system-generators/podman-system-generator <<'WRAPPER'
+    #!/bin/sh
+    GEN=$(readlink -f /root/.nix-profile/lib/systemd/system-generators/podman-system-generator 2>/dev/null)
+    if [ -n "$GEN" ] && [ -x "$GEN" ]; then
+      exec "$GEN" "$@"
+    fi
+    echo "podman-system-generator: 未找到 nix podman generator（/root/.nix-profile）" >&2
+    exit 1
+    WRAPPER
+    chmod +x /usr/lib/systemd/system-generators/podman-system-generator
     systemctl daemon-reload
-    echo "podman quadlet generator 已链接（${pkgs.podman.name}）"
+    echo "podman quadlet generator 已链接（wrapper → nix profile）"
   '';
 in
 {
