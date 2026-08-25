@@ -70,7 +70,7 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out/bin $out/share/applications $out/share/icons
-    cp ${fhs}/bin/rustdesk $out/bin/rustdesk
+    cp ${fhs}/bin/rustdesk-bin $out/bin/rustdesk
     cp -r ${raw}/share/icons/* $out/share/icons/
     cp ${raw}/share/applications/*.desktop $out/share/applications/
     substituteInPlace $out/share/applications/*.desktop \
