@@ -7,10 +7,13 @@
 # 注意：KCM（系统设置→远程桌面）未开，避免与 plasma-krdp_server.service 抢 3389
 { pkgs, lib, config, ... }:
 {
+  # home-manager 的 systemd.user.services 用 Unit/Service/Install 三段式（camelCase 键）
   systemd.user.services.krdp = {
-    description = "KDE RDP server (krdpserver, 声明式)";
-    wantedBy = [ "default.target" ];
-    serviceConfig = {
+    Unit = {
+      Description = "KDE RDP server (krdpserver, 声明式)";
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
       Type = "simple";
       Restart = "on-failure";
       RestartSec = 5;
@@ -26,6 +29,9 @@
           --certificate-key %h/.local/share/krdpserver/krdp.key \
           -u fan -p QAZxsw2341
       '';
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
     };
   };
 
