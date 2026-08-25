@@ -57,6 +57,8 @@ scp "$HOME/.secrets/age-keys.txt" root@$HOST:/root/.secrets/age-keys.txt
 
 @TS_PUSH@
 
+@LUCKY_PUSH@
+
 echo "==> [4/5] 远程构建 HM activation + activate（ohmyzsh / zsh / 工具）"
 ssh root@$HOST 'bash -s' <<'HM'
 set -euo pipefail

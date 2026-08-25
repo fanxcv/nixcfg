@@ -20,6 +20,53 @@ let
     fi
   '' else "";
   tsApply = if tsState != "" then builtins.readFile ./tailscale-apply.sh else "";
+  # lucky 容器（podman quadlet + age 归档；仅 mi）：mac 侧解密 → scp 推送
+  luckyPush = if cfg ? luckyData then ''
+    echo "==> [4.6/5] 推送 lucky 配置归档（age 解密 → scp）"
+    if [ -f "${cfg.luckyData}" ]; then
+      age -d -i "$HOME/.secrets/age-keys.txt" "${cfg.luckyData}" > /tmp/lucky-data.tar.gz
+      scp -q /tmp/lucky-data.tar.gz root@$HOST:/tmp/lucky-data.tar.gz
+      rm -f /tmp/lucky-data.tar.gz
+      echo "lucky 配置已推送"
+    else
+      echo "警告: lucky 归档文件缺失（${cfg.luckyData}）" >&2
+    fi
+  '' else "";
+  # apply 段：解压配置 + quadlet 容器声明 + 迁移（旧手动容器删除，数据在挂载卷无损）
+  luckyApply = if cfg ? luckyData then ''
+    echo "==> [6.7/7] lucky 容器（Podman Quadlet：nix 宣言 + age 配置）"
+    mkdir -p /opt/lucky
+    tar xzf /tmp/lucky-data.tar.gz -C /opt/lucky
+    rm -f /tmp/lucky-data.tar.gz
+    mkdir -p /etc/containers/systemd
+    cat > /etc/containers/systemd/lucky.container <<'EOF'
+    [Unit]
+    Description=Lucky port forward proxy (nix 管理)
+    After=network-online.target
+    Wants=network-online.target
+
+    [Container]
+    Image=docker.1ms.run/gdy666/lucky:2.17.6
+    Network=host
+    Volume=/opt/lucky/data:/goodluck
+
+    [Service]
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+    systemctl daemon-reload
+    # 迁移：旧手动容器删除（数据在 /opt/lucky/data 挂载，无损）；quadlet 接管（重启后自动恢复）
+    podman rm -f lucky 2>/dev/null || true
+    systemctl enable --now podman-lucky.service || systemctl restart podman-lucky.service
+    sleep 3
+    if ss -tlnp | grep -qE ":338[0-9]|:339[0-9]"; then
+      echo "lucky 已启动，转发端口监听正常"
+    else
+      echo "警告: lucky 端口未监听（检查 podman-lucky.service）" >&2
+    fi
+  '' else "";
   # tailscale 转发规则（仅 fan/mi 网关机）：写 rules + systemd unit（幂等：先删后插，重启自动恢复）
   tsFwd = if (cfg ? tailscaleForward && cfg.tailscaleForward) then ''
     echo "==> [6.6/7] tailscale 转发规则（nix 管理：MASQUERADE + FORWARD ACCEPT）"
@@ -48,11 +95,11 @@ let
     fi
   '' else "";
   applySh = pkgs.writeShellScript "${host}-apply" (builtins.replaceStrings
-    [ "@PVE_ASSIST_BASE@" "@TAILSCALE@" "@HP_EXTRA@" "@TS_FWD@" ]
-    [ cfg.pveAssistBase tsApply (if cfg ? hpExtra then cfg.hpExtra else "") tsFwd ]
+    [ "@PVE_ASSIST_BASE@" "@TAILSCALE@" "@HP_EXTRA@" "@TS_FWD@" "@LUCKY_APPLY@" ]
+    [ cfg.pveAssistBase tsApply (if cfg ? hpExtra then cfg.hpExtra else "") tsFwd luckyApply ]
     (builtins.readFile ./apply.sh));
 in
 pkgs.writeShellScriptBin "${host}-deploy" (builtins.replaceStrings
-  [ "@FILES@" "@APPLY@" "@HOST@" "@TS_PUSH@" ]
-  [ "${cfg.files}" "${applySh}" host tsPush ]
+  [ "@FILES@" "@APPLY@" "@HOST@" "@TS_PUSH@" "@LUCKY_PUSH@" ]
+  [ "${cfg.files}" "${applySh}" host tsPush luckyPush ]
   (builtins.readFile ./deploy.sh))

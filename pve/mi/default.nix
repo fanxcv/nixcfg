@@ -23,6 +23,7 @@ in
   inherit modprobeHost;
   tailscaleForward = true;    # tailscale 网关转发规则（外部转发经本机访问 10.1.0.0/24）
   tailscaleState = ../../secrets/tailscale-mi-state.age;
+  luckyData = ../../secrets/lucky-data.age;    # lucky 配置归档（podman quadlet + age；web 面板改规则后重新导出）
   files = import ../render.nix {
     inherit pkgs lib;
     dns = common.dns;
