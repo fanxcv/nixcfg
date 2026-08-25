@@ -44,6 +44,14 @@ fi
 if ! grep -q "^sandbox" /etc/nix/nix.conf; then
   echo 'sandbox = relaxed' >> /etc/nix/nix.conf
 fi
+# 自部署模式（--self）走 ssh root@127.0.0.1——本机 root ssh 免密（幂等；authorized_keys 只追加）
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+if [ ! -f /root/.ssh/id_ed25519 ]; then
+  ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519 -q
+fi
+grep -qF "$(cat /root/.ssh/id_ed25519.pub)" /root/.ssh/authorized_keys 2>/dev/null || cat /root/.ssh/id_ed25519.pub >> /root/.ssh/authorized_keys
+chmod 600 /root/.ssh/authorized_keys
 BOOTSTRAP
 
 echo "==> [2/4] git 凭据 + 拉取仓库 → /root/nixcfg（git clone/pull）"
