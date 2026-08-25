@@ -238,6 +238,7 @@
         "fan@ds2" = mkHomeConfig { hostName = "ds2"; system = "x86_64-linux"; platform = "pve"; };
         "fan@desktop" = mkHomeConfig { hostName = "desktop"; system = "x86_64-linux"; platform = "pve"; };
         "fan@fan" = mkHomeConfig { hostName = "fan"; system = "x86_64-linux"; platform = "pve"; };
+        "fan@hp" = mkHomeConfig { hostName = "hp"; system = "x86_64-linux"; platform = "pve"; };
         "fan@mi" = mkHomeConfig { hostName = "mi"; system = "x86_64-linux"; platform = "pve"; };
         "fan@razer" = mkHomeConfig { hostName = "razer"; system = "x86_64-linux"; platform = "pve"; };
       };
@@ -300,6 +301,7 @@
           ds2 = import ./pve/deploy.nix { inherit pkgs lib; host = "ds2"; };
           desktop = import ./pve/deploy.nix { inherit pkgs lib; host = "desktop"; };
           fan = import ./pve/deploy.nix { inherit pkgs lib; host = "fan"; };
+          hp = import ./pve/deploy.nix { inherit pkgs lib; host = "hp"; };
           mi = import ./pve/deploy.nix { inherit pkgs lib; host = "mi"; };
           razer = import ./pve/deploy.nix { inherit pkgs lib; host = "razer"; };
         });

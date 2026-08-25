@@ -409,6 +409,16 @@ pve_hosts:                     # PVE 宿主机（Debian 底，非 NixOS；用户
     modprobe: nix 管           # vfio 8086:3185 + 声卡/i915 黑名单 + microcode + zfs arc（→ pve/desktop/default.nix modprobeHost，同名覆盖）
     fuse: apt 公共             # 所有 PVE 机器统一（→ pve/apply.sh [5/7]）
     deploy: nix run .#desktop  # 同 ds2 管线（→ pve/deploy.nix，host 参数化）
+  hp:                          # PVE 9.0.11 宿主机（10.2.237.149；HP ProBook 450 G10 笔记本，独立节点未入群；接管后升 9.2.11）
+    platform: pve-9.0          # trixie 底（清华源），255 包待升 → 接管后 dist-upgrade 至 9.2.11（同线升级）
+    laptop: true               # 笔记本：盒盖不休眠（logind HandleLidSwitch=ignore drop-in，→ pve/hp/default.nix hpExtra）
+    dns: 公共                  # 10.21.1.1 优先（→ pve/default.nix）
+    mirror: ustc               # apt 换中科大（清华→中科大，→ pve/hp/default.nix）
+    pve_assist: true           # 装 pve-assist（→ pve/apply.sh）
+    ohmyzsh: true              # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/hp/）
+    grub: 公共                 # quiet consoleblank=60 intel_iommu=on iommu=pt（→ pve/hp/default.nix）
+    tailscale: nix 包          # state 全新，需手动 tailscale up 认证（→ home/fan/hp/ + pve/hp/default.nix hpExtra unit）
+    deploy: nix run .#hp       # 同 ds2 管线（→ pve/deploy.nix，host 参数化）
   mi:                          # PVE 9.2 宿主机（10.2.241.92；原节点名 pve，改名 mi；8.4 大版本升级至 9.2；VM 100 LTSC + LXC 104/106/110 生产）
     platform: pve-9.2          # 升级路径：8.4（bookworm）→ trixie dist-upgrade → 9.2（备份 /etc/pve/nodes/pve/ 后执行）
     rename: pve→mi             # pvecm delnode + 改 hostname + pvecm add 重新入群（2026-08 执行，备份 /root/pve-backup-pre-migration.tar.gz）

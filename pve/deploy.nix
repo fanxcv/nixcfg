@@ -21,8 +21,8 @@ let
   '' else "";
   tsApply = if tsState != "" then builtins.readFile ./tailscale-apply.sh else "";
   applySh = pkgs.writeShellScript "${host}-apply" (builtins.replaceStrings
-    [ "@PVE_ASSIST_BASE@" "@TAILSCALE@" ]
-    [ cfg.pveAssistBase tsApply ]
+    [ "@PVE_ASSIST_BASE@" "@TAILSCALE@" "@HP_EXTRA@" ]
+    [ cfg.pveAssistBase tsApply (if cfg ? hpExtra then cfg.hpExtra else "") ]
     (builtins.readFile ./apply.sh));
 in
 pkgs.writeShellScriptBin "${host}-deploy" (builtins.replaceStrings
