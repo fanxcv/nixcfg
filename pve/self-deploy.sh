@@ -17,5 +17,5 @@ git pull --ff-only
 echo "==> 仓库已同步: $(git log --oneline -1)"
 
 HOST="${1:-$(hostname)}"
-export PATH="/usr/local/bin:/nix/var/nix/profiles/default/bin:$PATH"
+export PATH="/usr/local/bin:/nix/var/nix/profiles/default/bin:/root/.nix-profile/bin:$PATH"
 nix run ".#${HOST}" -- --self

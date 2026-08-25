@@ -13,6 +13,9 @@
 {
   imports = [ ../_linux_ ] ++ tools.scan ./.;
 
+  # age：自部署模式（--self）本地解密 ts-state/lucky 归档必需（secrets 推送原在 mac 侧解密）
+  home.packages = [ pkgs.age ];
+
   # standalone 入口（home/fan/default.nix）不参与内嵌模式，这里补 stateVersion
   home.stateVersion = "25.05";
 
