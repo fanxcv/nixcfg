@@ -36,9 +36,10 @@ let
     '';
     installPhase = ''
       runHook preInstall
-      mkdir -p $out/share/rustdesk $out/bin $out/share/icons
+      mkdir -p $out/share/rustdesk $out/bin $out/share/icons $out/share/applications
       cp -r usr/share/rustdesk/* $out/share/rustdesk/
       cp -r usr/share/icons/hicolor $out/share/icons/
+      cp usr/share/applications/*.desktop $out/share/applications/
       # launcher 在 share/rustdesk/ 下，$ORIGIN 定位同目录 lib/（真实文件路径，symlink 不影响）
       ln -s ../share/rustdesk/rustdesk $out/bin/rustdesk
       runHook postInstall
