@@ -59,12 +59,19 @@ let
     systemctl daemon-reload
     # 迁移：旧手动容器删除（数据在 /opt/lucky/data 挂载，无损）；quadlet 接管（重启后自动恢复）
     podman rm -f lucky 2>/dev/null || true
-    systemctl enable --now podman-lucky.service || systemctl restart podman-lucky.service
-    sleep 3
-    if ss -tlnp | grep -qE ":338[0-9]|:339[0-9]"; then
-      echo "lucky 已启动，转发端口监听正常"
+    # quadlet 生成 unit 名：podman 5.x 为 lucky.service，4.x 为 podman-lucky.service——动态检测
+    LUCKY_UNIT=$(systemctl list-unit-files 2>/dev/null | awk '$2 ~ /generated/ && $1 ~ /(podman-)?lucky\.service/ {print $1; exit}')
+    if [ -z "$LUCKY_UNIT" ]; then
+      echo "警告: quadlet 未生成 lucky unit（检查 lucky.container 语法）" >&2
     else
-      echo "警告: lucky 端口未监听（检查 podman-lucky.service）" >&2
+      systemctl enable "$LUCKY_UNIT" 2>/dev/null || true
+      systemctl restart "$LUCKY_UNIT"
+      sleep 3
+      if ss -tlnp | grep -qE ":338[0-9]|:339[0-9]"; then
+        echo "lucky 已启动（$LUCKY_UNIT），转发端口监听正常"
+      else
+        echo "警告: lucky 端口未监听（检查 $LUCKY_UNIT）" >&2
+      fi
     fi
   '' else "";
   # tailscale 转发规则（仅 fan/mi 网关机）：写 rules + systemd unit（幂等：先删后插，重启自动恢复）
