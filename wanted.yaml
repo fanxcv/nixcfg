@@ -386,7 +386,7 @@ nixos:
       - https://docker.1ms.run
       - https://docker.m.daocloud.io
     dns: [119.29.29.29, 223.5.5.5]  # MagicDNS 后端 resolver（headscale 服务端 dns.nameservers 下发，客户端只 accept-dns）
-    tailscale: 安装+服务（hostname=nix-pve，accept-routes，MagicDNS）  # 注册时指定机器名（--hostname 走 extraUpFlags——tailscaled 无此 flag，2026-08 nixpkgs 更新后 daemon 直接拒绝）+ 接受子网路由（useRoutingFeatures=client）+ 接受 headscale DNS（tailscaled 默认，经 systemd-resolved 应用，→ hosts/nix-pve/services/tailscale.nix、networking.nix）
+    tailscale: 安装+服务（headscale 幂等登录，accept-routes，MagicDNS）  # 注册时指定机器名（--hostname 走 login/set 参数——tailscaled 无此 flag，1.98.10 起 daemon 直接拒绝）；登录 oneshot（tailscale-headscale，boot 幂等，authkey 走 agenix secrets/headscale-auth-key.txt.age，对齐 mac 方案）+ 接受子网路由（useRoutingFeatures=client）+ 接受 headscale DNS（tailscaled 默认，经 systemd-resolved 应用，→ hosts/nix-pve/services/tailscale.nix、networking.nix）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）
     ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（本机无 OrbStack，解密后删除 Include ~/.orbstack/ssh/config 行；→ home/fan/nix-pve/ssh-config.nix）
     user_password: agenix        # fan 登录密码 hash（secrets/hosts/nix-pve/fan-password.age，→ hosts/_nixos_/base/password.nix；SSH 走公钥，密码仅 SDDM 图形登录）
