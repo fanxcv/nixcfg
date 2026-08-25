@@ -58,7 +58,7 @@ let
     # 迁移：旧手动容器删除（数据在 /opt/lucky/data 挂载，无损）；quadlet 接管（重启后自动恢复）
     podman rm -f lucky 2>/dev/null || true
     # quadlet 生成 unit 名：podman 5.x 为 lucky.service，4.x 为 podman-lucky.service——动态检测
-    LUCKY_UNIT=$(systemctl list-unit-files 2>/dev/null | awk '$2 ~ /generated/ && $1 ~ /(podman-)?lucky\.service/ {print $1; exit}')
+    LUCKY_UNIT=$(systemctl list-unit-files 2>/dev/null | awk '$2 ~ /generated/ && $1 ~ /(podman-)?lucky\.service/ && !f {print $1; f=1}')
     if [ -z "$LUCKY_UNIT" ]; then
       echo "警告: quadlet 未生成 lucky unit（检查 lucky.container 语法）" >&2
     else
