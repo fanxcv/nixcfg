@@ -40,7 +40,7 @@ substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://mirrors.tu
 experimental-features = nix-command flakes
 NIXCONF
 fi
-# claude-code 等 derivation 带 __noChroot（构建时需网络/特权），relaxed 允许其非沙箱构建
+# 部分 derivation 构建期需网络/特权（__noChroot），relaxed 允许其非沙箱构建
 if ! grep -q "^sandbox" /etc/nix/nix.conf; then
   echo 'sandbox = relaxed' >> /etc/nix/nix.conf
 fi

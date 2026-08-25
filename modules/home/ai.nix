@@ -1,6 +1,6 @@
 # AI 工具二进制模块（从 _common_/ai.nix 迁入，加 softwares.ai.enable 门控）：beads
 # beads（bd）→ Go 单二进制，官方 release 直接分发（fetchurl，不经 npm/编译）
-# 其他 AI 工具各归各文件：claude-code + ccline → claude.nix，codex → codex.nix，pi → pi.nix
+# 其他 AI 工具各归各文件：codex → codex.nix，pi → pi.nix
 # 启用：common 默认 enable=true；某台不装 → 机器层 softwares.ai.enable = lib.mkForce false
 
 { config, lib, pkgs, tools, ... }:   # GitHub 加速前缀/开关从集中配置 tools/config.nix 读（tools.githubUrl）

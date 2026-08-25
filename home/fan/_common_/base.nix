@@ -16,7 +16,6 @@
     fd
     jq
     rtk
-    btop
     # 终端工作流：模糊搜索/智能 cd/环境加载/高亮 cat/现代 ls/yaml 处理
     fzf
     zoxide

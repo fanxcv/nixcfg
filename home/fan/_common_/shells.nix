@@ -35,8 +35,10 @@ in
       export ZSH_DISABLE_COMPFIX="true"
       source "$ZSH/oh-my-zsh.sh"
 
-      # 常用别名
-      alias ll='ls -lah'
+      # 常用别名（cat/ls/ll 用 bat/eza 增强版，见 global.pkgs）
+      alias cat='bat'
+      alias ls='eza --icons --group-directories-first'
+      alias ll='eza -lah --git --group-directories-first --time-style=long-iso'
       alias la='ls -A'
       alias untar='tar -xzf'
 

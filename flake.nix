@@ -34,7 +34,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # --- unstable 通道：需要新版本的包使用（vscode 本体 + 扩展市场、claude-code/codex/pi，→ pkgs.repos.unstable）---
+    # --- unstable 通道：需要新版本的包使用（vscode 本体 + 扩展市场、codex/pi，→ pkgs.repos.unstable）---
     # 锁 rev（flake.lock）+ 周级 nix flake update：unstable 滚动快、二进制保留期短于稳定分支，长时间不更新会掉缓存
     # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix、home/fan/_common_/{claude,codex,pi}.nix）
     unstable = {
@@ -138,22 +138,18 @@
       tools = import ./tools { inherit lib self; };
       # 全局镜像/代理集中配置（tools/config.nix，唯一配置入口）—— useChinaMirror 注入默认值取自这里
       netConfig = tools.config;
-      # claude-code 分发镜像（npm 平台包走 npmmirror），定义见 overlays/claude-code.nix
       # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
       # overlay 无法在 home 模块层注册（pkgs 先于模块构造），只能在此注入
-      claudeOverlay = import ./overlays/claude-code.nix { inherit lib; };
-      # skemate latest.json input（flake=false，锁在 flake.lock，nix flake update 自动跟随）
       skemateOverlay = import ./overlays/skemate.nix { inherit lib; skemateLatest = inputs.skemate-latest; };
       # unstable/vscode 市场 overlay（pkgs.repos.unstable / pkgs.repos.vscode，定义见 overlays/）
-      # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ claude-code/codex/pi（_common_）
-      unstableOverlay = import ./overlays/unstable.nix { inherit inputs claudeOverlay; };
+      # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ codex/pi（_common_）
+      unstableOverlay = import ./overlays/unstable.nix { inherit inputs; };
       vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
       # comin 包共享构建（消除 nixos/mini-m4 两处 buildGoModule 重复，见 overlays/comin.nix）
       cominOverlay = import ./overlays/comin.nix { inherit lib inputs; };
-      # unfree 白名单：claude-code（镜像包）+ vscode 本体/扩展（unstable 通道，见 modules/home/vscode.nix；
+      # unfree 白名单：vscode 本体/扩展（unstable 通道，见 modules/home/vscode.nix；
       # pylance 为微软专有 license，remote-ssh 同理）
       unfreeAllowlist = [
-        "claude-code"
         "vscode"
         "vscode-extension-ms-vscode-remote-remote-ssh"
         "vscode-extension-MS-python-vscode-pylance"
@@ -174,11 +170,10 @@
       mkHomeConfig =
         { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? netConfig.useChinaMirror, isContainer ? false }:
         home-manager.lib.homeManagerConfiguration {
-          # claude-code 在 nixpkgs 标记 unfree，用 predicate 只放行它（import 重新求值带 config 的 pkgs）
           pkgs = import nixpkgs {
             inherit system;
             config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
-            overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
+            overlays = [ skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
           };
           modules = [
             ./home/fan
@@ -200,7 +195,7 @@
         pkgs = import inputs."nixpkgs-darwin" {
           inherit system;
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
-          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
+          overlays = [ skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
         };
         modules = [
           ./hosts/${hostName}
@@ -271,7 +266,7 @@
         pkgs = import nixpkgs {
           system = "x86_64-linux";
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) (unfreeAllowlist ++ [ "microsoft-edge" "libsciter" ]);
-          overlays = [ claudeOverlay skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
+          overlays = [ skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
         };
         modules = [ ./hosts/nix-pve ];
         specialArgs = {

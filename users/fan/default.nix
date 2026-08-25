@@ -54,7 +54,7 @@ in
 
   # Home Manager 内嵌：darwin 挂 nix-darwin 的 home-manager 模块，NixOS 挂 home-manager.nixosModules
   # 用户配置 = home/fan/<hostName>/（组装清单见该目录）
-  # 复用系统 pkgs（claudeOverlay + allowUnfreePredicate 一并生效，见 flake.nix）
+  # 复用系统 pkgs（allowUnfreePredicate 一并生效，见 flake.nix）
   home-manager.useGlobalPkgs = true;
   # home-manager 的 user submodule 不继承系统层 specialArgs，
   # 必须注入顶层 extraSpecialArgs（tools.scan / ${self} 主题路径 / inputs 都要用）
