@@ -146,12 +146,13 @@ macos:
       menubar.hour24: true        # 24 小时制
       menubar.show_weekday: true  # 显示星期
       menubar.battery_percent: true  # 电池百分比
+      menubar.auto_hide_fullscreen: false  # 全屏时自动隐藏菜单栏（悬停显示）
       # --- 输入/触控板 ---
       input.fn_keys: true         # 按 fn 显示 F 键
       input.trackpad_force_click: true    # 用力点按
       input.trackpad_tap_click: true      # 轻点点击
       # --- 窗口管理 ---
-      windowmanager.stage_manager: true  # 台前调度
+      windowmanager.stage_manager: true  # 台前调度（含屏幕边缘应用条预览；依赖 spaces.span_displays=false，Apple 硬性要求）
       windowmanager.auto_hide: true      # 侧栏自动隐藏
       windowmanager.tiled_margins: false  # 分屏间距
       # --- 外观 ---
@@ -162,7 +163,7 @@ macos:
       # --- 屏保 ---
       screensaver.idle_seconds: 600   # 10 分钟启动屏保
       # --- 空间 ---
-      spaces.span_displays: true  # 跨屏显示空间
+      spaces.span_displays: false  # 每屏独立空间（关：全屏仅当前屏）
       # --- 系统应用 ---
       activitymonitor.show_category: 100    # 活动监视器显示全部进程（→ quartz.applications.nix）
       activitymonitor.open_main_window: false  # 启动不自动打开主窗口

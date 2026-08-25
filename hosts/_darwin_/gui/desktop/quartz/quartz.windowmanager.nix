@@ -17,7 +17,7 @@
       EnableTiledWindowMargins = false;
       # 拖到菜单栏填满屏幕
       EnableTopTilingByEdgeDrag = true;
-      # 不启用台前调度
+      # 台前调度开启（屏幕边缘应用条预览；依赖 spans-displays=false——Apple 硬性要求，见 quartz.spaces.nix）
       GloballyEnabled = true;
       # 台前调度时隐藏桌面项目（不生效时无影响）
       HideDesktop = true;
