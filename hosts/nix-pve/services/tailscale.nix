@@ -9,7 +9,7 @@
 #   后端 nameserver（119.29.29.29/223.5.5.5）由 headscale 服务端 dns.nameservers 下发
 # authkey 轮换：headscale 上 headscale preauthkeys create -r -e 0 生成 → 写入
 #   secrets/source/headscale-auth-key.txt → ./secrets/encrypt.sh --force 重加密 → 重部署
-{ tools, lib, ... }:
+{ tools, lib, pkgs, ... }:
 {
   services.tailscale.enable = true;
   services.tailscale.openFirewall = true;
@@ -43,5 +43,23 @@
     device = "/persist/var/lib/tailscale";
     fsType = "none";
     options = [ "bind" ];
+  };
+
+  # state 灾备（对齐 fan/mi 的 pve 管线语义）：age 加密入库（secrets/hosts/nix-pve/），
+  # 仅当 state 缺失时解密落位——平时 bind 持久化已够；此机制用于 /persist 损坏/重建后恢复登录态
+  system.activationScripts.tailscaleState = {
+    deps = [ "users" ];
+    text = ''
+      if [ ! -f /var/lib/tailscale/tailscaled.state ]; then
+        if ${pkgs.age}/bin/age -d -i /home/fan/.secrets/age-keys.txt \
+          -o /tmp/ts-state.tmp ${tools.relative "secrets/hosts/nix-pve/tailscale-nix-pve-state.age"} 2>/tmp/ts-state.err; then
+          install -m 0600 -o root -g root /tmp/ts-state.tmp /var/lib/tailscale/tailscaled.state
+          echo "tailscale: state 已从仓库种子恢复"
+        else
+          echo "警告: tailscale state 种子解密失败（autoconnect 将用 authkey 重新注册）：$(cat /tmp/ts-state.err)"
+        fi
+        rm -f /tmp/ts-state.tmp /tmp/ts-state.err
+      fi
+    '';
   };
 }

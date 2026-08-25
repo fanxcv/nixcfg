@@ -386,7 +386,7 @@ nixos:
       - https://docker.1ms.run
       - https://docker.m.daocloud.io
     dns: [119.29.29.29, 223.5.5.5]  # MagicDNS 后端 resolver（headscale 服务端 dns.nameservers 下发，客户端只 accept-dns）
-    tailscale: 安装+服务（headscale 原生 authKeyFile 登录，state 落盘持久化）  # 登录走模块原生 tailscaled-autoconnect（authkey 经 agenix secrets/headscale-auth-key.txt.age）；--hostname 属 up/set 参数（tailscaled 无此 flag，1.98.10 起 daemon 直接拒绝）；**state 持久化**：--state 直写 /persist/var/lib/tailscale（impermanence 不回拷，tmpfs 登录态重启即丢→重新注册→headscale 重名随机后缀→IP 漂移；落 /persist 后节点名/IP 固定）+ 接受子网路由（useRoutingFeatures=client）+ 接受 headscale DNS（→ hosts/nix-pve/services/tailscale.nix、networking.nix）
+    tailscale: 安装+服务（headscale 原生 authKeyFile 登录，state 双保险）  # 登录走模块原生 tailscaled-autoconnect（authkey 经 agenix secrets/headscale-auth-key.txt.age；--login-server 必须显式，否则默认连官方 tailscale.com 必拒 headscale key）；--hostname 属 up/set 参数（tailscaled 无此 flag，1.98.10 起 daemon 直接拒绝）；**state 双保险**：① bind mount /var/lib/tailscale → /persist（运行态写即落盘）；② age 加密入库 secrets/hosts/nix-pve/tailscale-nix-pve-state.age（仅缺失时激活解密落位，/persist 损坏可恢复，对齐 fan/mi 的 pve 管线）+ 接受子网路由（useRoutingFeatures=client）+ 接受 headscale DNS（→ hosts/nix-pve/services/tailscale.nix、networking.nix）
     ssh_keys: agenix             # host key 接入时生成并加密（secrets/hosts/nix-pve/，见 secrets/README.md）
     ssh_config: 客户端 SSH 配置   # secrets/ssh-config.age 激活解密到 ~/.ssh/config（本机无 OrbStack，解密后删除 Include ~/.orbstack/ssh/config 行；→ home/fan/nix-pve/ssh-config.nix）
     user_password: agenix        # fan 登录密码 hash（secrets/hosts/nix-pve/fan-password.age，→ hosts/_nixos_/base/password.nix；SSH 走公钥，密码仅 SDDM 图形登录）
