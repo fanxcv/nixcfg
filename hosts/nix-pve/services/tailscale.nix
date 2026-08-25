@@ -9,7 +9,7 @@
 #   后端 nameserver（119.29.29.29/223.5.5.5）由 headscale 服务端 dns.nameservers 下发
 # authkey 轮换：headscale 上 headscale preauthkeys create -r -e 0 生成 → 写入
 #   secrets/source/headscale-auth-key.txt → ./secrets/encrypt.sh --force 重加密 → 重部署
-{ tools, lib, pkgs, ... }:
+{ tools, lib, ... }:
 {
   services.tailscale.enable = true;
   services.tailscale.openFirewall = true;
@@ -36,8 +36,10 @@
     mode = "0400";
   };
 
-  # state 落盘持久化：重写 tailscaled 的 --state（默认 /var/lib/tailscale 在 tmpfs）
-  systemd.services.tailscaled.serviceConfig.ExecStart = lib.mkForce [
-    "${pkgs.tailscale}/bin/tailscaled --state=/persist/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --port=\${PORT} \${FLAGS}"
-  ];
+  # state 落盘持久化：/var/lib/tailscale bind 到 /persist（impermanence 只开机拷入不回拷，
+  # tmpfs 下登录态重启即丢；bind 挂载后 tailscaled 写 state 直接落 /persist，零 unit 改动）
+  fileSystems."/var/lib/tailscale" = {
+    device = "/persist/var/lib/tailscale";
+    options = [ "bind" ];
+  };
 }
