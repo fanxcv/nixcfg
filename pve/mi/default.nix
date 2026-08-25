@@ -24,6 +24,8 @@ let
   miExtra = ''
     echo "==> [6.6/7] podman system-generator 链接（nix 包 podman 的 quadlet 支持）"
     mkdir -p /usr/lib/systemd/system-generators
+    # 旧链接可能是悬空 symlink（指向 mac 侧 store 路径），cat > 会跟随链接失败——先 rm 再写
+    rm -f /usr/lib/systemd/system-generators/podman-system-generator
     cat > /usr/lib/systemd/system-generators/podman-system-generator <<'WRAPPER'
     #!/bin/sh
     GEN=$(readlink -f /root/.nix-profile/lib/systemd/system-generators/podman-system-generator 2>/dev/null)
