@@ -27,6 +27,10 @@
     "https://cache.nixos.org/"
   ];
 
+  # claude-code overlay（overlays/claude-code.nix）声明 __noChroot（构建期联网拉 npmmirror tarball），
+  # sandbox=true 时 Nix 直接拒绝（__noChroot not allowed）；本机为本地 VM，关沙箱换构建可行
+  nix.settings.sandbox = false;
+
   # store 自动 GC（128G 盘，30 天保留）+ 定期硬链接优化
   nix.gc.automatic = true;
   nix.gc.options = "--delete-older-than 30d";

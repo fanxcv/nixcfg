@@ -380,6 +380,7 @@ nixos:
     nix_optimise: 自动          # 定期硬链接优化（→ hosts/nix-pve/default.nix）
     fstrim: weekly              # virtio 盘定期 trim（SSD 寿命/性能，→ hosts/nix-pve/default.nix）
     use_china_mirror: true       # 挂全局 useChinaMirror 开关（flake.nix specialArgs 注入，与 mac orbstack/mirrors.nix 同语义；false 时不设镜像，→ hosts/nix-pve/services/docker.nix daemon.settings）
+    nix_sandbox: false           # 关构建沙箱（overlays/claude-code.nix 的 __noChroot 需联网构建，sandbox=true 直接拒绝；本机是本地 VM，→ hosts/nix-pve/default.nix）
     registry_mirrors:            # Docker 镜像列表（三镜像与 mac 一致）
       - https://docker.xuanyuan.me
       - https://docker.1ms.run
