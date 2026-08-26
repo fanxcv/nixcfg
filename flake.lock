@@ -398,7 +398,7 @@
     "skemate-latest": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-sizPpUpVMZ0N2PRKrcP4UQsQCgblCQBZsxIQOUBqd/4=",
+        "narHash": "sha256-MsTrcWYM/eV0DrLKeSweHU0T23SquotIDZ5s0Ah1bY8=",
         "type": "file",
         "url": "https://w-apis.qksxin.com/terminal/latest.json"
       },
