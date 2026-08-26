@@ -23,6 +23,8 @@
   # 默认会话切 X11（plasmax11）：RustDesk 在 KDE Plasma 6 Wayland 下 capturer 报错
   # （上游 bug #13374/#13378，portal 预授权无效，1.4.9 未修）；X11 会话 RustDesk 捕获稳定
   services.displayManager.defaultSession = "plasmax11";
+  # X11 会话需要 Xorg（plasma6 模块默认只启 Wayland，不自动开 xserver）
+  services.xserver.enable = true;
 
   # nix 下载走国内镜像（comin 部署/手动 rebuild 用；root 的 nix.conf 由 NixOS 生成，天然 trusted）
   nix.settings.substituters = [
