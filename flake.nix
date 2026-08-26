@@ -131,7 +131,16 @@
   };
 
   outputs =
-    { self, nixpkgs, home-manager, agenix, treefmt-nix, comin, nix-darwin, ... }@inputs:
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      agenix,
+      treefmt-nix,
+      comin,
+      nix-darwin,
+      ...
+    }@inputs:
     let
       # outputs == self（flake 自身），模块里统一用这个引用
       outputs = self;
@@ -142,7 +151,10 @@
       netConfig = tools.config;
       # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
       # overlay 无法在 home 模块层注册（pkgs 先于模块构造），只能在此注入
-      skemateOverlay = import ./overlays/skemate.nix { inherit lib; skemateLatest = inputs.skemate-latest; };
+      skemateOverlay = import ./overlays/skemate.nix {
+        inherit lib;
+        skemateLatest = inputs.skemate-latest;
+      };
       # unstable/vscode 市场 overlay（pkgs.repos.unstable / pkgs.repos.vscode，定义见 overlays/）
       # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ codex/pi（_common_）
       unstableOverlay = import ./overlays/unstable.nix { inherit inputs; };
@@ -150,7 +162,12 @@
       # comin 包共享构建（消除 nixos/mini-m4 两处 buildGoModule 重复，见 overlays/comin.nix）
       cominOverlay = import ./overlays/comin.nix { inherit lib inputs; };
       # 本地包统一注入，供所有配置构造器复用
-      localPkgsOverlay = final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; };
+      localPkgsOverlay =
+        final: prev:
+        import ./packages {
+          pkgs = prev;
+          githubFetchBase = tools.githubFetchBase;
+        };
       # unfree 白名单：vscode 本体/扩展（unstable 通道，见 modules/home/vscode.nix；
       # pylance 为微软专有 license，remote-ssh 同理）
       unfreeAllowlist = [
@@ -162,15 +179,30 @@
       ];
       # 统一构造 pkgs；通道与额外 unfree 差异由调用点显式传入
       mkPkgs =
-        { system, nixpkgsInput, extraUnfree ? [ ] }:
+        {
+          system,
+          nixpkgsInput,
+          extraUnfree ? [ ],
+        }:
         import nixpkgsInput {
           inherit system;
           config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) (unfreeAllowlist ++ extraUnfree);
-          overlays = [ skemateOverlay unstableOverlay vscodeOverlay cominOverlay localPkgsOverlay ];
+          overlays = [
+            skemateOverlay
+            unstableOverlay
+            vscodeOverlay
+            cominOverlay
+            localPkgsOverlay
+          ];
         };
       # 每个 system 生成一套可运行包（nix run 一步 build+activate）
-      forAllSystems = lib.genAttrs [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-      # 生成指定机器上的 home 配置（用户由 home/fan/default.nix 决定：Linux=root / darwin=fan）
+      forAllSystems = lib.genAttrs [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+      # 生成指定机器上的 home 配置（模块清单由 home/fan/module-list.nix 统一组装）
       #   hostName:        机器名（容器 hostname 由部署层 docker-compose 决定，与此无关）
       #                     home/fan/<hostName>/ 目录可选：存在则注入机器微调，不存在自动跳过
       #   system:          架构（aarch64-linux / x86_64-linux / aarch64-darwin）
@@ -180,7 +212,13 @@
       #   isContainer:     是否容器环境（容器里 docker daemon 起不来，不安装 docker 全家桶；
       #                     容器用户覆盖为 root，见 _common_/container.nix）
       mkHomeConfig =
-        { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? netConfig.useChinaMirror, isContainer ? false }:
+        {
+          hostName,
+          system ? "aarch64-linux",
+          platform ? "nixos",
+          useChinaMirror ? netConfig.useChinaMirror,
+          isContainer ? false,
+        }:
         home-manager.lib.homeManagerConfiguration {
           pkgs = mkPkgs {
             inherit system;
@@ -188,39 +226,62 @@
           };
           modules = [
             ./home/fan
-            ./home/fan/_${platform}_
-          ] ++ lib.optionals (builtins.pathExists ./home/fan/${hostName}) [
-            ./home/fan/${hostName}
-          ];
+          ]
+          ++ import ./home/fan/module-list.nix {
+            inherit
+              lib
+              self
+              platform
+              hostName
+              ;
+          };
           extraSpecialArgs = {
-            inherit self inputs outputs tools useChinaMirror hostName isContainer platform;
+            inherit
+              self
+              inputs
+              outputs
+              tools
+              useChinaMirror
+              hostName
+              isContainer
+              platform
+              ;
           };
         };
       # 生成指定 macOS 机器的 nix-darwin 配置（home-manager 内嵌，darwin-rebuild 一次管全部）
       #   系统层：hosts/<hostName>/default.nix 组装（见 hosts/README.md）
-      #   用户层：users/fan 的 home-manager.users 指向 home/fan/<hostName>/
-      mkDarwinConfig = { hostName, system ? "aarch64-darwin" }:
-      nix-darwin.lib.darwinSystem {
-        inherit system;
-        # mac 用 nixpkgs-26.05-darwin channel（darwin 闭包完整，镜像命中）；与 nix-darwin-26.05 分支配套
-        pkgs = mkPkgs {
+      #   用户层：users/fan 复用 home/fan/module-list.nix，注入公共/平台/可选机器层
+      mkDarwinConfig =
+        {
+          hostName,
+          system ? "aarch64-darwin",
+        }:
+        nix-darwin.lib.darwinSystem {
           inherit system;
-          nixpkgsInput = inputs."nixpkgs-darwin";
+          # mac 用 nixpkgs-26.05-darwin channel（darwin 闭包完整，镜像命中）；与 nix-darwin-26.05 分支配套
+          pkgs = mkPkgs {
+            inherit system;
+            nixpkgsInput = inputs."nixpkgs-darwin";
+          };
+          modules = [
+            ./hosts/${hostName}
+            {
+              networking.hostName = hostName;
+            }
+          ];
+          specialArgs = {
+            inherit
+              self
+              inputs
+              outputs
+              tools
+              ;
+            # darwin 固定值（与 mkHomeConfig 的注入对齐，home 层模块统一取用；默认取集中配置 tools/config.nix）
+            useChinaMirror = netConfig.useChinaMirror;
+            isContainer = false;
+            platform = "darwin";
+          };
         };
-        modules = [
-          ./hosts/${hostName}
-          {
-            networking.hostName = hostName;
-          }
-        ];
-        specialArgs = {
-          inherit self inputs outputs tools;
-          # darwin 固定值（与 mkHomeConfig 的注入对齐，home 层模块统一取用；默认取集中配置 tools/config.nix）
-          useChinaMirror = netConfig.useChinaMirror;
-          isContainer = false;
-          platform = "darwin";
-        };
-      };
     in
     {
       # --- 自建模块库（tsln 思路）：平台 base 层引用 ---
@@ -236,8 +297,16 @@
         # 代理：仅 ide-si 走（sysenv.nix 接管环境变量+hosts，与 compose 无关）；lenovo 国内直连
         # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异），容器内 nix run .#ide-si / .#ide-lenovo
         # 容器平台层（_container_，继承 _ubuntu_ 系统基础）：Ubuntu 层留给服务器/真机，_nixos_ 仅 NixOS 真机
-        "fan@ide-si" = mkHomeConfig { hostName = "ide-si"; platform = "container"; isContainer = true; };
-        "fan@ide-lenovo" = mkHomeConfig { hostName = "ide-lenovo"; platform = "container"; isContainer = true; };
+        "fan@ide-si" = mkHomeConfig {
+          hostName = "ide-si";
+          platform = "container";
+          isContainer = true;
+        };
+        "fan@ide-lenovo" = mkHomeConfig {
+          hostName = "ide-lenovo";
+          platform = "container";
+          isContainer = true;
+        };
 
         # --- 多台 ide 开发容器：一行注册即可（机器目录可选），hostname 在部署层 docker-compose 里设 ---
         # "fan@ide-eu" = mkHomeConfig { hostName = "ide-eu"; isContainer = true; };
@@ -249,16 +318,40 @@
 
         # --- PVE 宿主机（Debian 底，非 NixOS）：用户层 HM standalone（root），系统层见 pve/（渲染+推送）---
         # 部署：nix run .#ds2 / .#desktop（bootstrap nix → nix copy → 系统层 apply，见 pve/deploy.nix）
-        "fan@ds2" = mkHomeConfig { hostName = "ds2"; system = "x86_64-linux"; platform = "pve"; };
-        "fan@desktop" = mkHomeConfig { hostName = "desktop"; system = "x86_64-linux"; platform = "pve"; };
-        "fan@fan" = mkHomeConfig { hostName = "fan"; system = "x86_64-linux"; platform = "pve"; };
-        "fan@hp" = mkHomeConfig { hostName = "hp"; system = "x86_64-linux"; platform = "pve"; };
-        "fan@mi" = mkHomeConfig { hostName = "mi"; system = "x86_64-linux"; platform = "pve"; };
-        "fan@razer" = mkHomeConfig { hostName = "razer"; system = "x86_64-linux"; platform = "pve"; };
+        "fan@ds2" = mkHomeConfig {
+          hostName = "ds2";
+          system = "x86_64-linux";
+          platform = "pve";
+        };
+        "fan@desktop" = mkHomeConfig {
+          hostName = "desktop";
+          system = "x86_64-linux";
+          platform = "pve";
+        };
+        "fan@fan" = mkHomeConfig {
+          hostName = "fan";
+          system = "x86_64-linux";
+          platform = "pve";
+        };
+        "fan@hp" = mkHomeConfig {
+          hostName = "hp";
+          system = "x86_64-linux";
+          platform = "pve";
+        };
+        "fan@mi" = mkHomeConfig {
+          hostName = "mi";
+          system = "x86_64-linux";
+          platform = "pve";
+        };
+        "fan@razer" = mkHomeConfig {
+          hostName = "razer";
+          system = "x86_64-linux";
+          platform = "pve";
+        };
       };
 
       # --- macOS：三台 nix-darwin（home-manager 内嵌，darwin-rebuild switch --flake .#<机器>）---
-      # 系统层组装见 hosts/<host>/default.nix，用户层自动挂载 home/fan/<host>/
+      # 系统层组装见 hosts/<host>/default.nix；用户层按 home/fan/module-list.nix 自动组装
       darwinConfigurations = {
         mba-m5 = mkDarwinConfig { hostName = "mba-m5"; };
         mbp-m1 = mkDarwinConfig { hostName = "mbp-m1"; };
@@ -267,7 +360,7 @@
 
       # --- NixOS 真机：nix-pve（Proxmox VE 上的虚拟机，128G 盘 + KDE Plasma 桌面）---
       # 系统层：hosts/nix-pve/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面）
-      # 用户层：users/fan 的 home-manager.users 指向 home/fan/nix-pve（复用同一份 home 配置）
+      # 用户层：users/fan 复用 home/fan/module-list.nix（_common_ + _nixos_ + 可选 nix-pve 差异）
       # 部署：nixos-rebuild switch --flake .#nix-pve；comin 已启用，轮询 main 自动部署
       nixosConfigurations.nix-pve = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
@@ -276,11 +369,19 @@
         pkgs = mkPkgs {
           system = "x86_64-linux";
           nixpkgsInput = nixpkgs;
-          extraUnfree = [ "microsoft-edge" "libsciter" ];
+          extraUnfree = [
+            "microsoft-edge"
+            "libsciter"
+          ];
         };
         modules = [ ./hosts/nix-pve ];
         specialArgs = {
-          inherit self inputs outputs tools;
+          inherit
+            self
+            inputs
+            outputs
+            tools
+            ;
           useChinaMirror = netConfig.useChinaMirror;
           isContainer = false;
           platform = "nixos";
@@ -294,37 +395,77 @@
       # ide 容器可能跑在不同架构服务器（lenovo/si-11 等），激活配置必须按当前 system 构建：
       # 不能引用固定架构的 homeConfigurations（会 platform mismatch，如 x86_64 机器拿到 aarch64 配置）
       # 本地包集合（packages/ 目录）与机器别名合并导出：nix build .#<包名> 或 nix run .#<机器名>
-      packages = forAllSystems (system:
-        let pkgs = nixpkgs.legacyPackages.${system};
-        in (import ./packages { inherit pkgs; githubFetchBase = tools.githubFetchBase; }) // {
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        (import ./packages {
+          inherit pkgs;
+          githubFetchBase = tools.githubFetchBase;
+        })
+        // {
           # 机器专属别名：mise 组件共享 _container_/mise.nix（hostName 分支差异），si/lenovo 各一份
           # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
-          ide-si = pkgs.writeShellScriptBin "ide-activate"
-            "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide-si"; system = system; platform = "container"; isContainer = true; }).activationPackage}/activate";
-          ide-lenovo = pkgs.writeShellScriptBin "ide-activate"
-            "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${(mkHomeConfig { hostName = "ide-lenovo"; system = system; platform = "container"; isContainer = true; }).activationPackage}/activate";
+          ide-si = pkgs.writeShellScriptBin "ide-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
+            (mkHomeConfig {
+              hostName = "ide-si";
+              inherit system;
+              platform = "container";
+              isContainer = true;
+            }).activationPackage
+          }/activate";
+          ide-lenovo = pkgs.writeShellScriptBin "ide-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
+            (mkHomeConfig {
+              hostName = "ide-lenovo";
+              inherit system;
+              platform = "container";
+              isContainer = true;
+            }).activationPackage
+          }/activate";
           # Mac 一次性构建+激活别名：nix run .#mba-m5 等（activate 必须 root，内置 sudo）
-          "mba-m5" = pkgs.writeShellScriptBin "mba-m5"
-            "exec sudo ${self.darwinConfigurations.mba-m5.system}/activate";
-          "mbp-m1" = pkgs.writeShellScriptBin "mbp-m1"
-            "exec sudo ${self.darwinConfigurations.mbp-m1.system}/activate";
-          "mini-m4" = pkgs.writeShellScriptBin "mini-m4"
-            "exec sudo ${self.darwinConfigurations.mini-m4.system}/activate";
+          "mba-m5" =
+            pkgs.writeShellScriptBin "mba-m5" "exec sudo ${self.darwinConfigurations.mba-m5.system}/activate";
+          "mbp-m1" =
+            pkgs.writeShellScriptBin "mbp-m1" "exec sudo ${self.darwinConfigurations.mbp-m1.system}/activate";
+          "mini-m4" =
+            pkgs.writeShellScriptBin "mini-m4" "exec sudo ${self.darwinConfigurations.mini-m4.system}/activate";
           # PVE 宿主机部署（ds2 / desktop）：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply
           # （apt 源/DNS/去 nag/pve-assist，见 pve/ 目录；host 参数决定机器层）
-          ds2 = import ./pve/deploy.nix { inherit pkgs lib; host = "ds2"; };
-          desktop = import ./pve/deploy.nix { inherit pkgs lib; host = "desktop"; };
-          fan = import ./pve/deploy.nix { inherit pkgs lib; host = "fan"; };
-          hp = import ./pve/deploy.nix { inherit pkgs lib; host = "hp"; };
-          mi = import ./pve/deploy.nix { inherit pkgs lib; host = "mi"; };
-          razer = import ./pve/deploy.nix { inherit pkgs lib; host = "razer"; };
-        });
+          ds2 = import ./pve/deploy.nix {
+            inherit pkgs lib;
+            host = "ds2";
+          };
+          desktop = import ./pve/deploy.nix {
+            inherit pkgs lib;
+            host = "desktop";
+          };
+          fan = import ./pve/deploy.nix {
+            inherit pkgs lib;
+            host = "fan";
+          };
+          hp = import ./pve/deploy.nix {
+            inherit pkgs lib;
+            host = "hp";
+          };
+          mi = import ./pve/deploy.nix {
+            inherit pkgs lib;
+            host = "mi";
+          };
+          razer = import ./pve/deploy.nix {
+            inherit pkgs lib;
+            host = "razer";
+          };
+        }
+      );
 
       # --- 多台 ide 部署的别名同规则：nix build .#ide-si / .#ide-lenovo（packages 块内各一行）---
 
       # 代码格式化：nix fmt 一键格式化（treefmt：nixfmt + statix，配置见 formatter.nix）
-      formatter = forAllSystems (system:
-        (treefmt-nix.lib.evalModule nixpkgs.legacyPackages.${system} ./formatter.nix).config.build.wrapper);
+      formatter = forAllSystems (
+        system:
+        (treefmt-nix.lib.evalModule nixpkgs.legacyPackages.${system} ./formatter.nix).config.build.wrapper
+      );
 
       # 格式与回归检查：nix flake check（本地/CI 均可用）
       checks = forAllSystems (

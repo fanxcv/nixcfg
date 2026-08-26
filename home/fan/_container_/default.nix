@@ -6,7 +6,4 @@
 { tools, ... }:
 {
   imports = [ ../_ubuntu_ ] ++ tools.scan ./.;
-
-  # standalone 入口（home/fan/default.nix）不参与内嵌模式，这里补 stateVersion
-  home.stateVersion = "25.05";
 }

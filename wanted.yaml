@@ -14,18 +14,18 @@
 #     _darwin_/          mac 三台共享（apps / homebrew / quartz 设置 / kernel / 网络）
 #     _nixos_/           NixOS 共享（base / plasma / openssh / comin / locale）
 #     <机>/              mac 三台 + nix-pve 机器专属
-#   home/fan/            用户层（home-manager）
-#     _common_/          所有平台共享（base / shells / mirrors / secrets / path / container）
+#   home/fan/            用户层（home-manager；module-list.nix 统一组装公共/平台/可选机器层）
+#     _common_/          所有平台共享（identity / base / shells / mirrors / secrets / path / container）
 #     _darwin_/          mac 用户层（gui apps / launchd-fix / syncthing / tailscale / rustdesk）
 #     _linux_/ _ubuntu_/ _container_/ _nixos_/ _pve_/   平台层
-#     <机>/              机器专属（mini-m4 / ide-si / ide-lenovo / nix-pve / ds2 / ...）
+#     <机>/              可选机器差异（mini-m4 / ide-si / ide-lenovo / nix-pve / ds2 / ...；无差异可省目录）
 #   modules/             自建模块库（home/：软件封装 softwares.<名>.enable；darwin/：nix 配置）
 #   packages/            本地自打包（rustdesk-bin / csv-grid-editor / catppuccin-konsole）
 #   overlays/            unstable / vscode 市场 / skemate / comin 包注入
 #   tools/               构建工具（scan 自动导入 / config 集中配置 / syncthing 互配 / rustdesk 共享注入）
 #   secrets/             age 加密密钥（fan 域 activation 解密 + 系统域 agenix）
 #   pve/                 PVE 宿主机系统层（渲染 + 推送，非 nix 部署）
-#   users/fan/           用户定义（挂载 home/fan/<机>）
+#   users/fan/           系统用户定义（内嵌 HM 复用 home/fan/module-list.nix，与 standalone 同规则）
 #   docker/ide/          ide 容器镜像（Dockerfile / entrypoint）
 #   scripts/             辅助脚本（switch-github-proxy 等）
 # ──────────────────────────────────────────────────────────────
@@ -267,7 +267,7 @@ macos:
     secrets:                # 密钥（→ tailscale.nix 解密 activation）
       tailscale_headscale_authkey: agenix
 
-  machines:                 # 三台 mac 专属（→ hosts/<机>/ + home/fan/<机>/）
+  machines:                 # 三台 mac 专属（→ hosts/<机>/；home/fan/<机>/ 仅有用户层差异时存在）
     mini-m4:                # → hosts/mini-m4/ + home/fan/mini-m4/
       system:
         apps: [blender]     # 3D 建模
@@ -293,14 +293,14 @@ macos:
         skemate: 包+配置+自启      # 终端复用服务（→ skemate.nix；tunnel.yaml 整文件 + config.json 仅 password 字段，age 加密）
         ssh_keys: agenix          # id_rsa 对（→ modules/home/ssh.nix；私钥加密入库，公钥明文）
         keystore: agenix          # bill-app 签名密钥（→ keystore.nix）
-    mba-m5:                 # → hosts/mba-m5/ + home/fan/mba-m5/
+    mba-m5:                 # → hosts/mba-m5/（用户层无机器差异，省略 home/fan/mba-m5/）
       system:
         apps: [qq, wechat, jetbrains-toolbox, microsoft-remote-desktop, bilibili, steam]
         dock.persistent_apps: [iterm2, wechat, qq, Microsoft Edge]  # mkForce 覆盖共享层
       user:
         ssh_config: 客户端 SSH 配置  # secrets/ssh-config.age → ~/.ssh/config（含 OrbStack Include）
         ssh_id_rsa: SSH 身份密钥     # secrets/hosts/mba-m5/ssh_id_rsa.age（mba-m5/mbp-m1 共用）
-    mbp-m1:                 # → hosts/mbp-m1/ + home/fan/mbp-m1/
+    mbp-m1:                 # → hosts/mbp-m1/（用户层无机器差异，省略 home/fan/mbp-m1/）
       system:
         apps: [qq, wechat, jetbrains-toolbox, microsoft-remote-desktop, wechatwebdevtools, tencent-meeting, wpsoffice]  # 后 3 个为 cask 接管（→ hosts/mbp-m1/homebrew.nix）；netease 手动装（dmg damaged 标记 cask 装不了）
         dock.persistent_apps: [iterm2, wechat, qq, Microsoft Edge]
@@ -374,7 +374,7 @@ nixos:
       ssh_config: 客户端 SSH 配置  # 解密后删除 OrbStack Include 行（本机无 OrbStack）
 
 # ════════════════════════════════════════════════════════════
-# ⑤ PVE 宿主机 → pve/（系统层渲染+推送）+ home/fan/_pve_/ + home/fan/<机>/
+# ⑤ PVE 宿主机 → pve/（系统层渲染+推送）+ home/fan/_pve_/ + 可选 home/fan/<机>/ 差异
 # ════════════════════════════════════════════════════════════
 pve:
   common:                   # → pve/default.nix + pve/mkHost.nix + pve/apply.sh（公共默认 + 机器 cfg 构造 + 系统 apply）
@@ -383,7 +383,7 @@ pve:
     grub: quiet consoleblank=60 intel_iommu=on iommu=pt  # 公共 GRUB 参数（apply 时 update-grub）
     fuse: nix 包（fuse3）  # fusermount3 用户态工具（→ home/fan/_pve_/；内核模块由 PVE 内核自带）
     pve_assist: true        # 去订阅 nag 自动 repair（→ pve/apply.sh）
-    ohmyzsh: true           # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/<机>/）
+    ohmyzsh: true           # root 用户 zsh + oh-my-zsh（HM standalone；module-list 注入 _common_ + _pve_ + 可选机器差异）
     nix_gc: 30 天自动清理    # 周级 systemd timer nix-gc.timer + auto-optimise-store（→ pve/apply.sh [6.9/7]）
     podman_mirror: 国内 3 域名  # 值源 tools/config.nix；pve/apply.sh [6.8/7] 跨 Nix 边界静态对齐
     deploy: nix run .#<机>  # 部署机只查环境+传文件（凭据/secrets 归档 .age，远端解密）；远程构建 HM + 系统层 apply；传参须与声明 ip 一致（→ pve/deploy.nix）

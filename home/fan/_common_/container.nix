@@ -1,20 +1,15 @@
 # 容器通用配置（isContainer=true 的机器生效，如多台 ide 开发容器）
-# 容器挂载/SSH 全是 /root 语义，覆盖平台默认用户（nixos 默认 fan → root）
-# 原在 ide/default.nix，多台容器部署提取为共享模块，机器目录只需留空占位
+# 身份与 reloadSystemd 由 identity.nix 统一；本文件只处理旧镜像文件接管。
 
-{ pkgs, lib, isContainer ? false, ... }:
 {
-  home.username = lib.mkIf isContainer (lib.mkForce "root");
-  home.homeDirectory = lib.mkIf isContainer (lib.mkForce "/root");
-
-  # 容器无 user systemd：覆盖 reloadSystemd 钩子为空脚本，
-  # 消除每次激活的 "User systemd daemon not running. Skipping reload." 警告
-  # （容器只有系统级 systemd，skemate 等系统服务的启停由各自 activation 直接调 systemctl；原 ide/systemd.nix 迁入）
-  home.activation.reloadSystemd = lib.mkIf isContainer (lib.mkForce (lib.hm.dag.entryAfter [ "linkGeneration" ] ""));
-
+  lib,
+  isContainer ? false,
+  ...
+}:
+{
   # 旧镜像构建期写过 ~/.zshrc ~/.zshenv（Dockerfile 已改写到 /etc/zsh/zshenv，新镜像无此文件）：
-  # HM 的 programs.zsh 要接管这两个文件，force 覆盖旧镜像残留；新镜像 force 无副作用
-  # 注意键必须带 "./" 前缀与 hm 的 zsh 模块对齐（dotDirRel），否则会生成孤立条目报错
+  # HM 的 programs.zsh 要接管这两个文件，force 覆盖旧镜像残留；新镜像 force 无副作用。
+  # 键必须带 "./" 前缀与 HM zsh 模块对齐（dotDirRel），否则会生成孤立条目。
   home.file."./.zshrc".force = lib.mkIf isContainer true;
   home.file."./.zshenv".force = lib.mkIf isContainer true;
 }

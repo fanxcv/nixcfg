@@ -1,6 +1,5 @@
 # 用户定义（对应原仓库 users/tsln）
-# darwin：primaryUser + home-manager 内嵌（home-manager.users.fan = home/fan/<hostName>）
-# NixOS 真机（nix-pve）：isNormalUser + 组授权 + home-manager 挂载（home/fan/<hostName>）
+# darwin / NixOS：系统用户定义 + Home Manager 内嵌（模块清单复用 home/fan/module-list.nix）
 #   密码策略：不内置 hash（SSH 公钥登录由 _common_/ssh.nix 激活拉取；
 #   控制台登录需接入时设置，hash 可后续走 agenix）
 
@@ -20,7 +19,6 @@
 let
   inherit (pkgs.stdenv.hostPlatform) isLinux isDarwin;
   inherit (config.networking) hostName;
-  inherit (lib.strings) toLower;
   userName = "fan";
   isNixos = platform == "nixos";
 in
@@ -53,14 +51,36 @@ in
   };
 
   # Home Manager 内嵌：darwin 挂 nix-darwin 的 home-manager 模块，NixOS 挂 home-manager.nixosModules
-  # 用户配置 = home/fan/<hostName>/（组装清单见该目录）
+  # 用户配置由 home/fan/module-list.nix 统一组装（_common_ + 平台层 + 可选机器差异）。
   # 复用系统 pkgs（allowUnfreePredicate 一并生效，见 flake.nix）
   home-manager.useGlobalPkgs = true;
   # home-manager 的 user submodule 不继承系统层 specialArgs，
   # 必须注入顶层 extraSpecialArgs（tools.scan / ${self} 主题路径 / inputs 都要用）
   home-manager.extraSpecialArgs = {
-    inherit self inputs outputs tools useChinaMirror isContainer platform hostName;
+    inherit
+      self
+      inputs
+      outputs
+      tools
+      useChinaMirror
+      isContainer
+      platform
+      hostName
+      ;
   };
 
-  home-manager.users."${userName}" = tools.relative "home/fan/${toLower hostName}";
+  # 用户配置统一由 home/fan/module-list.nix 组装，避免每台机器重复导入公共/平台层。
+  home-manager.users."${userName}" = {
+    imports = [
+      (self + "/home/fan")
+    ]
+    ++ import (self + "/home/fan/module-list.nix") {
+      inherit
+        lib
+        self
+        platform
+        hostName
+        ;
+    };
+  };
 }
