@@ -12,7 +12,7 @@ nixcfg/
 ├── docker/ide/                # ide 容器定义（docker-compose.yml + ubuntu/Dockerfile + entrypoint.sh）
 ├── hosts/                     # 系统层（NixOS / nix-darwin 接入模板，见 hosts/README.md）
 └── home/fan/                  # home-manager 配置
-    ├── default.nix            # 入口：用户身份按平台（nixos/darwin=fan，alpine=root）
+    ├── default.nix            # 入口：用户身份按平台（nixos/darwin=fan，容器由 isContainer 强制 root）
     ├── _common_/              # 跨平台共享（所有机器生效）
     │   ├── base.nix           #   git 配置 + CLI 工具（rg/fd/jq/rtk，nix 管理）
     │   ├── ai.nix             #   claude-code / codex / pi + beads/ccline + claude 配置（settings/cc_claude）
@@ -24,18 +24,17 @@ nixcfg/
     │   ├── shells.nix         #   oh-my-zsh + 插件（gh-proxy 镜像开关）
     │   ├── ssh.nix            #   公钥拉取 + sshd 加固（root/sudo 执行）
     │   └── tmux.nix           #   tmux + gpakosz 配置
-    ├── _linux_/               # Linux 系公共（git/vim/curl + docker，NixOS/Alpine 共用）
+    ├── _linux_/               # Linux 系公共（git/vim/curl + docker，NixOS/Ubuntu 共用）
     ├── _nixos_/               # NixOS 平台（真机桌面：Plasma/gui/i18n）
     ├── _ubuntu_/              # Ubuntu 平台（服务器/真机基础：make/net-tools/inetutils）
     ├── _container_/           # 容器平台（ide-si/ide-lenovo：skemate 公共，继承 _ubuntu_）
-    ├── _alpine_/              # Alpine 平台（busybox/cacert + ssh 服务端配置）
     ├── _darwin_/              # macOS 平台（三台 Mac 生效）
     ├── ide-si/                # 机器微调：ide-si 容器（原 si-11-ide，代理+hosts 接管）
     ├── ide-lenovo/            # 机器微调：ide-lenovo 容器（mise 组件差异）
     └── mba-m5/ mbp-m1/ mini-m4/ nix-pve/   # 真机微调（可留空，flake 自动跳过不存在的目录）
 ```
 
-**平台矩阵**：`_common_`（全平台）+ `_linux_`（Linux 系公共，NixOS/Ubuntu/Alpine 共用）+ `_${platform}_`（nixos/ubuntu/container/alpine/darwin，container 继承 ubuntu）+ `<host>`（机器微调，可选）。用户身份：nixos/darwin = fan，alpine = root；容器（isContainer=true）强制 root。
+**平台矩阵**：`_common_`（全平台）+ `_linux_`（Linux 系公共，NixOS/Ubuntu 共用）+ `_${platform}_`（nixos/ubuntu/container/darwin，container 继承 ubuntu）+ `<host>`（机器微调，可选）。用户身份：nixos/darwin = fan；容器（isContainer=true）强制 root。
 
 ## 构建 ide 容器（Docker 开发容器）
 

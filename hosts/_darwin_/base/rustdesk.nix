@@ -11,12 +11,17 @@
 #   - 1.4.9 的 enable-udp-punch/enable-ipv6-punch 读 RustDesk_local.toml 的 [options]，自建服务器时
 #     local 无值强制 N → 两文件 [options] 全键双写
 
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  tools,
+  ...
+}:
 let
-  # 自建 hbbs 服务器（与 hbbr 同机，RustDesk 自动推断 relay）
-  rendezvousServer = "120.55.164.147:21116";
-  # hbbs 公钥（id_ed25519.pub），加密连接用
-  serverKey = "biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=";
+  rustdesk = tools.config.rustdesk;
+  injector = ../../../tools/rustdesk-inject.py;
+  # Mac 实机可信设备；nix-pve 首次被连时由 GUI 确认，不预写。
+  trustedDevices = "009GnjljLRT/b2k0DwCFQSXI6O";
 in
 {
   # 注意：nix-darwin 26.05 起自定义 system.activationScripts.<名字> 条目不再自动执行
@@ -36,7 +41,7 @@ in
 
         # 1. 收敛检查：fan 配置已是自建服务器（GUI 或注入写入）→ 已到位，完全不动
         #    （避免部署时无条件杀进程触发 service 抢写把好配置变成官方默认）
-        if grep -q "120.55.164.147" "$dir/RustDesk2.toml" 2>/dev/null; then
+        if grep -Fq "${rustdesk.relay}" "$dir/RustDesk2.toml" 2>/dev/null; then
           echo "rustdesk: 配置已是自建服务器，跳过注入/重启"
           return 0
         fi
@@ -47,10 +52,16 @@ in
         sleep 1
 
         # 3. 注入双域——注入失败直接中断系统激活（暴露问题，无兜底）
-        ${pkgs.python3}/bin/python3 ${./rustdesk/inject.py} "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
+        ${pkgs.python3}/bin/python3 ${injector} \
+          "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" \
+          --server "${rustdesk.server}" --key "${rustdesk.key}" --relay "${rustdesk.relay}" \
+          --trusted-devices "${trustedDevices}"
         chown "$owner":staff "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
         chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
-        ${pkgs.python3}/bin/python3 ${./rustdesk/inject.py} "$root_dir/RustDesk2.toml" "$root_dir/RustDesk_local.toml" "${rendezvousServer}" "${serverKey}"
+        ${pkgs.python3}/bin/python3 ${injector} \
+          "$root_dir/RustDesk2.toml" "$root_dir/RustDesk_local.toml" \
+          --server "${rustdesk.server}" --key "${rustdesk.key}" --relay "${rustdesk.relay}" \
+          --trusted-devices "${trustedDevices}"
         chmod 600 "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml
 
         # 4. 杀旧进程（GUI/--server 内存里是旧配置；--server 由 LaunchAgent KeepAlive 自动拉起读新配置）
@@ -70,5 +81,5 @@ in
         launchctl bootstrap system /Library/LaunchDaemons/com.carriez.RustDesk_service.plist 2>/dev/null || true
       }
       setup_rustdesk_server
-    '';
+  '';
 }

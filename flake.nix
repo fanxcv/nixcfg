@@ -317,10 +317,19 @@
       formatter = forAllSystems (system:
         (treefmt-nix.lib.evalModule nixpkgs.legacyPackages.${system} ./formatter.nix).config.build.wrapper);
 
-      # 格式检查：nix flake check（本地/CI 均可用）
-      checks = forAllSystems (system: {
-        formatting =
-          (treefmt-nix.lib.evalModule nixpkgs.legacyPackages.${system} ./formatter.nix).config.build.check self;
-      });
+      # 格式与回归检查：nix flake check（本地/CI 均可用）
+      checks = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          formatting = (treefmt-nix.lib.evalModule pkgs ./formatter.nix).config.build.check self;
+          rustdesk-injector = pkgs.runCommand "rustdesk-injector-test" { } ''
+            ${pkgs.python3}/bin/python3 ${./tests/rustdesk-injector.py} ${./tools/rustdesk-inject.py}
+            touch "$out"
+          '';
+        }
+      );
     };
 }

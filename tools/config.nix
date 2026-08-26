@@ -15,4 +15,11 @@
   withoutProxy = [
     "https://github.com/fanxcv.keys"
   ];
+
+  # RustDesk 自建 hbbs/hbbr（客户端注入统一由 tools/rustdesk-inject.py 实现）
+  rustdesk = {
+    server = "120.55.164.147:21116";
+    relay = "120.55.164.147";
+    key = "biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=";
+  };
 }
