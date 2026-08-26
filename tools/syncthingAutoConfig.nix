@@ -3,35 +3,42 @@
 #   幂等：REST API 检查存在性，仅补缺不删改（GUI 手动配对状态保留）
 #   失败策略：API 不可达/读不到 key 时仅警告返回（下次部署补），不阻塞部署
 # 用法：
-#   tools.syncthingAutoConfig { pkgs; peers = [ { name; id; addr = [ ... ]; } ]; guiPasswordAgePath = null; }
+#   tools.syncthingAutoConfig { pkgs; peers = [ { name; id; addr = [ ... ]; } ]; guiPasswordAgePath = null; guiPasswordFile = null; }
 #     guiPasswordAgePath 非空时启用 GUI 密码段（age 解密 → PUT /rest/config/gui，放最后因会触发重启）
+#     guiPasswordFile 非空时改用明文密码文件（nix-pve：/run/agenix/syncthing-gui-password，fan 可读）
+#     两者互斥，至少一个非空才注入；注入 PUT 整个 gui 配置（user=fan + password），
+#     与 nixpkgs 模块 guiPasswordFile 只 PATCH password 不设 user 不同——syncthing 要求 user+password 双非空才启用认证
 #     addr 为设备地址数组（如 [ "tcp://mba-m5:22000" "dynamic" ]）
 #     folder 路径恒为 $HOME/sync（darwin 下 = /Users/fan/sync，nix-pve 下 = /home/fan/sync）
 {
   pkgs,
   peers,
   guiPasswordAgePath ? null,
+  guiPasswordFile ? null,
 }:
 let
   curl = "${pkgs.curl}/bin/curl";
   jq = "${pkgs.jq}/bin/jq";
   age = "${pkgs.age}/bin/age";
   peersJson = builtins.toJSON peers;
-  guiPasswordBlock = if guiPasswordAgePath == null then
-    "true # GUI 密码由外部机制管理（nix-pve：agenix guiPasswordFile）"
+  pwCmd = if guiPasswordFile != null then
+    "pw=$(cat ${guiPasswordFile}) || { echo \"警告: 读 syncthing GUI 密码文件失败\"; return 0; }"
+  else if guiPasswordAgePath != null then
+    "pw=$(${age} -d -i \"$HOME/.secrets/age-keys.txt\" ${guiPasswordAgePath}) || { echo \"警告: 解密 syncthing GUI 密码失败\"; return 0; }"
   else
-    ''
-      local pw
-      pw=$(${age} -d -i "$HOME/.secrets/age-keys.txt" ${guiPasswordAgePath}) || { echo "警告: 解密 syncthing GUI 密码失败"; return 0; }
-      local gui
-      gui=$(${curl} -sf -H "$hdr" $api/config/gui) || { echo "警告: syncthing API 不可达，GUI 密码未设置"; return 0; }
-      gui=$(printf '%s' "$gui" | ${jq} --arg u fan --arg p "$pw" '.user=$u | .password=$p')
-      if ${curl} -sf -X PUT -H "$hdr" -H "Content-Type: application/json" -d "$gui" $api/config/gui >/dev/null; then
-        echo "[syncthing] GUI 密码已设置"
-      else
-        echo "警告: syncthing GUI 密码设置失败"
-      fi
-    '';
+    "return 0 # GUI 密码由外部机制管理";
+  guiPasswordBlock = ''
+    local pw
+    ${pwCmd}
+    local gui
+    gui=$(${curl} -sf -H "$hdr" $api/config/gui) || { echo "警告: syncthing API 不可达，GUI 密码未设置"; return 0; }
+    gui=$(printf '%s' "$gui" | ${jq} --arg u fan --arg p "$pw" '.user=$u | .password=$p')
+    if ${curl} -sf -X PUT -H "$hdr" -H "Content-Type: application/json" -d "$gui" $api/config/gui >/dev/null; then
+      echo "[syncthing] GUI 密码已设置"
+    else
+      echo "警告: syncthing GUI 密码设置失败"
+    fi
+  '';
 in
 ''
   set_syncthing_autoconfig() {

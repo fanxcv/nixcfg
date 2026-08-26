@@ -2,7 +2,6 @@
 #   id  = 各机 syncthing device ID（REST /rest/system/status 的 myID；或 TLS 22000 证书指纹算法）
 #   addr = 设备地址（MagicDNS 名，headscale 下各机 accept-dns 已开；dynamic 兜底发现）
 # 注意：本机不在清单不影响（folder 的 devices 自动并入本机 ID，见 syncthingAutoConfig.nix）
-# 待补：nix-pve 的 device ID（机器离线未取到，上线后从 GUI 或 TLS 指纹补入）
 # 注：mbp-m1 的 MagicDNS 名为 macbookpro（tailscale 注册名），addr 用 macbookpro 而非 mbp-m1
 [
   {
@@ -18,6 +17,14 @@
     id = "45P4AQI-ZTYFDMK-2YXBUUW-LVGU7ZG-MQJRQQR-KXCKLBV-2MEIJWV-LKH6MQ3";
     addr = [
       "tcp://mba-m5:22000"
+      "dynamic"
+    ];
+  }
+  {
+    name = "nix-pve";
+    id = "USWSSMC-KP4K3H4-ESKCMRQ-COEBIC5-YBMWBZY-U44EZAM-NJ6AGKU-ORREOAF";
+    addr = [
+      "tcp://nix-pve:22000"
       "dynamic"
     ];
   }

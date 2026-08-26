@@ -4,6 +4,8 @@
 #   GUI 仅绑 127.0.0.1（本机浏览器/SSH 隧道）；openDefaultPorts 放行 22000/21027
 #   设备互配：syncthing-autoregister oneshot（syncthing 启动后自动跑，清单 tools/syncthingPeers.nix）
 #   配置由 syncthing 自管（脚本仅补缺不删改，rebuild 不覆盖 GUI 配对状态）
+#   GUI 密码：agenix 解密到 /run/agenix/syncthing-gui-password（fan 可读），oneshot 注入 user=fan+password
+#     （nixpkgs 模块 guiPasswordFile 只 PATCH password 不设 user，syncthing 要求双非空才启用认证，故必须自注入）
 {
   pkgs,
   tools,
@@ -11,8 +13,11 @@
 }:
 let
   peers = tools.syncthingPeers;
-  # 自动注册脚本（设备互配 + ~/sync folder；GUI 密码由 agenix guiPasswordFile 管，不在此注入）
-  autoConfigScript = tools.syncthingAutoConfig { inherit pkgs peers; };
+  # 自动注册脚本（设备互配 + ~/sync folder + GUI 密码注入）
+  autoConfigScript = tools.syncthingAutoConfig {
+    inherit pkgs peers;
+    guiPasswordFile = "/run/agenix/syncthing-gui-password";
+  };
 in
 {
   services.syncthing = {
