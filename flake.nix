@@ -121,11 +121,10 @@
 
     # skemate 发布元数据（自研终端复用服务，官方 latest.json）：
     # flake=false 纯文件 input，overlay 动态解析 version/sha256（见 overlays/skemate.nix）。
-    # URL 带 ?v=版本号 查询参数：发版后改此版本号 → URL 变化 → nix fetcher-cache key 变化，
-    # 必然重新下载，绕过 CDN/本地缓存（旧坑：URL 不变时 nix flake update 跳过、--refresh 无效、
-    # 各机器缓存旧内容致 narHash mismatch）。升级用 scripts/update-skemate.sh 一步完成。
+    # 升级：nix flake update skemate-latest 即重新下载 latest.json 并重算 narHash（实测 nix 2.34
+    # 对 URL 不变的 http input 也会重新获取，无需 ?v= 参数/脚本；内容不变时幂等跳过）。
     skemate-latest = {
-      url = "https://w-apis.qksxin.com/terminal/latest.json?v=0.5.78";
+      url = "https://w-apis.qksxin.com/terminal/latest.json";
       flake = false;
     };
   };
