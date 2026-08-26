@@ -398,13 +398,13 @@
     "skemate-latest": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-uIJ0wUttfZLB84FyXwG0KFr+oDNkd3oNwZ214APGE94=",
+        "narHash": "sha256-1e5SvO7JjaVEh40u+yskaehyrv7HcrZ5m1DuKTVhfWc=",
         "type": "file",
-        "url": "https://w-apis.qksxin.com/terminal/latest.json"
+        "url": "https://w-apis.qksxin.com/terminal/latest.json?v=0.5.78"
       },
       "original": {
         "type": "file",
-        "url": "https://w-apis.qksxin.com/terminal/latest.json"
+        "url": "https://w-apis.qksxin.com/terminal/latest.json?v=0.5.78"
       }
     },
     "systems": {

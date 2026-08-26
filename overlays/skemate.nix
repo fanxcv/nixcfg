@@ -2,9 +2,10 @@
 # 二进制托管在 w-apis.qksxin.com/terminal，version/sha256 不再硬编码：
 # latest.json 作为 flake input 锁定（flake.nix 的 skemate-latest，flake=false），
 # 此文件在 flake.lock 里锁 narHash，nix flake update 即自动跟随官方新版本。
-# 升级流程（零手工）：
-#   nix flake update skemate-latest   # 只刷新元数据（或全量 nix flake update）
-#   之后各机器 rebuild 即拉到新版本二进制（builtins.fetchurl 按最新 url+sha256 下载）
+# 升级流程（scripts/update-skemate.sh 一步完成）：
+#   1. 脚本 curl latest.json 取新版本号，改写 flake.nix 的 ?v= 查询参数
+#   2. nix flake update skemate-latest   # URL 已变 → 必然重新下载，不走缓存
+#   3. 之后各机器 rebuild 即拉到新版本二进制（builtins.fetchurl 按最新 url+sha256 下载）
 # 平台：以 latest.json 的 platforms 键为准（当前 linux-amd64 / darwin-arm64 / linux-arm64），
 #       未发布的平台直接 throw
 
