@@ -31,7 +31,7 @@ in
       isNormalUser = true;
       extraGroups = builtins.filter (g: builtins.hasAttr g config.users.groups) [
         "wheel"
-        "docker"
+        "podman"
         "networkmanager"
       ];
     })

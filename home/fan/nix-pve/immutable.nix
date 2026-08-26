@@ -32,10 +32,6 @@ _: {
         mode = "0755";
       }
       {
-        directory = ".docker";
-        mode = "0755";
-      }
-      {
         directory = ".claude";
         mode = "0755";
       }
