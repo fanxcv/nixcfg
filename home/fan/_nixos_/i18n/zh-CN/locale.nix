@@ -5,8 +5,11 @@
   home.language.base = lib.mkDefault "en_US.UTF-8";
 
   # KDE 界面语言：声明式写 plasma-localerc（KDE 启动时读；用户改语言设置会被下次激活覆盖，声明式优先）
+  # force=true：KDE 已生成过该文件，home-manager 默认拒绝覆盖（clobber 保护）
   # 注意：KDE 会话运行中改此文件不生效，需注销重登（或重启 plasmashell）
-  home.file.".config/plasma-localerc".text = ''
+  home.file.".config/plasma-localerc" = {
+    force = true;
+    text = ''
     [Formats]
     LANG=zh_CN.UTF-8
 
