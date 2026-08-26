@@ -152,6 +152,7 @@ fi
 
 @LUCKY_APPLY@
 
+# PVE apply.sh 是跨 Nix 边界的静态 shell；镜像域名唯一来源为 tools/config.nix.dockerRegistryMirrors，改入口后需同步此块。
 echo "==> [6.8/7] podman 镜像加速（registries.conf.d drop-in，与 docker daemon.json 同域名）"
 mkdir -p /etc/containers/registries.conf.d
 cat > /etc/containers/registries.conf.d/mirror.conf <<'MIRROR'

@@ -1,7 +1,8 @@
 {
   description = "fan 的 Nix 配置仓库（多机共用，结构参考 tsln1998/nixcfg）";
 
-  # 二进制缓存默认走国内镜像（与 Dockerfile 生成的 /root/.config/nix/nix.conf 一致）
+  # 二进制缓存默认走国内镜像；具体列表集中 tools/config.nix。
+  # 此处 nixConfig 必须保持静态（flake fetcher 解析阶段读不到 tools），Dockerfile/PVE shell 属跨语言边界，按各自格式手写对齐。
   # 优先级：命令行 --option > 环境变量 NIX_CONFIG > /etc/nix/nix.conf > 这里的 nixConfig
   # 临时跳过：nix run --option substituters https://cache.nixos.org/ ...
   nixConfig = {
@@ -148,6 +149,8 @@
       vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
       # comin 包共享构建（消除 nixos/mini-m4 两处 buildGoModule 重复，见 overlays/comin.nix）
       cominOverlay = import ./overlays/comin.nix { inherit lib inputs; };
+      # 本地包统一注入，供所有配置构造器复用
+      localPkgsOverlay = final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; };
       # unfree 白名单：vscode 本体/扩展（unstable 通道，见 modules/home/vscode.nix；
       # pylance 为微软专有 license，remote-ssh 同理）
       unfreeAllowlist = [
@@ -157,6 +160,14 @@
         "vscode-extension-ms-ceintl-vscode-language-pack-zh-hans"
         "vscode-extension-mhutchie-git-graph"
       ];
+      # 统一构造 pkgs；通道与额外 unfree 差异由调用点显式传入
+      mkPkgs =
+        { system, nixpkgsInput, extraUnfree ? [ ] }:
+        import nixpkgsInput {
+          inherit system;
+          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) (unfreeAllowlist ++ extraUnfree);
+          overlays = [ skemateOverlay unstableOverlay vscodeOverlay cominOverlay localPkgsOverlay ];
+        };
       # 每个 system 生成一套可运行包（nix run 一步 build+activate）
       forAllSystems = lib.genAttrs [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       # 生成指定机器上的 home 配置（用户由 home/fan/default.nix 决定：Linux=root / darwin=fan）
@@ -171,10 +182,9 @@
       mkHomeConfig =
         { hostName, system ? "aarch64-linux", platform ? "nixos", useChinaMirror ? netConfig.useChinaMirror, isContainer ? false }:
         home-manager.lib.homeManagerConfiguration {
-          pkgs = import nixpkgs {
+          pkgs = mkPkgs {
             inherit system;
-            config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
-            overlays = [ skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
+            nixpkgsInput = nixpkgs;
           };
           modules = [
             ./home/fan
@@ -193,10 +203,9 @@
       nix-darwin.lib.darwinSystem {
         inherit system;
         # mac 用 nixpkgs-26.05-darwin channel（darwin 闭包完整，镜像命中）；与 nix-darwin-26.05 分支配套
-        pkgs = import inputs."nixpkgs-darwin" {
+        pkgs = mkPkgs {
           inherit system;
-          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) unfreeAllowlist;
-          overlays = [ skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
+          nixpkgsInput = inputs."nixpkgs-darwin";
         };
         modules = [
           ./hosts/${hostName}
@@ -264,10 +273,10 @@
         system = "x86_64-linux";
         # 与 mkHomeConfig 同款 pkgs：overlay 注入 + unfree 放行（unfreeAllowlist + microsoft-edge / libsciter[clash-verge-rev]）
         # 本地包（packages/，catppuccin-konsole 等）以 overlay 并入（home 层 useGlobalPkgs 直接用）
-        pkgs = import nixpkgs {
+        pkgs = mkPkgs {
           system = "x86_64-linux";
-          config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) (unfreeAllowlist ++ [ "microsoft-edge" "libsciter" ]);
-          overlays = [ skemateOverlay unstableOverlay vscodeOverlay cominOverlay (final: prev: import ./packages { pkgs = prev; githubFetchBase = tools.githubFetchBase; }) ];
+          nixpkgsInput = nixpkgs;
+          extraUnfree = [ "microsoft-edge" "libsciter" ];
         };
         modules = [ ./hosts/nix-pve ];
         specialArgs = {

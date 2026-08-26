@@ -1,7 +1,15 @@
 # NixOS 系统服务：podman（声明式，开机自启；docker CLI/socket 兼容，drop-in 替换 docker）
 # 国内镜像加速（挂 useChinaMirror 开关，flake.nix specialArgs 注入，与 mac orbstack/mirrors.nix 同语义）：
 #   true  → registries.conf.d 三镜像；false → 不设，podman 默认源
-{ pkgs, lib, useChinaMirror ? true, ... }:
+{ pkgs, lib, tools, useChinaMirror ? true, ... }:
+let
+  registryMirrors = lib.concatMapStringsSep "\n" (
+    mirror: ''
+      [[registry.mirror]]
+      location = "${lib.strings.removePrefix "https://" mirror}"
+    ''
+  ) tools.config.dockerRegistryMirrors;
+in
 {
   virtualisation.podman = {
     enable = true;
@@ -17,12 +25,7 @@
     text = ''
       [[registry]]
       location = "docker.io"
-      [[registry.mirror]]
-      location = "docker.xuanyuan.me"
-      [[registry.mirror]]
-      location = "docker.1ms.run"
-      [[registry.mirror]]
-      location = "docker.m.daocloud.io"
+${registryMirrors}
     '';
   };
 }

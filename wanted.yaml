@@ -89,7 +89,7 @@ common:
     go: goproxy.cn          # .config/go/env GOPROXY
     flutter: flutter-io.cn  # PUB_HOSTED_URL/FLUTTER_STORAGE_BASE_URL
 
-  nix:                      # 二进制缓存/源码拉取（→ flake.nix nixConfig + modules/darwin/nix.nix + hosts/nix-pve + Dockerfile，4 处一致）
+  nix:                      # 二进制缓存/源码拉取（列表集中 tools/config.nix；flake.nix nixConfig 保持静态入口，模块/Dockerfile/PVE shell 按边界格式对齐）
     substituters: [USTC, TUNA, cache.nixos.org]  # SJTU 已移除（2026-08 超时拖死 build）；另有 numtide/nix-community cachix
     inputs_proxy: ghfast.top  # 15 个 inputs 走加速前缀（换域名跑 scripts/switch-github-proxy.sh）
     gc: 30 天自动清理 + 硬链接优化  # darwin 周级定时器（→ modules/darwin/nix.nix）；PVE 周级 systemd timer（→ pve/apply.sh）；容器重建即弃仅 auto-optimise（→ Dockerfile）
@@ -225,7 +225,7 @@ macos:
         use_china_mirror: true
         memory_mib: 8192    # VM 内存上限 8G
         auto_update: false
-        registry_mirrors: [https://docker.xuanyuan.me, https://docker.1ms.run, https://docker.m.daocloud.io]
+        registry_mirrors: [https://docker.xuanyuan.me, https://docker.1ms.run, https://docker.m.daocloud.io]  # 具体值 → tools/config.nix.dockerRegistryMirrors
       clashx_meta:          # 代理客户端（→ clashx-meta.nix + apply.py，GitHub release 下载安装 + 激活期幂等注入，App 重启生效）
         version: 1.4.43     # 升级改这里（GitHub release 版本，→ clashx-meta.nix 同步）
         subscription: https://xx.fan-x.eu.org/api/v1/client/subscribe?token=eaa63ab248c016278df7f8f6d2847757
@@ -316,7 +316,7 @@ linux:
     pkgs: [git, vim, curl]  # Linux 基础三件套（mac 自带不装）
     docker:                 # docker/compose/buildx + 自启 + fan 网络（ide 容器 isContainer=true 移除）
       enable: true
-      registry_mirrors: [https://docker.xuanyuan.me, https://docker.1ms.run, https://docker.m.daocloud.io]  # 国内镜像加速：NixOS 真机→系统层 daemon.settings（nix-pve）；Ubuntu→_linux_/docker.nix daemon.json（useChinaMirror 门控）
+      registry_mirrors: [https://docker.xuanyuan.me, https://docker.1ms.run, https://docker.m.daocloud.io]  # 具体值集中 tools/config.nix；NixOS→services/podman.nix，Ubuntu→_linux_/docker.nix（useChinaMirror 门控）
   ubuntu:                   # → _ubuntu_/（服务器/真机；容器经 _container_ 继承本层）
     pkgs: [gnumake, net-tools, inetutils]
   container:                # → _container_/（当前 ide-si / ide-lenovo）
@@ -366,7 +366,7 @@ nixos:
       use_china_mirror: true
       nix_sandbox: false    # 本地 VM 关沙箱换构建可行
       dns: [119.29.29.29, 223.5.5.5]  # MagicDNS 后端 resolver（headscale 服务端下发，本机不声明）
-      podman: 系统服务 + docker CLI/socket 兼容 + 镜像加速  # → services/podman.nix（registries.conf.d 三镜像，docker drop-in 替换）
+      podman: 系统服务 + docker CLI/socket 兼容 + 镜像加速  # → services/podman.nix；具体值读取 tools/config.nix.dockerRegistryMirrors
       tailscale: 安装+服务（headscale 原生 authKeyFile，state 双保险）  # bind mount /persist + age 加密备份（→ services/tailscale.nix）
       ssh_keys: agenix      # host key 接入时生成并加密
       user_password: agenix  # fan 登录密码 hash（SSH 走公钥，密码仅 SDDM 登录）
@@ -377,7 +377,7 @@ nixos:
 # ⑤ PVE 宿主机 → pve/（系统层渲染+推送）+ home/fan/_pve_/ + home/fan/<机>/
 # ════════════════════════════════════════════════════════════
 pve:
-  common:                   # → pve/default.nix + pve/apply.sh（所有机器统一，机器无差异则省略）
+  common:                   # → pve/default.nix + pve/mkHost.nix + pve/apply.sh（公共默认 + 机器 cfg 构造 + 系统 apply）
     dns: [10.21.1.1, 119.29.29.29, 223.5.5.5]  # 内网 DNS 优先 + 公共兜底
     mirror: ustc            # apt 中科大（debian + debian-security + pve no-subscription）
     grub: quiet consoleblank=60 intel_iommu=on iommu=pt  # 公共 GRUB 参数（apply 时 update-grub）
@@ -385,7 +385,7 @@ pve:
     pve_assist: true        # 去订阅 nag 自动 repair（→ pve/apply.sh）
     ohmyzsh: true           # root 用户 zsh + oh-my-zsh（HM standalone，→ home/fan/_pve_/ + home/fan/<机>/）
     nix_gc: 30 天自动清理    # 周级 systemd timer nix-gc.timer + auto-optimise-store（→ pve/apply.sh [6.9/7]）
-    podman_mirror: 国内 3 域名  # docker.io → xuanyuan/1ms.run/daocloud（→ pve/apply.sh [6.8/7] registries.conf.d；lucky Image 走 mirror）
+    podman_mirror: 国内 3 域名  # 值源 tools/config.nix；pve/apply.sh [6.8/7] 跨 Nix 边界静态对齐
     deploy: nix run .#<机>  # 部署机只查环境+传文件（凭据/secrets 归档 .age，远端解密）；远程构建 HM + 系统层 apply；传参须与声明 ip 一致（→ pve/deploy.nix）
   machines:
     ds2:                    # PVE 9.2（Debian 13 trixie，→ pve/ds2/ + home/fan/ds2/）

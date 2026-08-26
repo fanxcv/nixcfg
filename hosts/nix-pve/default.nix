@@ -27,11 +27,9 @@
   services.xserver.enable = true;
 
   # nix 下载走国内镜像（comin 部署/手动 rebuild 用；root 的 nix.conf 由 NixOS 生成，天然 trusted）
-  nix.settings.substituters = [
-    "https://mirrors.ustc.edu.cn/nix-channels/store"
-    "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-    "https://cache.nixos.org/"
-  ];
+  nix.settings.substituters = tools.config.nixSubstituters;
+  nix.settings.extra-substituters = tools.config.nixCachixSubstituters;
+  nix.settings.extra-trusted-public-keys = tools.config.nixCachixTrustedPublicKeys;
 
   # 本地 VM 构建：sandbox=true 时部分包构建受限，关沙箱换构建可行
   nix.settings.sandbox = false;

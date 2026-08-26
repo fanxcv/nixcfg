@@ -8,7 +8,7 @@
 # 容器环境不安装：isContainer 由 flake.nix 传入（ide 容器 = true，真机默认 false），
 #   包与 activation 均 mkIf 跳过——容器里 docker daemon 起不来，连检测都不跑
 
-{ pkgs, lib, isContainer ? false, useChinaMirror ? true, platform ? "linux", ... }:
+{ pkgs, lib, tools, isContainer ? false, useChinaMirror ? true, platform ? "linux", ... }:
 {
   home.packages = lib.mkIf (!isContainer) (with pkgs; [
     docker
@@ -49,7 +49,7 @@
       #    HM 写普通文件会覆盖其 symlink，rebuild 后丢失）
       if [ "${if useChinaMirror then "true" else "false"}" = true ] && [ "${platform}" != nixos ]; then
         ''${SUDO} mkdir -p /etc/docker
-        echo '{"registry-mirrors": ["https://docker.xuanyuan.me", "https://docker.1ms.run", "https://docker.m.daocloud.io"]}' \
+        echo '{"registry-mirrors": ${builtins.toJSON tools.config.dockerRegistryMirrors}}' \
           | ''${SUDO} tee /etc/docker/daemon.json > /dev/null
         echo "===> 已写入 /etc/docker/daemon.json（registry-mirrors 国内镜像）"
       fi

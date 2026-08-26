@@ -1,6 +1,6 @@
 # fan 的 Nix 配置仓库
 
-多机 home-manager 配置（结构参考 [tsln1998/nixcfg](https://github.com/tsln1998/nixcfg)），当前管理 Docker 开发容器（ide），后续扩展 NixOS 真机与 macOS。
+多机 Nix 配置，当前管理三台 Mac、NixOS 真机 nix-pve、两个 Docker 开发容器与六台 PVE 宿主机。
 
 **宗旨：能 nix 就 nix**——软件包、配置、环境变量尽量全部交给 nix 声明式管理；实在不行的（systemd、sshd、登录 shell 这类系统级依赖）才留在 Dockerfile/系统层。改配置 = 容器内重建激活，不用重新 build 镜像。
 
@@ -10,20 +10,17 @@
 nixcfg/
 ├── flake.nix                  # 多机器入口：注册 + 命令别名（nix run .#<机器名>）
 ├── docker/ide/                # ide 容器定义（docker-compose.yml + ubuntu/Dockerfile + entrypoint.sh）
-├── hosts/                     # 系统层（NixOS / nix-darwin 接入模板，见 hosts/README.md）
+├── hosts/                     # 系统层（NixOS / nix-darwin，见 hosts/README.md）
+├── modules/home/              # 可复用 Home Manager 软件模块（ai/codex/mise/pi/ssh/tmux/vscode）
 └── home/fan/                  # home-manager 配置
     ├── default.nix            # 入口：用户身份按平台（nixos/darwin=fan，容器由 isContainer 强制 root）
     ├── _common_/              # 跨平台共享（所有机器生效）
     │   ├── base.nix           #   git 配置 + CLI 工具（rg/fd/jq/rtk，nix 管理）
-    │   ├── ai.nix             #   claude-code / codex / pi + beads/ccline + claude 配置（settings/cc_claude）
-    │   ├── codex.nix          #   codex 配置通用段（机器特定段本机维护，switch 自动合并）
-    │   ├── container.nix      #   容器通用（isContainer=true：root 用户 + PATH）
-    │   ├── mise.nix           #   mise 本体（组件清单暂空，分机器确定）
-    │   ├── pi.nix             #   pi agent 配置拉取（git.fan-x.fun → ~/.pi/agent/）
-    │   ├── secrets.nix        #   AI 密钥注入（$HOME/.secrets/ai.env）
-    │   ├── shells.nix         #   oh-my-zsh + 插件（gh-proxy 镜像开关）
-    │   ├── ssh.nix            #   公钥拉取 + sshd 加固（root/sudo 执行）
-    │   └── tmux.nix           #   tmux + gpakosz 配置
+    │   ├── container.nix      #   容器身份/PATH 适配
+    │   ├── mirrors.nix        #   npm/pip/uv/go/flutter 镜像
+    │   ├── path.nix           #   激活环境 PATH 修复
+    │   ├── secrets.nix        #   age 解密 + AI 环境变量映射
+    │   └── shells.nix         #   oh-my-zsh + 插件（gh-proxy 镜像开关）
     ├── _linux_/               # Linux 系公共（git/vim/curl + docker，NixOS/Ubuntu 共用）
     ├── _nixos_/               # NixOS 平台（真机桌面：Plasma/gui/i18n）
     ├── _ubuntu_/              # Ubuntu 平台（服务器/真机基础：make/net-tools/inetutils）
@@ -82,7 +79,7 @@ docker exec -it ide bash     # 首次 SSH 还没公钥，用 docker exec
 
 cd /root/nixcfg            # 配置仓库已由宿主机拉取并挂载，无需 clone
 nix run .#ide-si          # ide-si 容器（原 si-11-ide）；lenovo 容器用 .#ide-lenovo（构建 + 激活：拉公钥、加固 sshd、oh-my-zsh/tmux 配置就位）
-# mise 组件由 nix 按机器目录声明（home/fan/ide-si/mise.nix / ide-lenovo/mise.nix），激活自动写入 ~/.config/mise/config.toml
+# mise 组件由 home/fan/_container_/mise.nix 按 hostName 声明，激活自动写入 ~/.config/mise/config.toml
 ```
 
 ### 4. 验证
@@ -120,42 +117,42 @@ nix flake update && nix run .#ide-si
 ```nix
 "fan@ide-si" = mkHomeConfig { hostName = "ide-si"; platform = "container"; isContainer = true; };
 "fan@ide-lenovo" = mkHomeConfig { hostName = "ide-lenovo"; platform = "container"; isContainer = true; };
-# packages 块内：ide-si = ...（mise 组件按机器目录声明，见 home/fan/ide-si/mise.nix）
+# packages 块内：ide-si = ...（mise 组件见 home/fan/_container_/mise.nix 的 hostName 分支）
 ```
 
 → ide-si 容器内 `nix run .#ide-si`，lenovo 用 `.#ide-lenovo`。机器专属微调放 home/fan/<host>/（ide-si 含 sysenv.nix 代理+hosts；ide-lenovo 仅 mise 差异）。
 
-## 构建 NixOS 真机（待补）
+## 构建 NixOS 真机（已接入 nix-pve）
 
-接入方式：flake.nix 一行注册（platform = "nixos"，默认用户 fan）+ `hosts/` 系统层配置（见 `hosts/README.md`）。机器微调放 `home/fan/<hostName>/default.nix`。
+`nix-pve` 已由 `nixosConfigurations.nix-pve` 管理；系统层见 `hosts/nix-pve/`，用户层见 `home/fan/nix-pve/`。
 
-```nix
-"fan@laptop" = mkHomeConfig { hostName = "laptop"; system = "x86_64-linux"; };
-laptop = self.homeConfigurations."fan@laptop".activationPackage;   # packages 块
+```bash
+sudo nixos-rebuild switch --flake .#nix-pve
 ```
 
-> TODO：系统层（nixosConfigurations）、本机密钥文件初始化、首装流程待补。
+comin 已启用，会轮询 `main` 自动部署；手动命令用于首次接入和故障恢复。
 
-## 构建 macOS（待补）
+## 构建 macOS（已接入三台）
 
-接入方式：注册 platform = "darwin"，用户 fan（`/Users/fan`），nix-darwin 系统层见 `hosts/README.md`。mac 自带 git/vim/curl，`_common_` 的 ai/mise/shells/tmux/secrets 全部生效。
+系统层由 nix-darwin 管理，用户层由 Home Manager 管理；当前目标为 `mba-m5`、`mbp-m1`、`mini-m4`。
 
-```nix
-"fan@macbook" = mkHomeConfig { hostName = "macbook"; system = "aarch64-darwin"; platform = "darwin"; };
-macbook = self.homeConfigurations."fan@macbook".activationPackage;  # packages 块
+```bash
+nix run .#mba-m5
+nix run .#mbp-m1
+nix run .#mini-m4
 ```
 
-> TODO：darwinConfigurations 系统层、密钥文件初始化（`~/.secrets/ai.env`）、首装流程待补。
+mini-m4 已启用 comin 自动部署；三台机器的系统层结构见 `hosts/README.md`。
 
 ## 密钥与环境变量（三平台通用）
 
 | 平台 | 密钥文件 | 来源 |
 |---|---|---|
-| 容器（root） | `/root/.secrets/ai.env` | compose 挂载宿主机 |
-| NixOS 真机（fan） | `/home/fan/.secrets/ai.env` | 本机文件（chmod 600） |
-| mac（fan） | `/Users/fan/.secrets/ai.env` | 本机文件（chmod 600） |
+| 容器（root） | `/root/.secrets/ai.env` | `secrets/ai.env.age`（activation 解密；私钥由宿主机挂载） |
+| NixOS 真机（fan） | `/home/fan/.secrets/ai.env` | `secrets/ai.env.age`（activation 解密） |
+| mac（fan） | `/Users/fan/.secrets/ai.env` | `secrets/ai.env.age`（activation 解密） |
 
-`_common_/secrets.nix` 统一 `source $HOME/.secrets/ai.env`（缺失静默跳过），密钥不进 nix 配置、不提交 git。`ai.env` 只存三个源 key（AI_FAN_CLAUDE / AI_FAN_CODEX / AI_FAN_CHAT），工具变量（ANTHROPIC_AUTH_TOKEN、PIPI_*）由 secrets.nix 映射派生；`PI_CONFIG_GIT_TOKEN` 供 pi 配置仓库拉取（`_common_/pi.nix`）。非敏感全局变量用 `home.sessionVariables`（全平台生效）。
+`_common_/secrets.nix` 在 activation 阶段用 `$HOME/.secrets/age-keys.txt` 解密 `ai.env` 与 git 凭据；私钥缺失或解密失败会中止部署。zsh 启动时仅在 `ai.env` 已存在时 source。`ai.env` 只存三个源 key（AI_FAN_CLAUDE / AI_FAN_CODEX / AI_FAN_CHAT），工具变量（ANTHROPIC_AUTH_TOKEN、PIPI_*）由 secrets.nix 映射派生；`PI_CONFIG_GIT_TOKEN` 供 pi 配置仓库拉取（`modules/home/pi.nix`）。非敏感全局变量用 `home.sessionVariables`。
 
 ## 镜像控制
 
@@ -184,7 +181,7 @@ nix flake check              # 语法检查（有 nix 的机器上）
 | install_packages（apt 基础包） | `_linux_/base.nix`（git/vim/curl）+ `_ubuntu_/base.nix`（make/net-tools，容器经 `_container_` 继承） |
 | git config --global | `_common_/base.nix` programs.git |
 | install_oh_my_zsh（gh-proxy） | `_common_/shells.nix`（clone + 插件 + 主题） |
-| install_mise | `_common_/mise.nix`（mise 本体；组件清单分机器确定） |
+| install_mise | `modules/home/mise.nix`（mise 本体；组件清单由 `_container_/mise.nix` 按机器确定） |
 | install_docker + compose + network fan | `_linux_/docker.nix`（仅 Linux 系，容器跳过） |
-| ssh_config（公钥 + 禁密码） | `_common_/ssh.nix`（activation，防锁死回滚） |
+| ssh_config（公钥 + 禁密码） | `modules/home/ssh.nix`（activation，防锁死回滚） |
 | BBR / TUN / root shell / apt 源 | 系统级，装机时处理（Dockerfile / 系统层） |

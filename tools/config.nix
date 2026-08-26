@@ -16,6 +16,28 @@
     "https://github.com/fanxcv.keys"
   ];
 
+  # Nix 二进制缓存（Nix 模块直接读取；flake.nix/Dockerfile/PVE shell 属解析边界，手写对齐）
+  nixSubstituters = [
+    "https://mirrors.ustc.edu.cn/nix-channels/store"
+    "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+    "https://cache.nixos.org/"
+  ];
+  nixCachixSubstituters = [
+    "https://cache.numtide.com"
+    "https://nix-community.cachix.org"
+  ];
+  nixCachixTrustedPublicKeys = [
+    "cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+    "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+  ];
+
+  # Docker/Podman/OrbStack registry mirrors（Nix 模块直接读取；pve/apply.sh 静态块手写对齐）
+  dockerRegistryMirrors = [
+    "https://docker.xuanyuan.me"
+    "https://docker.1ms.run"
+    "https://docker.m.daocloud.io"
+  ];
+
   # RustDesk 自建 hbbs/hbbr（客户端注入统一由 tools/rustdesk-inject.py 实现）
   rustdesk = {
     server = "120.55.164.147:21116";
