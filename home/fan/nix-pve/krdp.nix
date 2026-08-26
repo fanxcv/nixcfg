@@ -17,8 +17,7 @@
       Type = "simple";
       Restart = "on-failure";
       RestartSec = 5;
-      # KDE Wayland 会话的 socket 名（SDDM 默认 wayland-0；异常登录多次可能变 -1，届时改这里）
-      Environment = "WAYLAND_DISPLAY=wayland-0";
+      # X11 会话（defaultSession=plasmax11）：krdp 自动用 X11 捕获，无需 WAYLAND_DISPLAY
       # 证书幂等生成（KCM 同款路径 ~/.local/share/krdpserver/，自签名 10 年）
       ExecStartPre = ''
         ${pkgs.bash}/bin/bash -c 'test -f %h/.local/share/krdpserver/krdp.crt || { mkdir -p %h/.local/share/krdpserver && ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -out %h/.local/share/krdpserver/krdp.crt -keyout %h/.local/share/krdpserver/krdp.key -subj /CN=nix-pve >/dev/null 2>&1; }'

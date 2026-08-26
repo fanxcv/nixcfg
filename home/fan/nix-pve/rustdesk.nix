@@ -8,7 +8,7 @@
 #   - trusted_devices 不预写（mac 那份是 mac 实机的设备 id；nix-pve 首次被连时 GUI 确认添加）
 # 机制沿用 mac 实机验证结论：RustDesk2.toml 的 [options] 是权威（local 的 [options] 会被 GUI 启动
 #   清空）；enable-udp-punch/enable-ipv6-punch 读 local → 两文件 [options] 全键双写
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 let
   # 自建 hbbs 服务器（与 hbbr 同机，RustDesk 自动推断 relay；同 mac 版）
   rendezvousServer = "120.55.164.147:21116";
@@ -18,6 +18,20 @@ in
 {
   # 官方二进制包（packages/ 本地包集合，github release deb 解包；githubFetchBase 用默认=直连，包内主 URL 自带镜像不受影响）
   home.packages = [ (import ../../../packages { inherit pkgs; }).rustdesk-bin ];
+
+  # KDE 自动启动（deb 包未带 autostart 文件）：登录后自启，替代 RustDesk 的"请求权限"（root 服务模式）
+  # 注意：rustdesk-bin 跑在 buildFHSEnv 的 bwrap 沙箱里，bwrap 强制 no_new_privs → sudo setuid 失效，
+  #   点"请求权限"输入密码必报 "If sudo is running in a container..."——沙箱固有限制，无解；
+  #   普通用户模式远程控制完整可用，自启走 KDE autostart 即可，勿用 root 服务模式
+  home.file.".config/autostart/rustdesk.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=RustDesk
+    Comment=RustDesk remote desktop
+    Exec=${config.home.profileDirectory}/bin/rustdesk
+    X-GNOME-Autostart-enabled=true
+    X-KDE-autostart-after=panel
+  '';
 
   home.activation.setupRustDesk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_rustdesk() {

@@ -1,4 +1,4 @@
-# 系统 locale：默认 en_US（与 mac 一致），支持中文（fcitx5 输入法 + Noto CJK 字体）
+# 系统 locale：默认 zh_CN（SDDM 登录界面/系统服务中文；用户终端 LANG 由 home.language.base 决定，保持 en_US）
 {
   lib,
   pkgs,
@@ -6,7 +6,7 @@
   ...
 }:
 {
-  i18n.defaultLocale = lib.mkDefault "en_US.UTF-8";
+  i18n.defaultLocale = lib.mkDefault "zh_CN.UTF-8";
   i18n.supportedLocales = lib.mkDefault [
     "en_US.UTF-8/UTF-8"
     "zh_CN.UTF-8/UTF-8"
