@@ -20,6 +20,8 @@ id_ed25519
 *.swp
 .idea/
 files/
+__pycache__/
+*.pyc
 
 # === docker/ide ===
 docker/ide/*

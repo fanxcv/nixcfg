@@ -5,8 +5,14 @@
 { lib, ... }:
 {
   homebrew.casks = lib.mkAfter [
-    { name = "wechat"; }                  # 微信（dock 固定应用需要）
+    { name = "visual-studio-code"; }      # 编辑器（共享层已有，冗余无害）
     { name = "qq"; }                      # QQ 聊天（dock 固定应用需要）
+    { name = "wechat"; }                  # 微信（dock 固定应用需要）
+    { name = "jetbrains-toolbox"; }       # IDE 管理器
     { name = "microsoft-remote-desktop"; } # Windows App（微软远程桌面）
+    { name = "wechatwebdevtools"; }  # 微信开发者工具（小程序/公众号）
+    { name = "neteasemusic"; }       # 网易云音乐
+    { name = "tencent-meeting"; }    # 腾讯会议
+    { name = "wpsoffice"; }          # WPS Office
   ];
 }

@@ -66,7 +66,7 @@ common:
 
   zsh:                      # shell（→ shells.nix；oh-my-zsh git clone 自动装）
     theme: fishy-custom
-    plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions, mise]
+    plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]
     aliases: cat=bat, ls=eza --icons --group-directories-first, ll=eza -lah --git --group-directories-first --time-style=long-iso
     disable_compfix: true   # nix store 目录 compaudit 误报，跳过补全安全检查
     enable_completion: false  # HM 不生成 compinit（omz 接管）
@@ -147,7 +147,6 @@ macos:
       - tencent-lemon       # 系统清理
       - bitwarden
       - tailscale-app       # 组网（App 版）
-      - clash-verge-rev
       - visual-studio-code  # vscode 商店版（扩展/设置 nix 声明）
     formulae:               # brew 命令行公式（→ base/homebrew.nix；autoMigrate 已开）
       - syncthing           # P2P 文件同步（~/sync，LaunchAgent 自启）
@@ -225,14 +224,14 @@ macos:
         memory_mib: 8192    # VM 内存上限 8G
         auto_update: false
         registry_mirrors: [https://docker.xuanyuan.me, https://docker.1ms.run, https://docker.m.daocloud.io]
-      clash_verge:          # 代理客户端（→ clash-verge.nix + apply.py，激活期幂等注入，App 重启生效）
+      clashx_meta:          # 代理客户端（→ clashx-meta.nix + apply.py，GitHub release 下载安装 + 激活期幂等注入，App 重启生效）
+        version: 1.4.43     # 升级改这里（GitHub release 版本，→ clashx-meta.nix 同步）
         subscription: https://xx.fan-x.eu.org/api/v1/client/subscribe?token=eaa63ab248c016278df7f8f6d2847757
-        mixed_port: 7890
-        auto_launch: true
-        silent_start: true
-        allow_lan: true
-        dns_override: false
-        ipv6: false
+        mixed_port: 7890    # 注入订阅 yaml 的 mixed-port（ClashX 读 config 的 mixed-port 作混合端口）
+        allow_lan: true     # allowConnectFromLan
+        show_net_speed: true  # showNetSpeedIndicator（菜单栏实时网速）
+        auto_update_core: true   # 默认行为（App 启动自动检查核心更新），无需注入
+        auto_update_subscription: true  # kAutoUpdateEnable（2h 自动更新订阅）
       edge_extensions:      # Edge 扩展（→ edge-ext/data.nix + hosts/_darwin_/base/edge-policy.nix 企业策略 force_installed）
         # Edge 129+ 禁用 External Extensions JSON → 必须走企业策略；策略装的扩展不可手动卸载（从清单移除即卸载）
         # store: edge=Edge 商店 / chrome=Chrome 商店；Chrome 商店扩展国内直连不可达，依赖 clash 系统代理
@@ -301,7 +300,7 @@ macos:
         ssh_id_rsa: SSH 身份密钥     # secrets/hosts/mba-m5/ssh_id_rsa.age（mba-m5/mbp-m1 共用）
     mbp-m1:                 # → hosts/mbp-m1/ + home/fan/mbp-m1/
       system:
-        apps: [qq, wechat, microsoft-remote-desktop]
+        apps: [visual-studio-code, qq, wechat, jetbrains-toolbox, microsoft-remote-desktop, wechatwebdevtools, neteasemusic, tencent-meeting, wpsoffice]  # 后 4 个为 cask 接管（→ hosts/mbp-m1/homebrew.nix）
         dock.persistent_apps: [iterm2, wechat, qq, Microsoft Edge]
       user:
         ssh_config: 客户端 SSH 配置

@@ -25,7 +25,7 @@ in
     envExtra = nixShSource;
     initContent = ''
       # ---- oh-my-zsh（git clone 方式，安装/更新见下方 home.activation）----
-      plugins=(git zsh-syntax-highlighting zsh-autosuggestions mise)
+      plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
       export ZSH="$HOME/.oh-my-zsh"
       export ZSH_CUSTOM="$ZSH/custom"
       # 主题必须在 source oh-my-zsh.sh 之前设置，否则加载瞬间仍是默认 robbyrussell
