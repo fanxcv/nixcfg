@@ -4,7 +4,7 @@
 #   前缀由 tools/config.nix 的 githubProxy 声明（换代理只改一处 + 跑 scripts/switch-github-proxy.sh 同步 flake inputs）
 # 注意：clone 的 origin 即安装地址，oh-my-zsh 自动更新 / omz update 天然走同一通道
 
-{ pkgs, lib, self, tools, platform ? "container", ... }:
+{ pkgs, lib, self, tools, config, platform ? "container", ... }:
 let
   # NixOS 的 nix 由系统 profile 提供（/run/current-system/sw），无 /nix/var/nix/profiles/default；
   # 仅容器/darwin 单用户 nix 需要 source nix.sh 加载 PATH
@@ -25,7 +25,8 @@ in
     envExtra = nixShSource;
     initContent = ''
       # ---- oh-my-zsh（git clone 方式，安装/更新见下方 home.activation）----
-      plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
+      # mise 插件随 softwares.mise.enable 门控：装了 mise 的机器才 activate（omz 官方插件，不需 clone）
+      plugins=(git zsh-syntax-highlighting zsh-autosuggestions${lib.optionalString config.softwares.mise.enable " mise"})
       export ZSH="$HOME/.oh-my-zsh"
       export ZSH_CUSTOM="$ZSH/custom"
       # 主题必须在 source oh-my-zsh.sh 之前设置，否则加载瞬间仍是默认 robbyrussell
