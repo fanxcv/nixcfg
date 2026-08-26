@@ -1,5 +1,5 @@
 # Homebrew casks 清单（GUI 应用，三台 Mac 公共）
-# 由 wanted.yaml 的 macos.all_macs.apps 维护：改清单后同步即可
+# 由 wanted.yaml 的 macos.system.apps 维护：改清单后同步即可
 # 从清单移除 = 下次 darwin-rebuild 自动卸载；个别机器差异化时：
 #   把该机器要增减的条目移到 hosts/<host>/homebrew.nix 用 lib.mkAfter 追加
 _: {

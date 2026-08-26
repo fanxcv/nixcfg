@@ -59,7 +59,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # git 驱动的自动部署（服务器轮询仓库自动 nixos-rebuild），等真机接入后启用
+    # git 驱动自动部署：mini-m4 与 nix-pve 已启用（服务器轮询仓库自动切换配置）
     comin = {
       url = "git+https://ghfast.top/https://github.com/nlewo/comin.git?ref=refs/tags/v0.14.0&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -259,7 +259,7 @@
       # --- NixOS 真机：nix-pve（Proxmox VE 上的虚拟机，128G 盘 + KDE Plasma 桌面）---
       # 系统层：hosts/nix-pve/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面）
       # 用户层：users/fan 的 home-manager.users 指向 home/fan/nix-pve（复用同一份 home 配置）
-      # 部署：nixos-rebuild switch --flake .#nix-pve（手动；comin 自动部署未启用）
+      # 部署：nixos-rebuild switch --flake .#nix-pve；comin 已启用，轮询 main 自动部署
       nixosConfigurations.nix-pve = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         # 与 mkHomeConfig 同款 pkgs：overlay 注入 + unfree 放行（unfreeAllowlist + microsoft-edge / libsciter[clash-verge-rev]）

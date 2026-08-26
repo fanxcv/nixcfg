@@ -177,15 +177,14 @@ nix flake update            # 升级全部依赖（nixpkgs 稳定版点更新，
 nix flake check              # 语法检查（有 nix 的机器上）
 ```
 
-## 与 alpine-init.sh 的迁移对照
+## 与旧初始化脚本的迁移对照
 
-| alpine-init.sh | 本仓库 |
+| 旧脚本步骤 | 本仓库 |
 |---|---|
-| install_packages（apk/apt 基础包） | `_linux_/base.nix`（git/vim/curl）+ `_ubuntu_/base.nix`（make/net-tools，容器经 `_container_` 继承）+ `_alpine_/base.nix`（busybox/cacert） |
+| install_packages（apt 基础包） | `_linux_/base.nix`（git/vim/curl）+ `_ubuntu_/base.nix`（make/net-tools，容器经 `_container_` 继承） |
 | git config --global | `_common_/base.nix` programs.git |
 | install_oh_my_zsh（gh-proxy） | `_common_/shells.nix`（clone + 插件 + 主题） |
 | install_mise | `_common_/mise.nix`（mise 本体；组件清单分机器确定） |
 | install_docker + compose + network fan | `_linux_/docker.nix`（仅 Linux 系，容器跳过） |
 | ssh_config（公钥 + 禁密码） | `_common_/ssh.nix`（activation，防锁死回滚） |
-| post_config_alpine（PubkeyAcceptedKeyTypes） | `_alpine_/ssh.nix` |
-| BBR / TUN / root shell / apk·apt 源 | 系统级，装机时处理（Dockerfile / 系统层） |
+| BBR / TUN / root shell / apt 源 | 系统级，装机时处理（Dockerfile / 系统层） |
