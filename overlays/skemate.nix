@@ -1,17 +1,16 @@
 # skemate（自研终端复用服务）分发 overlay
 # 二进制托管在 w-apis.qksxin.com/terminal，version/sha256 不再硬编码：
-# latest.json 由 builtins.fetchurl 无 hash 动态拉取（每次 eval 重新下载，667B 可忽略），
-# 天然跟随官方新版本，无需 flake input / lock / 手动刷新。
-# 2026-08 根治：原 flake=false input 方案（skemate-latest）弃用——动态内容被 narHash 锁定，
-# 发版后各机器 fetcher-cache 缓存旧内容导致 "mismatch in field 'narHash'"，且 --refresh 对 file input 无效。
-# 注意：builtins.fetchurl 无 hash 属 impure 操作，eval 必须 --impure（flake 命令 pure 模式仅此可关）。
+# latest.json 作为 flake input 锁定（flake.nix 的 skemate-latest，flake=false），
+# 此文件在 flake.lock 里锁 narHash，nix flake update 即自动跟随官方新版本。
+# 升级流程（零手工）：
+#   nix flake update skemate-latest   # 只刷新元数据（或全量 nix flake update）
+#   之后各机器 rebuild 即拉到新版本二进制（builtins.fetchurl 按最新 url+sha256 下载）
 # 平台：以 latest.json 的 platforms 键为准（当前 linux-amd64 / darwin-arm64 / linux-arm64），
 #       未发布的平台直接 throw
 
-{ lib }:
+{ lib, skemateLatest }:
 final: prev: let
-  release = builtins.fromJSON (builtins.readFile
-    (builtins.fetchurl "https://w-apis.qksxin.com/terminal/latest.json"));
+  release = builtins.fromJSON (builtins.readFile skemateLatest);
 in {
   skemate = final.stdenv.mkDerivation {
     pname = "skemate";
@@ -26,7 +25,7 @@ in {
       }.${final.stdenv.hostPlatform.system} or (throw
         "skemate: 平台 ${final.stdenv.hostPlatform.system} 无官方构建（latest.json platforms 键）");
       info = release.platforms.${platformKey} or (throw
-        "skemate: latest.json 缺 ${platformKey} 平台条目，请检查 w-apis.qksxin.com/terminal/latest.json");
+        "skemate: latest.json 缺 ${platformKey} 平台条目，请先 nix flake update skemate-latest");
     in builtins.fetchurl {
       # latest.json 的 url 形如 /0.5.74/skemate-linux-amd64（含 skemate- 前缀）
       url = "https://w-apis.qksxin.com/terminal/${release.version}/skemate-${platformKey}";

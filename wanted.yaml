@@ -325,7 +325,7 @@ linux:
     file_backup: ".backup"  # 手配文件冲突自动备份再覆盖
     secrets: agenix         # docker/ide/.secrets/age-keys.txt → 解密 ai.env/git-credentials
     skemate:                # 终端复用服务（→ overlays/skemate.nix + _container_/skemate.nix，两台共用）
-      version: fetchurl 动态  # 版本由 overlay 内 builtins.fetchurl 无 hash 实时拉取，部署自动跟随（不手写版本号）
+      version: latest.json 锁定  # 版本由 flake input skemate-latest 动态解析，nix flake update 跟随（不手写版本号）
       service: systemd      # serve 前台 + Restart=always + SHELL=/bin/zsh
       config: 宿主机挂载      # docker/ide/skemate/ → /root/.config/skemate
     lazygit: true           # HM 配置模块（programs.lazygit.enable；包已由 common.pkgs 装，容器无手配 config.yml 不冲突）
