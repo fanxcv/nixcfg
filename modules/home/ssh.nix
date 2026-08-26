@@ -1,7 +1,7 @@
 # ssh 配置模块（从 _common_/ssh.nix + 机器层 ssh.nix/ssh-config.nix 收敛，加 softwares.ssh.enable 门控）
 # 三块逻辑：
 #   1. 授权公钥拉取 + sshd 禁用密码（对应 alpine-init.sh 的 ssh_config()，所有平台；mac 的 uname 守卫自动跳过系统加固）
-#   2. darwin 用户身份密钥解密（~/.ssh/id_rsa，age 路径按 hostName 参数化 → secrets/hosts/<host>/ssh_id_rsa.age）
+#   2. darwin 用户身份密钥解密（~/.ssh/id_rsa，age 路径按 hostName 参数化 → secrets/hosts/<host>/ssh-user-key.age）
 #   3. ssh config 解密（~/.ssh/config ← secrets/ssh-config.age；mba-m5/mbp-m1/nix-pve 需要；nix-pve 额外删 orbstack include 行）
 # 启用：common 默认 enable=true；某台不装 → 机器层 softwares.ssh.enable = lib.mkForce false
 
@@ -46,9 +46,9 @@
             grep -qF "$1" "$pve_keys" 2>/dev/null || { echo "$1" >> "$pve_keys"; echo "PVE: 公钥已并入集群信任（$(echo "$1" | cut -c1-40)…）"; }
           }
           ${pkgs.curl}/bin/curl -sfL --max-time 15 "${tools.githubUrl "https://github.com/fanxcv.keys"}" 2>/dev/null | while read -r line; do add_key "$line"; done || true  # || true：pipefail 下 curl 超时/网络不通不中断 activate（公钥拉取失败容忍）
-          add_key "$(cat ${toString ../../secrets/hosts/mini-m4/ssh_id_rsa.pub} 2>/dev/null)"
-          add_key "$(cat ${toString ../../secrets/hosts/mba-m5/ssh_id_rsa.pub} 2>/dev/null)"
-          add_key "$(cat ${toString ../../secrets/hosts/mbp-m1/ssh_id_rsa.pub} 2>/dev/null)"
+          add_key "$(cat ${toString ../../secrets/hosts/mini-m4/ssh-user-key.pub} 2>/dev/null)"
+          add_key "$(cat ${toString ../../secrets/hosts/mba-m5/ssh-user-key.pub} 2>/dev/null)"
+          add_key "$(cat ${toString ../../secrets/hosts/mbp-m1/ssh-user-key.pub} 2>/dev/null)"
           # 合并后转普通分支的 sshd 加固（PasswordAuthentication no 等）
         else
           keys_tmp="$HOME/.ssh/authorized_keys.tmp"
@@ -57,11 +57,11 @@
             && [ -s "$keys_tmp" ]; then
             # 追加 mac 身份公钥（各台自己的 id_rsa：mini-m4 / mba-m5 / mbp-m1，即原 mac-pub.pub；
             # github 集合可能不含最新 key，防激活覆盖锁死）
-            # 注意 mba-m5 与 mbp-m1 共用同一套 id_rsa（secrets/hosts/<host>/ssh_id_rsa.pub 同内容，
+            # 注意 mba-m5 与 mbp-m1 共用同一套用户密钥（secrets/hosts/<host>/ssh-user-key.pub 同内容，
             #   authorized_keys 重复行无害，ssh 按 key 去重）
-            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mini-m4/ssh_id_rsa.pub}' >> "$keys_tmp"
-            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mba-m5/ssh_id_rsa.pub}' >> "$keys_tmp"
-            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mbp-m1/ssh_id_rsa.pub}' >> "$keys_tmp"
+            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mini-m4/ssh-user-key.pub}' >> "$keys_tmp"
+            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mba-m5/ssh-user-key.pub}' >> "$keys_tmp"
+            printf '%s\n' '${builtins.readFile ../../secrets/hosts/mbp-m1/ssh-user-key.pub}' >> "$keys_tmp"
             mv -f "$keys_tmp" "$HOME/.ssh/authorized_keys"
             chmod 600 "$HOME/.ssh/authorized_keys"
           else
@@ -127,7 +127,7 @@
       lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         umask 077
         ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
-          -o "${config.home.homeDirectory}/.ssh/id_rsa" ${../../secrets/hosts/${hostName}/ssh_id_rsa.age}
+          -o "${config.home.homeDirectory}/.ssh/id_rsa" ${../../secrets/hosts/${hostName}/ssh-user-key.age}
       ''
     );
 

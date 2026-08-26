@@ -21,5 +21,5 @@ import ../mkHost.nix {
   ip = "10.2.241.88/24";
   extra = [ "video=efifb:off,vesafb:off" ];
   tailscaleForward = true;
-  tailscaleState = ../../secrets/hosts/fan/tailscale-fan-state.age;
+  tailscaleState = ../../secrets/hosts/fan/tailscale-state.age;
 }

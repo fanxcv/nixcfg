@@ -24,12 +24,12 @@
       local age_bin="${pkgs.age}/bin/age"
       local base=${../../..}/secrets/hosts/mini-m4
       mkdir -p "$dir"
-      "$age_bin" -d -i "$HOME/.secrets/age-keys.txt" -o "$dir/tunnel.yaml" "$base/skemate-tunnel.yaml.age"
+      "$age_bin" -d -i "$HOME/.secrets/age-keys.txt" -o "$dir/tunnel.yaml" "$base/skemate-tunnel.age"
       chmod 644 "$dir/tunnel.yaml"
       # config.json：nix 只管理 password 字段——存在则仅覆盖 password（保留用户手动配置），
       # 不存在则新建仅含 password 的文件；先解密到临时文件再合并，避免整文件覆盖丢字段
       local tmp="$dir/.config.json.tmp"
-      "$age_bin" -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" "$base/skemate-config.json.age"
+      "$age_bin" -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" "$base/skemate-config.age"
       if [ -f "$dir/config.json" ]; then
         ${pkgs.jq}/bin/jq --arg pw "$(${pkgs.jq}/bin/jq -r .password "$tmp")" '.password = $pw' "$dir/config.json" > "$tmp.merged"
         mv "$tmp.merged" "$dir/config.json"

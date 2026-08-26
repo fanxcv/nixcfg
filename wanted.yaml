@@ -76,7 +76,7 @@ common:
     model: gpt-5.6-sol
     provider: fan
   pi:                       # pi agent（→ modules/home/pi.nix；~/.pi/agent 从 git.fan-x.fun 拉取，switch 后 fpi-install 更新）
-    token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai.env 读取，clone 后清 origin
+    token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai-env 读取，clone 后清 origin
   mise:                     # 运行时管理器（→ modules/home/mise.nix；config.toml 策略：不存在→模板，存在→补齐缺失键保留用户版本）
   ai:                       # beads/dolt（→ modules/home/ai.nix）
   ssh:                      # 身份密钥/authorized_keys（→ modules/home/ssh.nix）
@@ -131,7 +131,7 @@ common:
       extensions: 公共 14 剔除客户端 UI 类 3 个 + python/go profile 平铺  # 剔除 errorlens/github-theme/material-icon（server 无 UI）
 
   secrets:                  # 密钥（→ secrets.nix；fan 域统一 activation 解密 age -d，失败即部署失败）
-    ai_env: agenix          # secrets/ai.env.age → ~/.secrets/ai.env
+    ai_env: agenix          # secrets/ai-env.age → ~/.secrets/ai-env
     git_credentials: agenix  # secrets/git-credentials.age → ~/.git-credentials
 
 # ════════════════════════════════════════════════════════════
@@ -258,7 +258,7 @@ macos:
         general: { view_style: adaptive, keep_awake_incoming: false, keep_awake_outgoing: true, use_texture_render: true, av1_test: true, check_update: false }
       tailscale_headscale:   # Tailscale App 版 headscale 登录（→ tailscale.nix，激活幂等）
         server: https://headscale.fan-x.fun
-        authkey: agenix      # secrets/headscale-auth-key.txt.age
+        authkey: agenix      # secrets/headscale-auth-key.age
         hostname: 系统 LocalHostName  # 节点名取 scutil --get LocalHostName
         accept_routes: true
         accept_dns: true
@@ -299,14 +299,14 @@ macos:
         dock.persistent_apps: [iterm2, wechat, qq, Microsoft Edge]  # mkForce 覆盖共享层
       user:
         ssh_config: 客户端 SSH 配置  # secrets/ssh-config.age → ~/.ssh/config（含 OrbStack Include）
-        ssh_id_rsa: SSH 身份密钥     # secrets/hosts/mba-m5/ssh_id_rsa.age（mba-m5/mbp-m1 共用）
+        ssh_user_key: SSH 身份密钥   # secrets/hosts/mba-m5/ssh-user-key.age（mba-m5/mbp-m1 共用）
     mbp-m1:                 # → hosts/mbp-m1/（用户层无机器差异，省略 home/fan/mbp-m1/）
       system:
         apps: [qq, wechat, jetbrains-toolbox, microsoft-remote-desktop, wechatwebdevtools, tencent-meeting, wpsoffice]  # 后 3 个为 cask 接管（→ hosts/mbp-m1/homebrew.nix）；netease 手动装（dmg damaged 标记 cask 装不了）
         dock.persistent_apps: [iterm2, wechat, qq, Microsoft Edge]
       user:
         ssh_config: 客户端 SSH 配置
-        ssh_id_rsa: SSH 身份密钥
+        ssh_user_key: SSH 身份密钥
 
 # ════════════════════════════════════════════════════════════
 # ③ Linux 平台层 → home/fan/_linux_/ + _ubuntu_/ + _container_/
@@ -323,7 +323,7 @@ linux:
     ssh_host_key: agenix
     ssh_keys: true          # 授权公钥拉取 + sshd 禁密码（github 拉，挂镜像前缀）
     file_backup: ".backup"  # 手配文件冲突自动备份再覆盖
-    secrets: agenix         # docker/ide/.secrets/age-keys.txt → 解密 ai.env/git-credentials
+    secrets: agenix         # docker/ide/.secrets/age-keys → 解密 ai-env/git-credentials
     skemate:                # 终端复用服务（→ overlays/skemate.nix + _container_/skemate.nix，两台共用）
       version: latest.json 锁定  # 版本由 flake input skemate-latest 动态解析，nix flake update skemate-latest 自动跟随（不手写版本号）
       service: systemd      # serve 前台 + Restart=always + SHELL=/bin/zsh

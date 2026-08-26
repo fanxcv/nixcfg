@@ -148,11 +148,11 @@ mini-m4 已启用 comin 自动部署；三台机器的系统层结构见 `hosts/
 
 | 平台 | 密钥文件 | 来源 |
 |---|---|---|
-| 容器（root） | `/root/.secrets/ai.env` | `secrets/ai.env.age`（activation 解密；私钥由宿主机挂载） |
-| NixOS 真机（fan） | `/home/fan/.secrets/ai.env` | `secrets/ai.env.age`（activation 解密） |
-| mac（fan） | `/Users/fan/.secrets/ai.env` | `secrets/ai.env.age`（activation 解密） |
+| 容器（root） | `/root/.secrets/ai.env` | `secrets/ai-env.age`（activation 解密；私钥由宿主机挂载） |
+| NixOS 真机（fan） | `/home/fan/.secrets/ai.env` | `secrets/ai-env.age`（activation 解密） |
+| mac（fan） | `/Users/fan/.secrets/ai-env` | `secrets/ai-env.age`（activation 解密） |
 
-`_common_/secrets.nix` 在 activation 阶段用 `$HOME/.secrets/age-keys.txt` 解密 `ai.env` 与 git 凭据；私钥缺失或解密失败会中止部署。zsh 启动时仅在 `ai.env` 已存在时 source。`ai.env` 只存三个源 key（AI_FAN_CLAUDE / AI_FAN_CODEX / AI_FAN_CHAT），工具变量（ANTHROPIC_AUTH_TOKEN、PIPI_*）由 secrets.nix 映射派生；`PI_CONFIG_GIT_TOKEN` 供 pi 配置仓库拉取（`modules/home/pi.nix`）。非敏感全局变量用 `home.sessionVariables`。
+`_common_/secrets.nix` 在 activation 阶段用 `$HOME/.secrets/age-keys.txt` 解密 `ai-env` 与 git 凭据；私钥缺失或解密失败会中止部署。zsh 启动时仅在 `ai-env` 已存在时 source。`ai-env` 只存三个源 key（AI_FAN_CLAUDE / AI_FAN_CODEX / AI_FAN_CHAT），工具变量（ANTHROPIC_AUTH_TOKEN、PIPI_*）由 secrets.nix 映射派生；`PI_CONFIG_GIT_TOKEN` 供 pi 配置仓库拉取（`modules/home/pi.nix`）。非敏感全局变量用 `home.sessionVariables`。
 
 ## 镜像控制
 

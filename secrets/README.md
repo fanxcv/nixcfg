@@ -21,25 +21,25 @@
 
 ```
 secrets/
-├── age-keys.txt.age              # age 私钥备份（公共：所有机共用一把私钥）
-├── ai.env.age                    # 各机激活解密（_common_/secrets.nix）
+├── age-keys.age                  # age 私钥备份（公共：所有机共用一把私钥；本地忽略）
+├── ai-env.age                    # 各机激活解密（_common_/secrets.nix）
 ├── git-credentials.age           # ~/.git-credentials（公共）
-├── headscale-auth-key.txt.age    # tailscale pre-auth key（三 mac，公共）
+├── headscale-auth-key.age        # tailscale pre-auth key（三 mac，公共）
 ├── ssh-config.age                # ~/.ssh/config（mba/mbp/nix-pve，公共）
 ├── syncthing-gui-password.age    # syncthing GUI 密码（三 mac + nix-pve，公共）
 ├── encrypt.sh / keys.nix / README.md
 └── hosts/
-    ├── ide-lenovo/  ssh_host_ed25519_key.age + .pub（明文）
-    ├── ide-si/      ssh_host_ed25519_key.age + .pub（明文）
-    ├── mba-m5/      ssh_id_rsa.age + .pub
-    ├── mbp-m1/      ssh_id_rsa.age + .pub
+    ├── ide-lenovo/  ssh-host-key.age + .pub（明文）
+    ├── ide-si/      ssh-host-key.age + .pub（明文）
+    ├── mba-m5/      ssh-user-key.age + .pub
+    ├── mbp-m1/      ssh-user-key.age + .pub
     ├── mini-m4/     bill-app-android-release.p12.age（签名密钥）
-    │                skemate-config.json.age + skemate-tunnel.yaml.age  # config.json 仅 password 字段由 nix 管理，其余用户自管
-    │                ssh_id_rsa.age + .pub
+    │                skemate-config.age + skemate-tunnel.age  # config.json 仅 password 字段由 nix 管理，其余用户自管
+    │                ssh-user-key.age + .pub
     ├── nix-pve/     comin-token.age（mini-m4 共用）、fan-password.age
-    │                ssh_host_ed25519_key.age + .pub（明文）
-    ├── fan/         tailscale-fan-state.age
-    └── mi/          tailscale-mi-state.age、lucky-data.age
+    │                ssh-host-key.age + .pub（明文）、tailscale-state.age
+    ├── fan/         tailscale-state.age
+    └── mi/          tailscale-state.age、lucky-data.age
 ```
 
 ## 加密新文件
@@ -63,7 +63,7 @@ age -d -i ~/.secrets/age-keys.txt secrets/hosts/nix-pve/fan-password.age
 ## 启用（home-manager 侧）
 
 1. 加密文件就位（.age 已入库）
-2. `home/fan/_common_/secrets.nix` agenix 块已启用（ai.env/git-credentials）
+2. `home/fan/_common_/secrets.nix` agenix 块已启用（ai-env/git-credentials）
 3. 各模块自带解密：tailscale/ssh/keystore/skemate 等（见各自 .nix）
 4. 私钥就位：`$HOME/.secrets/age-keys.txt`（chmod 600，**永不提交 git**）
    - 容器：compose 挂载 `./.secrets → /root/.secrets`（docker/ide/ 目录下）

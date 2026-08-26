@@ -2,7 +2,7 @@
 # 无 bind mount（compose 已移除 ./ssh-keys 挂载）：key 由本激活脚本写容器内目录并同步 /etc/ssh/；
 # 容器重建后 entrypoint 会先生成临时 key，激活时总是覆盖（age -d 本地解密毫秒级）+ reload sshd
 # entrypoint.sh（docker/ide/ubuntu/entrypoint.sh）检测到 key 存在则跳过生成，直接 cp 到 /etc/ssh/
-# 密钥文件：secrets/hosts/<hostName>/ssh_host_ed25519_key.age（加密）+ .pub（明文，直接拷贝）
+# 密钥文件：secrets/hosts/<hostName>/ssh-host-key.age（加密）+ .pub（明文，直接拷贝）
 # （与 nix-pve 同构：私钥 encrypt.sh 加密，公钥明文入库）
 
 {
@@ -23,9 +23,9 @@
     mkdir -p "$KEY_DIR"
     umask 077
     # 总是解密覆盖（容器重建后 entrypoint 生成的临时 key 会被替换为固定 key）
-    "$AGE_BIN" -d -i "$AGE_KEY" -o "$KEY_DIR/ssh_host_ed25519_key" ${../../..}/secrets/hosts/${hostName}/ssh_host_ed25519_key.age
+    "$AGE_BIN" -d -i "$AGE_KEY" -o "$KEY_DIR/ssh_host_ed25519_key" ${../../..}/secrets/hosts/${hostName}/ssh-host-key.age
     # 公钥明文入库，直接拷贝（不加密）
-    cp -f ${../../..}/secrets/hosts/${hostName}/ssh_host_ed25519_key.pub "$KEY_DIR/ssh_host_ed25519_key.pub"
+    cp -f ${../../..}/secrets/hosts/${hostName}/ssh-host-key.pub "$KEY_DIR/ssh_host_ed25519_key.pub"
     chmod 600 "$KEY_DIR/ssh_host_ed25519_key"
     chmod 644 "$KEY_DIR/ssh_host_ed25519_key.pub"
     # 同步到 sshd 实际使用路径并重载（重建后 entrypoint 的临时 key 尚未被替换）

@@ -73,13 +73,13 @@
 
 ### secrets 架构（无兑底链，单一机制）
 
-- **fan 域 secrets**（ai.env / git-credentials / tailscale authkey / ssh 私钥 / keystore / skemate 配置）：
+- **fan 域 secrets**（ai-env / git-credentials / tailscale authkey / ssh 私钥 / keystore / skemate 配置）：
   统一由 `home.activation` 解密——`${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o <目标> <secrets/*.age>`，
   模式见 home/fan/_common_/secrets.nix 与各模块。**失败即部署失败**（无 if 无 || true）。
 - **系统域 secrets**（NixOS host keys、nix-pve comin 等）：走 agenix 系统层（hosts/ 下声明，root 激活解密）。
 - **禁止**：HM 层 age.secrets 声明（agenix homeManagerModules 已整体移除）、
   agenixContainerFallback 类兑底链、条件跳过解密。
-- 密钥维护：明文放 secrets/source/ → `./secrets/encrypt.sh` 生成 .age（git 可公开），私钥 $HOME/.secrets/age-keys.txt。
+- 密钥维护：明文放 secrets/source/ → `./secrets/encrypt.sh` 生成 .age（git 可公开），私钥 `$HOME/.secrets/age-keys.txt`。
 
 ### 激活脚本规范
 

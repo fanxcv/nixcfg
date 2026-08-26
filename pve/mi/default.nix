@@ -42,6 +42,6 @@ import ../mkHost.nix {
   hostName = "mi";
   ip = "10.2.241.92/24";
   tailscaleForward = true;
-  tailscaleState = ../../secrets/hosts/mi/tailscale-mi-state.age;
+  tailscaleState = ../../secrets/hosts/mi/tailscale-state.age;
   luckyData = ../../secrets/hosts/mi/lucky-data.age;
 }

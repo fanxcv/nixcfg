@@ -8,7 +8,7 @@
 # MagicDNS：tailscaled 默认 --accept-dns=true，经 systemd-resolved 应用（见 networking.nix）；
 #   后端 nameserver（119.29.29.29/223.5.5.5）由 headscale 服务端 dns.nameservers 下发
 # authkey 轮换：headscale 上 headscale preauthkeys create -r -e 0 生成 → 写入
-#   secrets/source/headscale-auth-key.txt → ./secrets/encrypt.sh --force 重加密 → 重部署
+#   secrets/source/headscale-auth-key → ./secrets/encrypt.sh --force 重加密 → 重部署
 {
   tools,
   lib,
@@ -37,7 +37,7 @@
 
   # authkey 系统域解密（root 读；跟 comin-token 同机制）
   age.secrets."headscale-auth-key" = {
-    file = tools.relative "secrets/headscale-auth-key.txt.age";
+    file = tools.relative "secrets/headscale-auth-key.age";
     path = "/run/agenix/headscale-auth-key";
     mode = "0400";
   };
@@ -57,7 +57,7 @@
     text = ''
       if [ ! -f /var/lib/tailscale/tailscaled.state ]; then
         if ${pkgs.age}/bin/age -d -i /home/fan/.secrets/age-keys.txt \
-          -o /tmp/ts-state.tmp ${tools.relative "secrets/hosts/nix-pve/tailscale-nix-pve-state.age"} 2>/tmp/ts-state.err; then
+          -o /tmp/ts-state.tmp ${tools.relative "secrets/hosts/nix-pve/tailscale-state.age"} 2>/tmp/ts-state.err; then
           install -m 0600 -o root -g root /tmp/ts-state.tmp /var/lib/tailscale/tailscaled.state
           echo "tailscale: state 已从仓库种子恢复"
         else

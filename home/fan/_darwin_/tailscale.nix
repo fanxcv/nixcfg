@@ -16,7 +16,7 @@ let
   # headscale 服务器（若部署在子路径，补在 URL 末尾，如 https://host/headscale）
   headscaleUrl = "https://headscale.fan-x.fun";
   # 三台 mac 共享同一 headscale；authkey 解密到用户域（App 版登录走用户会话）
-  authKeyFile = ../../../secrets/headscale-auth-key.txt.age;
+  authKeyFile = ../../../secrets/headscale-auth-key.age;
   authKeyPath = "${config.home.homeDirectory}/.secrets/tailscale-headscale-authkey";
 in
 {
