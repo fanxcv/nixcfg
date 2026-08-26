@@ -17,4 +17,5 @@
     LANGUAGE=zh_CN
     Language=zh_CN
   '';
+  };
 }
