@@ -13,7 +13,12 @@
 #   common/_common_/default.nix 显式 enable=true（所有机器默认装）
 #   某台不装 → 机器层 softwares.codex.enable = lib.mkForce false
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   options.softwares.codex.enable = lib.mkEnableOption "codex（CLI 编码 agent，config 默认模板由 nix 声明）";
 

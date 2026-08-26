@@ -44,7 +44,9 @@ let
   # 幂等追加脚本：激活即跑 + oneshot 服务容器启动自动恢复
   hostsScript = pkgs.writeShellScript "ide-extra-hosts" ''
     set -eu
-    ${lib.concatMapStringsSep "\n" (line: "grep -qxF '${line}' /etc/hosts || echo '${line}' >> /etc/hosts") hostLines}
+    ${lib.concatMapStringsSep "\n" (
+      line: "grep -qxF '${line}' /etc/hosts || echo '${line}' >> /etc/hosts"
+    ) hostLines}
   '';
 
   hostsUnit = ''

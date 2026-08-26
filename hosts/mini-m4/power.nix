@@ -10,12 +10,12 @@ in
   system.activationScripts.pmset = {
     text = concatStringsSep " " [
       "pmset -c"
-      "sleep 0"          # 永不睡眠
-      "displaysleep 10"  # 10 分钟关显示器
-      "powernap 1"       # 睡眠时跑维护任务
-      "womp 1"           # 局域网唤醒
-      "hibernatemode 0"  # 仅内存睡眠
-      "standby 0"        # 禁用待机
+      "sleep 0" # 永不睡眠
+      "displaysleep 10" # 10 分钟关显示器
+      "powernap 1" # 睡眠时跑维护任务
+      "womp 1" # 局域网唤醒
+      "hibernatemode 0" # 仅内存睡眠
+      "standby 0" # 禁用待机
     ];
   };
 }

@@ -21,7 +21,7 @@ let
 in
 {
   # 官方二进制包（packages/ 本地包集合，github release deb 解包；githubFetchBase 用默认=直连，包内主 URL 自带镜像不受影响）
-  home.packages = [ (import ../../../packages { inherit pkgs; }).rustdesk-bin ];
+  home.packages = [ pkgs.rustdesk-bin ];
 
   # KDE 自动启动（deb 包未带 autostart 文件）：登录后自启，替代 RustDesk 的"请求权限"（root 服务模式）
   # 注意：rustdesk-bin 跑在 buildFHSEnv 的 bwrap 沙箱里，bwrap 强制 no_new_privs → sudo setuid 失效，

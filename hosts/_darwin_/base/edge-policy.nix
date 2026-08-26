@@ -9,7 +9,12 @@
 #   - Chrome 商店直连不可达（国内网络）→ 依赖 clash 系统代理（clash-verge 常驻，开系统代理后重启 Edge 即装）
 # 副作用：force_installed 扩展不可在 edge://extensions 内禁用/卸载（显示"由你的组织管理"），
 #   从清单（edge-extensions.nix）移除并部署后 Edge 重启即卸载
-{ pkgs, lib, tools, ... }:
+{
+  pkgs,
+  lib,
+  tools,
+  ...
+}:
 let
   ext = import (tools.relative "home/fan/_darwin_/gui/apps/edge-ext/data.nix");
   edgeStoreUrl = "https://edge.microsoft.com/extensionwebstorebase/v1/crx";
@@ -18,13 +23,13 @@ let
   # ExtensionSettings 策略条目：全部 force_installed + 显式 update_url（edge=Edge 商店 / chrome=CWS）
   policyEntries = builtins.concatStringsSep "\n" (
     builtins.map (id: ''
-        <key>${id}</key>
-        <dict>
-          <key>installation_mode</key>
-          <string>force_installed</string>
-          <key>update_url</key>
-          <string>${updateUrl ext.extensions.${id}}</string>
-        </dict>
+      <key>${id}</key>
+      <dict>
+        <key>installation_mode</key>
+        <string>force_installed</string>
+        <key>update_url</key>
+        <string>${updateUrl ext.extensions.${id}}</string>
+      </dict>
     '') (builtins.attrNames ext.extensions)
   );
   # nix 生成 plist 实体（激活期 install 到 /Library/Managed Preferences）

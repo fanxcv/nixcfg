@@ -5,7 +5,15 @@
 #   3. ssh config 解密（~/.ssh/config ← secrets/ssh-config.age；mba-m5/mbp-m1/nix-pve 需要；nix-pve 额外删 orbstack include 行）
 # 启用：common 默认 enable=true；某台不装 → 机器层 softwares.ssh.enable = lib.mkForce false
 
-{ config, lib, pkgs, tools, hostName, ... }:   # GitHub 加速/例外由 tools/config.nix 控制（tools.githubUrl）
+{
+  config,
+  lib,
+  pkgs,
+  tools,
+  hostName,
+  platform,
+  ...
+}: # GitHub 加速/例外由 tools/config.nix 控制（tools.githubUrl）
 {
   options.softwares.ssh.enable = lib.mkEnableOption "ssh 配置（公钥拉取 + sshd 加固 + 身份/ssh-config 解密）";
 
@@ -114,7 +122,8 @@
     '';
 
     # ---------- 2) darwin 用户身份密钥解密（hostName 参数化） ----------
-    home.activation.decryptSshIdRsa = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin (
+    # 门控用 platform 而非 hostPlatform.isDarwin：跨架构构建（如 darwin 宿主上构建容器配置）会误判
+    home.activation.decryptSshIdRsa = lib.mkIf (platform == "darwin") (
       lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         umask 077
         ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
@@ -123,18 +132,25 @@
     );
 
     # ---------- 3) ssh config 解密（mba-m5 / mbp-m1 / nix-pve；nix-pve 额外删 orbstack include） ----------
-    home.activation.decryptSshConfig = lib.mkIf (builtins.elem hostName [ "mba-m5" "mbp-m1" "nix-pve" ]) (
-      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        umask 077
-        mkdir -p "$HOME/.ssh"
-        chmod 700 "$HOME/.ssh"
-        ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
-          -o "${config.home.homeDirectory}/.ssh/config" ${../../secrets/ssh-config.age}
-        chmod 600 "${config.home.homeDirectory}/.ssh/config"
-        ${lib.optionalString (hostName == "nix-pve") ''
-          ${pkgs.gnused}/bin/sed -i '/^Include ~\/\.orbstack\/ssh\/config$/d' "${config.home.homeDirectory}/.ssh/config"
-        ''}
-      ''
-    );
+    home.activation.decryptSshConfig =
+      lib.mkIf
+        (builtins.elem hostName [
+          "mba-m5"
+          "mbp-m1"
+          "nix-pve"
+        ])
+        (
+          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            umask 077
+            mkdir -p "$HOME/.ssh"
+            chmod 700 "$HOME/.ssh"
+            ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
+              -o "${config.home.homeDirectory}/.ssh/config" ${../../secrets/ssh-config.age}
+            chmod 600 "${config.home.homeDirectory}/.ssh/config"
+            ${lib.optionalString (hostName == "nix-pve") ''
+              ${pkgs.gnused}/bin/sed -i '/^Include ~\/\.orbstack\/ssh\/config$/d' "${config.home.homeDirectory}/.ssh/config"
+            ''}
+          ''
+        );
   };
 }

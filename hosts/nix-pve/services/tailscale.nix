@@ -9,7 +9,12 @@
 #   后端 nameserver（119.29.29.29/223.5.5.5）由 headscale 服务端 dns.nameservers 下发
 # authkey 轮换：headscale 上 headscale preauthkeys create -r -e 0 生成 → 写入
 #   secrets/source/headscale-auth-key.txt → ./secrets/encrypt.sh --force 重加密 → 重部署
-{ tools, lib, pkgs, ... }:
+{
+  tools,
+  lib,
+  pkgs,
+  ...
+}:
 {
   services.tailscale.enable = true;
   services.tailscale.openFirewall = true;

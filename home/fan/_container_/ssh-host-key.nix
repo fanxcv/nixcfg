@@ -5,7 +5,12 @@
 # 密钥文件：secrets/hosts/<hostName>/ssh_host_ed25519_key.age（加密）+ .pub（明文，直接拷贝）
 # （与 nix-pve 同构：私钥 encrypt.sh 加密，公钥明文入库）
 
-{ lib, hostName, pkgs, ... }:
+{
+  lib,
+  hostName,
+  pkgs,
+  ...
+}:
 {
   home.activation.setupSshHostKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     KEY_DIR=/etc/ssh-host-keys

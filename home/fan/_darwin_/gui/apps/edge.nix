@@ -7,7 +7,12 @@
 #      → ~/.secrets/edge-ext/<id>.tar.age；本地目录缺失且有备份时激活自动恢复（重建机器场景）
 #      前提：Edge 未运行（运行中拷 leveldb 会损坏）；在跑则警告跳过，退出后重跑部署生效
 #   3. 禁用/拆卸 Edge 自动更新服务（EdgeUpdater）
-{ pkgs, lib, tools, ... }:
+{
+  pkgs,
+  lib,
+  tools,
+  ...
+}:
 let
   ext = import ./edge-ext/data.nix;
   # 本仓库统一 age 公钥（secrets/keys.nix 同源，各机器一把）
@@ -34,29 +39,31 @@ in
     if pgrep -f "Microsoft Edge.app/Contents/MacOS" > /dev/null 2>&1; then
       echo "警告: Edge 正在运行，跳过扩展数据备份（退出 Edge 后重新部署生效）"
     else
-      ${builtins.concatStringsSep "\n" (map (bid: ''
-        if [ -d "$storage_dir/${bid}" ]; then
-          tmp_tar="$(mktemp "$backup_dir/.edge-ext.XXXXXX.tar")"
-          chmod 600 "$tmp_tar"
-          if tar -C "$storage_dir" -cf "$tmp_tar" "${bid}"; then
-            ${pkgs.age}/bin/age -e -r "${agePubkey}" -o "$backup_dir/${bid}.tar.age" "$tmp_tar"
-          else
-            echo "警告: 扩展 ${bid} 数据打包失败，跳过备份" >&2
+      ${builtins.concatStringsSep "\n" (
+        map (bid: ''
+          if [ -d "$storage_dir/${bid}" ]; then
+            tmp_tar="$(mktemp "$backup_dir/.edge-ext.XXXXXX.tar")"
+            chmod 600 "$tmp_tar"
+            if tar -C "$storage_dir" -cf "$tmp_tar" "${bid}"; then
+              ${pkgs.age}/bin/age -e -r "${agePubkey}" -o "$backup_dir/${bid}.tar.age" "$tmp_tar"
+            else
+              echo "警告: 扩展 ${bid} 数据打包失败，跳过备份" >&2
+            fi
+            rm -f "$tmp_tar"
+          elif [ -f "$backup_dir/${bid}.tar.age" ]; then
+            # 本地数据缺失（重建机器/新扩展）→ 从备份恢复
+            tmp_restore="$(mktemp "$backup_dir/.edge-restore.XXXXXX.tar")"
+            chmod 600 "$tmp_restore"
+            if ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp_restore" "$backup_dir/${bid}.tar.age"; then
+              mkdir -p "$storage_dir"
+              tar -C "$storage_dir" -xf "$tmp_restore"
+            else
+              echo "警告: 扩展 ${bid} 数据恢复失败（备份可能损坏）" >&2
+            fi
+            rm -f "$tmp_restore"
           fi
-          rm -f "$tmp_tar"
-        elif [ -f "$backup_dir/${bid}.tar.age" ]; then
-          # 本地数据缺失（重建机器/新扩展）→ 从备份恢复
-          tmp_restore="$(mktemp "$backup_dir/.edge-restore.XXXXXX.tar")"
-          chmod 600 "$tmp_restore"
-          if ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp_restore" "$backup_dir/${bid}.tar.age"; then
-            mkdir -p "$storage_dir"
-            tar -C "$storage_dir" -xf "$tmp_restore"
-          else
-            echo "警告: 扩展 ${bid} 数据恢复失败（备份可能损坏）" >&2
-          fi
-          rm -f "$tmp_restore"
-        fi
-      '') backups)}
+        '') backups
+      )}
     fi
   '';
   # 禁用/拆卸 Edge 自动更新服务（EdgeUpdater）

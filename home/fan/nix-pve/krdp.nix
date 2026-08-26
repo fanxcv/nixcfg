@@ -5,7 +5,12 @@
 # 连接：Windows mstsc → 10.2.241.39:3389 或 10.1.0.21:3389，账号 fan / 密码 QAZxsw2341
 # 密码改动：改下方 ExecStart 的 -p 值（与 syncthing GUI 同款密码约定；仓库私有，明文声明）
 # 注意：KCM（系统设置→远程桌面）未开，避免与 plasma-krdp_server.service 抢 3389
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 {
   # home-manager 的 systemd.user.services 用 Unit/Service/Install 三段式（camelCase 键）
   systemd.user.services.krdp = {

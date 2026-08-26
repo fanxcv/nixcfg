@@ -11,10 +11,7 @@ map (f: (path + "/${f}")) (
     lib.attrsets.filterAttrs (
       name: type:
       (type == "directory" && builtins.pathExists (path + "/${name}/default.nix"))
-      || (
-        (name != "default.nix")
-        && (lib.strings.hasSuffix ".nix" name)
-      )
+      || ((name != "default.nix") && (lib.strings.hasSuffix ".nix" name))
     ) (builtins.readDir path)
   )
 )

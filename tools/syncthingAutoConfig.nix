@@ -21,12 +21,13 @@ let
   jq = "${pkgs.jq}/bin/jq";
   age = "${pkgs.age}/bin/age";
   peersJson = builtins.toJSON peers;
-  pwCmd = if guiPasswordFile != null then
-    "pw=$(cat ${guiPasswordFile}) || { echo \"警告: 读 syncthing GUI 密码文件失败\"; return 0; }"
-  else if guiPasswordAgePath != null then
-    "pw=$(${age} -d -i \"$HOME/.secrets/age-keys.txt\" ${guiPasswordAgePath}) || { echo \"警告: 解密 syncthing GUI 密码失败\"; return 0; }"
-  else
-    "return 0 # GUI 密码由外部机制管理";
+  pwCmd =
+    if guiPasswordFile != null then
+      "pw=$(cat ${guiPasswordFile}) || { echo \"警告: 读 syncthing GUI 密码文件失败\"; return 0; }"
+    else if guiPasswordAgePath != null then
+      "pw=$(${age} -d -i \"$HOME/.secrets/age-keys.txt\" ${guiPasswordAgePath}) || { echo \"警告: 解密 syncthing GUI 密码失败\"; return 0; }"
+    else
+      "return 0 # GUI 密码由外部机制管理";
   guiPasswordBlock = ''
     local pw
     ${pwCmd}

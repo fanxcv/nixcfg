@@ -2,10 +2,19 @@
 # 经 flake.nix 的 packages output 合并导出（nix build .#<包名>）
 # home 配置里引用：import 本文件传 pkgs（见 home/fan/nix-pve/rustdesk.nix）
 # githubFetchBase：GitHub 加速 base（来自 tools/config.nix 集中配置），包构建期编 GitHub 时用
-{ pkgs, githubFetchBase ? "github.com" }:
 {
+  pkgs,
+  githubFetchBase ? "github.com",
+}:
+let
   # 官方 GitHub Release 二进制（deb 解包），免 rustdesk 源码编译（无缓存，编译 ~1h）
-  rustdesk-bin = pkgs.callPackage ./rustdesk-bin.nix { };
+  # 仅 x86_64-linux（nix-pve 用）；darwin 走 brew + 注入脚本（见 hosts/_darwin_/base/rustdesk.nix）
+  rustdesk = pkgs.lib.optionalAttrs (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
+    rustdesk-bin = pkgs.callPackage ./rustdesk-bin.nix { };
+  };
+in
+rustdesk
+// {
 
   # VSCode 扩展：CSV Grid Editor（补市场缓存滞后 → 官方 vsix 直链 1.18.4）
   csv-grid-editor = pkgs.callPackage ./csv-grid-editor.nix { };

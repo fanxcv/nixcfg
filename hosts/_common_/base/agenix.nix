@@ -7,14 +7,13 @@
 
 { config, lib, ... }:
 let
-  userName =
-    if config ? system.primaryUser then config.system.primaryUser
-    else "fan";
+  userName = config.system.primaryUser or "fan";
 in
 {
   age.identityPaths = [
     "${config.users.users.${userName}.home}/.secrets/age-keys.txt"
-  ] ++ lib.optionals (config ? users.users.${userName}.isNormalUser) [
+  ]
+  ++ lib.optionals (config ? users.users.${userName}.isNormalUser) [
     # NixOS 真机：persist 直连（见上方注释）
     "/persist/home/fan/.secrets/age-keys.txt"
   ];

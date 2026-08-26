@@ -9,29 +9,36 @@
 #       未发布的平台直接 throw
 
 { lib, skemateLatest }:
-final: prev: let
+final: prev:
+let
   release = builtins.fromJSON (builtins.readFile skemateLatest);
-in {
+in
+{
   skemate = final.stdenv.mkDerivation {
     pname = "skemate";
     version = release.version;
 
     # nix system → 官方下载文件名（latest.json 的 platforms 键）
-    src = let
-      platformKey = {
-        "x86_64-linux" = "linux-amd64";
-        "aarch64-darwin" = "darwin-arm64";
-        "aarch64-linux" = "linux-arm64";
-      }.${final.stdenv.hostPlatform.system} or (throw
-        "skemate: 平台 ${final.stdenv.hostPlatform.system} 无官方构建（latest.json platforms 键）");
-      info = release.platforms.${platformKey} or (throw
-        "skemate: latest.json 缺 ${platformKey} 平台条目，请先 nix flake update skemate-latest");
-    in builtins.fetchurl {
-      # latest.json 的 url 形如 /0.5.74/skemate-linux-amd64（含 skemate- 前缀）
-      url = "https://w-apis.qksxin.com/terminal/${release.version}/skemate-${platformKey}";
-      # latest.json 的 sha256 为 hex，builtins.fetchurl 直接接受
-      sha256 = info.sha256;
-    };
+    src =
+      let
+        platformKey =
+          {
+            "x86_64-linux" = "linux-amd64";
+            "aarch64-darwin" = "darwin-arm64";
+            "aarch64-linux" = "linux-arm64";
+          }
+          .${final.stdenv.hostPlatform.system}
+            or (throw "skemate: 平台 ${final.stdenv.hostPlatform.system} 无官方构建（latest.json platforms 键）");
+        info =
+          release.platforms.${platformKey}
+            or (throw "skemate: latest.json 缺 ${platformKey} 平台条目，请先 nix flake update skemate-latest");
+      in
+      builtins.fetchurl {
+        # latest.json 的 url 形如 /0.5.74/skemate-linux-amd64（含 skemate- 前缀）
+        url = "https://w-apis.qksxin.com/terminal/${release.version}/skemate-${platformKey}";
+        # latest.json 的 sha256 为 hex，builtins.fetchurl 直接接受
+        sha256 = info.sha256;
+      };
 
     dontUnpack = true;
     installPhase = ''
@@ -43,7 +50,11 @@ in {
     meta = {
       description = "自研终端复用服务（skemate）";
       mainProgram = "skemate";
-      platforms = [ "x86_64-linux" "aarch64-darwin" "aarch64-linux" ];
+      platforms = [
+        "x86_64-linux"
+        "aarch64-darwin"
+        "aarch64-linux"
+      ];
     };
   };
 }

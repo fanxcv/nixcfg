@@ -8,7 +8,11 @@
 # 说明：镜像配置对全平台统一生效（装过 node/go/uv/python/flutter 的机器自然受益，
 #   未装对应组件的机器写文件也无副作用）
 
-{ lib, useChinaMirror ? true, ... }:
+{
+  lib,
+  useChinaMirror ? true,
+  ...
+}:
 {
   # ~/.npmrc：mise 装的 node 的 npm/pnpm/yarn 均读此文件
   # better-sqlite3 预编译二进制默认从 GitHub releases 下载（国内不可达），

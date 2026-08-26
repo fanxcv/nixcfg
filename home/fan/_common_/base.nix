@@ -45,8 +45,8 @@
       init.defaultBranch = "main";
       pull.rebase = true;
       push.autoSetupRemote = true; # 新分支首次 push 自动建远端跟踪
-      fetch.prune = true;          # fetch 时清理已删远端分支
-      rerere.enabled = true;        # 冲突解决记忆（同冲突只解一次）
+      fetch.prune = true; # fetch 时清理已删远端分支
+      rerere.enabled = true; # 冲突解决记忆（同冲突只解一次）
       # 配置仓库挂载自宿主机，owner 可能与容器用户不同，避免 dubious ownership 报错
       safe.directory = "/root/nixcfg";
     };

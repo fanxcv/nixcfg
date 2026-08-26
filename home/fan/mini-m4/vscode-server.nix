@@ -4,7 +4,6 @@
 # 扩展清单与客户端同源（docs/tsln-vscode.yaml，封装见 modules/home/vscode.nix）
 # 注意：扩展由 nix 锁定，客户端侧手动安装扩展会失败；增删扩展 = 改清单 + 重新部署
 # 部署前请断开所有 VSCode 远程连接（激活会 rm -rf 自装目录，占用中可能导致失败）
-{ ... }:
-{
+_: {
   vscode.server.enable = true;
 }

@@ -6,7 +6,12 @@
 # 幂等：已有 .git 跳过 clone；每次 switch 静默 pull（--ff-only）
 # 启用：common 默认 enable=true；某台不装 → 机器层 softwares.pi.enable = lib.mkForce false
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   options.softwares.pi.enable = lib.mkEnableOption "pi agent（配置仓库拉取 + fpi-install 同步）";
 

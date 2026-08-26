@@ -5,7 +5,7 @@
 { lib, ... }:
 {
   homebrew.casks = lib.mkAfter [
-    { name = "blender"; }           # 3D 建模
+    { name = "blender"; } # 3D 建模
   ];
 
   homebrew.brews = lib.mkAfter [

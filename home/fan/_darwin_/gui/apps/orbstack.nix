@@ -7,13 +7,17 @@
 # 其余 orb config 项（docker.expose_ports_to_lan/machines.expose_ports_to_lan/app.start_at_login
 #   等）经 set-默认值实验确认为默认行为，无需声明
 # 生效时机：vmconfig/docker.json 需 orb stop && orb start（或 orb restart docker）；defaults 重启 App 生效
-{ pkgs, lib, tools, useChinaMirror ? true, ... }:
+{
+  pkgs,
+  lib,
+  tools,
+  useChinaMirror ? true,
+  ...
+}:
 let
   # 国内镜像三连（useChinaMirror=false 时传空，apply.py 跳过 docker.json，保持用户现状）
-  dockerMirrors = if useChinaMirror then
-    lib.concatStringsSep " " tools.config.dockerRegistryMirrors
-  else
-    "";
+  dockerMirrors =
+    if useChinaMirror then lib.concatStringsSep " " tools.config.dockerRegistryMirrors else "";
 in
 {
   home.activation.setupOrbstack = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

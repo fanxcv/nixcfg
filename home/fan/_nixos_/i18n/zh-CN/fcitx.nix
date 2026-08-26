@@ -1,6 +1,11 @@
 # fcitx5 中文输入法（拼音默认；双拼：DefaultIM 改 "shuangpin" + ShuangpinProfile 如 "MS"）
 # Wayland 前端 + Plasma 虚拟键盘联动
-{ lib, pkgs, isContainer ? false, ... }:
+{
+  lib,
+  pkgs,
+  isContainer ? false,
+  ...
+}:
 {
   i18n.inputMethod = {
     enable = true;
@@ -40,7 +45,8 @@
   };
 
   # Plasma 虚拟键盘联动（fcitx5-wayland-launcher；容器无桌面不加载此模块定义）
-} // lib.optionalAttrs (!isContainer) {
+}
+// lib.optionalAttrs (!isContainer) {
   programs.plasma.configFile.kwinrc = {
     Wayland = {
       VirtualKeyboardEnabled = {

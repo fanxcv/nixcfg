@@ -26,7 +26,11 @@ in
   launchd.agents.syncthing = {
     enable = true;
     config = {
-      ProgramArguments = [ "/opt/homebrew/bin/syncthing" "serve" "--no-browser" ];
+      ProgramArguments = [
+        "/opt/homebrew/bin/syncthing"
+        "serve"
+        "--no-browser"
+      ];
       RunAtLoad = true;
       KeepAlive = true;
       WorkingDirectory = "/Users/fan";

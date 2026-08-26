@@ -3,6 +3,6 @@
 
 {
   imports = [
-    ./comin.nix  # git 驱动自动部署
+    ./comin.nix # git 驱动自动部署
   ];
 }

@@ -5,7 +5,13 @@
 # 全平台生效（macOS 同样使用）
 # 启用：common 默认 enable=true；某台不装 → 机器层 softwares.tmux.enable = lib.mkForce false
 
-{ config, lib, pkgs, tools, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  tools,
+  ...
+}:
 {
   options.softwares.tmux.enable = lib.mkEnableOption "tmux + gpakosz 配置";
 

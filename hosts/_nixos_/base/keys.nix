@@ -1,7 +1,12 @@
 # SSH host key 管理：私钥 agenix 加密（secrets/hosts/<hostName>/ssh_host_ed25519_key.age），
 # 公钥明文入库（secrets/hosts/<hostName>/ssh_host_ed25519_key.pub，可直接提交 git），
 # 激活时由 activationScripts 拷贝到 /etc/ssh/keys/（机器名动态拼接）
-{ config, lib, tools, ... }:
+{
+  config,
+  lib,
+  tools,
+  ...
+}:
 {
   age.secrets."hosts/${config.networking.hostName}/ssh_host_ed25519_key" = {
     file = tools.relative "secrets/hosts/${config.networking.hostName}/ssh_host_ed25519_key.age";

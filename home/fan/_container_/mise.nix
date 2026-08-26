@@ -6,7 +6,12 @@
 # config.toml 策略（→ _common_/mise/apply.py，实体文件可写）：
 #   不存在 → nix 模板创建默认；已存在 → 补齐缺失键，已存在键保留用户版本；旧 symlink 自动实体化
 
-{ pkgs, lib, hostName, ... }:
+{
+  pkgs,
+  lib,
+  hostName,
+  ...
+}:
 let
   # 机器差异：java 版本（si=zulu-8 / lenovo=oracle-17）
   java = if hostName == "ide-lenovo" then "oracle-17" else "zulu-8";
@@ -21,7 +26,8 @@ let
     node = "22"
     python = "3.12"
     uv = "latest"
-  '' + pipxLine;
+  ''
+  + pipxLine;
   template = pkgs.writeText "mise-config-${hostName}.toml" configText;
 in
 {

@@ -1,11 +1,19 @@
 # Plasma 桌面定制（plasma-manager，参考 tsln minipc）：
 # 底部浮动面板 + 4 虚拟桌面 + Noto CJK 字体 + KWin 贴边
 # Catppuccin 主题（latte 亮色）+ Papirus 图标 + Konsole（mocha 配色）+ 界面中文
-{ inputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 let
   inherit (config.fonts.fontconfig) defaultFonts;
   # Catppuccin latte 壁纸（nixpkgs 的 nixos-artwork 自带，路径同 tsln）
-  wallpaper = "${pkgs.nixos-artwork.wallpapers."catppuccin-latte"}/share/backgrounds/nixos/nixos-wallpaper-catppuccin-latte.png";
+  wallpaper = "${
+    pkgs.nixos-artwork.wallpapers."catppuccin-latte"
+  }/share/backgrounds/nixos/nixos-wallpaper-catppuccin-latte.png";
 in
 {
   imports = [ inputs.plasma-manager.homeModules.plasma-manager ];
@@ -126,7 +134,9 @@ in
     # 界面中文：写 ~/.config/plasma-localerc，只影响 KDE 界面；终端/SSH 环境保持 en_US
     # （与 mac 的 AppleLanguages 策略一致：界面中文、环境英文，见 hosts/_darwin_/i18n/locale.nix）
     configFile."plasma-localerc" = {
-      Translations = { Language = "zh_CN"; };
+      Translations = {
+        Language = "zh_CN";
+      };
     };
   };
 

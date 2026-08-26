@@ -90,7 +90,13 @@ let
       <key>EnvironmentVariables</key>
       <dict>
         <key>PATH</key>
-        <string>${lib.makeBinPath [ config.nix.package pkgs.git pkgs.openssh ]}</string>
+        <string>${
+          lib.makeBinPath [
+            config.nix.package
+            pkgs.git
+            pkgs.openssh
+          ]
+        }</string>
       </dict>
     </dict>
     </plist>

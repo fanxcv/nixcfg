@@ -394,17 +394,23 @@
       # --- 一步到位：nix run .#<机器名>（构建 + activate 一条命令）---
       # ide 容器可能跑在不同架构服务器（lenovo/si-11 等），激活配置必须按当前 system 构建：
       # 不能引用固定架构的 homeConfigurations（会 platform mismatch，如 x86_64 机器拿到 aarch64 配置）
+      # 容器只跑 linux：darwin 宿主上构建容器配置会 hostPlatform.isDarwin 误判（见 modules/home/ssh.nix 门控），
+      # 故 ide 别名仅对 linux 系统生成；本地包（packages/）仍全平台可用
       # 本地包集合（packages/ 目录）与机器别名合并导出：nix build .#<包名> 或 nix run .#<机器名>
       packages = forAllSystems (
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          isLinux = builtins.elem system [
+            "x86_64-linux"
+            "aarch64-linux"
+          ];
         in
         (import ./packages {
           inherit pkgs;
           githubFetchBase = tools.githubFetchBase;
         })
-        // {
+        // lib.optionalAttrs isLinux {
           # 机器专属别名：mise 组件共享 _container_/mise.nix（hostName 分支差异），si/lenovo 各一份
           # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
           ide-si = pkgs.writeShellScriptBin "ide-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
@@ -423,13 +429,6 @@
               isContainer = true;
             }).activationPackage
           }/activate";
-          # Mac 一次性构建+激活别名：nix run .#mba-m5 等（activate 必须 root，内置 sudo）
-          "mba-m5" =
-            pkgs.writeShellScriptBin "mba-m5" "exec sudo ${self.darwinConfigurations.mba-m5.system}/activate";
-          "mbp-m1" =
-            pkgs.writeShellScriptBin "mbp-m1" "exec sudo ${self.darwinConfigurations.mbp-m1.system}/activate";
-          "mini-m4" =
-            pkgs.writeShellScriptBin "mini-m4" "exec sudo ${self.darwinConfigurations.mini-m4.system}/activate";
           # PVE 宿主机部署（ds2 / desktop）：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply
           # （apt 源/DNS/去 nag/pve-assist，见 pve/ 目录；host 参数决定机器层）
           ds2 = import ./pve/deploy.nix {
@@ -456,6 +455,15 @@
             inherit pkgs lib;
             host = "razer";
           };
+        }
+        // lib.optionalAttrs (!isLinux) {
+          # Mac 一次性构建+激活别名：nix run .#mba-m5 等（activate 必须 root，内置 sudo）
+          "mba-m5" =
+            pkgs.writeShellScriptBin "mba-m5" "exec sudo ${self.darwinConfigurations.mba-m5.system}/activate";
+          "mbp-m1" =
+            pkgs.writeShellScriptBin "mbp-m1" "exec sudo ${self.darwinConfigurations.mbp-m1.system}/activate";
+          "mini-m4" =
+            pkgs.writeShellScriptBin "mini-m4" "exec sudo ${self.darwinConfigurations.mini-m4.system}/activate";
         }
       );
 

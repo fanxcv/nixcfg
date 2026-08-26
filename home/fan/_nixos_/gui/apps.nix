@@ -6,7 +6,7 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
-    microsoft-edge          # 浏览器（mac 同款；nixpkgs 标记 unfree，flake 已放行）
-    bitwarden-desktop       # 密码管理（mac 同款）
+    microsoft-edge # 浏览器（mac 同款；nixpkgs 标记 unfree，flake 已放行）
+    bitwarden-desktop # 密码管理（mac 同款）
   ];
 }

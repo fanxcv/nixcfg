@@ -1,7 +1,12 @@
 # Catppuccin Konsole 配色（nixpkgs 26.05 无此包，固定 rev 自打包；同 tsln1998/nixcfg 的 packages/catppuccin/konsole.nix）
 # 输出 themes/* 全部 flavor 的 colorscheme，home 层软链到 ~/.local/share/konsole/ 后按名引用
 # githubBase：由 packages/default.nix 从 tools/config.nix 传入（GitHub 加速；内部拼 https://${githubBase}/…，无 scheme）
-{ lib, stdenvNoCC, fetchFromGitHub, githubBase ? "github.com" }:
+{
+  lib,
+  stdenvNoCC,
+  fetchFromGitHub,
+  githubBase ? "github.com",
+}:
 let
   owner = "catppuccin";
   repo = "konsole";
@@ -13,7 +18,13 @@ stdenvNoCC.mkDerivation {
   version = builtins.substring 0 6 rev;
 
   src = fetchFromGitHub {
-    inherit owner repo rev hash githubBase;
+    inherit
+      owner
+      repo
+      rev
+      hash
+      githubBase
+      ;
   };
 
   installPhase = ''

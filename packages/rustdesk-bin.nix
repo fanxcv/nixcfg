@@ -8,12 +8,41 @@
 #   破坏 Dart AOT snapshot 定位，启动即崩（FATAL: Invalid vm isolate snapshot）。
 #   现方案：deb 原样解包（原始 RUNPATH=$ORIGIN/lib 自足）+ buildFHS 环境提供系统库，
 #   ELF 零改动。已验证：virtio-gl VM（renderD128）+ Wayland 会话正常启动。
-{ lib, stdenv, fetchurl, xz, buildFHSEnv
-, gtk3, glib, pango, cairo, gdk-pixbuf, atk, harfbuzz, freetype, fontconfig, expat
-, libpng, libjpeg, libtiff
-, libxcb, xorg, libxkbcommon, wayland, dbus
-, gst_all_1, pam, pulseaudio, libva, zlib, libepoxy
-, alsa-lib, systemdLibs, curl, xdotool, libnsl
+{
+  lib,
+  stdenv,
+  fetchurl,
+  xz,
+  buildFHSEnv,
+  gtk3,
+  glib,
+  pango,
+  cairo,
+  gdk-pixbuf,
+  atk,
+  harfbuzz,
+  freetype,
+  fontconfig,
+  expat,
+  libpng,
+  libjpeg,
+  libtiff,
+  libxcb,
+  xorg,
+  libxkbcommon,
+  wayland,
+  dbus,
+  gst_all_1,
+  pam,
+  pulseaudio,
+  libva,
+  zlib,
+  libepoxy,
+  alsa-lib,
+  systemdLibs,
+  curl,
+  xdotool,
+  libnsl,
 }:
 let
   src = fetchurl {
@@ -53,16 +82,49 @@ let
   fhs = buildFHSEnv {
     name = "rustdesk-bin";
     runScript = "rustdesk";
-    targetPkgs = pkgs: [ raw pkgs.glibc ];
+    targetPkgs = pkgs: [
+      raw
+      pkgs.glibc
+    ];
   };
 
   # GTK3 运行时全链（raw 的 NEEDED + dlopen 传递闭包：gtk3→pango/cairo/gdk-pixbuf/atk/harfbuzz/freetype）
   libPaths = lib.makeLibraryPath [
-    gtk3 glib pango cairo gdk-pixbuf atk harfbuzz freetype fontconfig expat
-    libpng libjpeg libtiff libxcb xorg.libX11 xorg.libXfixes xorg.libXtst
-    xorg.libXcursor xorg.libXi xorg.libXrandr libxkbcommon wayland
-    dbus gst_all_1.gstreamer gst_all_1.gst-plugins-base pam pulseaudio libva zlib
-    libepoxy alsa-lib systemdLibs curl xdotool libnsl
+    gtk3
+    glib
+    pango
+    cairo
+    gdk-pixbuf
+    atk
+    harfbuzz
+    freetype
+    fontconfig
+    expat
+    libpng
+    libjpeg
+    libtiff
+    libxcb
+    xorg.libX11
+    xorg.libXfixes
+    xorg.libXtst
+    xorg.libXcursor
+    xorg.libXi
+    xorg.libXrandr
+    libxkbcommon
+    wayland
+    dbus
+    gst_all_1.gstreamer
+    gst_all_1.gst-plugins-base
+    pam
+    pulseaudio
+    libva
+    zlib
+    libepoxy
+    alsa-lib
+    systemdLibs
+    curl
+    xdotool
+    libnsl
     stdenv.cc.cc.lib # libstdc++/libgcc_s（Flutter/rust 二进制必需）
   ];
 in

@@ -6,7 +6,12 @@
 #   App Store 版限制：CLI 经 XPC 与 GUI App 通信，登录时需 App 进程在位（脚本已兜底 open）
 #   authkey 轮换：headscale 上 headscale preauthkeys create -r -e 0 生成 → 写入
 #   secrets/source/tailscale-headscale-authkey → ./secrets/encrypt.sh --force 重加密 → 重部署
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   # headscale 服务器（若部署在子路径，补在 URL 末尾，如 https://host/headscale）
   headscaleUrl = "https://headscale.fan-x.fun";

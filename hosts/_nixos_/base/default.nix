@@ -10,12 +10,12 @@
 }:
 {
   imports = (tools.scan ./.) ++ [
-    outputs.nixosModules.default                          # 自建 nixos 系统模块库（modules/nixos/，当前空）
-    inputs.disko.nixosModules.disko                          # 声明式磁盘分区（hosts/<host>/disks.nix）
-    inputs.comin.nixosModules.comin                          # git 驱动自动部署（按机器启用 services/comin.nix）
-    inputs.agenix.nixosModules.default                       # 密钥解密（secrets/*.age，identity 见 hosts/_common_/base/agenix.nix）
-    inputs.impermanence.nixosModules.impermanence            # 不可变系统（/persist 持久化，见 hosts/<host>/immutable.nix）
-    inputs.home-manager.nixosModules.home-manager            # 用户层（users/fan 挂载 home/fan/<host>）
+    outputs.nixosModules.default # 自建 nixos 系统模块库（modules/nixos/，当前空）
+    inputs.disko.nixosModules.disko # 声明式磁盘分区（hosts/<host>/disks.nix）
+    inputs.comin.nixosModules.comin # git 驱动自动部署（按机器启用 services/comin.nix）
+    inputs.agenix.nixosModules.default # 密钥解密（secrets/*.age，identity 见 hosts/_common_/base/agenix.nix）
+    inputs.impermanence.nixosModules.impermanence # 不可变系统（/persist 持久化，见 hosts/<host>/immutable.nix）
+    inputs.home-manager.nixosModules.home-manager # 用户层（users/fan 挂载 home/fan/<host>）
   ];
 
   system.stateVersion = "25.05";

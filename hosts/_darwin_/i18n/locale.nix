@@ -9,6 +9,9 @@
 
   system.defaults.CustomUserPreferences.NSGlobalDomain = {
     AppleLocale = "zh_CN";
-    AppleLanguages = [ "zh-Hans-CN" "en-CN" ];
+    AppleLanguages = [
+      "zh-Hans-CN"
+      "en-CN"
+    ];
   };
 }

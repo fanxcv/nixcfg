@@ -8,13 +8,21 @@
 # darwin 也装包：mini-m4 的组件由 nix 声明（config.toml 见 home/fan/mini-m4/mise.nix）
 # 启用：common 默认 enable=true；某台不装 → 机器层 softwares.mise.enable = lib.mkForce false
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   options.softwares.mise.enable = lib.mkEnableOption "mise 运行时管理器（包 + shims PATH）";
 
   config = lib.mkIf config.softwares.mise.enable {
     # usage 是 mise 的 shell 补全/激活辅助 CLI（mise 不自带），装 mise 必装 usage
-    home.packages = [ pkgs.mise pkgs.usage ];
+    home.packages = [
+      pkgs.mise
+      pkgs.usage
+    ];
 
     home.sessionPath = [
       "$HOME/.local/share/mise/shims"

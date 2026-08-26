@@ -3,7 +3,12 @@
 #   加密：  secrets/hosts/mini-m4/bill-app-android-release.p12.age（age 加密入库，可提交 git）
 #   部署：  激活自动解密到 ~/.config/bill-app-android-release.p12（600）
 #   （路径与 bill-app Makefile 的 RELEASE_KEYSTORE_PATH 默认值一致，见 ~/code/bill-app/Makefile）
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 {
   # 统一 secrets 架构（见 _common_/secrets.nix）：activation 直接 age -d，失败即部署失败
   home.activation.decryptBillKeystore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

@@ -6,14 +6,20 @@
 # 订阅：下载订阅内容 → ~/.config/clash/fan-x.yaml，注入 mixed-port（ClashX 读 config 的 mixed-port 作混合端口）
 # 注意：App 运行中不热重载——部署后重启 App 生效（脚本只提示，不 killall）；
 #       自动升级核心为 ClashX Meta 默认行为，无需注入；开机自启走登录项（非 defaults），App 内勾选一次
-{ pkgs, lib, tools, ... }:
+{
+  pkgs,
+  lib,
+  tools,
+  ...
+}:
 let
   cfg = tools.config;
   # 升级：改 version（GitHub release 版本号），重新部署自动下载替换
   version = "1.4.43";
   baseUrl = "https://github.com/MetaCubeX/ClashX.Meta/releases/download/v${version}/ClashX.Meta.zip";
   # useChinaMirror 门控：走国内镜像时套 githubProxy 前缀，否则直连 GitHub
-  downloadUrl = if cfg.useChinaMirror && cfg.githubProxy != "" then cfg.githubProxy + baseUrl else baseUrl;
+  downloadUrl =
+    if cfg.useChinaMirror && cfg.githubProxy != "" then cfg.githubProxy + baseUrl else baseUrl;
 in
 {
   home.activation.setupClashXMeta = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

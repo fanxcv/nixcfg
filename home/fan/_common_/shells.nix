@@ -4,11 +4,21 @@
 #   前缀由 tools/config.nix 的 githubProxy 声明（换代理只改一处 + 跑 scripts/switch-github-proxy.sh 同步 flake inputs）
 # 注意：clone 的 origin 即安装地址，oh-my-zsh 自动更新 / omz update 天然走同一通道
 
-{ pkgs, lib, self, tools, config, platform ? "container", ... }:
+{
+  pkgs,
+  lib,
+  self,
+  tools,
+  config,
+  platform ? "container",
+  ...
+}:
 let
   # NixOS 的 nix 由系统 profile 提供（/run/current-system/sw），无 /nix/var/nix/profiles/default；
   # 仅容器/darwin 单用户 nix 需要 source nix.sh 加载 PATH
-  nixShSource = lib.optionalString (platform != "nixos") ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n";
+  nixShSource = lib.optionalString (
+    platform != "nixos"
+  ) ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n";
   # 安装 + 后期更新的仓库地址（对应脚本 REMOTE=...ohmyzsh.git）
   ohMyZshRepo = tools.githubUrl "https://github.com/ohmyzsh/ohmyzsh.git";
   themeSource = "${self}/home/fan/_common_/themes/fishy.zsh-theme";

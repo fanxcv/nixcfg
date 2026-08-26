@@ -5,13 +5,13 @@
 _: {
   homebrew.enable = true;
   homebrew.casks = [
-    { name = "orbstack"; }       # 容器运行时（三台 Mac 统一）
-    { name = "iterm2"; }         # 终端
+    { name = "orbstack"; } # 容器运行时（三台 Mac 统一）
+    { name = "iterm2"; } # 终端
     { name = "microsoft-edge"; } # 浏览器
-    { name = "rustdesk"; }       # 远程控制（自建中继）
-    { name = "tencent-lemon"; }  # 系统清理
-    { name = "bitwarden"; }       # 密码管理
-    { name = "tailscale-app"; }   # 组网（App 版；旧名 tailscale 已被 homebrew 重命名）
+    { name = "rustdesk"; } # 远程控制（自建中继）
+    { name = "tencent-lemon"; } # 系统清理
+    { name = "bitwarden"; } # 密码管理
+    { name = "tailscale-app"; } # 组网（App 版；旧名 tailscale 已被 homebrew 重命名）
     { name = "visual-studio-code"; } # vscode（商店版；扩展/设置由 nix 锁定 → home/fan/_darwin_/gui/apps/vscode.nix）
   ];
 }

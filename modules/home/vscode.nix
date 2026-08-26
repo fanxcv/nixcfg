@@ -6,7 +6,12 @@
 # 扩展主市场 pkgs.repos.unstable.vscode-extensions（unstable 通道，扩展版本较新）；
 #   补市场 pkgs.repos.vscode.vscode-marketplace-release 仅给 nixpkgs 缺失的扩展（autopep8 / vscode-buf）
 # 语言 profile：vscode --profile python / --profile go 启动，独立扩展+设置（公共部分自动并入）
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.vscode;
   market = pkgs.repos.unstable.vscode-extensions;
@@ -111,12 +116,10 @@ let
 
   # 语言 profile 生成（tsln _vsc_profile_ 思路：公共 + 语言专属，独立完整配置）
   # 注意：enableUpdateCheck / enableExtensionUpdateCheck 仅 default profile 有效（hm 限制）
-  profile =
-    p:
-    {
-      extensions = baseExtensions ++ (p.extensions or [ ]);
-      userSettings = baseSettings // (p.userSettings or { });
-    };
+  profile = p: {
+    extensions = baseExtensions ++ (p.extensions or [ ]);
+    userSettings = baseSettings // (p.userSettings or { });
+  };
 
   # vscode-server 扩展集合（容器远程开发）：公共（剔除客户端 UI 类）+ 语言扩展平铺
   # 主题/图标/状态栏类扩展 server 端无 UI 意义，但保留可避免两份清单；remote-ssh 等客户端扩展不装 server 端
@@ -161,56 +164,64 @@ in
   config = lib.mkMerge [
     # 客户端（vscode.enable）：mac/nixos 平台层启用
     (lib.mkIf cfg.enable {
-    # 界面语言中文：argv.json 的 locale（新版 VSCode 已不读 settings.json 的 locale 键）
-    # 语言包在 baseCommonExtensions（ms-ceintl.vscode-language-pack-zh-hans）；改后需重启 VSCode
-    # 不能用 home.file：它生成指向 nix store 只读文件的 symlink，而 VSCode 启动校验 argv.json
-    # 时会尝试写入（补 crash-reporter-id 等），写失败即判定文件无效并弹 "argv.json contains errors"
-    # （nix-community/home-manager#8724）。改由 activation 写真实文件：VSCode 可自行补写字段，locale 不受影响
-    home.activation.writeVscodeArgvJson = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      mkdir -p "$HOME/.vscode"
-      rm -f "$HOME/.vscode/argv.json"
-      cat > "$HOME/.vscode/argv.json" <<'JSON'
-      {
-        "locale": "zh-cn"
-      }
-      JSON
-      chmod 644 "$HOME/.vscode/argv.json"
-    '';
-    programs.vscode = {
-      enable = true;
-      package = cfg.package;
-      mutableExtensionsDir = false; # 扩展由 nix 锁定，编辑器内不可增删
-      profiles = {
-        default =
-          (profile {
-            extensions = cfg.extensions;
-            userSettings = cfg.settings;
-          })
-          // {
-            # 键位：仅 cmd/ctrl+d → 删除当前行（editor.action.deleteLines）；其余全部默认
-            # 平台分支：mac=cmd+d，linux=ctrl+d（VSCode 键位不含平台自动映射，需显式声明）；
-            # 放 profiles.default 而非顶层：顶层旧选项名会触发 HM rename，未启用 vscode 的平台报错
-            keybindings = lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
-              { key = "cmd+d"; command = "editor.action.deleteLines"; }
-            ] ++ lib.optionals (!pkgs.stdenv.hostPlatform.isDarwin) [
-              { key = "ctrl+d"; command = "editor.action.deleteLines"; }
-            ];
-            enableUpdateCheck = false;
-            enableExtensionUpdateCheck = false;
+      # 界面语言中文：argv.json 的 locale（新版 VSCode 已不读 settings.json 的 locale 键）
+      # 语言包在 baseCommonExtensions（ms-ceintl.vscode-language-pack-zh-hans）；改后需重启 VSCode
+      # 不能用 home.file：它生成指向 nix store 只读文件的 symlink，而 VSCode 启动校验 argv.json
+      # 时会尝试写入（补 crash-reporter-id 等），写失败即判定文件无效并弹 "argv.json contains errors"
+      # （nix-community/home-manager#8724）。改由 activation 写真实文件：VSCode 可自行补写字段，locale 不受影响
+      home.activation.writeVscodeArgvJson = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        mkdir -p "$HOME/.vscode"
+        rm -f "$HOME/.vscode/argv.json"
+        cat > "$HOME/.vscode/argv.json" <<'JSON'
+        {
+          "locale": "zh-cn"
+        }
+        JSON
+        chmod 644 "$HOME/.vscode/argv.json"
+      '';
+      programs.vscode = {
+        enable = true;
+        package = cfg.package;
+        mutableExtensionsDir = false; # 扩展由 nix 锁定，编辑器内不可增删
+        profiles = {
+          default =
+            (profile {
+              extensions = cfg.extensions;
+              userSettings = cfg.settings;
+            })
+            // {
+              # 键位：仅 cmd/ctrl+d → 删除当前行（editor.action.deleteLines）；其余全部默认
+              # 平台分支：mac=cmd+d，linux=ctrl+d（VSCode 键位不含平台自动映射，需显式声明）；
+              # 放 profiles.default 而非顶层：顶层旧选项名会触发 HM rename，未启用 vscode 的平台报错
+              keybindings =
+                lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
+                  {
+                    key = "cmd+d";
+                    command = "editor.action.deleteLines";
+                  }
+                ]
+                ++ lib.optionals (!pkgs.stdenv.hostPlatform.isDarwin) [
+                  {
+                    key = "ctrl+d";
+                    command = "editor.action.deleteLines";
+                  }
+                ];
+              enableUpdateCheck = false;
+              enableExtensionUpdateCheck = false;
+            };
+          # 语言 profile（docs/tsln-vscode.yaml extensions.profiles，vscode --profile <名> 启动）
+          python = profile {
+            extensions = pythonExtensions;
           };
-        # 语言 profile（docs/tsln-vscode.yaml extensions.profiles，vscode --profile <名> 启动）
-        python = profile {
-          extensions = pythonExtensions;
-        };
-        go = profile {
-          extensions = goExtensions;
-          userSettings = {
-            "go.showWelcome" = false;
-            "go.diagnostic.vulncheck" = "Off";
+          go = profile {
+            extensions = goExtensions;
+            userSettings = {
+              "go.showWelcome" = false;
+              "go.diagnostic.vulncheck" = "Off";
+            };
           };
         };
       };
-    };
     })
 
     # vscode-server（容器远程开发）：独立于 vscode.enable——容器只开 server 不开客户端

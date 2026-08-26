@@ -7,7 +7,12 @@
 #       是运行时文件，skemate 自管，不声明
 #   服务：LaunchAgent（launchd.agents.skemate，RunAtLoad + KeepAlive）——登录即启、崩溃自动重启；
 #         配置解密先于 agent 加载（entryBefore writeBoundary），部署后配置与服务同步就位
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 {
   home.packages = [ pkgs.skemate ];
 
@@ -44,7 +49,10 @@
   launchd.agents.skemate = {
     enable = true;
     config = {
-      ProgramArguments = [ "${pkgs.skemate}/bin/skemate" "serve" ];
+      ProgramArguments = [
+        "${pkgs.skemate}/bin/skemate"
+        "serve"
+      ];
       RunAtLoad = true;
       KeepAlive = true;
       WorkingDirectory = "/Users/fan";

@@ -5,7 +5,13 @@
 #   （HM programs.vscode 生成 extensions.json 时 relativeLocation = vscodeExtUniqueId，目录名必须与之精确一致，
 #   否则 VSCode 报「无法解析不存在的文件 …/package.json」；不可保留 vsix 内层 extension/ 子目录）。
 # 版本升级：改 version + 下载后重算 hash（nix-prefetch-url <同上 URL>；1.18.4 官方重新打包，2026-08 起市场端点固定返回 gzip 流，hash 为 gzip 字节之值 sha256-uejMq7AjtzvalKNzrAJb8sfNvTAiNUBrr/glI6qj/g0=，install 内先 gzip -dc 还原 vsix）
-{ lib, stdenv, fetchurl, unzip, gzip }:
+{
+  lib,
+  stdenv,
+  fetchurl,
+  unzip,
+  gzip,
+}:
 stdenv.mkDerivation (finalAttrs: {
   pname = "vscode-extension-robinreiche-csv-grid-editor";
   version = "1.18.4";
@@ -20,7 +26,10 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-uejMq7AjtzvalKNzrAJb8sfNvTAiNUBrr/glI6qj/g0=";
   };
 
-  nativeBuildInputs = [ unzip gzip ];
+  nativeBuildInputs = [
+    unzip
+    gzip
+  ];
 
   dontUnpack = true; # vspackage 后缀 stdenv 不识别，unpackPhase 直接炸，改 installPhase 自解压
 
