@@ -11,7 +11,6 @@
     { name = "jetbrains-toolbox"; }       # IDE 管理器
     { name = "microsoft-remote-desktop"; } # Windows App（微软远程桌面）
     { name = "wechatwebdevtools"; }  # 微信开发者工具（小程序/公众号）
-    { name = "neteasemusic"; }       # 网易云音乐
     { name = "tencent-meeting"; }    # 腾讯会议
     { name = "wpsoffice"; }          # WPS Office
   ];

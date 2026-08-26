@@ -300,7 +300,7 @@ macos:
         ssh_id_rsa: SSH 身份密钥     # secrets/hosts/mba-m5/ssh_id_rsa.age（mba-m5/mbp-m1 共用）
     mbp-m1:                 # → hosts/mbp-m1/ + home/fan/mbp-m1/
       system:
-        apps: [visual-studio-code, qq, wechat, jetbrains-toolbox, microsoft-remote-desktop, wechatwebdevtools, neteasemusic, tencent-meeting, wpsoffice]  # 后 4 个为 cask 接管（→ hosts/mbp-m1/homebrew.nix）
+        apps: [visual-studio-code, qq, wechat, jetbrains-toolbox, microsoft-remote-desktop, wechatwebdevtools, tencent-meeting, wpsoffice]  # 后 3 个为 cask 接管（→ hosts/mbp-m1/homebrew.nix）；netease 手动装（dmg damaged 标记 cask 装不了）
         dock.persistent_apps: [iterm2, wechat, qq, Microsoft Edge]
       user:
         ssh_config: 客户端 SSH 配置
