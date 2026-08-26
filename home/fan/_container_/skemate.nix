@@ -5,7 +5,8 @@
 #   自启：容器 PID1 即 systemd，写 /etc/systemd/system/skemate.service（serve 前台 +
 #         Restart=always），容器重启自动拉起；unit 模板见 ./skemate.service，
 #         激活时 sed 注入 skemate store 路径，内容不变则跳过（幂等）；
-#         无论 unit 是否变更，激活都会检查服务存活，挂了自动重启并输出 journalctl
+#         unit 变更（skemate 升级，store 路径变）强制 restart 换新二进制；
+#         unit 未变但服务挂了（崩溃循环）也自动拉起并输出 journalctl
 #   原在 ide-si/ide-lenovo 各一份，移入容器平台层去重（平台层即容器语义，不再需要 isContainer 门控）
 
 { pkgs, lib, ... }:
@@ -16,8 +17,10 @@
     unit=/etc/systemd/system/skemate.service
     tmp=$(mktemp)
     sed "s|@skemate@|${pkgs.skemate}|" ${./skemate.service} > "$tmp"
+    unit_changed=0
     if ! cmp -s "$tmp" "$unit"; then
       cp "$tmp" "$unit"
+      unit_changed=1
     fi
     rm -f "$tmp"
     # 无条件：确保 systemd 认识 unit 且已启用（幂等）；失败不再静默，输出真实错误
@@ -27,10 +30,10 @@
     if ! /usr/bin/systemctl enable skemate.service; then
       echo "警告: systemctl enable skemate.service 失败，错误如上（容器重启后不会自启）"
     fi
-    # 兜底：unit 未变但服务挂了（如崩溃循环）也尝试拉起，失败输出最近日志便于排查
+    # 重启条件：unit 变更（skemate 升级，旧进程仍跑旧二进制）或服务未存活（崩溃循环）
     # 用 ActiveState 判断而非 is-active：崩溃循环时 unit 处于 auto-restart（activating），is-active 会误判为 active
     state=$(/usr/bin/systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
-    if [ "$state" != "active" ]; then
+    if [ "$unit_changed" = "1" ] || [ "$state" != "active" ]; then
       if /usr/bin/systemctl restart skemate.service; then
         sleep 2
         state=$(/usr/bin/systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)

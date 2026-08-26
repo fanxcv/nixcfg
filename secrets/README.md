@@ -34,7 +34,7 @@ secrets/
     ├── mba-m5/      ssh_id_rsa.age + .pub
     ├── mbp-m1/      ssh_id_rsa.age + .pub
     ├── mini-m4/     bill-app-android-release.p12.age（签名密钥）
-    │                skemate-config.json.age + skemate-tunnel.yaml.age
+    │                skemate-config.json.age + skemate-tunnel.yaml.age  # config.json 仅 password 字段由 nix 管理，其余用户自管
     │                ssh_id_rsa.age + .pub
     ├── nix-pve/     comin-token.age（mini-m4 共用）、fan-password.age
     │                ssh_host_ed25519_key.age + .pub（明文）

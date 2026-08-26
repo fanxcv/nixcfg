@@ -214,10 +214,10 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1787728233,
-        "narHash": "sha256-r0RX1mA7qOCF5X8I3HGYC0ryl+v4p8lVstFpLPdtt/0=",
+        "lastModified": 1787735440,
+        "narHash": "sha256-yqML00DJF8aSe2fBpcyVIJiYJLEaGe/R/yerm7kln0I=",
         "ref": "main",
-        "rev": "b168102a57e7dae8ddc32b2b3dfb2fef340e13b1",
+        "rev": "28b4cbbe45a4c6b2b7e96a7a9017f4cb10b6ad65",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/homebrew/homebrew-cask.git"
@@ -232,10 +232,10 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1787722259,
-        "narHash": "sha256-qyZ+XThpGvpMCA/YwyzVAUXWnxb7szTJkSBUwHpk4G8=",
+        "lastModified": 1787735401,
+        "narHash": "sha256-znhhnto9fpocRGTjdx4L7wQrXmujldmrqvkHYVjosv4=",
         "ref": "main",
-        "rev": "569a9196eb72a2b42c58a9297d87fbdc6d4746c8",
+        "rev": "dfe308dd81e09b7b6dc070926295930598e61f2d",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/homebrew/homebrew-core.git"
@@ -398,7 +398,7 @@
     "skemate-latest": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-MsTrcWYM/eV0DrLKeSweHU0T23SquotIDZ5s0Ah1bY8=",
+        "narHash": "sha256-uIJ0wUttfZLB84FyXwG0KFr+oDNkd3oNwZ214APGE94=",
         "type": "file",
         "url": "https://w-apis.qksxin.com/terminal/latest.json"
       },

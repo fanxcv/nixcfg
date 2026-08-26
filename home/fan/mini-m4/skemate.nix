@@ -1,7 +1,8 @@
 # skemate（自研终端复用服务）——mini-m4 专属：包 + 配置 + LaunchAgent 自启
 #   安装：overlays/skemate.nix 提供 pkgs.skemate（官方构建，platforms 含 aarch64-darwin）
-#   配置：tunnel.yaml + config.json 由 nix 管理（含 token/密码 hash，age 加密，
-#         明文在 secrets/source/hosts/mini-m4/，加密后 secrets/hosts/mini-m4/*.age）
+#   配置：tunnel.yaml 整文件由 nix 管理（age 加密，明文在 secrets/source/hosts/mini-m4/）；
+#         config.json 仅 password 字段由 nix 管理——存在则只覆盖 password（保留用户手动
+#         配置的其他字段），不存在则新建仅含 password 的文件；其余字段用户自管
 #       其他文件（agent.sock/devices.json/layout.json/preferences.json/session.json/log/pid）
 #       是运行时文件，skemate 自管，不声明
 #   服务：LaunchAgent（launchd.agents.skemate，RunAtLoad + KeepAlive）——登录即启、崩溃自动重启；
@@ -20,9 +21,19 @@
       mkdir -p "$dir"
       "$age_bin" -d -i "$HOME/.secrets/age-keys.txt" -o "$dir/tunnel.yaml" "$base/skemate-tunnel.yaml.age"
       chmod 644 "$dir/tunnel.yaml"
-      "$age_bin" -d -i "$HOME/.secrets/age-keys.txt" -o "$dir/config.json" "$base/skemate-config.json.age"
+      # config.json：nix 只管理 password 字段——存在则仅覆盖 password（保留用户手动配置），
+      # 不存在则新建仅含 password 的文件；先解密到临时文件再合并，避免整文件覆盖丢字段
+      local tmp="$dir/.config.json.tmp"
+      "$age_bin" -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" "$base/skemate-config.json.age"
+      if [ -f "$dir/config.json" ]; then
+        ${pkgs.jq}/bin/jq --arg pw "$(${pkgs.jq}/bin/jq -r .password "$tmp")" '.password = $pw' "$dir/config.json" > "$tmp.merged"
+        mv "$tmp.merged" "$dir/config.json"
+      else
+        ${pkgs.jq}/bin/jq '{ password }' "$tmp" > "$dir/config.json"
+      fi
+      rm -f "$tmp"
       chmod 600 "$dir/config.json"
-      echo "[skemate] 配置已写入（tunnel.yaml/config.json，nix 管理）"
+      echo "[skemate] 配置已写入（tunnel.yaml 整文件；config.json 仅 password 字段，nix 管理）"
     }
     setup_skemate_config
   '';
