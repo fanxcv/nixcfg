@@ -94,9 +94,10 @@ let
   # 可写而非只读：container-init 要写 /etc/ld.so.conf（NixOS 无此文件，创建无害）。
   # runScript 用绝对路径：/etc 挂载后沙箱 /etc/profile 是宿主的（NixOS PATH 无 /usr/bin），
   # 相对命令名找不到（'/init: exec: rustdesk: not found'）
-  # ⚠ 2026-08 坑：container-init 无条件写 /etc/ld.so.conf（root 服务能写，但 fan 手动启动
-  #   GUI/autostart 时无 /etc 写权限 → 'Failed to generate ld.so.conf: Permission denied'
-  #   进程即退（主界面起不来）。解法：容器内 /etc/ld.so.conf 单独 bind 到 /tmp 可写文件
+  # ⚠ 2026-08 坑：container-init 无条件写 /etc/ld.so.conf 并跑 ldconfig（写 /etc/ld.so.cache）。
+  #   root 服务能写宿主 /etc，但 fan 手动启动 GUI/autostart 时无 /etc 写权限 →
+  #   'Failed to generate ld.so.conf: Permission denied' / 'ldconfig exited 1' 进程即退（主界面起不来）。
+  #   解法：容器内 /etc/ld.so.{conf,cache} 单独 bind 到 /tmp 可写文件
   #   （wrapper 先 touch+chmod 666，root/fan 双场景均可写；覆盖 --bind /etc /etc 的挂载）
   fhs = buildFHSEnv {
     name = "rustdesk-bin";
@@ -108,6 +109,7 @@ let
     extraBwrapArgs = [
       "--bind" "/etc" "/etc"
       "--bind" "/tmp/rustdesk-ld.so.conf" "/etc/ld.so.conf"
+      "--bind" "/tmp/rustdesk-ld.so.cache" "/etc/ld.so.cache"
     ];
   };
 
@@ -165,10 +167,10 @@ stdenv.mkDerivation {
     mkdir -p $out/bin $out/share/applications $out/share/icons
     cat > $out/bin/rustdesk <<EOF
     #!${stdenv.shell}
-    # bwrap 容器内 /etc/ld.so.conf 的 bind 源：container-init 要写它，root/fan 双场景
-    # 都要可写（root 服务先跑则文件归 root，fan 后跑需 666 才能写）
-    touch /tmp/rustdesk-ld.so.conf 2>/dev/null
-    chmod 666 /tmp/rustdesk-ld.so.conf 2>/dev/null || true
+    # bwrap 容器内 /etc/ld.so.{conf,cache} 的 bind 源：container-init 写 conf + ldconfig 写 cache，
+    # root/fan 双场景都要可写（root 服务先跑则文件归 root，fan 后跑需 666 才能写）
+    touch /tmp/rustdesk-ld.so.conf /tmp/rustdesk-ld.so.cache 2>/dev/null
+    chmod 666 /tmp/rustdesk-ld.so.conf /tmp/rustdesk-ld.so.cache 2>/dev/null || true
     export LD_LIBRARY_PATH="${libPaths}:\$LD_LIBRARY_PATH"
     exec ${fhs}/bin/rustdesk-bin "\$@"
     EOF
