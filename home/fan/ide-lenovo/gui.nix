@@ -262,6 +262,9 @@ in
     # 无 GPU 容器：强制 mesa 软渲染（llvmpipe），避免 libglvnd 尝试 DRI3 失败；kwin 用 GLX 接口（EGL 在 X11 软渲染不稳）
     export LIBGL_ALWAYS_SOFTWARE=1
     export KWIN_OPENGL_INTERFACE=glx
+    # QtQuick 强制软件渲染：SceneGraph 的 OpenGL（llvmpipe）渲染在 2560x1440 下黑屏（1280x800 正常），
+    # Raster 路径（CPU 渲染 + XPutImage）在高分辨率稳定；代价是动画帧率低
+    export QT_QUICK_BACKEND=software
     exec startplasma-x11
     EOF
     chmod +x /etc/xrdp/startwm.sh
