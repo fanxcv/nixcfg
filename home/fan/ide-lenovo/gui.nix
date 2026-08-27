@@ -268,6 +268,19 @@ in
     fi
 
     # --- 4. pam：xrdp-sesman 认证（nullok 允许空密码兜底 + systemd 会话建 XDG_RUNTIME_DIR）---
+    # nix 的 pam_unix 认证走 unix_chkpwd helper（编译期路径 /run/wrappers/bin/unix_chkpwd，NixOS setuid wrapper 机制）；
+    # 容器无 wrappers 目录，且镜像 /usr/sbin/unix_chkpwd（overlayfs 上的 setgid 二进制）glibc 加载报
+    # "cannot apply additional memory protection"（mprotect 失败）→ 必须复制到 /run（tmpfs）并保持 setgid shadow
+    mkdir -p /run/wrappers/bin
+    if [ ! -x /run/wrappers/bin/unix_chkpwd ]; then
+      cp /usr/sbin/unix_chkpwd /run/wrappers/bin/unix_chkpwd
+      chown root:shadow /run/wrappers/bin/unix_chkpwd
+      chmod 2755 /run/wrappers/bin/unix_chkpwd
+    fi
+    # xrdp 组：sesman 创建 /run/xrdp socket 需要（缺组报 create_xrdp_socket_path: Can't get GID of group xrdp）
+    if ! getent group xrdp >/dev/null 2>&1; then
+      groupadd xrdp
+    fi
     cat > /etc/pam.d/xrdp-sesman <<'EOF'
     auth [success=1 default=ignore] pam_unix.so nullok
     auth requisite pam_deny.so
