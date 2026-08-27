@@ -361,7 +361,7 @@ nixos:
       apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；bwrap no_new_privs → sudo 提权不可用，自启走 KDE autostart
       comin: true           # git 驱动自动部署（180s 轮询，与 mini-m4 对齐）
       syncthing: true       # 系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384；忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-pve/syncthing.nix）
-      rdp: krdp             # Plasma 远程桌面（RDP，mstsc 直连；凭据 fan/QAZxsw2341）
+      rdp: xrdp             # RDP 服务端（→ hosts/nix-pve/services/xrdp.nix）；krdp 走 portal 在 X11 会话不可用已弃用；独立 Xorg 会话与本地 SDDM 并存；账号 fan / 登录密码
       nix_gc: 30 天自动清理
       nix_optimise: 自动
       fstrim: weekly
