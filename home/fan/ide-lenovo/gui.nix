@@ -34,6 +34,9 @@ in
     pkgs.xrdp
     pkgs.xrdp.passthru.xorgxrdp
     pkgs.xorg-server
+    # mesa 完整版（swrast_dri.so/llvmpipe 软渲染 GL）：KDE 6 合成器需 OpenGL，容器无 GPU，
+    # 缺 mesa 时 plasmashell/kwin 报 "Cannot create platform OpenGL context" 黑屏
+    pkgs.mesa
     # 系统 dbus：KDE 强依赖，容器镜像未装；nix 包自带系统/用户级 systemd units，activation 链接启用
     pkgs.dbus
     # 中文：Noto CJK 字体（容器无 fontconfig 系统层，直接装包 + plasma 字体写死；26.05 拆为 sans/serif）
