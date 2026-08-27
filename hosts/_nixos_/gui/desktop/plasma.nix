@@ -24,11 +24,18 @@ with kdePackages;
     khelpcenter
     plasma-browser-integration
     plasma-workspace-wallpapers
+    aurorae # 窗口装饰主题引擎（默认 breeze 够用）
+    gwenview # 图片查看器（koko 替代）
+    kate # 文本编辑器（vscode 替代）
+    ktexteditor # kate 的库
+    krdp # RDP 远程桌面（rustdesk 替代）
+    plasma-keyboard # 触摸键盘（无触摸屏）
+    qtvirtualkeyboard # plasma-keyboard 依赖
+    qttools # qdbus 等 Qt 调试工具
   ];
 
   environment.systemPackages = [
     kalk
     koko
-    partitionmanager
   ];
 }
