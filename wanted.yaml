@@ -388,6 +388,43 @@ nixos:
     user:                   # → home/fan/nix-pve/
       ssh_config: 客户端 SSH 配置  # 解密后删除 OrbStack Include 行（本机无 OrbStack）
 
+  nix-book:                 # 无界14S 笔记本（476.9G NVMe + AMD 7840HS/780M 核显 + AX200 WiFi）
+    system:                 # → hosts/nix-book/
+      platform: laptop      # 真机：GRUB EFI（efiInstallAsRemovable）+ amdgpu 核显 + zram（→ hardware.nix）
+      disk: 476.9G 全盘格   # LVM：boot 1G + swap 8G（hibernate）+ nix 100G + persist 100G + 余量 ~267G 可扩 + tmpfs 根（→ disks.nix）
+      desktop: plasma6      # KDE Plasma 6 + SDDM，Wayland 默认会话（无 RustDesk 被控需求，不切 X11）+ fcitx5 拼音（→ _nixos_/gui/desktop/plasma.nix）
+      im_env: fcitx5 系统层 i18n.inputMethod  # 同 nix-pve
+      theme: catppuccin-latte + papirus-dark  # 同 nix-pve（→ plasma.papirus.nix）
+      ui_lang: zh_CN        # 系统 locale + KDE 界面中文
+      apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 仅 client（远程其他机器，非被控端）：官方 release 二进制 + 共享注入器，无 root 服务/无系统层 autostart（→ home/fan/nix-book/rustdesk.nix）
+      power: tsln powerdevil 计划  # AC=performance（15min 挂起/10min 关屏）、电池=balanced（10min/5min）、低电=powerSaving（5min/2min 亮度 15）；低电 20% / 危机 5% → hibernate（swap 8G 支持）；无系统层 TLP（→ home/fan/nix-book/plasma.powerdevil.nix）
+      comin: false          # 笔记本移动设备，手动 nixos-rebuild switch
+      syncthing: true       # 忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-book/syncthing.nix）
+      autologin: fan        # SDDM 自动登录（笔记本自用）
+      nix_gc: 30 天自动清理
+      nix_optimise: 自动
+      fstrim: weekly
+      persist_dirs: # 跨重启持久化（→ immutable.nix；/mnt/code 代码目录）
+        - /etc/nixos
+        - /etc/ssh/keys
+        - /etc/NetworkManager/system-connections
+        - /var/log/journal
+        - /var/lib/nixos
+        - /var/lib/tailscale
+        - /var/lib/NetworkManager
+        - /var/lib/systemd/coredump
+        - /var/lib/systemd/timers
+        - /mnt/code
+        - /opt
+      use_china_mirror: true
+      nix_sandbox: false    # 本地构建关沙箱换构建可行
+      dns: [119.29.29.29, 223.5.5.5]  # MagicDNS 后端 resolver（headscale 服务端下发，本机不声明）
+      tailscale: 安装+服务（headscale 原生 authKeyFile，state bind 持久化）  # → services/tailscale.nix；无 age 种子（首次 authkey 注册）
+      ssh_keys: agenix      # host key 接入时生成并加密
+      user_password: agenix  # fan 登录密码 hash（SSH 走公钥，密码仅 SDDM 登录）
+    user:                   # → home/fan/nix-book/
+      ssh_config: 客户端 SSH 配置  # 同 nix-pve
+
 # ════════════════════════════════════════════════════════════
 # ⑤ PVE 宿主机 → pve/（系统层渲染+推送）+ home/fan/_pve_/ + 可选 home/fan/<机>/ 差异
 # ════════════════════════════════════════════════════════════

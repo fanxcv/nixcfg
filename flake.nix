@@ -395,6 +395,38 @@
         };
       };
 
+      # --- NixOS 真机：nix-book（无界14S 笔记本，476.9G NVMe + AMD 7840HS/780M + KDE Plasma 桌面）---
+      # 系统层：hosts/nix-book/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面 / Wayland）
+      # 用户层：users/fan 复用 home/fan/module-list.nix（_common_ + _nixos_ + 可选 nix-book 差异）
+      # 部署：nixos-rebuild switch --flake .#nix-book（手动，无 comin）
+      nixosConfigurations.nix-book = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        # 与 mkHomeConfig 同款 pkgs：overlay 注入 + unfree 放行（unfreeAllowlist + microsoft-edge / libsciter[clash-verge-rev]）
+        # 本地包（packages/，catppuccin-konsole 等）以 overlay 并入（home 层 useGlobalPkgs 直接用）
+        pkgs = mkPkgs {
+          system = "x86_64-linux";
+          nixpkgsInput = nixpkgs;
+          extraUnfree = [
+            "microsoft-edge"
+            "libsciter"
+          ];
+        };
+        modules = [ ./hosts/nix-book ];
+        specialArgs = {
+          inherit
+            self
+            inputs
+            outputs
+            tools
+            ;
+          useChinaMirror = netConfig.useChinaMirror;
+          isContainer = false;
+          platform = "nixos";
+        };
+      };
+
+
+
       # --- 简短命令别名：nix build .#<机器名> && ./result/activate（两步）---
       # homeConfigurations 标准名保留（兼容 home-manager switch --flake 等工具）
 
