@@ -79,6 +79,10 @@ let
 
   # FHS 环境：只提供 deb 解释器（/lib64/ld-linux-x86-64.so.2，来自 glibc）；
   # 系统库全走外层 wrapper 的 LD_LIBRARY_PATH（bwrap 挂载 /nix/store，store 库直接解析）
+  # extraBwrapArgs：挂载宿主 /etc（覆盖默认 tmpfs）——root 服务（--service）内部用
+  # sudo -u <user> 降权起 user server，bwrap 默认 /etc 是 tmpfs（无 /etc/pam.d）→
+  # sudo PAM 初始化失败循环（'sudo: unable to initialize PAM'）；root 调 sudo 是降权
+  # 无 setuid 依赖，no_new_privs 不影响；/run 已由 auto_mounts 自动挂载（sudo 二进制可见）
   fhs = buildFHSEnv {
     name = "rustdesk-bin";
     runScript = "rustdesk";
@@ -86,6 +90,7 @@ let
       raw
       pkgs.glibc
     ];
+    extraBwrapArgs = [ "--ro-bind" "/etc" "/etc" ];
   };
 
   # GTK3 运行时全链（raw 的 NEEDED + dlopen 传递闭包：gtk3→pango/cairo/gdk-pixbuf/atk/harfbuzz/freetype）
