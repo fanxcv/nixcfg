@@ -365,6 +365,19 @@ nixos:
       nix_gc: 30 天自动清理
       nix_optimise: 自动
       fstrim: weekly
+      persist_dirs: # 跨重启持久化（→ immutable.nix；/mnt/code 代码目录）
+        - /etc/nixos
+        - /etc/ssh/keys
+        - /etc/NetworkManager/system-connections
+        - /var/log/journal
+        - /var/lib/nixos
+        - /var/lib/comin
+        - /var/lib/tailscale
+        - /var/lib/NetworkManager
+        - /var/lib/systemd/coredump
+        - /var/lib/systemd/timers
+        - /mnt/code
+        - /opt
       use_china_mirror: true
       nix_sandbox: false    # 本地 VM 关沙箱换构建可行
       dns: [119.29.29.29, 223.5.5.5]  # MagicDNS 后端 resolver（headscale 服务端下发，本机不声明）

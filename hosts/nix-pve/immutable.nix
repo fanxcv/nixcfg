@@ -48,6 +48,14 @@ _: {
         directory = "/var/lib/systemd/timers";
         mode = "0755";
       }
+      {
+        directory = "/mnt/code";
+        mode = "0755";
+      }
+      {
+        directory = "/opt";
+        mode = "0755";
+      }
     ];
     files = [
       "/etc/machine-id"
