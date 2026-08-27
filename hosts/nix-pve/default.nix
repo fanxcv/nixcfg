@@ -28,6 +28,13 @@
   # X11 会话需要 Xorg（plasma6 模块默认只启 Wayland，不自动开 xserver）
   services.xserver.enable = true;
 
+  # SDDM 自动登录 fan：开机直进桌面 → RustDesk（KDE autostart）自动拉起，无需手动登录
+  # （RustDesk 需图形会话捕获屏幕，无会话则无法自启；内网 VM，无锁屏风险可接受）
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "fan";
+  };
+
   # nix 下载走国内镜像（comin 部署/手动 rebuild 用；root 的 nix.conf 由 NixOS 生成，天然 trusted）
   nix.settings.substituters = tools.config.nixSubstituters;
   nix.settings.extra-substituters = tools.config.nixCachixSubstituters;

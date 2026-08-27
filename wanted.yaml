@@ -358,10 +358,10 @@ nixos:
       im_env: fcitx5 系统层 i18n.inputMethod  # NixOS 模块自动设 GTK/QT_IM_MODULE + XMODIFIERS（SDDM 图形会话生效）+ 生成 /etc/gtk-3.0/immodules.cache；HM 层 waylandFrontend=false（X11 会话）补登录 shell 变量
       theme: catppuccin-latte + papirus-dark  # 深色图标为 tsln 同款特意为之（→ plasma.papirus.nix）；配色包 nixpkgs 无，固定 rev 自打包（→ packages/catppuccin/konsole.nix）
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文（plasma-localerc 声明式；终端/SSH 保持 en_US）
-      apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；bwrap no_new_privs → sudo 提权不可用，自启走 KDE autostart
+      apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；bwrap no_new_privs → sudo 提权不可用；SDDM 自动登录 fan → 开机直进桌面 → KDE autostart 自启（无需手动登录）
       comin: true           # git 驱动自动部署（180s 轮询，与 mini-m4 对齐）
       syncthing: true       # 系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384；忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-pve/syncthing.nix）
-      rdp: xrdp             # RDP 服务端（→ hosts/nix-pve/services/xrdp.nix）；krdp 走 portal 在 X11 会话不可用已弃用；独立 Xorg 会话与本地 SDDM 并存；账号 fan / 登录密码
+      autologin: fan        # SDDM 自动登录（RustDesk 开机即用；内网 VM 无锁屏风险可接受）
       nix_gc: 30 天自动清理
       nix_optimise: 自动
       fstrim: weekly
