@@ -32,16 +32,19 @@ RUN apt update -y \
 # 注意：root 下安装脚本不会自动创建 /nix（会尝试 sudo），需先手动建好；
 #       2.35 起 root 跑 nix 按多用户语义解析配置（build-users-group=nixbld），需先建组；
 #       --tarball-url-prefix 不被真实安装器接受（打印 usage 静默退出），省略（包装脚本默认即清华 URL）
+# nix.conf 必须写 /etc/nix/nix.conf（系统级）：compose 挂载 ./kde-config → /root/.config 会遮蔽
+#   镜像内 /root/.config/nix/nix.conf（重建后 nix-command disabled 报错的根因）；/etc/nix 不在挂载路径
 RUN groupadd -r nixbld && useradd -g nixbld nixbld \
     && mkdir -m 0755 /nix \
     && mkdir -p /etc/nix \
-    && printf 'build-users-group =\n' > /etc/nix/nix.conf \
+    && printf 'build-users-group =\nsubstituters = https://mirrors.ustc.edu.cn/nix-channels/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/\nextra-substituters = https://cache.numtide.com https://nix-community.cachix.org\nextra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\nexperimental-features = nix-command flakes\nauto-optimise-store = true\n' > /etc/nix/nix.conf \
     && curl -fsL https://mirrors.tuna.tsinghua.edu.cn/nix/latest/install -o /tmp/nix-install.sh \
     && sh /tmp/nix-install.sh --no-daemon --no-channel-add --yes \
     && rm -f /tmp/nix-install.sh
 
-# nix 配置：国内 binary cache + flake 支持（单用户模式配置文件在 ~/.config/nix/nix.conf）
-# 与 tools/config.nix 及 flake.nix nixConfig 手写对齐（Docker build 解析阶段无法导入 Nix attrset）
+# nix 配置已并入上方 /etc/nix/nix.conf（国内 binary cache + flake 支持，与 tools/config.nix 及
+# flake.nix nixConfig 手写对齐，Docker build 解析阶段无法导入 Nix attrset）；不再写
+# /root/.config/nix/nix.conf（被 compose kde-config 挂载遮蔽）
 # nix 可执行性（构建期镜像内无 HM 管理的 ~/.zshenv/~/.zshrc）：
 #   1. ENV PATH 追加 nix bin：docker exec ide nix / sh -c 等非 shell 场景可用
 #   2. /etc/zsh/zshenv source nix.sh：系统级全局配置（root 的 zsh 也会读），
@@ -49,9 +52,7 @@ RUN groupadd -r nixbld && useradd -g nixbld nixbld \
 #      （home/fan/_common_/shells.nix 的 envExtra/initContent，含同款 source），
 #      不写用户文件避免 HM clobber 冲突
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.nix-profile/bin:/nix/var/nix/profiles/default/bin"
-RUN mkdir -p /root/.config/nix \
-    && printf 'substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/\nextra-substituters = https://cache.numtide.com https://nix-community.cachix.org\nextra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\nexperimental-features = nix-command flakes\nauto-optimise-store = true\n' > /root/.config/nix/nix.conf \
-    && mkdir -p /etc/zsh \
+RUN mkdir -p /etc/zsh \
     && printf '. /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n' > /etc/zsh/zshenv
 
 COPY entrypoint.sh /usr/local/bin/
