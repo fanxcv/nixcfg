@@ -23,4 +23,7 @@
     videos = "Videos";
     publicShare = "Shared";
   };
+
+  # 覆盖已存在的手配 user-dirs.dirs（HM 默认拒绝 clobber，NixOS 真机上文件早已存在）
+  xdg.configFile."user-dirs.dirs".force = true;
 }
