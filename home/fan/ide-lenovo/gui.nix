@@ -23,6 +23,7 @@ in
     # KDE Plasma 6 桌面（plasma-workspace 提供 startplasma-x11 会话脚本）
     pkgs.kdePackages.plasma-desktop
     pkgs.kdePackages.plasma-workspace
+    pkgs.kdePackages.kwin-x11  # X11 合成器（26.05 起 kwin_x11 拆为独立包，缺则 startplasma-x11 报 error starting process kwin_x11 黑屏）
     pkgs.kdePackages.konsole
     pkgs.kdePackages.dolphin
     pkgs.kdePackages.systemsettings
@@ -303,6 +304,13 @@ in
     fi
 
     # --- 6. dbus：系统服务 + user 服务（KDE 强依赖；容器镜像未装 dbus）---
+    # libglvnd 的 GL 实现查找路径（/run/opengl-driver，NixOS opengl-driver 机制）；容器无此目录则
+    # plasmashell/kwin 报 Cannot create platform OpenGL context 黑屏；/run 为 tmpfs 须每次激活重建
+    mkdir -p /run/opengl-driver/lib /run/opengl-driver/share/glvnd/egl_vendor.d
+    ln -sf ${pkgs.mesa}/lib/libGLX_mesa.so.0 /run/opengl-driver/lib/
+    ln -sf ${pkgs.mesa}/lib/libEGL_mesa.so.0 /run/opengl-driver/lib/
+    ln -sf ${pkgs.mesa}/lib/dri /run/opengl-driver/lib/dri
+    ln -sf ${pkgs.mesa}/share/glvnd/egl_vendor.d/50_mesa.json /run/opengl-driver/share/glvnd/egl_vendor.d/
     ln -sf ${pkgs.dbus}/etc/systemd/system/dbus.service /etc/systemd/system/dbus.service
     ln -sf ${pkgs.dbus}/etc/systemd/system/dbus.socket /etc/systemd/system/dbus.socket
     mkdir -p /etc/systemd/user/default.target.wants /etc/systemd/user/sockets.target.wants
