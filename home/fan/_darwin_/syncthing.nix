@@ -21,6 +21,38 @@ in
   # ~/sync 同步目录（.keep 占位触发 home-manager 建目录）
   home.file."sync/.keep".text = "";
 
+  # ~/sync/.stignore：忽略 macOS/Windows 垃圾文件（.DS_Store 等），不参与同步
+  #   syncthing 自动忽略 .stignore 本身，不跨设备同步 → 各设备需各自配置（nix-pve 见 home/fan/nix-pve/syncthing.nix）
+  home.file."sync/.stignore".text = ''
+    // macOS 系统/垃圾文件
+    .DS_Store
+    .sync-conflict-*.DS_Store
+    ._*
+    .Spotlight-V100
+    .Trashes
+    .fseventsd
+    .localized
+    .apdisk
+    .AppleDouble
+    .DocumentRevisions-V100
+    .TemporaryItems
+    .VolumeIcon.icns
+    .com.apple.timemachine.donotpresent
+    Icon?
+    // 子目录 .stignore / verysync 遗留（syncthing 只认根目录 .stignore，子目录的无效）
+    .stignore
+    .verysync
+    // Windows 垃圾
+    Thumbs.db
+    desktop.ini
+    // Office 临时
+    ~$*
+    // 编辑器/开发临时
+    *.swp
+    *.swo
+    *~
+  '';
+
   # LaunchAgent：登录即启 + KeepAlive 常驻（改配置后 launchctl kickstart -k gui/$(id -u)/syncthing 重启）
   # --no-browser：不弹浏览器；日志 syncthing 自管（配置目录 syncthing.log），不设 StandardOutPath
   launchd.agents.syncthing = {

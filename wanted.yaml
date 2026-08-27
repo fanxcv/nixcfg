@@ -215,7 +215,7 @@ macos:
       LANG: en_US.UTF-8     # SSH 连 Linux 不触发中文 locale 问题
       LC_ALL: en_US.UTF-8
     services:               # 系统服务（→ home/fan/_darwin_/syncthing.nix；hosts/_darwin_/services/ 为空占位）
-      syncthing: LaunchAgent 自启  # tailscale 用 App（IP 稳定），nix 服务会换 IP 不启用；设备互配/密码由 activation 幂等处理（tools/syncthingPeers.nix）
+      syncthing: LaunchAgent 自启  # tailscale 用 App（IP 稳定），nix 服务会换 IP 不启用；设备互配/密码由 activation 幂等处理（tools/syncthingPeers.nix）；忽略规则 .stignore（.DS_Store 等垃圾，→ syncthing.nix）
     fonts:                  # 字体（→ i18n/fonts.nix；Monaspace 已全部移除）
 
   user:                     # → home/fan/_darwin_/
@@ -360,7 +360,7 @@ nixos:
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文（plasma-localerc 声明式；终端/SSH 保持 en_US）
       apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；bwrap no_new_privs → sudo 提权不可用，自启走 KDE autostart
       comin: true           # git 驱动自动部署（180s 轮询，与 mini-m4 对齐）
-      syncthing: true       # 系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384
+      syncthing: true       # 系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384；忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-pve/syncthing.nix）
       rdp: krdp             # Plasma 远程桌面（RDP，mstsc 直连；凭据 fan/QAZxsw2341）
       nix_gc: 30 天自动清理
       nix_optimise: 自动
