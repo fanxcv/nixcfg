@@ -37,7 +37,7 @@
     Type=Application
     Name=RustDesk
     Comment=RustDesk remote desktop
-    Exec=sh -c "echo autostart-ran >> /tmp/rustdesk-autostart.log; cp /run/user/1000/xauth_* $HOME/.Xauthority 2>/dev/null; sudo systemctl restart rustdesk 2>/dev/null; exec ${pkgs.rustdesk-bin}/bin/rustdesk"
+    Exec=sh -c "cp /run/user/1000/xauth_* /home/fan/.Xauthority 2>/dev/null; sudo systemctl restart rustdesk 2>/dev/null; exec ${pkgs.rustdesk-bin}/bin/rustdesk"
     X-GNOME-Autostart-enabled=true
     X-KDE-autostart-after=panel
   '';
