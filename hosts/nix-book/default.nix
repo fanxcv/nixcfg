@@ -52,6 +52,16 @@
   # fan sudo 免密（日常维护/手动 rebuild 用）
   security.sudo.wheelNeedsPassword = false;
 
+  # syncthing GUI 密码（syncthing 服务以 fan 用户跑，owner 必须 fan 才能读；
+  # 模块 guiPasswordFile 自动 bcrypt 后经 REST API 注入，不覆盖 config.xml 配对状态）
+  age.secrets."syncthing-gui-password" = {
+    file = tools.relative "secrets/syncthing-gui-password.age";
+    path = "/run/agenix/syncthing-gui-password";
+    owner = "fan";
+    group = "users";
+    mode = "0400";
+  };
+
   programs.git = {
     enable = true;
     config.credential.helper = "store";
