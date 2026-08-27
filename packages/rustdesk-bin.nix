@@ -73,6 +73,14 @@ let
       cp usr/share/applications/*.desktop $out/share/applications/
       # launcher 在 share/rustdesk/ 下，$ORIGIN 定位同目录 lib/（真实文件路径，symlink 不影响）
       ln -s ../share/rustdesk/rustdesk $out/bin/rustdesk
+      # user server（root 服务 sudo -u fan 直接跑本 raw launcher，sudo 1.9 硬编码清
+      # LD_LIBRARY_PATH，-E/env_keep 均无效）→ 依赖 $ORIGIN/lib RUNPATH：把 libPaths
+      # 库 symlink 进 lib/（与 deb 自带库共存，store 路径 GC 安全）
+      for p in $(echo "${libPaths}" | tr ":" " "); do
+        for lib in $p/*.so*; do
+          [ -e "$lib" ] && ln -sf "$lib" "$out/share/rustdesk/lib/"
+        done
+      done
       runHook postInstall
     '';
   };
@@ -160,14 +168,6 @@ stdenv.mkDerivation {
     find $out/share/applications -size 0 -delete
     substituteInPlace $out/share/applications/*.desktop \
       --replace "Exec=rustdesk" "Exec=$out/bin/rustdesk"
-    # user server（root 服务 sudo -u fan 直接跑 raw 二进制，sudo 1.9 硬编码清
-    # LD_LIBRARY_PATH，-E/env_keep 均无效）→ 依赖 launcher 的 $ORIGIN/lib RUNPATH：
-    # 把 libPaths 库 symlink 进 lib/（与 deb 自带库共存，store 路径 GC 安全）
-    for p in $(echo "${libPaths}" | tr ":" " "); do
-      for lib in $p/*.so*; do
-        [ -e "$lib" ] && ln -sf "$lib" "$out/share/rustdesk/lib/"
-      done
-    done
     runHook postInstall
   '';
 
