@@ -35,7 +35,6 @@ with kdePackages;
   ];
 
   environment.systemPackages = [
-    kalk
     koko
   ];
 }
