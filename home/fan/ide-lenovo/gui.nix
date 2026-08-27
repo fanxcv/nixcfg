@@ -254,6 +254,9 @@ in
     export XDG_RUNTIME_DIR=/run/user/0
     export XDG_SESSION_DESKTOP=KDE
     export XDG_CURRENT_DESKTOP=KDE
+    # 无 GPU 容器：强制 mesa 软渲染（llvmpipe），避免 libglvnd 尝试 DRI3 失败；kwin 用 GLX 接口（EGL 在 X11 软渲染不稳）
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export KWIN_OPENGL_INTERFACE=glx
     exec startplasma-x11
     EOF
     chmod +x /etc/xrdp/startwm.sh
