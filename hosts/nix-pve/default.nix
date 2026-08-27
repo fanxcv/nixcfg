@@ -10,7 +10,9 @@
       "hosts/_common_/i18n"
       "hosts/_nixos_/base"
       "hosts/_nixos_/i18n"
-      "hosts/_nixos_/gui/desktop/plasma.nix"
+      "hosts/_nixos_/gui/desktop"
+      "hosts/_nixos_/themes"
+      "hosts/_nixos_/kernel"
       "hosts/_nixos_/services/openssh.nix"
       "hosts/_nixos_/services/comin.nix"
 

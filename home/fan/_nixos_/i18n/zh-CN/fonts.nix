@@ -1,5 +1,5 @@
-# fontconfig 默认字体（用户层）：中文 Noto CJK，等宽不指定用系统默认
-# 系统字体已由 hosts/_nixos_/i18n/fonts.nix 安装，这里只定默认优先级
+# fontconfig 默认字体（tsln 同款）：中文 Noto CJK（SC→TC→JP→KR 回退链），
+# 等宽 Monaspace Neon（NF 变体）；字体包同文件安装
 { pkgs, ... }:
 {
   fonts.fontconfig = {
@@ -10,16 +10,31 @@
     defaultFonts = {
       serif = [
         "Noto Serif CJK SC"
+        "Noto Serif CJK TC"
+        "Noto Serif CJK JP"
+        "Noto Serif CJK KR"
       ];
       sansSerif = [
         "Noto Sans CJK SC"
+        "Noto Sans CJK TC"
+        "Noto Sans CJK JP"
+        "Noto Sans CJK KR"
       ];
       monospace = [
-        "Noto Sans Mono CJK SC"
+        "Monaspace Neon"
+        "Monaspace Neon NF"
       ];
       emoji = [
         "Noto Color Emoji"
       ];
     };
   };
+
+  home.packages = with pkgs; [
+    monaspace
+    nerd-fonts.monaspace
+    noto-fonts-cjk-sans
+    noto-fonts-cjk-serif
+    noto-fonts-color-emoji
+  ];
 }

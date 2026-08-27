@@ -25,6 +25,29 @@
         "url": "https://ghfast.top/https://github.com/ryantm/agenix.git"
       }
     },
+    "catppuccin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786309022,
+        "narHash": "sha256-Bn1EFvCd74JZXJs3pxUdfEMhls3/yuJre4O1owI6oe8=",
+        "ref": "main",
+        "rev": "9e84aa294455c58a1caba475902d06c1170ed5c1",
+        "shallow": true,
+        "type": "git",
+        "url": "https://ghfast.top/https://github.com/catppuccin/nix.git"
+      },
+      "original": {
+        "ref": "main",
+        "rev": "9e84aa294455c58a1caba475902d06c1170ed5c1",
+        "shallow": true,
+        "type": "git",
+        "url": "https://ghfast.top/https://github.com/catppuccin/nix.git"
+      }
+    },
     "cirruslabs-cli": {
       "flake": false,
       "locked": {
@@ -376,6 +399,7 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "catppuccin": "catppuccin",
         "cirruslabs-cli": "cirruslabs-cli",
         "comin": "comin",
         "disko": "disko",

@@ -10,6 +10,7 @@
 {
   tools,
   outputs,
+  inputs,
   config,
   lib,
   ...
@@ -17,6 +18,10 @@
 {
   imports = (tools.scan ./.) ++ [
     outputs.homeModules.default
+    inputs.catppuccin.homeModules.catppuccin
+    # plasma-manager 挂全平台（tsln 同款）：darwin/容器也持有 programs.plasma options，
+    # 避免 modules/home/catppuccin/plasma.nix 在非 NixOS 平台 eval undefined
+    inputs.plasma-manager.homeModules.plasma-manager
   ];
 
   # 软件默认全开（所有机器装）；机器层可 lib.mkForce false 关闭对应软件

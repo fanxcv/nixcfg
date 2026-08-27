@@ -18,6 +18,7 @@ with kdePackages;
 
   # 去掉用不到的预装应用（保持精简）
   environment.plasma6.excludePackages = [
+    qrca
     elisa
     discover
     khelpcenter
@@ -26,6 +27,8 @@ with kdePackages;
   ];
 
   environment.systemPackages = [
+    kalk
+    koko
     partitionmanager
   ];
 }

@@ -1,0 +1,4 @@
+{ tools, ... }:
+{
+  imports = tools.scan ./.;
+}

@@ -79,11 +79,18 @@
       url = "git+https://ghfast.top/https://github.com/nix-community/impermanence.git?ref=master&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Plasma 面板/字体/KWin 声明式定制（home 层，见 home/fan/_nixos_/gui/plasma.nix）
+    # Plasma 面板/字体/KWin 声明式定制（home 层，见 home/fan/_nixos_/gui/desktop/plasma/）
     plasma-manager = {
       url = "git+https://ghfast.top/https://github.com/nix-community/plasma-manager.git?ref=trunk&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
+    };
+
+    # Catppuccin 全家桶主题模块（plasma/sddm/grub/plymouth/fcitx5 等 target，见 themes/catppuccin.nix）
+    # 固定 rev（同 tsln1998/nixcfg，release-26.11 前的稳定点）；nixpkgs 跟随避免双实例
+    catppuccin = {
+      url = "git+https://ghfast.top/https://github.com/catppuccin/nix.git?ref=main&rev=9e84aa294455c58a1caba475902d06c1170ed5c1&shallow=1";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # --- macOS（nix-darwin）：三台 Mac 的系统层，见 hosts/_darwin_/ 与 hosts/<host>/ ---

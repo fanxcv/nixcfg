@@ -16,6 +16,7 @@
     inputs.agenix.nixosModules.default # 密钥解密（secrets/*.age，identity 见 hosts/_common_/base/agenix.nix）
     inputs.impermanence.nixosModules.impermanence # 不可变系统（/persist 持久化，见 hosts/<host>/immutable.nix）
     inputs.home-manager.nixosModules.home-manager # 用户层（users/fan 挂载 home/fan/<host>）
+    inputs.catppuccin.nixosModules.catppuccin # Catppuccin 系统级主题（sddm/grub/plymouth，见 hosts/_nixos_/themes/）
   ];
 
   system.stateVersion = "25.05";
