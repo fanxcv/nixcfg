@@ -21,6 +21,21 @@ cp -f "$KEYDIR/ssh_host_ed25519_key.pub" /etc/ssh/ssh_host_ed25519_key.pub
 chmod 600 /etc/ssh/ssh_host_ed25519_key
 chmod 644 /etc/ssh/ssh_host_ed25519_key.pub
 
+# nix.conf 兜底：compose 挂载 ./kde-config → /root/.config 遮蔽镜像内 /root/.config/nix/nix.conf
+# （重建后 nix-command disabled 报错根因），配置必须系统级 /etc/nix/nix.conf（不在挂载路径）。
+# 此处幂等补齐（与 Dockerfile 构建期写入 + flake.nix nixConfig 对齐；新镜像已含，本段仅兜底旧镜像/意外缺失）
+NIXCONF=/etc/nix/nix.conf
+if ! grep -q 'experimental-features' "$NIXCONF" 2>/dev/null; then
+  cat >> "$NIXCONF" <<'EOF'
+substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/
+extra-substituters = https://cache.numtide.com https://nix-community.cachix.org
+extra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+experimental-features = nix-command flakes
+auto-optimise-store = true
+EOF
+  echo "[entrypoint] /etc/nix/nix.conf 已补齐（nix-command/flakes + 镜像）"
+fi
+
 if [ "$#" -eq 0 ] || [ "${1#-}" != "$1" ]; then
   exec /usr/sbin/init
 fi
