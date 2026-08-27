@@ -9,10 +9,10 @@
 {
   # user server（root 服务 sudo -u fan 降权起 --server）缺库根因：glibc 对 setuid
   # 程序（sudo）清 LD_LIBRARY_PATH（AT_SECURE），env_keep/-E 均无效（实测）。
-  # 解法：pam_env（sudo PAM session 段）读 /etc/pam/environment 在 sudo 进程内
+  # 解法：pam_env（sudo PAM session 段，conffile=/etc/pam/environment）在 sudo 进程内
   # 注入 LD_LIBRARY_PATH（不受 AT_SECURE 影响）→ env_keep 保留 → user server 有库。
   # 单用户 VM（fan 免密 sudo）风险可接受。
-  environment.pamEnvironment.LD_LIBRARY_PATH = pkgs.rustdesk-bin.libPaths;
+  environment.etc."pam/environment".text = "LD_LIBRARY_PATH=${pkgs.rustdesk-bin.libPaths}";
   security.sudo.extraConfig = ''
     Defaults env_keep += "LD_LIBRARY_PATH"
   '';
