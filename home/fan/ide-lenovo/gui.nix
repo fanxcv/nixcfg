@@ -146,6 +146,11 @@ in
         BorderSnapZone = 10;
         WindowSnapZone = 10;
       };
+      # 禁用合成器：kwin 的 OpenGL 合成在 llvmpipe 软渲染下输出黑屏（splash 正常、桌面黑），
+      # 禁用后窗口直接渲染到 X 根窗口（X11 传统路径），xorgxrdp 捕获正常；代价是无窗口特效
+      Compositing = {
+        Enabled = false;
+      };
     };
 
     # 会话：空会话启动（不恢复上次桌面）
