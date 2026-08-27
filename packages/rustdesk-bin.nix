@@ -43,6 +43,8 @@
   curl,
   xdotool,
   libnsl,
+  mesa,
+  libayatana-appindicator,
 }:
 let
   src = fetchurl {
@@ -117,6 +119,8 @@ let
   };
 
   # GTK3 运行时全链（raw 的 NEEDED + dlopen 传递闭包：gtk3→pango/cairo/gdk-pixbuf/atk/harfbuzz/freetype）
+  # + mesa（flutter 渲染：libEGL/libGL/libgbm，容器内缺则 flutter 窗口创建失败 ID 0）
+  # + libayatana-appindicator（托盘图标，缺则 appindicator panic 但非致命）
   libPaths = lib.makeLibraryPath [
     gtk3
     glib
@@ -153,6 +157,8 @@ let
     curl
     xdotool
     libnsl
+    mesa
+    libayatana-appindicator
     stdenv.cc.cc.lib # libstdc++/libgcc_s（Flutter/rust 二进制必需）
   ];
 in
@@ -171,6 +177,8 @@ stdenv.mkDerivation {
     cat > $out/bin/rustdesk <<EOF
     #!${stdenv.shell}
     export LD_LIBRARY_PATH="${libPaths}:\$LD_LIBRARY_PATH"
+    # flutter 渲染需 EGL dri 驱动（virtio-gl VM：libgallium/virgl）；宿主 mesa 的 dri 目录
+    export LIBGL_DRIVERS_PATH="${mesa}/lib/dri"
     exec ${fhs}/bin/rustdesk-bin "\$@"
     EOF
     chmod +x $out/bin/rustdesk
