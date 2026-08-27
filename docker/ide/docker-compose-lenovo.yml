@@ -32,12 +32,17 @@ services:
       - /mnt:/mnt
       # nix 配置仓库：compose 位于仓库内 docker/ide/，挂载仓库根（../../）；容器内不 clone
       - ./nixcfg:/root/nixcfg
+      # KDE 桌面持久化（gui.nix）：配置/数据/状态，容器重建不丢；嵌套挂载与 skemate/mise/JetBrains 子挂载共存
+      - ./kde/config:/root/.config
+      - ./kde/data:/root/.local/share
+      - ./kde/state:/root/.local/state
       # AI 密钥等敏感环境变量（chmod 600，不进 nix 配置）
       - ./.secrets:/root/.secrets
       # nix store 持久化：容器重建后不重新下载（named volume 首次创建自动拷贝镜像内 /nix）
       - nix-store:/nix
     ports:
       - 2222:22
+      - 13389:3389   # xrdp 远程桌面（KDE，见 home/fan/ide-lenovo/gui.nix）
     networks:
       - fan
     deploy:
