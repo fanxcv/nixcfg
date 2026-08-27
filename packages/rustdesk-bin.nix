@@ -99,8 +99,9 @@ let
   #   写权限 → 'Failed to generate ld.so.conf: Permission denied' / 'ldconfig exited 1'
   #   进程即退，GUI/autostart 起不来）；宿主条目（passwd/group/shadow/sudoers/时区等）
   #   由默认 etcBindEntries 自动 symlink，无需整体挂载。
-  #   唯一例外：fhsenv rootfs 的 /etc/pam.d 无 sudo 配置（root 服务内部 sudo -u fan
-  #   降权起 user server 需宿主 /etc/pam.d/sudo）→ 单独 bind 宿主 pam.d 目录。
+  #   唯一例外：root 服务内部 sudo -u fan 降权起 user server，需宿主 /etc/pam/sudo
+  #   （fhsenv rootfs 的 /etc/pam.d 无 sudo）→ 单独 bind 宿主整个 /etc/pam（含 pam.d
+  #   与 pam/environment——pam_env 注入 LD_LIBRARY_PATH 的 conffile，缺则 user server 缺库）。
   fhs = buildFHSEnv {
     name = "rustdesk-bin";
     runScript = "${raw}/bin/rustdesk";
@@ -108,7 +109,7 @@ let
       raw
       pkgs.glibc
     ];
-    extraBwrapArgs = [ "--bind" "/etc/pam.d" "/etc/pam.d" ];
+    extraBwrapArgs = [ "--bind" "/etc/pam" "/etc/pam" ];
   };
 
   # GTK3 运行时全链（raw 的 NEEDED + dlopen 传递闭包：gtk3→pango/cairo/gdk-pixbuf/atk/harfbuzz/freetype）
