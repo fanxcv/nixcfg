@@ -344,7 +344,6 @@ linux:
       ide-lenovo:           # → home/fan/ide-lenovo/（激活：nix run .#ide-lenovo）
         proxy: false        # 国内机器直连
         mise: [bun@latest, go@1.25, java@oracle-17, maven@3, node@22, python@3.12, uv@latest, pipx@latest]
-        gui: KDE Plasma 6 + xrdp  # → gui.nix（X11 会话 + RDP，compose 13389:3389 + kde-{config,data,state} 挂载持久化，中文界面 + fcitx5 拼音）
 
 # ════════════════════════════════════════════════════════════
 # ④ NixOS 真机 → hosts/nix-pve/ + home/fan/nix-pve/
