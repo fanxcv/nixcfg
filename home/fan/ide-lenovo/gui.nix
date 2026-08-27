@@ -286,7 +286,9 @@ in
     auth requisite pam_deny.so
     auth required pam_permit.so
     account required pam_unix.so
-    session optional pam_systemd.so
+    # session 用 pam_permit：pam_open_session 无模块报 "no modules loaded"，pam_systemd（镜像版）连 logind
+    # 失败报 Permission denied；XDG_RUNTIME_DIR 由 startwm.sh 兜底创建，无需 systemd session
+    session required pam_permit.so
     EOF
 
     # --- 5. root 密码（xrdp 登录用；文件内容格式 root:<密码>，宿主机 docker/ide/.secrets/ 维护）---
