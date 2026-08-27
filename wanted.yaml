@@ -358,7 +358,7 @@ nixos:
       im_env: fcitx5 系统层 i18n.inputMethod  # NixOS 模块自动设 GTK/QT_IM_MODULE + XMODIFIERS（SDDM 图形会话生效）+ 生成 /etc/gtk-3.0/immodules.cache；HM 层 waylandFrontend=false（X11 会话）补登录 shell 变量
       theme: catppuccin-latte + papirus-dark  # 深色图标为 tsln 同款特意为之（→ plasma.papirus.nix）；配色包 nixpkgs 无，固定 rev 自打包（→ packages/catppuccin/konsole.nix）
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文（plasma-localerc 声明式；终端/SSH 保持 en_US）
-      apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；root 服务声明式（→ services/rustdesk.nix，免 GUI 请求权限 sudo）；SDDM 自动登录 fan → 开机直进桌面 → KDE autostart 自启
+      apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；root 服务声明式（→ services/rustdesk.nix，免 GUI 请求权限 sudo）；SDDM 自动登录 fan → 开机直进桌面 → 系统层 autostart（/etc/xdg/autostart，HM home.file 链接会被 plasma-manager 清）自启：先复制 SDDM 新 xauth 为 ~/.Xauthority 再重启 root 服务（--server 用新 key 重连 X）再 exec GUI；包内 /etc 用默认 tmpfs（container-init 写 ld.so.conf/ldconfig 需可写）+ bind 宿主 /etc/pam 与 /etc/pam.d（sudo PAM + pam_env LD_LIBRARY_PATH 注入）；libPaths 含 mesa（flutter 窗口需 EGL/dri）
       comin: true           # git 驱动自动部署（180s 轮询，与 mini-m4 对齐）
       syncthing: true       # 系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384；忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-pve/syncthing.nix）
       autologin: fan        # SDDM 自动登录（RustDesk 开机即用；内网 VM 无锁屏风险可接受）
