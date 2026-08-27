@@ -9,21 +9,28 @@
 { pkgs, lib, ... }:
 let
   kasmvnc = pkgs.kasmvnc;
-  xfce = pkgs.xfce;
+  # 26.05 起 xfce 组件移顶层（pkgs.xfce4-session 等，xfce.* 已 deprecated）
+  xfce4-session = pkgs.xfce4-session;
+  xfwm4 = pkgs.xfwm4;
+  xfce4-panel = pkgs.xfce4-panel;
+  xfdesktop = pkgs.xfdesktop;
+  xfce4-settings = pkgs.xfce4-settings;
+  xfce4-terminal = pkgs.xfce4-terminal;
+  xfconf = pkgs.xfconf;
   # xstartup / systemd service 运行时 PATH：xfce 核心组件 + dbus + xauth/xkbcomp（kasmvncserver wrap 已带，双保险）
   # 最小集：session/wm/panel/desktop/settings/xfconf/terminal，其余 xfce 捆绑（appfinder/screenshooter/taskmanager/whisker/clipman/notifyd/thunar）不装
   runPath = lib.makeBinPath [
     kasmvnc
-    xfce.xfce4-session
-    xfce.xfwm4
-    xfce.xfce4-panel
-    xfce.xfdesktop
-    xfce.xfce4-settings
-    xfce.xfce4-terminal
-    xfce.xfconf
+    xfce4-session
+    xfwm4
+    xfce4-panel
+    xfdesktop
+    xfce4-settings
+    xfce4-terminal
+    xfconf
     pkgs.dbus
-    pkgs.xorg.xauth
-    pkgs.xorg.xkbcomp
+    pkgs.xauth
+    pkgs.xkbcomp
   ];
 in
 # 仅 x86_64-linux（lenovo 真机架构）：deb 是 amd64，aarch64 上无法构建；
@@ -32,13 +39,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   home.packages = with pkgs; [
     kasmvnc
     # xfce4 核心组件（GTK 软渲染稳定；最小集，不装捆绑应用）
-    xfce.xfce4-session
-    xfce.xfwm4
-    xfce.xfce4-panel
-    xfce.xfdesktop
-    xfce.xfce4-settings
-    xfce.xfce4-terminal
-    xfce.xfconf
+    xfce4-session
+    xfwm4
+    xfce4-panel
+    xfdesktop
+    xfce4-settings
+    xfce4-terminal
+    xfconf
     dbus
     adwaita-icon-theme # GTK 默认图标（无则界面空白）
     dejavu_fonts # Xvnc 渲染 + 界面字体
@@ -53,7 +60,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     unset SESSION_MANAGER
     unset DBUS_SESSION_BUS_ADDRESS
     export PATH="${runPath}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    exec ${pkgs.dbus}/bin/dbus-launch --exit-with-session ${xfce.xfce4-session}/bin/xfce4-session
+    exec ${pkgs.dbus}/bin/dbus-launch --exit-with-session ${xfce4-session}/bin/xfce4-session
     EOF
     chmod +x /root/.vnc/xstartup
 

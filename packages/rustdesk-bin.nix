@@ -177,4 +177,8 @@ stdenv.mkDerivation {
     license = lib.licenses.agpl3Only;
     platforms = [ "x86_64-linux" ];
   };
+
+  # 供系统层注入 pamEnvironment（user server 经 sudo 启动，glibc AT_SECURE 清
+  # LD_LIBRARY_PATH，env_keep 无效；pam_env 在 sudo 进程内设置不受影响）
+  passthru = { inherit libPaths; };
 }

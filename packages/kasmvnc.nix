@@ -23,7 +23,16 @@
   zlib,
   libunwind,
   pixman,
-  xorg,
+  libXfont2,
+  libXau,
+  libXdmcp,
+  libxshmfence,
+  libX11,
+  libXext,
+  libXtst,
+  libXrandr,
+  libXcursor,
+  libXfixes,
   systemdLibs,
   libGL,
   mesa,
@@ -31,6 +40,9 @@
   libxcrypt,
   freetype,
   dejavu_fonts,
+  xauth,
+  xkbcomp,
+  xkeyboard_config,
 }:
 let
   version = "1.5.0";
@@ -57,16 +69,16 @@ stdenv.mkDerivation {
     zlib
     libunwind
     pixman
-    xorg.libXfont2
-    xorg.libXau
-    xorg.libXdmcp
-    xorg.libxshmfence
-    xorg.libX11
-    xorg.libXext
-    xorg.libXtst
-    xorg.libXrandr
-    xorg.libXcursor
-    xorg.libXfixes
+    libXfont2
+    libXau
+    libXdmcp
+    libxshmfence
+    libX11
+    libXext
+    libXtst
+    libXrandr
+    libXcursor
+    libXfixes
     systemdLibs
     libGL
     mesa
@@ -103,8 +115,8 @@ stdenv.mkDerivation {
         pp.Switch pp.YAMLTiny pp.HashMergeSimple pp.ScalarListUtils pp.ListMoreUtils
         pp.TryTiny pp.DateTime pp.DateTimeTimeZone
       ])}/lib/perl5/site_perl" \
-      --prefix PATH : "${xorg.xkbcomp}/bin:${xorg.xauth}/bin" \
-      --set XKB_BASE "${xorg.xkbdata}/share/X11/xkb"
+      --prefix PATH : "${xkbcomp}/bin:${xauth}/bin" \
+      --set XKB_BASE "${xkeyboard_config}/share/X11/xkb"
   '';
 
   meta = {

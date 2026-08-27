@@ -38,6 +38,7 @@ services:
       - nix-store:/nix
     ports:
       - 2222:22
+      - 6901:6901 # KasmVNC 浏览器远程桌面（http://<host>:6901/vnc.html）
     networks:
       - fan
     deploy:

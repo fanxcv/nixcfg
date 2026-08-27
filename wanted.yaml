@@ -344,6 +344,7 @@ linux:
       ide-lenovo:           # → home/fan/ide-lenovo/（激活：nix run .#ide-lenovo）
         proxy: false        # 国内机器直连
         mise: [bun@latest, go@1.25, java@oracle-17, maven@3, node@22, python@3.12, uv@latest, pipx@latest]
+        kasmvnc: 浏览器远程桌面  # xfce4 + KasmVNC（→ kasmvnc.nix；compose 6901:6901，http://<host>:6901/vnc.html，root + 首次激活随机密码）
 
 # ════════════════════════════════════════════════════════════
 # ④ NixOS 真机 → hosts/nix-pve/ + home/fan/nix-pve/
