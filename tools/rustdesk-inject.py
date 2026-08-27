@@ -78,9 +78,9 @@ def inject(
 ) -> None:
     top_updates = {
         "rendezvous_server": repr(server),
-        # Exactly two single quotes are the TOML empty literal string. Three make Bad TOML.
-        "unlock_pin": "''",
     }
+    # unlock_pin 不在 top_updates：保留用户 GUI 设置（原强制写 '' 会在每次部署清掉
+    #   用户 PIN → GUI 解锁走 sudo（bwrap 沙箱 no_new_privs 必败））；行缺失时 RustDesk 读空，无碍
     if trusted_devices is not None:
         top_updates["trusted_devices"] = repr(trusted_devices)
 
