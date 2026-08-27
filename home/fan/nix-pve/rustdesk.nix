@@ -27,12 +27,15 @@ in
   # 注意：rustdesk-bin 跑在 buildFHSEnv 的 bwrap 沙箱里，bwrap 强制 no_new_privs → sudo setuid 失效，
   #   点"请求权限"输入密码必报 "If sudo is running in a container..."——沙箱固有限制，无解；
   #   普通用户模式远程控制完整可用，自启走 KDE autostart 即可，勿用 root 服务模式
+  # Exec 前置：① SDDM 每次登录生成新 xauth（/run/user/1000/xauth_*，随机名），复制为
+  #   ~/.Xauthority（RustDesk GUI/--server 都兜底读它，缺则 X 连接失败）；② 重启 root 服务
+  #   让 --server 用新 key 重新连 X（登录前起的 --server 拿的是旧 key/无 key）
   home.file.".config/autostart/rustdesk.desktop".text = ''
     [Desktop Entry]
     Type=Application
     Name=RustDesk
     Comment=RustDesk remote desktop
-    Exec=${config.home.profileDirectory}/bin/rustdesk
+    Exec=sh -c "cp /run/user/1000/xauth_* $HOME/.Xauthority 2>/dev/null; sudo systemctl restart rustdesk 2>/dev/null; exec ${config.home.profileDirectory}/bin/rustdesk"
     X-GNOME-Autostart-enabled=true
     X-KDE-autostart-after=panel
   '';
