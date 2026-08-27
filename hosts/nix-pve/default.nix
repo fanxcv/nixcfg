@@ -2,7 +2,7 @@
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
 # 部署：comin 自动部署（git.fan-x.fun 仓库轮询，见 services/comin.nix）；
 #   首次接入手动：nixos-rebuild switch --flake /etc/nixos#nix-pve（仓库放 /persist/etc/nixos）
-{ tools, ... }:
+{ tools, pkgs, ... }:
 {
   imports =
     map tools.relative [
@@ -80,4 +80,13 @@
     enable = true;
     config.credential.helper = "store";
   };
+
+  # fcitx5 中文输入法：home-manager 层 sessionVariables 只对登录 shell 生效（~/.zshenv），
+  # SDDM 图形会话不读 → 系统层补 IM 环境变量 + GTK immodules 缓存（fcitx5-gtk）
+  environment.variables = {
+    GTK_IM_MODULE = "fcitx";
+    QT_IM_MODULE = "fcitx";
+    XMODIFIERS = "@im=fcitx";
+  };
+  programs.gtk3.cachePackages = [ pkgs.fcitx5-gtk ];
 }

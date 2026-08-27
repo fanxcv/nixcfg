@@ -355,7 +355,8 @@ nixos:
       platform: qemu-vm     # virtio 磁盘 / GRUB EFI / OVMF（→ hardware.nix）
       disk: 128G            # LVM：boot 1G + nix 48G + persist 40G + tmpfs 根（→ disks.nix）
       desktop: plasma6      # KDE Plasma 6 + SDDM，默认 X11 会话（RustDesk Wayland capturer bug #13374，1.4.9 未修）+ fcitx5 拼音
-      theme: catppuccin-latte + papirus  # 配色包 nixpkgs 无，固定 rev 自打包（→ packages/catppuccin/konsole.nix）
+      im_env: fcitx5 系统层注入  # GTK/QT_IM_MODULE + XMODIFIERS + gtk3 缓存（home-manager sessionVariables 不覆盖 SDDM 图形会话）
+      theme: catppuccin-latte + papirus-dark  # 深色图标为 tsln 同款特意为之（→ plasma.papirus.nix）；配色包 nixpkgs 无，固定 rev 自打包（→ packages/catppuccin/konsole.nix）
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文（plasma-localerc 声明式；终端/SSH 保持 en_US）
       apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；bwrap no_new_privs → sudo 提权不可用，自启走 KDE autostart
       comin: true           # git 驱动自动部署（180s 轮询，与 mini-m4 对齐）
