@@ -79,12 +79,12 @@ let
 
   # FHS 环境：只提供 deb 解释器（/lib64/ld-linux-x86-64.so.2，来自 glibc）；
   # 系统库全走外层 wrapper 的 LD_LIBRARY_PATH（bwrap 挂载 /nix/store，store 库直接解析）
-  # extraBwrapArgs：挂载宿主 /etc（覆盖默认 tmpfs，可写）——root 服务（--service）内部用
+  # extraBwrapArgs：挂载宿主 /etc 子路径（不挂整个 /etc——会遮蔽 buildFHSEnv 生成的
+  # /etc/profile（FHS PATH），致 exec rustdesk 找不到；且 container-init 要写
+  # /etc/ld.so.conf，整个 /etc 只读会失败）。root 服务（--service）内部用
   # sudo -u <user> 降权起 user server，bwrap 默认 /etc 是 tmpfs（无 /etc/pam.d）→
   # sudo PAM 初始化失败循环（'sudo: unable to initialize PAM'）；root 调 sudo 是降权
-  # 无 setuid 依赖，no_new_privs 不影响；/run 已由 auto_mounts 自动挂载（sudo 二进制可见）。
-  # 可写而非只读：container-init 要写 /etc/ld.so.conf（NixOS 无此文件，创建无害），
-  # root 服务要写 /etc/rustdesk 配置；--ro-bind 会致 'Failed to generate ld.so.conf' 启动失败
+  # 无 setuid 依赖，no_new_privs 不影响；/run 已由 auto_mounts 自动挂载（sudo 二进制可见）
   fhs = buildFHSEnv {
     name = "rustdesk-bin";
     runScript = "rustdesk";
@@ -92,7 +92,20 @@ let
       raw
       pkgs.glibc
     ];
-    extraBwrapArgs = [ "--bind" "/etc" "/etc" ];
+    extraBwrapArgs = [
+      # sudo PAM/用户/权限（root 服务降权起 user server 必需）
+      "--ro-bind" "/etc/pam.d" "/etc/pam.d"
+      "--ro-bind" "/etc/sudoers" "/etc/sudoers"
+      "--ro-bind-try" "/etc/sudoers.d" "/etc/sudoers.d"
+      "--ro-bind" "/etc/passwd" "/etc/passwd"
+      "--ro-bind" "/etc/shadow" "/etc/shadow"
+      "--ro-bind" "/etc/group" "/etc/group"
+      "--ro-bind" "/etc/nsswitch.conf" "/etc/nsswitch.conf"
+      # root 服务配置（可写；宿主无目录时跳过，沙箱 tmpfs 内自建）
+      "--bind-try" "/etc/rustdesk" "/etc/rustdesk"
+      "--ro-bind-try" "/etc/machine-id" "/etc/machine-id"
+      "--ro-bind-try" "/etc/localtime" "/etc/localtime"
+    ];
   };
 
   # GTK3 运行时全链（raw 的 NEEDED + dlopen 传递闭包：gtk3→pango/cairo/gdk-pixbuf/atk/harfbuzz/freetype）
