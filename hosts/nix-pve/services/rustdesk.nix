@@ -26,4 +26,19 @@
       RestartSec = 5;
     };
   };
+
+  # KDE 登录自启（系统层 /etc/xdg/autostart，不依赖 HM home.file 链接——实测 HM 的
+  # ~/.config/autostart 链接会被 plasma-manager 会话清理）。前置：
+  # ① SDDM 每次登录生成新 xauth（/run/user/1000/xauth_*，随机名），复制为 ~/.Xauthority
+  #   （RustDesk GUI/--server 都兜底读它，缺则 X 连接失败）；② 重启 root 服务让 --server
+  #   用新 key 重连 X（登录前起的 --server 拿的是旧 key/无 key）
+  environment.etc."xdg/autostart/rustdesk.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=RustDesk
+    Comment=RustDesk remote desktop
+    Exec=sh -c "cp /run/user/1000/xauth_* $HOME/.Xauthority 2>/dev/null; sudo systemctl restart rustdesk 2>/dev/null; exec ${pkgs.rustdesk-bin}/bin/rustdesk"
+    X-GNOME-Autostart-enabled=true
+    X-KDE-autostart-after=panel
+  '';
 }

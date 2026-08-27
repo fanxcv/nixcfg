@@ -23,22 +23,11 @@ in
   # 官方二进制包（packages/ 本地包集合，github release deb 解包；githubFetchBase 用默认=直连，包内主 URL 自带镜像不受影响）
   home.packages = [ pkgs.rustdesk-bin ];
 
-  # KDE 自动启动（deb 包未带 autostart 文件）：登录后自启，替代 RustDesk 的"请求权限"（root 服务模式）
+  # KDE 自动启动改系统层 /etc/xdg/autostart（见 hosts/nix-pve/services/rustdesk.nix）：
+  #   HM 的 home.file 链接 ~/.config/autostart/ 会被 plasma-manager 会话清理，链接不稳定
   # 注意：rustdesk-bin 跑在 buildFHSEnv 的 bwrap 沙箱里，bwrap 强制 no_new_privs → sudo setuid 失效，
   #   点"请求权限"输入密码必报 "If sudo is running in a container..."——沙箱固有限制，无解；
   #   普通用户模式远程控制完整可用，自启走 KDE autostart 即可，勿用 root 服务模式
-  # Exec 前置：① SDDM 每次登录生成新 xauth（/run/user/1000/xauth_*，随机名），复制为
-  #   ~/.Xauthority（RustDesk GUI/--server 都兜底读它，缺则 X 连接失败）；② 重启 root 服务
-  #   让 --server 用新 key 重新连 X（登录前起的 --server 拿的是旧 key/无 key）
-  home.file.".config/autostart/rustdesk.desktop".text = ''
-    [Desktop Entry]
-    Type=Application
-    Name=RustDesk
-    Comment=RustDesk remote desktop
-    Exec=sh -c "cp /run/user/1000/xauth_* $HOME/.Xauthority 2>/dev/null; sudo systemctl restart rustdesk 2>/dev/null; exec ${config.home.profileDirectory}/bin/rustdesk"
-    X-GNOME-Autostart-enabled=true
-    X-KDE-autostart-after=panel
-  '';
 
   home.activation.setupRustDesk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_rustdesk() {
