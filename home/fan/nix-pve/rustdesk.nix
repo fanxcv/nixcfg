@@ -26,8 +26,9 @@ in
   # KDE 自动启动改系统层 /etc/xdg/autostart（见 hosts/nix-pve/services/rustdesk.nix）：
   #   HM 的 home.file 链接 ~/.config/autostart/ 会被 plasma-manager 会话清理，链接不稳定
   # 注意：rustdesk-bin 跑在 buildFHSEnv 的 bwrap 沙箱里，bwrap 强制 no_new_privs → sudo setuid 失效，
-  #   点"请求权限"输入密码必报 "If sudo is running in a container..."——沙箱固有限制，无解；
-  #   普通用户模式远程控制完整可用，自启走 KDE autostart 即可，勿用 root 服务模式
+  #   点"解锁安全设置"输系统密码必报 "If sudo is running in a container..."——沙箱固有限制，无解；
+  #   解法：设置 unlock PIN（--pin，Nix 管理）→ GUI 解锁走 PIN 弹窗（免 sudo）；普通用户模式远程控制完整可用，
+  #   自启走 KDE autostart 即可，勿用 root 服务模式
 
   home.activation.setupRustDesk = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     setup_rustdesk() {
@@ -36,7 +37,8 @@ in
 
       ${pkgs.python3}/bin/python3 ${injector} \
         "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" \
-        --server "${rustdesk.server}" --key "${rustdesk.key}" --relay "${rustdesk.relay}"
+        --server "${rustdesk.server}" --key "${rustdesk.key}" --relay "${rustdesk.relay}" \
+        ${lib.optionalString (rustdesk.unlockPin or "" != "") "--pin \"${rustdesk.unlockPin}\""}
       chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
 
       # 进程未运行时 pkill 失败属幂等预期；桌面会话随后由 KDE autostart 拉起。

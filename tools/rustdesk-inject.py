@@ -75,12 +75,14 @@ def inject(
     key: str,
     relay: str | None,
     trusted_devices: str | None,
+    pin: str | None = None,
 ) -> None:
     top_updates = {
         "rendezvous_server": repr(server),
     }
-    # unlock_pin 不在 top_updates：保留用户 GUI 设置（原强制写 '' 会在每次部署清掉
-    #   用户 PIN → GUI 解锁走 sudo（bwrap 沙箱 no_new_privs 必败））；行缺失时 RustDesk 读空，无碍
+    if pin is not None:
+        # Nix 管理 PIN（--pin 传值）；不传则保留现有行（用户 GUI 手动设置）
+        top_updates["unlock_pin"] = repr(pin)
     if trusted_devices is not None:
         top_updates["trusted_devices"] = repr(trusted_devices)
 
@@ -131,6 +133,10 @@ def parse_args() -> argparse.Namespace:
         "--trusted-devices",
         help="optional RustDesk trusted_devices value (Mac-specific in nixcfg)",
     )
+    parser.add_argument(
+        "--pin",
+        help="optional unlock PIN for GUI security-settings unlock (Nix-managed; omit to keep existing value)",
+    )
     return parser.parse_args()
 
 
@@ -143,6 +149,7 @@ def main() -> None:
         args.key,
         args.relay,
         args.trusted_devices,
+        args.pin,
     )
 
 

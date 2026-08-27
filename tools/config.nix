@@ -43,5 +43,8 @@
     server = "120.55.164.147:21116";
     relay = "120.55.164.147";
     key = "biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=";
+    # GUI 解锁安全设置的 PIN（→ injector --pin；bwrap 沙箱内 sudo 必败，PIN 是唯一解锁通道）。
+    # 明文入库：属本地解锁凭据（解锁后仅能改本机 ID/密码/权限），不影响远程访问安全。
+    unlockPin = "246810";
   };
 }

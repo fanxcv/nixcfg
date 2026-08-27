@@ -254,7 +254,7 @@ macos:
         rendezvous: 120.55.164.147:21116  # ID 服务器（hbbs）
         key: biYiu92uX5k0qOaDuhLIpVRcD0iYwqAOlSCDCR14uHg=  # 加密公钥
         network: { relay_server: 120.55.164.147, direct_server: true, udp_punch: true }  # hbbr 同机 + 直连优先 + UDP 打洞
-        security: { unlock_pin: "", trusted_devices: 009GnjljLRT/b2k0DwCFQSXI6O, allow_remote_config_modification: true }  # trusted_devices 仅 Mac 预写
+        security: { unlock_pin: "246810", trusted_devices: 009GnjljLRT/b2k0DwCFQSXI6O, allow_remote_config_modification: true }  # PIN 供 GUI 解锁安全设置（bwrap 沙箱 sudo 必败，唯一通道；→ tools/config.nix unlockPin → injector --pin，全平台生效）；trusted_devices 仅 Mac 预写
         general: { view_style: adaptive, keep_awake_incoming: false, keep_awake_outgoing: true, use_texture_render: true, av1_test: true, check_update: false }
       tailscale_headscale:   # Tailscale App 版 headscale 登录（→ tailscale.nix，激活幂等）
         server: https://headscale.fan-x.fun
