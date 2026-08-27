@@ -81,12 +81,12 @@
     config.credential.helper = "store";
   };
 
-  # fcitx5 中文输入法：home-manager 层 sessionVariables 只对登录 shell 生效（~/.zshenv），
-  # SDDM 图形会话不读 → 系统层补 IM 环境变量 + GTK immodules 缓存（fcitx5-gtk）
-  environment.variables = {
-    GTK_IM_MODULE = "fcitx";
-    QT_IM_MODULE = "fcitx";
-    XMODIFIERS = "@im=fcitx";
+  # fcitx5 中文输入法：系统层 i18n.inputMethod（NixOS 模块）自动设 IM 环境变量
+  # （SDDM 图形会话 source /etc/profile 生效，home-manager sessionVariables 只进 ~/.zshenv 不覆盖图形会话）
+  # + 生成 /etc/gtk-3.0/immodules.cache（GTK 默认查找路径；fcitx5-with-addons 含 fcitx5-gtk immodule）
+  # 用户层 fcitx5 配置（双拼/皮肤）由 home/fan/_nixos_/i18n/zh-CN/fcitx.nix 管理
+  i18n.inputMethod = {
+    enable = true;
+    type = "fcitx5";
   };
-  programs.gtk3.cachePackages = [ pkgs.fcitx5-gtk ];
 }
