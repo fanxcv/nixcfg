@@ -1,6 +1,6 @@
 # ide-lenovo 专属：KasmVNC 浏览器远程桌面（xfce4 桌面，无 GPU 软渲染）
 # 访问：http://<lenovo-ip>:6901/vnc.html（compose 映射 6901:6901），用户名 root + 密码
-# 密码：首次激活生成随机密码（/root/.kasmpasswd），部署日志打印；改密码 docker exec ide kasmvncpasswd -u root -w
+# 密码：nix 管理（secrets/source/kasmvnc-passwd → encrypt.sh → .age，激活 age 解密写入）
 # 包：packages/kasmvnc.nix（官方 deb 解包自打包，nixpkgs 无此包）
 # 桌面：xfce4（GTK 软渲染稳定，KasmVNC 官方默认；KDE 黑屏坑多已弃）
 # 会话：~/.vnc/xstartup 激活生成（dbus-launch + xfce4-session，store 绝对路径 + PATH 注入）
@@ -101,14 +101,20 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
         x_font_path: ${pkgs.dejavu_fonts}/share/fonts/truetype
     EOF
 
-    # ── 3. 密码：首次生成随机密码（已存在不覆盖，用户改过密码保留）──
-    if [ ! -s /root/.kasmpasswd ]; then
-      pass=$(head -c 12 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 12)
-      printf '%s\n%s\n' "$pass" "$pass" | ${kasmvnc}/bin/kasmvncpasswd -u root -w
-      echo "===> kasmvnc 初始密码: $pass"
-      echo "===> 浏览器访问 http://<lenovo-ip>:6901/vnc.html，用户名 root"
-      echo "===> 改密码: docker exec ide kasmvncpasswd -u root -w"
+    # ── 3. 密码：age 解密（secrets/source/kasmvnc-passwd → encrypt.sh 生成 .age，git 可公开）──
+    #    私钥 $HOME/.secrets/age-keys.txt（compose 挂载，容器重建不丢）；解密失败即部署失败
+    #    hash 标记比较，密码变更才重写（声明式收敛：手改密码下次激活回滚；无变更不打扰运行中会话）
+    pass_file=/root/.kasmpasswd
+    pass_hash=/root/.vnc/kasmvnc-passwd.sha256
+    tmp=$(mktemp)
+    ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" ${../../..}/secrets/kasmvnc-passwd.age
+    new_hash=$(${pkgs.coreutils}/bin/sha256sum "$tmp" | cut -d' ' -f1)
+    if [ ! -f "$pass_hash" ] || [ "$(cat "$pass_hash" 2>/dev/null)" != "$new_hash" ]; then
+      printf '%s\n%s\n' "$(cat "$tmp")" "$(cat "$tmp")" | ${kasmvnc}/bin/kasmvncpasswd -u root -w
+      echo "$new_hash" > "$pass_hash"
+      echo "===> kasmvnc 密码已更新（nix 管理，secrets/source/kasmvnc-passwd）"
     fi
+    rm -f "$tmp"
 
     # ── 4. systemd service（幂等写入 + 变更重启，同 skemate 模式）──
     unit=/etc/systemd/system/kasmvnc.service
