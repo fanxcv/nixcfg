@@ -287,17 +287,20 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     chmod +x /root/.config/autostart/theme-setup.sh
 
     # 6.5 外部面板插件 .desktop+.so 同目录 symlink（XDG_DATA_HOME 优先于 XDG_DATA_DIRS）
-    #    坑：nix 包布局 .desktop 在 share/、.so 在 lib/，xfce4-panel 按 .desktop 目录找 .so 会失败（弹'无法加载插件'）
-    #    坑：nix run 的 flake 求值 GC 可能删旧 store 路径（broken symlink），激活每次重写 symlink 指向当前路径
-    mkdir -p /root/.local/share/xfce4/panel/plugins
-    for pkg in ${whiskermenu} ${xfce4-clipman}; do
-      for f in "$pkg"/share/xfce4/panel/plugins/*.desktop; do
-        [ -e "$f" ] && ln -sfn "$f" /root/.local/share/xfce4/panel/plugins/
-      done
-      for f in "$pkg"/lib/xfce4/panel/plugins/*.so; do
-        [ -e "$f" ] && ln -sfn "$f" /root/.local/share/xfce4/panel/plugins/
-      done
-    done
+    #    坑1：nix 包布局 .desktop 在 share/、.so 在 lib/，xfce4-panel 按 .desktop 目录找 .so 会失败（弹'无法加载插件'）
+    #    坑2：xfce4-panel 的模块表 key = .desktop 文件名（去 .desktop）——配置名 'clipman' 须有 clipman.desktop
+    #        （包内文件名是 xfce4-clipman-plugin.desktop → key=xfce4-clipman-plugin，与配置名不匹配 → 弹窗）
+    #    坑3：user datadir（/root/.local/share）的 libdir 配对是 /root/.local/lib/xfce4/panel/plugins——.so 须放那
+    #    坑4：nix run 的 flake 求值 GC 可能删旧 store 路径（broken symlink），激活每次重写 symlink 指向当前路径
+    mkdir -p /root/.local/share/xfce4/panel/plugins /root/.local/lib/xfce4/panel/plugins
+    # whiskermenu：文件名即配置名，symlink 即可
+    ln -sfn ${whiskermenu}/share/xfce4/panel/plugins/whiskermenu.desktop /root/.local/share/xfce4/panel/plugins/
+    ln -sfn ${whiskermenu}/lib/xfce4/panel/plugins/libwhiskermenu.so /root/.local/share/xfce4/panel/plugins/
+    ln -sfn ${whiskermenu}/lib/xfce4/panel/plugins/libwhiskermenu.so /root/.local/lib/xfce4/panel/plugins/
+    # clipman：包内 .desktop 文件名（xfce4-clipman-plugin.desktop）≠ 配置名（clipman）→ 复制改名
+    cp -f ${xfce4-clipman}/share/xfce4/panel/plugins/xfce4-clipman-plugin.desktop /root/.local/share/xfce4/panel/plugins/clipman.desktop
+    ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so /root/.local/share/xfce4/panel/plugins/
+    ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so /root/.local/lib/xfce4/panel/plugins/
 
     # 7. fontconfig：容器无 /etc/fonts（字体全不生效，中文方块/edge 字体报错）
     #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf 指 store 字体目录
