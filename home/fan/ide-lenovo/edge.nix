@@ -27,7 +27,7 @@ in
 lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   home.packages = [ edgeWrapper edgeRun ];
 
-  home.activation.edge = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.edge = lib.hm.dag.entryAfter [ "kasmvncBeautify" ] ''
     # ── 1. autostart：登录自动开 edge（xfce4-session 启动后扫描 ~/.config/autostart；循环重启保常驻）──
     #    内容变更（wrapper 路径/参数变化）→ 重启 kasmvnc.service 让新会话拉起（session 启动时已扫过 autostart）
     mkdir -p /root/.config/autostart

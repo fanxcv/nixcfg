@@ -120,7 +120,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   #   → 用户级 xfce4-session.xml 覆盖 Failsafe 会话（去掉 xfsettingsd）→ GTK 应用读 settings.ini（Catppuccin）
   #   已验证：xfsettingsd 不启动后 GTK 深色主题生效（截图亮度 58 vs Adwaita 200+）
   # 其余（xfwm4 窗口/壁纸/面板）走 xfconf 频道，xfsettingsd 不管，直接生效
-  home.activation.kasmvncBeautify = lib.hm.dag.entryAfter [ "kasmvnc" ] ''
+  home.activation.kasmvncBeautify = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     # 0. 主题/图标/鼠标 symlink 到传统路径（GTK 查找 ~/.themes ~/.icons，不依赖 XDG_DATA_DIRS 顺序）
     mkdir -p /root/.themes /root/.icons
     ln -sfn ${catppuccinGtk}/share/themes/${gtkTheme} /root/.themes/${gtkTheme}
@@ -305,7 +305,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     fi
   '';
 
-  home.activation.kasmvnc = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.kasmvnc = lib.hm.dag.entryAfter [ "edge" ] ''
     # ── 0. Xvnc 硬编码系统路径（ELF 内嵌，无法 sed/wrap）：
     #    /usr/share/X11/xkb（xkb 数据）与 /usr/bin/xkbcomp（keymap 编译器）
     #    nix 的 xkeyboard_config/xkbcomp 在 store，容器无此路径 → symlink 指 store（幂等）
@@ -317,8 +317,10 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # dbus：不用 dbus-launch（nix 编译期硬编码 /run/current-system/sw/bin/dbus-daemon，容器无此路径）
     #   → dbus-daemon 直起，--config-file 显式指 nix store 的 session.conf；
     #   坑：不能带 --session（隐含默认 /etc/dbus-1/session.conf，与 --config-file 冲突报错）
+    # 变更检测：xstartup 内容变更 → 重启 service（新会话才读新 xstartup）
     mkdir -p /root/.vnc
-    cat > /root/.vnc/xstartup <<EOF
+    tmp_xstartup=$(mktemp)
+    cat > "$tmp_xstartup" <<EOF
     #!/bin/sh
     # KasmVNC 会话启动（激活生成，声明式；改配置在 home/fan/ide-lenovo/kasmvnc.nix）
     unset SESSION_MANAGER
@@ -339,7 +341,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     export DBUS_SESSION_BUS_ADDRESS=\$(${pkgs.dbus}/bin/dbus-daemon --fork --print-address --config-file=${pkgs.dbus}/share/dbus-1/session.conf)
     exec ${xfce4-session}/bin/xfce4-session
     EOF
-    chmod +x /root/.vnc/xstartup
+    chmod +x "$tmp_xstartup"
+    xstartup_changed=0
+    if ! cmp -s "$tmp_xstartup" /root/.vnc/xstartup; then
+      cp "$tmp_xstartup" /root/.vnc/xstartup
+      xstartup_changed=1
+    fi
+    rm -f "$tmp_xstartup"
 
     # ── 2. 用户级配置（覆盖 defaults：分辨率/端口/httpd_directory/字体/SSL）──
     # defaults 的 ssl 指 Debian snakeoil（容器无），须生成自签名证书并覆盖；require_ssl: false（http 访问）
@@ -399,9 +407,9 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     if ! /usr/bin/systemctl enable kasmvnc.service; then
       echo "警告: systemctl enable kasmvnc.service 失败，错误如上（容器重启后不会自启）"
     fi
-    # 重启条件：unit 变更（kasmvnc 升级，旧进程仍跑旧二进制）或服务未存活（崩溃循环）
+    # 重启条件：unit 变更（kasmvnc 升级，旧进程仍跑旧二进制）、xstartup 变更（新会话配置）或服务未存活（崩溃循环）
     state=$(/usr/bin/systemctl show -p ActiveState --value kasmvnc.service 2>/dev/null || echo unknown)
-    if [ "$unit_changed" = "1" ] || [ "$state" != "active" ]; then
+    if [ "$unit_changed" = "1" ] || [ "$xstartup_changed" = "1" ] || [ "$state" != "active" ]; then
       if /usr/bin/systemctl restart kasmvnc.service; then
         sleep 2
         state=$(/usr/bin/systemctl show -p ActiveState --value kasmvnc.service 2>/dev/null || echo unknown)
