@@ -334,6 +334,34 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     theme=WhiteSur-Dark
     hide-mode=none
     PLANKEOF
+    # Plank 固定应用（dock 默认只显示运行中窗口——edge 未开时 dock 空/残桩；固定常用应用才有 macOS dock 观感）
+    # dockitem 格式：[PlankDockItemPreferences] Launcher=file://<store>/share/applications/<name>.desktop
+    # plank 用 GFileMonitor 监听 launchers 目录，写入后自动刷新（无需重启进程）
+    mkdir -p /root/.config/plank/dock1/launchers
+    cat > /root/.config/plank/dock1/launchers/edge.dockitem <<'DOCKEOF'
+    [PlankDockItemPreferences]
+    Launcher=file://${pkgs.microsoft-edge}/share/applications/microsoft-edge.desktop
+    DOCKEOF
+    cat > /root/.config/plank/dock1/launchers/thunar.dockitem <<'DOCKEOF'
+    [PlankDockItemPreferences]
+    Launcher=file://${thunar}/share/applications/thunar.desktop
+    DOCKEOF
+    cat > /root/.config/plank/dock1/launchers/terminal.dockitem <<'DOCKEOF'
+    [PlankDockItemPreferences]
+    Launcher=file://${xfce4-terminal}/share/applications/xfce4-terminal.desktop
+    DOCKEOF
+    cat > /root/.config/plank/dock1/launchers/mousepad.dockitem <<'DOCKEOF'
+    [PlankDockItemPreferences]
+    Launcher=file://${mousepad}/share/applications/org.xfce.mousepad.desktop
+    DOCKEOF
+    cat > /root/.config/plank/dock1/launchers/settings.dockitem <<'DOCKEOF'
+    [PlankDockItemPreferences]
+    Launcher=file://${xfce4-settings}/share/applications/xfce-settings-manager.desktop
+    DOCKEOF
+    cat > /root/.config/plank/dock1/launchers/appfinder.dockitem <<'DOCKEOF'
+    [PlankDockItemPreferences]
+    Launcher=file://${xfce4-appfinder}/share/applications/xfce4-appfinder.desktop
+    DOCKEOF
     EOF
     chmod +x /root/.config/autostart/theme-setup.sh
 
