@@ -63,6 +63,7 @@ let
     pkgs.xkbcomp
   ];
   # XDG_DATA_DIRS：GTK 主题/图标/翻译查找路径（容器无 /usr/share，须指 nix store 各包 share）
+  # 面板插件查找也走 XDG_DATA_DIRS/xfce4/panel/plugins（缺则插件加载失败弹窗，如 clipman）
   xdgDataDirs = lib.concatStringsSep ":" [
     "${xfconf}/share"
     "${xfce4-session}/share"
@@ -72,6 +73,11 @@ let
     "${xfce4-terminal}/share"
     "${thunar}/share"
     "${whiskermenu}/share"
+    "${xfce4-appfinder}/share"
+    "${xfce4-notifyd}/share"
+    "${xfce4-screenshooter}/share"
+    "${xfce4-taskmanager}/share"
+    "${xfce4-clipman}/share"
     "${catppuccinGtk}/share"
     "${papirus}/share"
     "${catppuccinCursors}/share"
@@ -260,7 +266,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     cat > /root/.config/autostart/theme-setup.sh <<EOF
     #!/bin/sh
     # Catppuccin Mocha 壁纸/窗口设置（xfce4-session autostart 阶段执行，环境继承会话）
-    sleep 1
+    # 时序坑：xfdesktop 启动可能早于 xfconfd 就绪（读到空值→默认壁纸），故 sleep 后设置并二次兑底
+    sleep 3
     # 壁纸：ImageMagick 生成 mocha 渐变（1920x1080，无网络依赖；已存在不重生成）
     if [ ! -f /root/.config/background.png ]; then
       ${imagemagick}/bin/magick -size 1920x1080 gradient:'#11111b'-'#1e1e2e' \
@@ -269,10 +276,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
         -fill '#f38ba8' -draw 'rectangle 0,12 1920,18' \
         /root/.config/background.png 2>/dev/null || echo "警告: 壁纸生成失败"
     fi
-    # 窗口装饰/壁纸（xfsettingsd 不管这些频道，设置即生效）
+    # 窗口装饰/壁纸（xfsettingsd 不管这些频道，设置即生效；xfdesktop 监听变更自动重载）
     ${xfconf}/bin/xfconf-query -c xfwm4 -p /general/theme -s '${gtkTheme}'
     ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitor0/workspace0/last-image -s /root/.config/background.png
     ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitor0/workspace0/image-style -s 5
+    sleep 2
+    # 二次兑底：首次设置时 xfconfd 可能未就绪（PropertyNotFound），重设确保生效
+    ${xfconf}/bin/xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /root/.config/background.png 2>/dev/null || true
     EOF
     chmod +x /root/.config/autostart/theme-setup.sh
 
