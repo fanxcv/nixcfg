@@ -19,8 +19,16 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out/share/aurorae/themes $out/share/color-schemes $out/share/plasma
-    cp -r MacTahoe-kde-main/aurorae/MacTahoe-Dark "$out/share/aurorae/themes/"
-    cp -r MacTahoe-kde-main/aurorae/MacTahoe-Light "$out/share/aurorae/themes/"
+    # aurorae 主题：svg + <color>rc + icons<color> svg + metadata（install.sh 同款，sed 替换 theme_name）
+    for pair in "MacTahoe-Dark:Darkrc:icons-Dark" "MacTahoe-Light:Lightrc:icons-Light"; do
+      IFS=: read -r theme rc icons <<< "$pair"
+      mkdir -p "$out/share/aurorae/themes/$theme"
+      cp -r "MacTahoe-kde-main/aurorae/$theme/." "$out/share/aurorae/themes/$theme/"
+      cp "MacTahoe-kde-main/aurorae/$rc" "$out/share/aurorae/themes/$theme/$theme"rc
+      cp MacTahoe-kde-main/aurorae/$icons/*.svg "$out/share/aurorae/themes/$theme/"
+      cp MacTahoe-kde-main/aurorae/metadata.desktop MacTahoe-kde-main/aurorae/metadata.json "$out/share/aurorae/themes/$theme/"
+      sed -i "s/theme_name/$theme/g" "$out/share/aurorae/themes/$theme/metadata.desktop" "$out/share/aurorae/themes/$theme/metadata.json"
+    done
     cp -r MacTahoe-kde-main/color-schemes/. "$out/share/color-schemes/"
     cp -r MacTahoe-kde-main/plasma/desktoptheme "$out/share/plasma/"
     cp -r MacTahoe-kde-main/plasma/look-and-feel "$out/share/plasma/"

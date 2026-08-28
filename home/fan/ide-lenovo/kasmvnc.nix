@@ -300,11 +300,18 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # Catppuccin Mocha 壁纸/窗口设置（xfce4-session autostart 阶段执行，环境继承会话）
     # 时序坑：xfdesktop 启动可能早于 xfconfd 就绪（读到空值→默认壁纸），故 sleep 后设置并二次兑底
     sleep 3
-    # 壁纸：kde-wallpaper.jpg（激活时从仓库 assets/ 复制）→ 竖屏 1080x1920 macOS 风格（模糊填充 + 居中裁切）
-    # 坑：composite 输出尺寸 = 较大输入，须用 \(...\) 子图像 + -extent 强制 1080x1920（否则输出源图尺寸 3350x1920）
+    # 壁纸：kde-wallpaper.jpg（激活时从仓库 assets/ 复制）→ 横屏 1920x1080 macOS 风格（模糊填充 + 居中裁切）
+    # 坑：composite 输出尺寸 = 较大输入，须用 \(...\) 子图像 + -extent 强制 1920x1080（否则输出源图尺寸 3350x1920）
+    # 旧竖屏版（1080x1920）存在时删除重生成（分辨率变更迁移）
+    if [ -f /root/.config/background.png ]; then
+      bg_size=$(${imagemagick}/bin/identify -format '%wx%h' /root/.config/background.png 2>/dev/null)
+      if [ "$bg_size" != "1920x1080" ]; then
+        rm -f /root/.config/background.png
+      fi
+    fi
     if [ ! -f /root/.config/background.png ]; then
-      ${imagemagick}/bin/magick /root/.config/kde-wallpaper.jpg -resize 1080x1920! -blur 0x30 /tmp/bg-blur.png 2>/dev/null \
-        && ${imagemagick}/bin/magick /tmp/bg-blur.png \( /root/.config/kde-wallpaper.jpg -resize 1080x1920^ -gravity center -extent 1080x1920 \) -gravity center -composite /root/.config/background.png 2>/dev/null \
+      ${imagemagick}/bin/magick /root/.config/kde-wallpaper.jpg -resize 1920x1080! -blur 0x30 /tmp/bg-blur.png 2>/dev/null \
+        && ${imagemagick}/bin/magick /tmp/bg-blur.png \( /root/.config/kde-wallpaper.jpg -resize 1920x1080^ -gravity center -extent 1920x1080 \) -gravity center -composite /root/.config/background.png 2>/dev/null \
         && rm -f /tmp/bg-blur.png \
         || echo "警告: 壁纸生成失败"
     fi
@@ -482,11 +489,11 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     cat > /root/.vnc/kasmvnc.yaml <<EOF
     desktop:
       resolution:
-        width: 1080
-        height: 1920
+        width: 1920
+        height: 1080
       # 坑：allow_resize: true 时 VNC 客户端连接会把分辨率改成客户端窗口尺寸（实测 2552x1320 横屏）
       #   → 面板 1080 宽不跟随、snap_position 失效 → 无 strut → workarea 全屏 → 最大化被面板遮挡
-      #   固定分辨率（false）后屏幕恒为 1080x1920 竖屏，面板全宽、strut 正常、最大化避让
+      #   固定分辨率（false）后屏幕恒为 1920x1080 横屏，面板全宽、strut 正常、最大化避让
       allow_resize: false
     network:
       protocol: http
