@@ -14,6 +14,7 @@
     pkgs.colloid-icon-theme
     pkgs.hoshino-cursor
     pkgs.redmi-clock
+    pkgs.qt6.qttools # qdbus：plasma-manager desktopScript 执行依赖（KDE 会话 PATH 默认无 qdbus，qdbus 在 qttools 包）
   ];
 
   programs.plasma.workspace = {
