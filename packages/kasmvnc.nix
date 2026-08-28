@@ -122,12 +122,17 @@ stdenv.mkDerivation {
     # perl 模块（自带 + perlPackages 外部依赖）+ 运行时命令（xkbcomp/xauth）+ xkb 数据
     # 坑：perlPackages 模块装在 site_perl/<perl.version>/ 子目录，PERL5LIB 不自动追加版本目录
     #   （只有编译期 @INC 才追加），必须显式指 site_perl/${perl.version}
+    # 坑2：XS 模块（DateTime 等）装在 site_perl/<version>/<archname>/，同样不自动追加，
+    #   archname 由 perl -MConfig 动态获取（平台无关）
+    perlEnv="${perl.withPackages (pp: [
+      pp.Switch pp.YAMLTiny pp.HashMergeSimple pp.ScalarListUtils pp.ListMoreUtils
+      pp.TryTiny pp.DateTime pp.DateTimeTimeZone
+    ])}"
+    archname=$(${perl}/bin/perl -MConfig -e 'print $Config{archname}')
     wrapProgram $out/bin/kasmvncserver \
       --prefix PERL5LIB : "$out/share/perl5" \
-      --prefix PERL5LIB : "${perl.withPackages (pp: [
-        pp.Switch pp.YAMLTiny pp.HashMergeSimple pp.ScalarListUtils pp.ListMoreUtils
-        pp.TryTiny pp.DateTime pp.DateTimeTimeZone
-      ])}/lib/perl5/site_perl/${perl.version}" \
+      --prefix PERL5LIB : "$perlEnv/lib/perl5/site_perl/${perl.version}" \
+      --prefix PERL5LIB : "$perlEnv/lib/perl5/site_perl/${perl.version}/$archname" \
       --prefix PATH : "${xkbcomp}/bin:${xauth}/bin" \
       --set XKB_BASE "${xkeyboard_config}/share/X11/xkb"
   '';
