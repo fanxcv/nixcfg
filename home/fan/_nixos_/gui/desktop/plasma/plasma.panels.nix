@@ -1,6 +1,6 @@
 # 面板布局重排（tsln→帖子方案）：上：启动器/窗口列表/全局菜单/间隙/数字时钟/间隙/托盘；下：图标任务栏 Dock
 # Panel-colorizer 挂件给面板做透明/配色（nixpkgs plasma-panel-colorizer，插件 ID org.github.luisbocanegra.plasma.panelcolorizer）
-# 上面板 ChromeOS 预设 + 禁 Color；下面板 Translucent 预设（帖子配置，见 blog.sotkg.com/2025/08/kde-customization）
+# 透明度 85（接近全透明）：globalSettings JSON 的 panel.*.opacity（7.2 的配置是 JSON，preset 键插件不读）
 {
   programs.plasma.panels = [
     # ── 上面板 ──
@@ -76,11 +76,29 @@
         {
           name = "luisbocanegra.panel.colorizer";
           config = {
-            General = {
-              preset = "chromeos";
-            };
-            outline = {
-              disableColor = true;
+            globalSettings = builtins.toJSON {
+              panel = {
+                normal.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+                busy.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+                hovered.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+                needsAttention.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+                expanded.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+              };
             };
           };
         }
@@ -119,8 +137,29 @@
         {
           name = "luisbocanegra.panel.colorizer";
           config = {
-            General = {
-              preset = "translucent";
+            globalSettings = builtins.toJSON {
+              panel = {
+                normal.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+                busy.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+                hovered.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+                needsAttention.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+                expanded.opacity = {
+                  enabled = true;
+                  value = "85";
+                };
+              };
             };
           };
         }

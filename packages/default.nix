@@ -27,13 +27,8 @@ rustdesk
   catppuccin-konsole = pkgs.callPackage ./catppuccin/konsole.nix { githubBase = githubFetchBase; };
 
   # --- KDE 帖子美化主题（blog.sotkg.com/2025/08/kde-customization，仅 nix-pve/nix-book 用）---
-  # Moe 全套（颜色/Plasma 样式/look-and-feel，GitLab fetchgit）
-  moe-kde = pkgs.callPackage ./moe-kde.nix { };
-  # Fedora 全局主题（koji rpm fetchurl + rpm2cpio）
-  fedora-look-and-feel = pkgs.callPackage ./fedora-look-and-feel.nix { };
-  # Redmi Clock plasmoid / Hoshino 光标（vendor 到 assets/kde-sources/，本地文件）
+  # Redmi Clock plasmoid（vendor 到 assets/kde-sources/，本地文件）
   redmi-clock = pkgs.callPackage ./redmi-clock.nix { };
-  hoshino-cursor = pkgs.callPackage ./hoshino-cursor.nix { };
   # McMojave 图标/KDE 主题（macOS 风格，GitHub tarball fetchzip）
   mcmojave-circle = pkgs.callPackage ./mcmojave-circle.nix { };
   mcmojave-kde = pkgs.callPackage ./mcmojave-kde.nix { };

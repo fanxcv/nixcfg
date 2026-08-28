@@ -1,9 +1,9 @@
-# KDE 主题整套（帖子方案 blog.sotkg.com/2025/08/kde-customization + macOS 风格升级）
-# MacTahoe 全局主题（macOS Tahoe 风格）+ MacTahoe 颜色/Plasma 样式 + McMojave-circle 图标 + 默认光标 + 用户壁纸 + Redmi Clock
-# macOS 化：MacTahoe aurorae 窗口装饰（红绿灯按钮+圆角）+ kwin blur 效果 + 最大化无边框 + kde-rounded-corners 圆角效果
+# KDE 主题整套：MacTahoe 全系（macOS Tahoe 风格）——全局主题/颜色/Plasma 样式/窗口装饰/欢迎屏幕（splash 随 look-and-feel）
+# 叠加变更：McMojave-circle 图标 + 默认光标 + 用户壁纸 + Redmi Clock + 上下双面板（见 plasma.panels.nix）
+# macOS 化：MacTahoe aurorae 装饰自带红绿灯（左置）+ 圆角 + 毛玻璃标题栏；kwin blur 效果 + 最大化无边框
 # GTK 应用（Firefox 等）用 MacTahoe GTK 主题；Catppuccin KDE（Classic+Modern）已装备用（不启用）
-# 包来源：moe-kde/fedora-look-and-feel/redmi-clock/mcmojave-circle/mcmojave-kde/mactahoe-kde/mactahoe-gtk/catppuccin-kde 见 packages/（本地自打包）
-#        numix-icon-theme-circle 用 nixpkgs 现成（备用图标）；kde-rounded-corners 用 nixpkgs（kwin 圆角效果）
+# 包来源：mactahoe-kde/mactahoe-gtk/catppuccin-kde/mcmojave-circle/mcmojave-kde/redmi-clock 见 packages/（本地自打包）
+#        numix-icon-theme-circle 用 nixpkgs 现成（备用图标）
 {
   pkgs,
   ...
@@ -17,13 +17,12 @@
     pkgs.mcmojave-kde
     pkgs.numix-icon-theme-circle
     pkgs.redmi-clock
-    pkgs.kde-rounded-corners # kwin 圆角效果（Rounded Corners，kwinrc Plugins.roundedcornersEnabled）
     pkgs.qt6.qttools # qdbus：plasma-manager desktopScript 执行依赖（KDE 会话 PATH 默认无 qdbus，qdbus 在 qttools 包）
     pkgs.python3 # Panel-colorizer 插件运行时（service.py 调 python3，plasmashell PATH 默认无）
   ];
 
   programs.plasma.workspace = {
-    # 全局主题（look-and-feel，MacTahoe macOS Tahoe 风格）
+    # 全局主题（look-and-feel，MacTahoe macOS Tahoe 风格；splash 欢迎屏幕随主题自带）
     lookAndFeel = "com.github.vinceliuice.MacTahoe-Dark";
     # 颜色方案（MacTahoe Dark）
     colorScheme = "MacTahoeDark";
@@ -36,7 +35,7 @@
     wallpaperFillMode = "preserveAspectCrop";
   };
 
-  # macOS 化窗口：MacTahoe aurorae 装饰（红绿灯按钮+圆角）+ blur 效果 + 最大化无边框 + 圆角效果
+  # macOS 化窗口：MacTahoe aurorae 装饰（红绿灯+圆角+毛玻璃，装饰自带，无需额外圆角效果）+ blur + 最大化无边框
   programs.plasma.kwin = {
     # 红绿灯按钮（mac 顺序：红关闭/黄最小化/绿最大化，左置）
     titlebarButtons.left = [ "close" "minimize" "maximize" ];
@@ -46,14 +45,13 @@
     effects.blur.enable = true;
   };
 
-  # 窗口装饰：MacTahoe aurorae + 圆角效果（kwinrc 的 org.kde.kdecoration2 / Plugins）
+  # 窗口装饰：MacTahoe aurorae（kwinrc 的 org.kde.kdecoration2）
   # kwin 6 的 aurorae SVG 主题名须带 __aurorae__svg__ 前缀（kwin 自动迁移 library 到 aurorae.v2）
   programs.plasma.configFile."kwinrc" = {
     "org.kde.kdecoration2" = {
       library = "org.kde.kwin.aurorae";
       theme = "__aurorae__svg__MacTahoe-Dark";
     };
-    Plugins.shapecornersEnabled = true;
   };
 
   # GTK 应用（Firefox/Thunderbird 等）用 MacTahoe 主题
