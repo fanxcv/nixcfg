@@ -358,7 +358,7 @@ nixos:
       disk: 128G            # LVM：boot 1G + nix 48G + persist 40G + tmpfs 根（→ disks.nix）
       desktop: plasma6      # KDE Plasma 6 + SDDM，默认 X11 会话（RustDesk Wayland capturer bug #13374，1.4.9 未修）+ fcitx5 拼音；预装应用精简（→ _nixos_/gui/desktop/plasma.nix excludePackages：qrca/elisa/discover/khelpcenter/plasma-browser-integration/plasma-workspace-wallpapers/aurorae/gwenview/kate/ktexteditor/krdp/plasma-keyboard/qtvirtualkeyboard/qttools；保留 konsole/ark/okular/dolphin/spectacle/kwin-x11）
       im_env: fcitx5 系统层 i18n.inputMethod  # NixOS 模块自动设 GTK/QT_IM_MODULE + XMODIFIERS（SDDM 图形会话生效）+ 生成 /etc/gtk-3.0/immodules.cache；HM 层 waylandFrontend=false（X11 会话）补登录 shell 变量
-      theme: catppuccin-latte + papirus-dark  # 深色图标为 tsln 同款特意为之（→ plasma.papirus.nix）；配色包 nixpkgs 无，固定 rev 自打包（→ packages/catppuccin/konsole.nix）
+      theme: fedora 全局主题 + moe 配色/plasma样式 + colloid 图标 + hoshino 光标 + 用户壁纸  # 帖子上贴方案（blog.sotkg.com/2025/08/kde-customization，→ plasma.theme.nix/plasma.panels.nix；moe/fedora/redmi/hoshino 自打包→packages/，colloid 用 nixpkgs；catppuccin 已禁（→ themes/catppuccin.nix）
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文（plasma-localerc 声明式；终端/SSH 保持 en_US）
       apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；root 服务声明式（→ services/rustdesk.nix，免 GUI 请求权限 sudo）；SDDM 自动登录 fan → 开机直进桌面 → GUI 由 systemd user service 守护（graphical-session.target，替代系统层 autostart——autostart 仅登录时执行一次，部署 activation 的 pkill 杀 GUI 后不复活致"离线"；user service Restart=on-failure 自动拉起，ExecStartPre 复制 SDDM 新 xauth 为 ~/.Xauthority）；包内 /etc 用默认 tmpfs（container-init 写 ld.so.conf/ldconfig 需可写）+ bind 宿主 /etc/pam 与 /etc/pam.d（sudo PAM + pam_env LD_LIBRARY_PATH 注入）；libPaths 含 mesa（flutter 窗口需 EGL/dri）
       comin: true           # git 驱动自动部署（180s 轮询，与 mini-m4 对齐）
@@ -396,7 +396,7 @@ nixos:
       disk: 476.9G 全盘格   # LVM：boot 1G + swap 8G（hibernate）+ nix 100G + persist 100G + 余量 ~267G 可扩 + tmpfs 根（→ disks.nix）
       desktop: plasma6      # KDE Plasma 6 + SDDM，Wayland 默认会话（无 RustDesk 被控需求，不切 X11）+ fcitx5 拼音（→ _nixos_/gui/desktop/plasma.nix）
       im_env: fcitx5 系统层 i18n.inputMethod  # 同 nix-pve
-      theme: catppuccin-latte + papirus-dark  # 同 nix-pve（→ plasma.papirus.nix）
+      theme: fedora 全局主题 + moe 配色/plasma样式 + colloid 图标 + hoshino 光标 + 用户壁纸  # 同 nix-pve（→ plasma.theme.nix）
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文
       apps: [edge, bitwarden, vscode, rustdesk, wechat, qq, mpv]  # rustdesk 仅 client（远程其他机器，非被控端）：官方 release 二进制 + 共享注入器，无 root 服务/无系统层 autostart（→ home/fan/nix-book/rustdesk.nix）；wechat/qq unfree（flake extraUnfree 放行）；mpv VAAPI 硬解（780M vcn，hwdec=vaapi）
       power: tsln powerdevil 计划  # AC=performance（15min 挂起/10min 关屏）、电池=balanced（10min/5min）、低电=powerSaving（5min/2min 亮度 15）；低电 20% / 危机 5% → hibernate（swap 8G 支持）；无系统层 TLP（→ home/fan/nix-book/plasma.powerdevil.nix）

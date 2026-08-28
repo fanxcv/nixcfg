@@ -1,19 +1,12 @@
-# Catppuccin NixOS 用户级主题开关（tsln 同款）：桌面 + 输入法皮肤 + 壁纸 + Konsole
+# KDE 主题切换（帖子方案 blog.sotkg.com/2025/08/kde-customization）：Catppuccin 全部禁用
+# 桌面主题由 plasma.theme.nix 接管（Fedora 全局主题 + Moe 颜色/Plasma 样式 + Colloid 图标 + Hoshino 光标）
+# catppuccin 模块仍在 _common_/default.nix 导入（全平台），这里用 mkForce false 强制关 NixOS 桌面主题
 { lib, ... }:
 {
   catppuccin = {
-    plasma.enable = lib.mkDefault true;
-    fcitx5.enable = lib.mkDefault true;
-    wallpaper.enable = lib.mkDefault true;
-
-    konsole.enable = lib.mkDefault true;
-    konsole.flavor = lib.mkDefault "mocha";
+    plasma.enable = lib.mkForce false;
+    fcitx5.enable = lib.mkForce false;
+    wallpaper.enable = lib.mkForce false;
+    konsole.enable = lib.mkForce false;
   };
-
-  # 防复发：plasma-manager 主题应用脚本（apply_themes）靠 last_run 文件防重跑（sha256 对比，
-  # 内容不变即跳过）；Plasma 运行时写回 ~/.config/kdeglobals 会丢 ColorScheme 回到 Breeze 默认，
-  # 此后脚本永不重跑。每次部署删 last_run，强制下次登录重应用主题（rm -f 幂等，无害）
-  home.activation.forcePlasmaThemeReapply = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    rm -f "$HOME/.local/share/plasma-manager/last_run_script_apply_themes"
-  '';
 }

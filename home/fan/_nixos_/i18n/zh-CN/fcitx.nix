@@ -1,4 +1,4 @@
-# fcitx5 中文输入法（tsln 完整版）：双拼 MS 默认 + 拼字/云拼音动画/标点策略；
+# fcitx5 中文输入法（tsln 完整版）：全拼默认 + 拼字/云拼音动画/标点策略；
 # 皮肤走 Catppuccin（catppuccin.fcitx5.enable，见 ../../themes/catppuccin.nix）
 # nix-pve 会话为 X11（plasmax11，RustDesk 捕获需要）→ waylandFrontend = false，
 # HM 设 GTK_IM_MODULE/QT_IM_MODULE/XMODIFIERS（登录 shell）；图形会话由系统层
@@ -25,15 +25,14 @@
           "Groups/0" = {
             "Name" = "Default";
             "Default Layout" = "us";
-            "DefaultIM" = "shuangpin";
+            "DefaultIM" = "pinyin";
           };
           "Groups/0/Items/0"."Name" = "keyboard-us";
-          "Groups/0/Items/1"."Name" = "shuangpin";
+          "Groups/0/Items/1"."Name" = "pinyin";
         };
         addons = {
           pinyin.globalSection = {
             "FirstRun" = "False";
-            "ShuangpinProfile" = "MS";
             "PageSize" = 9;
             "SpellEnabled" = "True";
             "SymbolsEnabled" = "True";

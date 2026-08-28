@@ -1,14 +1,16 @@
-# 底部浮动面板（tsln 完整版）：启动器 + 分页器 + 图标任务栏 + 窗口列表 + RAM/CPU 监视器 +
-# 托盘 + 时钟 + 显示桌面；launchers 对齐当前仓应用集（apps.nix：Edge/Bitwarden + vscode）
+# 面板布局重排（tsln→帖子方案）：上：启动器/窗口列表/全局菜单/间隙/数字时钟/间隙/托盘；下：图标任务栏 Dock
+# Panel-colorizer 挂件给面板做透明/配色（nixpkgs plasma-panel-colorizer，插件 ID org.github.luisbocanegra.plasma.panelcolorizer）
+# 上面板 ChromeOS 预设 + 禁 Color；下面板 Translucent 预设（帖子配置，见 blog.sotkg.com/2025/08/kde-customization）
 {
   programs.plasma.panels = [
+    # ── 上面板 ──
     {
       alignment = "center";
-      floating = true;
-      height = 36;
+      floating = false;
+      height = 30;
       hiding = "none";
       lengthMode = "fill";
-      location = "bottom";
+      location = "top";
       offset = 0;
       opacity = "adaptive";
       widgets = [
@@ -28,39 +30,11 @@
           };
         }
         {
-          name = "org.kde.plasma.pager";
-        }
-        {
-          name = "org.kde.plasma.icontasks";
-          config = {
-            General = {
-              # 固定启动器：与已装应用对齐（Edge/Bitwarden 见 gui/apps.nix，vscode 见 gui/apps/vscode.nix）
-              launchers = [
-                "applications:microsoft-edge.desktop"
-                "applications:org.kde.dolphin.desktop"
-                "applications:org.kde.konsole.desktop"
-                "applications:org.kde.spectacle.desktop"
-                "applications:code.desktop"
-                "applications:bitwarden.desktop"
-              ];
-
-              showOnlyCurrentActivity = false;
-              showOnlyCurrentDesktop = false;
-              showOnlyCurrentScreen = false;
-              showOnlyMinimized = false;
-            };
-          };
-        }
-        {
-          name = "org.kde.plasma.marginsseparator";
-        }
-        {
           name = "org.kde.plasma.windowlist";
           config = {
             General = {
               openOnHover = true;
               showText = false;
-
               showOnlyCurrentActivity = false;
               showOnlyCurrentDesktop = false;
               showOnlyCurrentScreen = false;
@@ -69,43 +43,25 @@
           };
         }
         {
-          name = "org.kde.plasma.systemmonitor";
+          name = "org.kde.plasma.globalmenu";
           config = {
-            CurrentPreset = "org.kde.plasma.systemmonitor";
-            popupHeight = 400;
-            popupWidth = 400;
-            Appearance = {
-              chartFace = "org.kde.ksysguard.linechart";
-              title = "RAM";
-              updateRateLimit = 0;
-            };
-            Sensors = {
-              highPrioritySensorIds = ''["memory/physical/used"]'';
-              lowPrioritySensorIds = ''["memory/physical/total"]'';
-              totalSensors = ''["memory/physical/usedPercent"]'';
+            General = {
+              showText = false;
             };
           };
         }
         {
-          name = "org.kde.plasma.systemmonitor";
+          name = "org.kde.plasma.panelspacer";
+        }
+        {
+          name = "org.kde.plasma.digitalclock";
           config = {
-            CurrentPreset = "org.kde.plasma.systemmonitor";
-            popupHeight = 400;
-            popupWidth = 400;
-            Appearance = {
-              chartFace = "org.kde.ksysguard.linechart";
-              title = "CPU";
-              updateRateLimit = 1000;
-            };
-            Sensors = {
-              highPrioritySensorIds = ''["cpu/all/usage"]'';
-              lowPrioritySensorIds = ''["cpu/all/cpuCount","cpu/all/coreCount"]'';
-              totalSensors = ''["cpu/all/usage"]'';
-            };
+            popupHeight = 450;
+            popupWidth = 450;
           };
         }
         {
-          name = "org.kde.plasma.marginsseparator";
+          name = "org.kde.plasma.panelspacer";
         }
         {
           name = "org.kde.plasma.systemtray";
@@ -118,14 +74,55 @@
           };
         }
         {
-          name = "org.kde.plasma.digitalclock";
+          name = "luisbocanegra.panel.colorizer";
           config = {
-            popupHeight = 450;
-            popupWidth = 450;
+            General = {
+              preset = "chromeos";
+            };
+            outline = {
+              disableColor = true;
+            };
+          };
+        }
+      ];
+    }
+    # ── 下面板：图标任务管理器 Dock ──
+    {
+      alignment = "center";
+      floating = true;
+      height = 48;
+      hiding = "none";
+      lengthMode = "fit";
+      location = "bottom";
+      offset = 0;
+      opacity = "adaptive";
+      widgets = [
+        {
+          name = "org.kde.plasma.icontasks";
+          config = {
+            General = {
+              launchers = [
+                "applications:microsoft-edge.desktop"
+                "applications:org.kde.dolphin.desktop"
+                "applications:org.kde.konsole.desktop"
+                "applications:org.kde.spectacle.desktop"
+                "applications:code.desktop"
+                "applications:bitwarden.desktop"
+              ];
+              showOnlyCurrentActivity = false;
+              showOnlyCurrentDesktop = false;
+              showOnlyCurrentScreen = false;
+              showOnlyMinimized = false;
+            };
           };
         }
         {
-          name = "org.kde.plasma.showdesktop";
+          name = "luisbocanegra.panel.colorizer";
+          config = {
+            General = {
+              preset = "translucent";
+            };
+          };
         }
       ];
     }

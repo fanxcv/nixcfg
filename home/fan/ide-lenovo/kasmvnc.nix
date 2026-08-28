@@ -144,6 +144,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     gtk-font-name=Noto Sans CJK SC 11
     gtk-cursor-theme-name=${cursorTheme}
     gtk-cursor-theme-size=24
+    gtk-application-prefer-dark-theme=1
     EOF
     cat > /root/.gtkrc-2.0 <<EOF
     gtk-theme-name = "${gtkTheme}"
@@ -198,12 +199,17 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     EOF
 
     # 4. 壁纸（xfdesktop 读 xfce4-desktop 频道；ImageMagick 生成 mocha 渐变 + 顶部色条）
-    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml <<EOF
+    #    坑：xfdesktop 4.20 的 backdrop 属性路径用 RandR connector 名（xfw_monitor_get_connector），
+    #    非 monitor0——Xvnc 的 connector 是 VNC-0（xdpyinfo/RandR 查询实证），写 monitor0 读不到 → 默认壁纸
+    #    image-style=5 = XFCE_BACKDROP_IMAGE_ZOOMED（4.20 枚举：0 none/1 centered/2 tiled/3 stretched/4 scaled/5 zoomed/6 spanning）
+    mkdir -p /root/.config/xfce4/xfconf/xfce-perchannel-xml
+    tmp_desktop=$(mktemp)
+    cat > "$tmp_desktop" <<EOF
     <?xml version="1.0" encoding="UTF-8"?>
     <channel name="xfce4-desktop" version="1.0">
       <property name="backdrop" type="empty">
         <property name="screen0" type="empty">
-          <property name="monitor0" type="empty">
+          <property name="monitorVNC-0" type="empty">
             <property name="workspace0" type="empty">
               <property name="last-image" type="string" value="/root/.config/background.png"/>
               <property name="image-style" type="int" value="5"/>
@@ -213,6 +219,14 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       </property>
     </channel>
     EOF
+    desktop_changed=0
+    # 语义检测（xfconfd 回写会加 last-settings-migration-version/改 XML 版本，cmp 恒不同 → 每次部署重启 VNC）
+    if ! grep -q "monitorVNC-0" /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml 2>/dev/null \
+      || ! grep -q "background.png" /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml 2>/dev/null; then
+      cp "$tmp_desktop" /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+      desktop_changed=1
+    fi
+    rm -f "$tmp_desktop"
 
     # 5. 面板（单条底部半透明 + 深色模式：whisker 菜单/任务列表/时钟/托盘/剪贴板）
     cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml <<EOF
@@ -277,12 +291,18 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
         /root/.config/background.png 2>/dev/null || echo "警告: 壁纸生成失败"
     fi
     # 窗口装饰/壁纸（xfsettingsd 不管这些频道，设置即生效；xfdesktop 监听变更自动重载）
+    # 路径用 monitorVNC-0（RandR connector 名，见上注释；monitor0 读不到）
     ${xfconf}/bin/xfconf-query -c xfwm4 -p /general/theme -s '${gtkTheme}'
-    ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitor0/workspace0/last-image -s /root/.config/background.png
-    ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitor0/workspace0/image-style -s 5
+    ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitorVNC-0/workspace0/last-image -s /root/.config/background.png
+    ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitorVNC-0/workspace0/image-style -s 5
     sleep 2
     # 二次兑底：首次设置时 xfconfd 可能未就绪（PropertyNotFound），重设确保生效
-    ${xfconf}/bin/xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s /root/.config/background.png 2>/dev/null || true
+    ${xfconf}/bin/xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitorVNC-0/workspace0/last-image -s /root/.config/background.png 2>/dev/null || true
+    # xfdesktop 4.20 只监听启动时读过的属性路径（monitorVNC-0），设置后不重载 → 重启 xfdesktop 生效
+    # （xfce4-session 的 failsafe 客户端监控不重启 xfdesktop，须手动拉起；SESSION_MANAGER 缺失仅告警不影响）
+    pkill -f '[x]fdesktop' 2>/dev/null || true
+    sleep 1
+    xfdesktop &
     EOF
     chmod +x /root/.config/autostart/theme-setup.sh
 
@@ -335,6 +355,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     if ! grep -q "gc-keep-outputs" /etc/nix/nix.conf 2>/dev/null; then
       echo "gc-keep-outputs = true" >> /etc/nix/nix.conf
       echo "gc-keep-derivations = true" >> /etc/nix/nix.conf
+    fi
+
+    # 10. xfce4-desktop.xml 变更（壁纸路径/样式）→ 运行中 xfdesktop 不重载（4.20 只监听启动时读过的属性路径）
+    #     重启 kasmvnc.service 让新会话生效（VNC 客户端重连即可；theme-setup.sh 的 pkill 自愈覆盖会话内变更）
+    if [ "$desktop_changed" = "1" ] && /usr/bin/systemctl is-active --quiet kasmvnc.service 2>/dev/null; then
+      echo "===> xfce4-desktop.xml 已变更，重启 kasmvnc.service 让新会话生效"
+      /usr/bin/systemctl restart kasmvnc.service 2>/dev/null || echo "警告: kasmvnc.service 重启失败（壁纸变更）"
     fi
   '';
 
