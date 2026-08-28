@@ -34,4 +34,7 @@ rustdesk
   # Redmi Clock plasmoid / Hoshino 光标（vendor 到 assets/kde-sources/，本地文件）
   redmi-clock = pkgs.callPackage ./redmi-clock.nix { };
   hoshino-cursor = pkgs.callPackage ./hoshino-cursor.nix { };
+  # McMojave 图标/KDE 主题（macOS 风格，GitHub tarball fetchzip）
+  mcmojave-circle = pkgs.callPackage ./mcmojave-circle.nix { };
+  mcmojave-kde = pkgs.callPackage ./mcmojave-kde.nix { };
 }
