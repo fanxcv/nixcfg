@@ -46,6 +46,16 @@
   # fan sudo 免密（日常维护/手动 rebuild 用）
   security.sudo.wheelNeedsPassword = false;
 
+  # 蓝牙（NixOS 默认不开；AX200 的蓝牙硬件在，KDE 界面已就位，蓝牙耳机/键鼠刚需）
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
+
+  # 无 WWAN 模块，ModemManager 纯耗资源，禁用（26.05 起选项为 networking.modemmanager）
+  networking.modemmanager.enable = false;
+
+  # 固件更新（BIOS/EC，Linux Vendor Firmware Service；无界这类二线品牌靠它）
+  services.fwupd.enable = true;
+
   # syncthing GUI 密码（syncthing 服务以 fan 用户跑，owner 必须 fan 才能读；
   # 模块 guiPasswordFile 自动 bcrypt 后经 REST API 注入，不覆盖 config.xml 配对状态）
   age.secrets."syncthing-gui-password" = {

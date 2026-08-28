@@ -401,7 +401,7 @@
       # 部署：nixos-rebuild switch --flake .#nix-book（手动，无 comin）
       nixosConfigurations.nix-book = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        # 与 mkHomeConfig 同款 pkgs：overlay 注入 + unfree 放行（unfreeAllowlist + microsoft-edge / libsciter[clash-verge-rev]）
+        # 与 mkHomeConfig 同款 pkgs：overlay 注入 + unfree 放行（unfreeAllowlist + microsoft-edge / libsciter[clash-verge-rev] / wechat / qq）
         # 本地包（packages/，catppuccin-konsole 等）以 overlay 并入（home 层 useGlobalPkgs 直接用）
         pkgs = mkPkgs {
           system = "x86_64-linux";
@@ -409,6 +409,8 @@
           extraUnfree = [
             "microsoft-edge"
             "libsciter"
+            "wechat"
+            "qq"
           ];
         };
         modules = [ ./hosts/nix-book ];

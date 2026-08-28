@@ -396,8 +396,13 @@ nixos:
       im_env: fcitx5 系统层 i18n.inputMethod  # 同 nix-pve
       theme: catppuccin-latte + papirus-dark  # 同 nix-pve（→ plasma.papirus.nix）
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文
-      apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 仅 client（远程其他机器，非被控端）：官方 release 二进制 + 共享注入器，无 root 服务/无系统层 autostart（→ home/fan/nix-book/rustdesk.nix）
+      apps: [edge, bitwarden, vscode, rustdesk, wechat, qq, mpv]  # rustdesk 仅 client（远程其他机器，非被控端）：官方 release 二进制 + 共享注入器，无 root 服务/无系统层 autostart（→ home/fan/nix-book/rustdesk.nix）；wechat/qq unfree（flake extraUnfree 放行）；mpv VAAPI 硬解（780M vcn，hwdec=vaapi）
       power: tsln powerdevil 计划  # AC=performance（15min 挂起/10min 关屏）、电池=balanced（10min/5min）、低电=powerSaving（5min/2min 亮度 15）；低电 20% / 危机 5% → hibernate（swap 8G 支持）；无系统层 TLP（→ home/fan/nix-book/plasma.powerdevil.nix）
+      lock: kscreenlocker 空闲自动锁屏 + 挂起后锁屏  # 移除自动登录后防窥（→ home/fan/nix-book/plasma.lock.nix）
+      bluetooth: 硬件+服务（AX200）  # NixOS 默认不开，KDE 界面已就位（→ default.nix）
+      podman: 系统服务 + docker CLI/socket 兼容 + 镜像加速  # 照搬 nix-pve（→ services/podman.nix）
+      modemmanager: 禁用  # 无 WWAN 模块（26.05 选项 networking.modemmanager.enable=false）
+      fwupd: 启用  # BIOS/EC 固件更新（Linux Vendor Firmware Service）
       comin: false          # 笔记本移动设备，手动 nixos-rebuild switch
       syncthing: true       # 忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-book/syncthing.nix）
       nix_gc: 30 天自动清理
