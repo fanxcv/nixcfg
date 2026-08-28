@@ -225,11 +225,13 @@
           platform ? "nixos",
           useChinaMirror ? netConfig.useChinaMirror,
           isContainer ? false,
+          extraUnfree ? [ ],
         }:
         home-manager.lib.homeManagerConfiguration {
           pkgs = mkPkgs {
             inherit system;
             nixpkgsInput = nixpkgs;
+            inherit extraUnfree;
           };
           modules = [
             ./home/fan
@@ -313,6 +315,7 @@
           hostName = "ide-lenovo";
           platform = "container";
           isContainer = true;
+          extraUnfree = [ "microsoft-edge" ];
         };
 
         # --- 多台 ide 开发容器：一行注册即可（机器目录可选），hostname 在部署层 docker-compose 里设 ---
@@ -468,6 +471,7 @@
               inherit system;
               platform = "container";
               isContainer = true;
+              extraUnfree = [ "microsoft-edge" ];
             }).activationPackage
           }/activate";
           # PVE 宿主机部署（ds2 / desktop）：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply

@@ -10,6 +10,10 @@ Environment=HOME=/root
 # systemd 默认 PATH 不含 nix bin；@path@ 由激活脚本注入（kasmvnc + xfce 组件 + dbus + xauth/xkbcomp）
 Environment=PATH=@path@
 ExecStart=@kasmvnc@/bin/kasmvncserver -fg :1 -geometry 1920x1080 -select-de manual
+# 旧 xfconfd 是 dbus 激活的独立进程（父进程 1），服务重启不杀它——内存里没有新激活写入的
+# xfconf 配置（xsettings.xml 等），xfsettingsd 启动时读旧值写默认（主题被覆盖成 Adwaita）
+# → ExecStartPre 杀旧 xfconfd，会话启动时 dbus 重新激活读最新 xml
+ExecStartPre=/bin/sh -c '/usr/bin/pkill -f "[x]fconfd" || true'
 Restart=on-failure
 RestartSec=5
 

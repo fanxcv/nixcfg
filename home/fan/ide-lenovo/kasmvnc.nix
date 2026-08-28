@@ -17,8 +17,29 @@ let
   xfce4-settings = pkgs.xfce4-settings;
   xfce4-terminal = pkgs.xfce4-terminal;
   xfconf = pkgs.xfconf;
-  # xstartup / systemd service 运行时 PATH：xfce 核心组件 + dbus + xauth/xkbcomp（kasmvncserver wrap 已带，双保险）
-  # 最小集：session/wm/panel/desktop/settings/xfconf/terminal，其余 xfce 捆绑（appfinder/screenshooter/taskmanager/whisker/clipman/notifyd/thunar）不装
+  # ── 基础应用（xfce 捆绑全家桶，容器远程桌面日常所需）──
+  thunar = pkgs.thunar; # 文件管理器（Failsafe 会话已引用 --daemon，此前未装导致目录打不开）
+  xfce4-appfinder = pkgs.xfce4-appfinder; # 应用查找器（Alt+F2 / 菜单搜索）
+  whiskermenu = pkgs.xfce4-whiskermenu-plugin; # 应用菜单（面板主菜单，替代默认 applicationsmenu）
+  xfce4-notifyd = pkgs.xfce4-notifyd; # 通知守护（dbus 激活）
+  xfce4-screenshooter = pkgs.xfce4-screenshooter; # 截图
+  xfce4-taskmanager = pkgs.xfce4-taskmanager; # 任务管理器
+  xfce4-clipman = pkgs.xfce4-clipman-plugin; # 剪贴板历史（面板插件）
+  mousepad = pkgs.mousepad; # 文本编辑器
+  xarchiver = pkgs.xarchiver; # 压缩包管理
+  # ── 美化（Catppuccin Mocha，与 nix-pve 的 catppuccin-konsole 同系）──
+  catppuccinGtk = pkgs.catppuccin-gtk.override { variant = "mocha"; }; # GTK2/3/4 + xfwm4 主题（默认 accent blue）
+  papirus = pkgs.catppuccin-papirus-folders; # Papirus 图标（构建时已配 catppuccin mocha 文件夹色）
+  catppuccinCursors = pkgs.catppuccin-cursors.mochaDark; # 鼠标（outputsToInstall=[] 须显式取 output；容器 nixpkgs 小写 mochaDark）
+  notoCjk = pkgs.noto-fonts-cjk-sans; # 中文渲染
+  imagemagick = pkgs.imagemagick; # 壁纸生成
+  fontconfig = pkgs.fontconfig; # 字体配置（容器无 /etc/fonts，字体全不生效）
+  glibc = pkgs.glibc; # localedef 生成 zh_CN.UTF-8（容器 /usr/share/i18n 被裁剪）
+  # 主题名（catppuccin-gtk 1.0.3 目录名小写：catppuccin-mocha-blue-standard，GTK+xfwm4 通用）
+  gtkTheme = "catppuccin-mocha-blue-standard";
+  iconTheme = "Papirus-Dark";
+  cursorTheme = "catppuccin-mocha-dark-cursors";
+  # xstartup / systemd service 运行时 PATH：xfce 核心组件 + 基础应用 + dbus + xauth/xkbcomp（kasmvncserver wrap 已带，双保险）
   runPath = lib.makeBinPath [
     kasmvnc
     xfce4-session
@@ -28,9 +49,33 @@ let
     xfce4-settings
     xfce4-terminal
     xfconf
+    thunar
+    xfce4-appfinder
+    whiskermenu
+    xfce4-notifyd
+    xfce4-screenshooter
+    xfce4-taskmanager
+    xfce4-clipman
+    mousepad
+    xarchiver
     pkgs.dbus
     pkgs.xauth
     pkgs.xkbcomp
+  ];
+  # XDG_DATA_DIRS：GTK 主题/图标/翻译查找路径（容器无 /usr/share，须指 nix store 各包 share）
+  xdgDataDirs = lib.concatStringsSep ":" [
+    "${xfconf}/share"
+    "${xfce4-session}/share"
+    "${xfce4-panel}/share"
+    "${xfdesktop}/share"
+    "${xfce4-settings}/share"
+    "${xfce4-terminal}/share"
+    "${thunar}/share"
+    "${whiskermenu}/share"
+    "${catppuccinGtk}/share"
+    "${papirus}/share"
+    "${catppuccinCursors}/share"
+    "${pkgs.adwaita-icon-theme}/share"
   ];
 in
 # 仅 x86_64-linux（lenovo 真机架构）：deb 是 amd64，aarch64 上无法构建；
@@ -38,7 +83,7 @@ in
 lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   home.packages = with pkgs; [
     kasmvnc
-    # xfce4 核心组件（GTK 软渲染稳定；最小集，不装捆绑应用）
+    # xfce4 核心组件（GTK 软渲染稳定）
     xfce4-session
     xfwm4
     xfce4-panel
@@ -49,7 +94,215 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     dbus
     adwaita-icon-theme # GTK 默认图标（无则界面空白）
     dejavu_fonts # Xvnc 渲染 + 界面字体
+    # 基础应用（文件管理器/菜单/通知/截图/任务管理/剪贴板/编辑器/压缩包）
+    thunar
+    xfce4-appfinder
+    whiskermenu
+    xfce4-notifyd
+    xfce4-screenshooter
+    xfce4-taskmanager
+    xfce4-clipman
+    mousepad
+    xarchiver
+    # 美化：主题/图标/鼠标/中文字体/壁纸生成
+    catppuccinGtk
+    papirus
+    catppuccinCursors
+    notoCjk
+    imagemagick
+    # 系统支撑：fontconfig（/etc/fonts 缺失，字体全不生效）、glibc（localedef 生成中文 locale）
+    fontconfig
+    glibc
   ];
+
+  # ── 美化声明式（Catppuccin Mocha 深色系）──
+  # 核心坑：xfsettingsd 启动时总写默认（ThemeName=Adwaita）覆盖 xsettings 频道，且被杀后 xfce4-session 会重启它
+  #   → 用户级 xfce4-session.xml 覆盖 Failsafe 会话（去掉 xfsettingsd）→ GTK 应用读 settings.ini（Catppuccin）
+  #   已验证：xfsettingsd 不启动后 GTK 深色主题生效（截图亮度 58 vs Adwaita 200+）
+  # 其余（xfwm4 窗口/壁纸/面板）走 xfconf 频道，xfsettingsd 不管，直接生效
+  home.activation.kasmvncBeautify = lib.hm.dag.entryAfter [ "kasmvnc" ] ''
+    # 0. 主题/图标/鼠标 symlink 到传统路径（GTK 查找 ~/.themes ~/.icons，不依赖 XDG_DATA_DIRS 顺序）
+    mkdir -p /root/.themes /root/.icons
+    ln -sfn ${catppuccinGtk}/share/themes/${gtkTheme} /root/.themes/${gtkTheme}
+    ln -sfn ${papirus}/share/icons/Papirus-Dark /root/.icons/Papirus-Dark
+    ln -sfn ${catppuccinCursors}/share/icons/${cursorTheme} /root/.icons/${cursorTheme}
+    ln -sfn ${pkgs.adwaita-icon-theme}/share/icons/Adwaita /root/.icons/Adwaita
+    ln -sfn ${pkgs.adwaita-icon-theme}/share/icons/hicolor /root/.icons/hicolor
+
+    # 1. GTK 主题（xfsettingsd 不启动后 GTK 读 settings.ini；GTK2 读 ~/.gtkrc-2.0）
+    mkdir -p /root/.config/gtk-3.0
+    cat > /root/.config/gtk-3.0/settings.ini <<EOF
+    [Settings]
+    gtk-theme-name=${gtkTheme}
+    gtk-icon-theme-name=${iconTheme}
+    gtk-font-name=Noto Sans CJK SC 11
+    gtk-cursor-theme-name=${cursorTheme}
+    gtk-cursor-theme-size=24
+    EOF
+    cat > /root/.gtkrc-2.0 <<EOF
+    gtk-theme-name = "${gtkTheme}"
+    gtk-icon-theme-name = "${iconTheme}"
+    gtk-font-name = "Noto Sans CJK SC 11"
+    EOF
+
+    # 2. xfce4-session Failsafe 会话（去掉 xfsettingsd——它写默认覆盖主题；键盘布局回默认，容器远程桌面无碍）
+    mkdir -p /root/.config/xfce4/xfconf/xfce-perchannel-xml
+    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml <<EOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <channel name="xfce4-session" version="1.0">
+      <property name="general" type="empty">
+        <property name="FailsafeSessionName" type="string" value="Failsafe"/>
+      </property>
+      <property name="sessions" type="empty">
+        <property name="Failsafe" type="empty">
+          <property name="IsFailsafe" type="bool" value="true"/>
+          <property name="Count" type="int" value="4"/>
+          <property name="Client0_Command" type="array">
+            <value type="string" value="xfwm4"/>
+          </property>
+          <property name="Client0_Priority" type="int" value="15"/>
+          <property name="Client1_Command" type="array">
+            <value type="string" value="xfce4-panel"/>
+          </property>
+          <property name="Client1_Priority" type="int" value="25"/>
+          <property name="Client2_Command" type="array">
+            <value type="string" value="Thunar"/>
+            <value type="string" value="--daemon"/>
+          </property>
+          <property name="Client2_Priority" type="int" value="30"/>
+          <property name="Client3_Command" type="array">
+            <value type="string" value="xfdesktop"/>
+          </property>
+          <property name="Client3_Priority" type="int" value="35"/>
+        </property>
+      </property>
+    </channel>
+    EOF
+
+    # 3. xfwm4 窗口装饰（Catppuccin 主题 + 右侧按钮）
+    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml <<EOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <channel name="xfwm4" version="1.0">
+      <property name="general" type="empty">
+        <property name="theme" type="string" value="${gtkTheme}"/>
+        <property name="button_layout" type="string" value="O|HMC"/>
+        <property name="title_font" type="string" value="Noto Sans CJK SC 10"/>
+      </property>
+    </channel>
+    EOF
+
+    # 4. 壁纸（xfdesktop 读 xfce4-desktop 频道；ImageMagick 生成 mocha 渐变 + 顶部色条）
+    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml <<EOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <channel name="xfce4-desktop" version="1.0">
+      <property name="backdrop" type="empty">
+        <property name="screen0" type="empty">
+          <property name="monitor0" type="empty">
+            <property name="workspace0" type="empty">
+              <property name="last-image" type="string" value="/root/.config/background.png"/>
+              <property name="image-style" type="int" value="5"/>
+            </property>
+          </property>
+        </property>
+      </property>
+    </channel>
+    EOF
+
+    # 5. 面板（单条底部半透明 + 深色模式：whisker 菜单/任务列表/时钟/托盘/剪贴板）
+    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml <<EOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <channel name="xfce4-panel" version="1.0">
+      <property name="configver" type="int" value="2"/>
+      <property name="panels" type="array">
+        <value type="int" value="1"/>
+        <property name="dark-mode" type="bool" value="true"/>
+        <property name="panel-1" type="empty">
+          <property name="position" type="string" value="p=10;x=0;y=0"/>
+          <property name="length" type="uint" value="100"/>
+          <property name="position-locked" type="bool" value="true"/>
+          <property name="icon-size" type="uint" value="20"/>
+          <property name="size" type="uint" value="34"/>
+          <property name="background-alpha" type="uint" value="190"/>
+          <property name="plugin-ids" type="array">
+            <value type="int" value="1"/>
+            <value type="int" value="2"/>
+            <value type="int" value="3"/>
+            <value type="int" value="4"/>
+            <value type="int" value="5"/>
+            <value type="int" value="6"/>
+          </property>
+        </property>
+      </property>
+      <property name="plugins" type="empty">
+        <property name="plugin-1" type="string" value="whiskermenu"/>
+        <property name="plugin-2" type="string" value="tasklist">
+          <property name="grouping" type="uint" value="1"/>
+        </property>
+        <property name="plugin-3" type="string" value="separator"/>
+        <property name="plugin-4" type="string" value="clock">
+          <property name="digital-format" type="string" value="%H:%M"/>
+        </property>
+        <property name="plugin-5" type="string" value="systray"/>
+        <property name="plugin-6" type="string" value="clipman"/>
+      </property>
+    </channel>
+    EOF
+
+    # 6. autostart 脚本（壁纸生成 + xfwm4/壁纸设置兜底；GTK 主题走 settings.ini 不需 xfconf）
+    mkdir -p /root/.config/autostart
+    cat > /root/.config/autostart/theme-setup.desktop <<EOF
+    [Desktop Entry]
+    Type=Application
+    Name=Theme Setup
+    Exec=/root/.config/autostart/theme-setup.sh
+    X-GNOME-Autostart-enabled=true
+    EOF
+    cat > /root/.config/autostart/theme-setup.sh <<EOF
+    #!/bin/sh
+    # Catppuccin Mocha 壁纸/窗口设置（xfce4-session autostart 阶段执行，环境继承会话）
+    sleep 1
+    # 壁纸：ImageMagick 生成 mocha 渐变（1920x1080，无网络依赖；已存在不重生成）
+    if [ ! -f /root/.config/background.png ]; then
+      ${imagemagick}/bin/magick -size 1920x1080 gradient:'#11111b'-'#1e1e2e' \
+        -fill '#89b4fa' -draw 'rectangle 0,0 1920,6' \
+        -fill '#cba6f7' -draw 'rectangle 0,6 1920,12' \
+        -fill '#f38ba8' -draw 'rectangle 0,12 1920,18' \
+        /root/.config/background.png 2>/dev/null || echo "警告: 壁纸生成失败"
+    fi
+    # 窗口装饰/壁纸（xfsettingsd 不管这些频道，设置即生效）
+    ${xfconf}/bin/xfconf-query -c xfwm4 -p /general/theme -s '${gtkTheme}'
+    ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitor0/workspace0/last-image -s /root/.config/background.png
+    ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitor0/workspace0/image-style -s 5
+    EOF
+    chmod +x /root/.config/autostart/theme-setup.sh
+
+    # 7. fontconfig：容器无 /etc/fonts（字体全不生效，中文方块/edge 字体报错）
+    #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf 指 store 字体目录
+    mkdir -p /etc/fonts/conf.d
+    cp -f ${fontconfig}/etc/fonts/fonts.conf /etc/fonts/fonts.conf
+    cat > /etc/fonts/conf.d/30-nix-fonts.conf <<EOF
+    <?xml version="1.0"?>
+    <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+    <fontconfig>
+      <dir>${pkgs.dejavu_fonts}/share/fonts/truetype</dir>
+      <dir>${notoCjk}/share/fonts/opentype/noto-cjk</dir>
+      <dir prefix="xdg">fonts</dir>
+    </fontconfig>
+    EOF
+    ${fontconfig}/bin/fc-cache -f >/dev/null 2>&1 || echo "警告: fc-cache 失败（字体缓存未建）"
+
+    # 8. locale：容器 /usr/share/i18n 被裁剪（无 locale-gen 源），用 nix glibc 的 localedef 生成到 /root/.locale
+    #    xstartup export LOCPATH 指过去；--no-archive 目录形式，不污染系统 locale-archive
+    #    注意：localedef 在 glibc 的 bin 输出（${glibc}/bin 主输出无），i18n 源数据在主输出
+    mkdir -p /root/.locale
+    export I18NPATH=${glibc}/share/i18n
+    if [ ! -d /root/.locale/zh_CN.UTF-8 ]; then
+      ${glibc.bin}/bin/localedef --no-archive -i zh_CN -f UTF-8 /root/.locale/zh_CN.UTF-8 || echo "警告: zh_CN.UTF-8 locale 生成失败"
+    fi
+    if [ ! -d /root/.locale/en_US.UTF-8 ]; then
+      ${glibc.bin}/bin/localedef --no-archive -i en_US -f UTF-8 /root/.locale/en_US.UTF-8 || echo "警告: en_US.UTF-8 locale 生成失败"
+    fi
+  '';
 
   home.activation.kasmvnc = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     # ── 0. Xvnc 硬编码系统路径（ELF 内嵌，无法 sed/wrap）：
@@ -70,9 +323,14 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     unset SESSION_MANAGER
     unset DBUS_SESSION_BUS_ADDRESS
     export PATH="${runPath}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    # 中文 locale（激活时 localedef 生成到 /root/.locale；容器系统 locale 只有 C.UTF-8）
+    export LOCPATH=/root/.locale
+    export LANG=zh_CN.UTF-8
+    export LC_ALL=zh_CN.UTF-8
     # xfconfd 靠 dbus 激活（org.xfce.Xfconf.service 在 xfconf 包 share/dbus-1/services），
     # dbus 标准目录找不到 store 路径 → XDG_DATA_DIRS 指 xfconf share（standard_session_servicedirs 读它）
-    export XDG_DATA_DIRS="${xfconf}/share"
+    # 同时指各包 share：GTK 主题/图标/翻译查找（容器无 /usr/share）
+    export XDG_DATA_DIRS="${xdgDataDirs}"
     # xfconfd 读配置用 XDG_CONFIG_DIRS（默认 /etc/xdg，容器无 nix 配置）→ 指 xfce4-session 的 etc/xdg
     # （xfce4-session.xml 的 Failsafe 会话定义；缺则 xfconfd 报 PropertyNotFound →
     #   xfsm_manager_load_failsafe 失败 → 弹模态错误对话框阻塞启动）
