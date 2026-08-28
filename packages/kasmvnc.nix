@@ -108,7 +108,7 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out
-    cp -r usr/bin usr/share usr/lib $out/
+    cp -r usr/bin usr/share usr/lib etc $out/
     runHook postInstall
   '';
 
@@ -123,10 +123,11 @@ stdenv.mkDerivation {
     ln -s kasmxproxy $out/bin/xproxy
     # perl 脚本 shebang → nix perl（kasmvncserver；select-de.sh 是 bash）
     patchShebangs $out
-    # 硬编码路径 → store（kasmvncserver 读 defaults yaml、调 select-de.sh）
+    # 硬编码路径 → store（kasmvncserver 读 defaults yaml、调 select-de.sh、读系统配置目录）
     substituteInPlace $out/bin/kasmvncserver \
       --replace "/usr/share/kasmvnc/kasmvnc_defaults.yaml" "$out/share/kasmvnc/kasmvnc_defaults.yaml" \
-      --replace "/usr/lib/kasmvncserver/select-de.sh" "$out/lib/kasmvncserver/select-de.sh"
+      --replace "/usr/lib/kasmvncserver/select-de.sh" "$out/lib/kasmvncserver/select-de.sh" \
+      --replace "/etc/kasmvnc" "$out/etc/kasmvnc"
     # defaults yaml 的 httpd_directory 写死 /usr/share/kasmvnc/www → 指 store
     substituteInPlace $out/share/kasmvnc/kasmvnc_defaults.yaml \
       --replace "/usr/share/kasmvnc/www" "$out/share/kasmvnc/www"
