@@ -286,6 +286,19 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     EOF
     chmod +x /root/.config/autostart/theme-setup.sh
 
+    # 6.5 外部面板插件 .desktop+.so 同目录 symlink（XDG_DATA_HOME 优先于 XDG_DATA_DIRS）
+    #    坑：nix 包布局 .desktop 在 share/、.so 在 lib/，xfce4-panel 按 .desktop 目录找 .so 会失败（弹'无法加载插件'）
+    #    坑：nix run 的 flake 求值 GC 可能删旧 store 路径（broken symlink），激活每次重写 symlink 指向当前路径
+    mkdir -p /root/.local/share/xfce4/panel/plugins
+    for pkg in ${whiskermenu} ${xfce4-clipman}; do
+      for f in "$pkg"/share/xfce4/panel/plugins/*.desktop; do
+        [ -e "$f" ] && ln -sfn "$f" /root/.local/share/xfce4/panel/plugins/
+      done
+      for f in "$pkg"/lib/xfce4/panel/plugins/*.so; do
+        [ -e "$f" ] && ln -sfn "$f" /root/.local/share/xfce4/panel/plugins/
+      done
+    done
+
     # 7. fontconfig：容器无 /etc/fonts（字体全不生效，中文方块/edge 字体报错）
     #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf 指 store 字体目录
     #    注意：fontconfig 默认输出是 bin（fc-* 命令），fonts.conf 在 out 输出 → 显式 .out
@@ -312,6 +325,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     fi
     if [ ! -d /root/.locale/en_US.UTF-8 ]; then
       ${glibc.bin}/bin/localedef --no-archive -i en_US -f UTF-8 /root/.locale/en_US.UTF-8 || echo "警告: en_US.UTF-8 locale 生成失败"
+    fi
+
+    # 9. nix.conf 防 GC：nix run 的 flake 求值 GC 曾删掉被 profile 引用的插件 store 路径（broken symlink）
+    #    gc-keep-outputs/derivations 保留 live 输出的 .drv 与输出（幂等追加，容器重建后自动恢复）
+    if ! grep -q "gc-keep-outputs" /etc/nix/nix.conf 2>/dev/null; then
+      echo "gc-keep-outputs = true" >> /etc/nix/nix.conf
+      echo "gc-keep-derivations = true" >> /etc/nix/nix.conf
     fi
   '';
 
