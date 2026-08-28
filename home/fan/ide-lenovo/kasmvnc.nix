@@ -61,7 +61,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
 
     # ── 1. 会话启动脚本（xfce4-session + dbus；store 绝对路径，不依赖 HM profile PATH）──
     # dbus：不用 dbus-launch（nix 编译期硬编码 /run/current-system/sw/bin/dbus-daemon，容器无此路径）
-    #   → dbus-daemon 直接起，--config-file 显式指 nix store 的 session.conf
+    #   → dbus-daemon 直起，--config-file 显式指 nix store 的 session.conf；
+    #   坑：不能带 --session（隐含默认 /etc/dbus-1/session.conf，与 --config-file 冲突报错）
     mkdir -p /root/.vnc
     cat > /root/.vnc/xstartup <<EOF
     #!/bin/sh
@@ -69,7 +70,14 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     unset SESSION_MANAGER
     unset DBUS_SESSION_BUS_ADDRESS
     export PATH="${runPath}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    export DBUS_SESSION_BUS_ADDRESS=\$(${pkgs.dbus}/bin/dbus-daemon --session --fork --print-address --config-file=${pkgs.dbus}/share/dbus-1/session.conf)
+    # xfconfd 靠 dbus 激活（org.xfce.Xfconf.service 在 xfconf 包 share/dbus-1/services），
+    # dbus 标准目录找不到 store 路径 → XDG_DATA_DIRS 指 xfconf share（standard_session_servicedirs 读它）
+    export XDG_DATA_DIRS="${xfconf}/share"
+    # xfconfd 读配置用 XDG_CONFIG_DIRS（默认 /etc/xdg，容器无 nix 配置）→ 指 xfce4-session 的 etc/xdg
+    # （xfce4-session.xml 的 Failsafe 会话定义；缺则 xfconfd 报 PropertyNotFound →
+    #   xfsm_manager_load_failsafe 失败 → 弹模态错误对话框阻塞启动）
+    export XDG_CONFIG_DIRS="${xfce4-session}/etc/xdg:/etc/xdg"
+    export DBUS_SESSION_BUS_ADDRESS=\$(${pkgs.dbus}/bin/dbus-daemon --fork --print-address --config-file=${pkgs.dbus}/share/dbus-1/session.conf)
     exec ${xfce4-session}/bin/xfce4-session
     EOF
     chmod +x /root/.vnc/xstartup
