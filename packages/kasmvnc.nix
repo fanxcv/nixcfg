@@ -74,6 +74,7 @@ stdenv.mkDerivation {
   #   libsystemd/libxshmfence/libXdmcp/libGL/libgbm/libssl/libcrypto/libcrypt/libfreetype/libstdc++
   #   kasmxproxy 另需 libX11/libXext/libXtst/libXrandr/libXcursor/libXfixes；kasmvncconfig 需 libX11
   buildInputs = [
+    perl # patchShebangs 靠 type -P perl 找解释器，perl 不在 buildInputs 则 shebang 保持 /usr/bin/perl（系统 5.38）
     libpng
     zlib
     libunwind
