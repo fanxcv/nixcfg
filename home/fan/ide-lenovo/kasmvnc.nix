@@ -254,7 +254,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
         <value type="int" value="1"/>
         <property name="dark-mode" type="bool" value="true"/>
         <property name="panel-1" type="empty">
-          <property name="position" type="string" value="p=0;x=0;y=0"/>
+          <property name="position" type="string" value="p=11;x=0;y=0"/>
           <property name="length" type="uint" value="100"/>
           <property name="position-locked" type="bool" value="true"/>
           <property name="icon-size" type="uint" value="18"/>
@@ -484,7 +484,10 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       resolution:
         width: 1080
         height: 1920
-      allow_resize: true
+      # 坑：allow_resize: true 时 VNC 客户端连接会把分辨率改成客户端窗口尺寸（实测 2552x1320 横屏）
+      #   → 面板 1080 宽不跟随、snap_position 失效 → 无 strut → workarea 全屏 → 最大化被面板遮挡
+      #   固定分辨率（false）后屏幕恒为 1080x1920 竖屏，面板全宽、strut 正常、最大化避让
+      allow_resize: false
     network:
       protocol: http
       websocket_port: 6901
