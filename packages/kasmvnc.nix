@@ -47,6 +47,10 @@
   xauth,
   xkbcomp,
   xkeyboard_config,
+  coreutils,
+  hostname,
+  util-linux,
+  xdpyinfo,
 }:
 let
   version = "1.5.0";
@@ -130,11 +134,13 @@ stdenv.mkDerivation {
       pp.TryTiny pp.DateTime pp.DateTimeTimeZone
     ])}"
     archname=$(${perl}/bin/perl -MConfig -e 'print $Config{archname}')
+    # 运行时命令：kasmvncserver 反引号调 cat/hostname/mcookie/uname/whoami/xdpyinfo
+    #   （coreutils/hostname/util-linux/xdpyinfo），systemd 的 PATH 不含这些，须 wrapProgram 注入
     wrapProgram $out/bin/kasmvncserver \
       --prefix PERL5LIB : "$out/share/perl5" \
       --prefix PERL5LIB : "$perlEnv/lib/perl5/site_perl/${perl.version}" \
       --prefix PERL5LIB : "$perlEnv/lib/perl5/site_perl/${perl.version}/$archname" \
-      --prefix PATH : "${xkbcomp}/bin:${xauth}/bin" \
+      --prefix PATH : "${coreutils}/bin:${hostname}/bin:${util-linux}/bin:${xdpyinfo}/bin:${xkbcomp}/bin:${xauth}/bin" \
       --set XKB_BASE "${xkeyboard_config}/share/X11/xkb"
   '';
 
