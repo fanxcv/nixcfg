@@ -390,7 +390,7 @@ nixos:
 
   nix-book:                 # 无界14S 笔记本（476.9G NVMe + AMD 7840HS/780M 核显 + AX200 WiFi）
     system:                 # → hosts/nix-book/
-      platform: laptop      # 真机：GRUB EFI（efiInstallAsRemovable）+ amdgpu 核显 + zram（→ hardware.nix）
+      platform: laptop      # 真机：GRUB EFI（efiInstallAsRemovable）+ amdgpu 核显 + zram + enableRedistributableFirmware（26.05 默认无 linux-firmware，AX200 无固件即无 WiFi 接口）（→ hardware.nix）
       disk: 476.9G 全盘格   # LVM：boot 1G + swap 8G（hibernate）+ nix 100G + persist 100G + 余量 ~267G 可扩 + tmpfs 根（→ disks.nix）
       desktop: plasma6      # KDE Plasma 6 + SDDM，Wayland 默认会话（无 RustDesk 被控需求，不切 X11）+ fcitx5 拼音（→ _nixos_/gui/desktop/plasma.nix）
       im_env: fcitx5 系统层 i18n.inputMethod  # 同 nix-pve
