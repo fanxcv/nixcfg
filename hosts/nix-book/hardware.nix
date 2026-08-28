@@ -15,6 +15,10 @@
   # AMD 核显用户态驱动（mesa/vaapi；内核 amdgpu 驱动 + 固件默认启用）
   hardware.graphics.enable = true;
 
+  # 无线固件：nixpkgs 26.05 起默认 firmware 仅 wireless-regdb，linux-firmware 需显式启用
+  # （iwlwifi AX200 缺固件则接口不出现：dmesg 'iwlwifi-cc-a0-77.ucode failed'）
+  hardware.enableRedistributableFirmware = true;
+
   # 12G 内存，zram 压缩提效
   zramSwap.enable = true;
   zramSwap.memoryPercent = 50;
