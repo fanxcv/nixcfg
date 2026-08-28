@@ -158,6 +158,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     gtk-cursor-theme-name=${cursorTheme}
     gtk-cursor-theme-size=24
     gtk-application-prefer-dark-theme=1
+    gtk-xft-dpi=147456
     EOF
     cat > /root/.gtkrc-2.0 <<EOF
     gtk-theme-name = "${gtkTheme}"
@@ -203,7 +204,19 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     </channel>
     EOF
 
-    # 3. xfwm4 窗口装饰（Catppuccin 主题 + 右侧按钮）
+    # 2.5 HiDPI：Xft.dpi 144（1.5x 字体缩放，VNC 自适应分辨率下界面不溢出）
+    #    xfsettingsd 不启动（写默认覆盖主题）→ xsettings 频道手动写文件（xfconfd 启动时读）
+    #    GTK 应用读 xsettings 频道的 Xft/DPI（dbus 经 xfconfd）；gtk-xft-dpi 在 settings.ini（GTK3 直读）
+    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml <<EOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <channel name="xsettings" version="1.0">
+      <property name="Xft" type="empty">
+        <property name="DPI" type="int" value="144"/>
+      </property>
+    </channel>
+    EOF
+
+    # 3. xfwm4 窗口装饰（WhiteSur 主题 + 右侧按钮）
     cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml <<EOF
     <?xml version="1.0" encoding="UTF-8"?>
     <channel name="xfwm4" version="1.0">
@@ -489,10 +502,9 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       resolution:
         width: 1920
         height: 1080
-      # 坑：allow_resize: true 时 VNC 客户端连接会把分辨率改成客户端窗口尺寸（实测 2552x1320 横屏）
-      #   → 面板 1080 宽不跟随、snap_position 失效 → 无 strut → workarea 全屏 → 最大化被面板遮挡
-      #   固定分辨率（false）后屏幕恒为 1920x1080 横屏，面板全宽、strut 正常、最大化避让
-      allow_resize: false
+      # 自适应：客户端连接/窗口变化时服务器分辨率跟随（Remote Resizing）
+      # 坑：分辨率变化后面板可能不跟随（length 百分比失效）→ 见 kasmvncBeautify 面板段注释
+      allow_resize: true
     network:
       protocol: http
       websocket_port: 6901
