@@ -4,7 +4,7 @@
 {
   home.packages = with pkgs; [
     wechat # 微信 4.x Linux
-    qq # QQ 6.x Linux
+    (repos.unstable.qq) # QQ：26.05 的 3.2.29 源 URL 已死（404），unstable 3.2.32 可用（→ overlays/unstable.nix）
     mpv # 视频播放（VAAPI 硬解）
   ];
 
