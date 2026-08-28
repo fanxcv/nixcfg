@@ -101,13 +101,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
         x_font_path: ${pkgs.dejavu_fonts}/share/fonts/truetype
     EOF
 
-    # ── 3. 密码：age 解密（secrets/source/kasmvnc-passwd → encrypt.sh 生成 .age，git 可公开）──
+    # ── 3. 密码：age 解密（secrets/source/hosts/ide-lenovo/kasmvnc-passwd → encrypt.sh 生成 .age，git 可公开）──
     #    私钥 $HOME/.secrets/age-keys.txt（compose 挂载，容器重建不丢）；解密失败即部署失败
     #    hash 标记比较，密码变更才重写（声明式收敛：手改密码下次激活回滚；无变更不打扰运行中会话）
     pass_file=/root/.kasmpasswd
     pass_hash=/root/.vnc/kasmvnc-passwd.sha256
     tmp=$(mktemp)
-    ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" ${../../..}/secrets/kasmvnc-passwd.age
+    ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" ${../../..}/secrets/hosts/ide-lenovo/kasmvnc-passwd.age
     new_hash=$(${pkgs.coreutils}/bin/sha256sum "$tmp" | cut -d' ' -f1)
     if [ ! -f "$pass_hash" ] || [ "$(cat "$pass_hash" 2>/dev/null)" != "$new_hash" ]; then
       printf '%s\n%s\n' "$(cat "$tmp")" "$(cat "$tmp")" | ${kasmvnc}/bin/kasmvncpasswd -u root -w

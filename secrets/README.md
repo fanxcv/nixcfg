@@ -29,7 +29,7 @@ secrets/
 ├── syncthing-gui-password.age    # syncthing GUI 密码（三 mac + nix-pve，公共）
 ├── encrypt.sh / keys.nix / README.md
 └── hosts/
-    ├── ide-lenovo/  ssh-host-key.age + .pub（明文）
+    ├── ide-lenovo/  ssh-host-key.age + .pub（明文）、kasmvnc-passwd.age（KasmVNC 远程桌面密码）
     ├── ide-si/      ssh-host-key.age + .pub（明文）
     ├── mba-m5/      ssh-user-key.age + .pub
     ├── mbp-m1/      ssh-user-key.age + .pub

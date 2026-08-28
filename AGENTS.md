@@ -80,6 +80,12 @@
 - **禁止**：HM 层 age.secrets 声明（agenix homeManagerModules 已整体移除）、
   agenixContainerFallback 类兑底链、条件跳过解密。
 - 密钥维护：明文放 secrets/source/ → `./secrets/encrypt.sh` 生成 .age（git 可公开），私钥 `$HOME/.secrets/age-keys.txt`。
+- **命名与位置规则**（secrets/README.md 规约）：
+  - 公共/多机共享 → `secrets/<name>.age`（根）；机器独有 → `secrets/hosts/<machine>/<name>.age`（一个机器一个目录，不只放密钥：skemate 配置、lucky 归档、tailscale state 等一切机器独有物都进这里）。
+  - 跨机器共用而非常见文件：文件本体放主机器目录，其他机器跨引用并注释说明。
+  - 公钥 `<key>.pub` 明文直接入库（不加密、不入 source/、encrypt.sh 自动跳过）；私钥/敏感物一律 `.age` 加密入库。
+  - 消费方 nix 引用路径：`${../../..}/secrets/hosts/<machine>/<name>.age`（相对 home/fan/<machine>/ 的仓库根）。
+  - 新机器：keys.nix 加 age 公钥 + secrets/hosts/<machine>/ 建目录（encrypt.sh 自动保持 source/ 子目录结构）。
 
 ### 激活脚本规范
 
