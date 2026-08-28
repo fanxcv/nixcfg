@@ -77,27 +77,9 @@
           name = "luisbocanegra.panel.colorizer";
           config = {
             globalSettings = builtins.toJSON {
-              panel = {
-                normal.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
-                busy.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
-                hovered.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
-                needsAttention.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
-                expanded.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
+              stockPanelSettings.opacity = {
+                enabled = true;
+                value = "85";
               };
             };
           };
@@ -138,27 +120,9 @@
           name = "luisbocanegra.panel.colorizer";
           config = {
             globalSettings = builtins.toJSON {
-              panel = {
-                normal.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
-                busy.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
-                hovered.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
-                needsAttention.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
-                expanded.opacity = {
-                  enabled = true;
-                  value = "85";
-                };
+              stockPanelSettings.opacity = {
+                enabled = true;
+                value = "85";
               };
             };
           };
