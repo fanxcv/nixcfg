@@ -52,7 +52,16 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   ];
 
   home.activation.kasmvnc = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    # ── 0. Xvnc 硬编码系统路径（ELF 内嵌，无法 sed/wrap）：
+    #    /usr/share/X11/xkb（xkb 数据）与 /usr/bin/xkbcomp（keymap 编译器）
+    #    nix 的 xkeyboard_config/xkbcomp 在 store，容器无此路径 → symlink 指 store（幂等）
+    mkdir -p /usr/share/X11
+    ln -sfn ${pkgs.xkeyboard_config}/share/X11/xkb /usr/share/X11/xkb
+    ln -sfn ${pkgs.xkbcomp}/bin/xkbcomp /usr/bin/xkbcomp
+
     # ── 1. 会话启动脚本（xfce4-session + dbus；store 绝对路径，不依赖 HM profile PATH）──
+    # dbus：不用 dbus-launch（nix 编译期硬编码 /run/current-system/sw/bin/dbus-daemon，容器无此路径）
+    #   → dbus-daemon 直接起，--config-file 显式指 nix store 的 session.conf
     mkdir -p /root/.vnc
     cat > /root/.vnc/xstartup <<EOF
     #!/bin/sh
@@ -60,7 +69,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     unset SESSION_MANAGER
     unset DBUS_SESSION_BUS_ADDRESS
     export PATH="${runPath}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    exec ${pkgs.dbus}/bin/dbus-launch --exit-with-session ${xfce4-session}/bin/xfce4-session
+    export DBUS_SESSION_BUS_ADDRESS=\$(${pkgs.dbus}/bin/dbus-daemon --session --fork --print-address --config-file=${pkgs.dbus}/share/dbus-1/session.conf)
+    exec ${xfce4-session}/bin/xfce4-session
     EOF
     chmod +x /root/.vnc/xstartup
 
