@@ -41,7 +41,9 @@ in
         ${lib.optionalString (rustdesk.unlockPin or "" != "") "--pin \"${rustdesk.unlockPin}\""}
       chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
 
-      # 进程未运行时 pkill 失败属幂等预期；桌面会话随后由 KDE autostart 拉起。
+      # 进程未运行时 pkill 失败属幂等预期；root 服务（systemd Restart=on-failure）与
+      # GUI（systemd user service，见 hosts/nix-pve/services/rustdesk.nix）均有守护，
+      # 被杀后 5s 自动复活，配置注入即时生效。
       ${pkgs.procps}/bin/pkill -x rustdesk 2>/dev/null || true
       echo "[rustdesk] 配置已注入 ~/.config/rustdesk（nix-pve，hbbs ${rustdesk.server}；进程已重启或待手动启动）"
     }
