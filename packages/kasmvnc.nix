@@ -10,8 +10,8 @@
 #   - perl 模块（KasmVNC 自带 + perlPackages 外部依赖）→ wrapProgram PERL5LIB
 #   - Xvnc 运行时需 xkb 数据（XKB_BASE）+ xkbcomp/xauth 命令 → wrapProgram 注入
 #   - 字体：x_font_path 默认 auto 找不到 nix 字体，用户配置里显式指 dejavu_fonts
-#   - libxcrypt 4.x soname 已升 libcrypt.so.2（26.05），deb 二进制要 libcrypt.so.1 →
-#     postFixup 里 patchelf --replace-needed + 补 RPATH（crypt 符号 XCRYPT_2.0 节点未变，ABI 兼容）
+#   - libxcrypt 4.x soname 由 hashes 组决定：strong（无 descrypt）→ obsolete-api 强制 no → libcrypt.so.2；
+#     glibc 组（含 descrypt）→ obsolete-api 保留 → libcrypt.so.1，与 deb 二进制 NEEDED 直接匹配，无需 patchelf
 #   - nixpkgs libxcrypt 默认 --enable-hashes=strong 不含 sha256crypt（$5$），KasmVNC 用 $5$kasm$ 盐
 #     → crypt() 返回 NULL → kasmvncpasswd 段错误；override enableHashes=glibc（descrypt/md5/sha256/sha512）
 {
@@ -52,7 +52,8 @@ let
   version = "1.5.0";
   # nixpkgs 默认 --enable-hashes=strong 只含 [y gy sm3y 7 2b 2y 2a 6]，无 sha256crypt（$5$）
   # KasmVNC 密码哈希用 $5$kasm$ 盐 → crypt() 返回 NULL → kasmvncpasswd 段错误
-  # glibc 组 = descrypt/md5crypt/sha256crypt/sha512crypt，即传统 libcrypt 全集
+  # glibc 组 = descrypt/md5crypt/sha256crypt/sha512crypt（传统 libcrypt 全集），
+  # 且含 descrypt → obsolete-api 保留 → soname libcrypt.so.1，与 deb 二进制 NEEDED 匹配
   libxcryptCompat = libxcrypt.override { enableHashes = "glibc"; };
 in
 stdenv.mkDerivation {
@@ -116,11 +117,8 @@ stdenv.mkDerivation {
     # defaults yaml 的 httpd_directory 写死 /usr/share/kasmvnc/www → 指 store
     substituteInPlace $out/share/kasmvnc/kasmvnc_defaults.yaml \
       --replace "/usr/share/kasmvnc/www" "$out/share/kasmvnc/www"
-    # libxcrypt 4.x 只出 libcrypt.so.2，deb 二进制（Xkasmvnc/kasmvncpasswd）要 libcrypt.so.1
-    # → replace-needed 指 libcrypt.so.2 + 补 RPATH（autoPatchelfHook 只加匹配到的依赖目录）
-    patchelf --replace-needed libcrypt.so.1 libcrypt.so.2 \
-      --add-rpath ${libxcryptCompat}/lib \
-      $out/bin/Xkasmvnc $out/bin/kasmvncpasswd
+    # 注：auto-patchelf 注册在 postFixupHooks（postFixup 之后跑），此处勿再改 NEEDED——
+    # glibc 组 libxcrypt soname 即 libcrypt.so.1，与 deb 二进制原始 NEEDED 匹配，auto-patchelf 自会找到
     # perl 模块（自带 + perlPackages 外部依赖）+ 运行时命令（xkbcomp/xauth）+ xkb 数据
     wrapProgram $out/bin/kasmvncserver \
       --prefix PERL5LIB : "$out/share/perl5" \
