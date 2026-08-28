@@ -47,10 +47,11 @@
   };
 
   # 窗口装饰：MacTahoe aurorae + 圆角效果（kwinrc 的 org.kde.kdecoration2 / Plugins）
+  # kwin 6 的 aurorae SVG 主题名须带 __aurorae__svg__ 前缀（kwin 自动迁移 library 到 aurorae.v2）
   programs.plasma.configFile."kwinrc" = {
     "org.kde.kdecoration2" = {
       library = "org.kde.kwin.aurorae";
-      theme = "MacTahoe-Dark";
+      theme = "__aurorae__svg__MacTahoe-Dark";
     };
     Plugins.shapecornersEnabled = true;
   };
