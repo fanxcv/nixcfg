@@ -27,18 +27,20 @@ let
   xfce4-clipman = pkgs.xfce4-clipman-plugin; # 剪贴板历史（面板插件）
   mousepad = pkgs.mousepad; # 文本编辑器
   xarchiver = pkgs.xarchiver; # 压缩包管理
-  # ── 美化（Catppuccin Mocha，与 nix-pve 的 catppuccin-konsole 同系）──
-  catppuccinGtk = pkgs.catppuccin-gtk.override { variant = "mocha"; }; # GTK2/3/4 + xfwm4 主题（默认 accent blue）
-  papirus = pkgs.catppuccin-papirus-folders; # Papirus 图标（构建时已配 catppuccin mocha 文件夹色）
-  catppuccinCursors = pkgs.catppuccin-cursors.mochaDark; # 鼠标（outputsToInstall=[] 须显式取 output；容器 nixpkgs 小写 mochaDark）
+  # ── 美化（WhiteSur macOS 风格，linux265 帖子方案：WhiteSur-Gtk-theme/icon/cursors + Plank dock）──
+  whitesurGtk = pkgs.whitesur-gtk-theme.override { colorVariants = [ "dark" ]; }; # GTK2/3/4 + xfwm4 + plank 主题（只留 dark 减体积）
+  whitesurIcon = pkgs.whitesur-icon-theme; # 图标（目录名 WhiteSur-dark，小写 d）
+  whitesurCursors = pkgs.whitesur-cursors; # 鼠标（目录名 WhiteSur-cursors）
+  plank = pkgs.plank; # macOS 风格 dock（底部，替代底部面板）
+  albert = pkgs.albert; # 搜索（帖子第 4 步）
   notoCjk = pkgs.noto-fonts-cjk-sans; # 中文渲染
   imagemagick = pkgs.imagemagick; # 壁纸生成
   fontconfig = pkgs.fontconfig; # 字体配置（容器无 /etc/fonts，字体全不生效）
   glibc = pkgs.glibc; # localedef 生成 zh_CN.UTF-8（容器 /usr/share/i18n 被裁剪）
-  # 主题名（catppuccin-gtk 1.0.3 目录名小写：catppuccin-mocha-blue-standard，GTK+xfwm4 通用）
-  gtkTheme = "catppuccin-mocha-blue-standard";
-  iconTheme = "Papirus-Dark";
-  cursorTheme = "catppuccin-mocha-dark-cursors";
+  # 主题名（WhiteSur：GTK WhiteSur-Dark、图标 WhiteSur-dark、光标 WhiteSur-cursors，nixpkgs 实证目录名）
+  gtkTheme = "WhiteSur-Dark";
+  iconTheme = "WhiteSur-dark";
+  cursorTheme = "WhiteSur-cursors";
   # xstartup / systemd service 运行时 PATH：xfce 核心组件 + 基础应用 + dbus + xauth/xkbcomp（kasmvncserver wrap 已带，双保险）
   runPath = lib.makeBinPath [
     kasmvnc
@@ -58,6 +60,8 @@ let
     xfce4-clipman
     mousepad
     xarchiver
+    plank
+    albert
     pkgs.dbus
     pkgs.xauth
     pkgs.xkbcomp
@@ -78,9 +82,10 @@ let
     "${xfce4-screenshooter}/share"
     "${xfce4-taskmanager}/share"
     "${xfce4-clipman}/share"
-    "${catppuccinGtk}/share"
-    "${papirus}/share"
-    "${catppuccinCursors}/share"
+    "${whitesurGtk}/share"
+    "${whitesurIcon}/share"
+    "${whitesurCursors}/share"
+    "${plank}/share"
     "${pkgs.adwaita-icon-theme}/share"
   ];
 in
@@ -110,10 +115,12 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     xfce4-clipman
     mousepad
     xarchiver
-    # 美化：主题/图标/鼠标/中文字体/壁纸生成
-    catppuccinGtk
-    papirus
-    catppuccinCursors
+    # 美化：WhiteSur 主题/图标/鼠标 + Plank dock + Albert 搜索 + 中文字体/壁纸生成
+    whitesurGtk
+    whitesurIcon
+    whitesurCursors
+    plank
+    albert
     notoCjk
     imagemagick
     # 系统支撑：fontconfig（/etc/fonts 缺失，字体全不生效）、glibc（localedef 生成中文 locale）
@@ -121,19 +128,25 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     glibc
   ];
 
-  # ── 美化声明式（Catppuccin Mocha 深色系）──
+  # ── 美化声明式（WhiteSur macOS 风格）──
   # 核心坑：xfsettingsd 启动时总写默认（ThemeName=Adwaita）覆盖 xsettings 频道，且被杀后 xfce4-session 会重启它
   #   → 用户级 xfce4-session.xml 覆盖 Failsafe 会话（去掉 xfsettingsd）→ GTK 应用读 settings.ini（Catppuccin）
   #   已验证：xfsettingsd 不启动后 GTK 深色主题生效（截图亮度 58 vs Adwaita 200+）
   # 其余（xfwm4 窗口/壁纸/面板）走 xfconf 频道，xfsettingsd 不管，直接生效
   home.activation.kasmvncBeautify = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     # 0. 主题/图标/鼠标 symlink 到传统路径（GTK 查找 ~/.themes ~/.icons，不依赖 XDG_DATA_DIRS 顺序）
-    mkdir -p /root/.themes /root/.icons
-    ln -sfn ${catppuccinGtk}/share/themes/${gtkTheme} /root/.themes/${gtkTheme}
-    ln -sfn ${papirus}/share/icons/Papirus-Dark /root/.icons/Papirus-Dark
-    ln -sfn ${catppuccinCursors}/share/icons/${cursorTheme} /root/.icons/${cursorTheme}
+    mkdir -p /root/.themes /root/.icons /root/.local/share/plank/themes
+    ln -sfn ${whitesurGtk}/share/themes/${gtkTheme} /root/.themes/${gtkTheme}
+    ln -sfn ${whitesurIcon}/share/icons/${iconTheme} /root/.icons/${iconTheme}
+    ln -sfn ${whitesurCursors}/share/icons/${cursorTheme} /root/.icons/${cursorTheme}
     ln -sfn ${pkgs.adwaita-icon-theme}/share/icons/Adwaita /root/.icons/Adwaita
     ln -sfn ${pkgs.adwaita-icon-theme}/share/icons/hicolor /root/.icons/hicolor
+    # Plank 主题：WhiteSur 的 dock.theme 在主题目录 plank/ 子目录 → symlink 到 plank 主题查找路径
+    ln -sfn ${whitesurGtk}/share/themes/${gtkTheme}/plank /root/.local/share/plank/themes/${gtkTheme}
+
+    # 0.5 壁纸源：仓库 assets/kde-wallpaper.jpg（声明式，容器重建不丢）
+    mkdir -p /root/.config
+    cp -f ${../../..}/assets/kde-wallpaper.jpg /root/.config/kde-wallpaper.jpg
 
     # 1. GTK 主题（xfsettingsd 不启动后 GTK 读 settings.ini；GTK2 读 ~/.gtkrc-2.0）
     mkdir -p /root/.config/gtk-3.0
@@ -163,7 +176,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       <property name="sessions" type="empty">
         <property name="Failsafe" type="empty">
           <property name="IsFailsafe" type="bool" value="true"/>
-          <property name="Count" type="int" value="4"/>
+          <property name="Count" type="int" value="5"/>
           <property name="Client0_Command" type="array">
             <value type="string" value="xfwm4"/>
           </property>
@@ -181,6 +194,10 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
             <value type="string" value="xfdesktop"/>
           </property>
           <property name="Client3_Priority" type="int" value="35"/>
+          <property name="Client4_Command" type="array">
+            <value type="string" value="plank"/>
+          </property>
+          <property name="Client4_Priority" type="int" value="40"/>
         </property>
       </property>
     </channel>
@@ -237,11 +254,11 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
         <value type="int" value="1"/>
         <property name="dark-mode" type="bool" value="true"/>
         <property name="panel-1" type="empty">
-          <property name="position" type="string" value="p=10;x=0;y=0"/>
+          <property name="position" type="string" value="p=0;x=0;y=0"/>
           <property name="length" type="uint" value="100"/>
           <property name="position-locked" type="bool" value="true"/>
-          <property name="icon-size" type="uint" value="20"/>
-          <property name="size" type="uint" value="34"/>
+          <property name="icon-size" type="uint" value="18"/>
+          <property name="size" type="uint" value="30"/>
           <property name="background-alpha" type="uint" value="190"/>
           <property name="plugin-ids" type="array">
             <value type="int" value="1"/>
@@ -282,13 +299,12 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # Catppuccin Mocha 壁纸/窗口设置（xfce4-session autostart 阶段执行，环境继承会话）
     # 时序坑：xfdesktop 启动可能早于 xfconfd 就绪（读到空值→默认壁纸），故 sleep 后设置并二次兑底
     sleep 3
-    # 壁纸：ImageMagick 生成 mocha 渐变（1920x1080，无网络依赖；已存在不重生成）
+    # 壁纸：kde-wallpaper.jpg（激活时从仓库 assets/ 复制）→ 竖屏 1080x1920 macOS 风格（模糊填充 + 居中裁切）
     if [ ! -f /root/.config/background.png ]; then
-      ${imagemagick}/bin/magick -size 1920x1080 gradient:'#11111b'-'#1e1e2e' \
-        -fill '#89b4fa' -draw 'rectangle 0,0 1920,6' \
-        -fill '#cba6f7' -draw 'rectangle 0,6 1920,12' \
-        -fill '#f38ba8' -draw 'rectangle 0,12 1920,18' \
-        /root/.config/background.png 2>/dev/null || echo "警告: 壁纸生成失败"
+      ${imagemagick}/bin/magick /root/.config/kde-wallpaper.jpg -resize 1080x1920 -blur 0x30 /tmp/bg-blur.png 2>/dev/null \
+        && ${imagemagick}/bin/magick /tmp/bg-blur.png /root/.config/kde-wallpaper.jpg -resize 1080x1920^ -gravity center -composite /root/.config/background.png 2>/dev/null \
+        && rm -f /tmp/bg-blur.png \
+        || echo "警告: 壁纸生成失败"
     fi
     # 窗口装饰/壁纸（xfsettingsd 不管这些频道，设置即生效；xfdesktop 监听变更自动重载）
     # 路径用 monitorVNC-0（RandR connector 名，见上注释；monitor0 读不到）
@@ -303,6 +319,22 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     pkill -f '[x]fdesktop' 2>/dev/null || true
     sleep 1
     xfdesktop &
+    # Plank dock 配置（macOS 风格：底部居中、图标缩放、WhiteSur 主题；Failsafe 会话已拉起 plank）
+    mkdir -p /root/.config/plank/dock1
+    cat > /root/.config/plank/dock1/settings <<'PLANKEOF'
+    [PlankDockPreferences]
+    position=bottom
+    alignment=center
+    icon-size=56
+    zoom-enabled=true
+    zoom-percent=150
+    theme=WhiteSur-Dark
+    hide-mode=none
+    PLANKEOF
+    # 配置变更后重启 plank 生效（Failsafe 会话的客户端监控会重新拉起）
+    pkill -f '[p]lank' 2>/dev/null || true
+    sleep 1
+    plank &
     EOF
     chmod +x /root/.config/autostart/theme-setup.sh
 
@@ -419,8 +451,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     cat > /root/.vnc/kasmvnc.yaml <<EOF
     desktop:
       resolution:
-        width: 1920
-        height: 1080
+        width: 1080
+        height: 1920
       allow_resize: true
     network:
       protocol: http

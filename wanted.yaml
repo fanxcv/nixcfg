@@ -344,7 +344,7 @@ linux:
       ide-lenovo:           # → home/fan/ide-lenovo/（激活：nix run .#ide-lenovo）
         proxy: false        # 国内机器直连
         mise: [bun@latest, go@1.25, java@oracle-17, maven@3, node@22, python@3.12, uv@latest, pipx@latest]
-        kasmvnc: 浏览器远程桌面  # xfce4 + KasmVNC（→ kasmvnc.nix；compose 6901:6901，http://<host>:6901/vnc.html，root + 密码 nix 管理 secrets/source/kasmvnc-passwd；含基础应用 thunar/appfinder/whisker/notifyd/截图/任务管理/剪贴板/mousepad/xarchiver + fontconfig + zh_CN locale）
+        kasmvnc: 浏览器远程桌面  # xfce4 + KasmVNC（→ kasmvnc.nix；compose 6901:6901，http://<host>:6901/vnc.html，root + 密码 nix 管理 secrets/source/kasmvnc-passwd；含基础应用 thunar/appfinder/whisker/notifyd/截图/任务管理/剪贴板/mousepad/xarchiver + fontconfig + zh_CN locale；美化 WhiteSur 主题/图标/光标 + Plank dock + Albert 搜索（linux265 仿 macOS 帖）+ 壁纸 assets/kde-wallpaper.jpg + 竖屏 1080x1920）
         edge: 浏览器（9222 调试端口）  # Microsoft Edge（→ edge.nix；wrapper 默认带 --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage，autostart 自启）
         skemate: last_state 兜底  # 部署后覆盖 tunnel.yaml 的 last_state=running（→ ide-lenovo/skemate.nix，仅本机）
 

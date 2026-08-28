@@ -40,8 +40,12 @@
     {
       name = "Redmi.Clock";
       position = {
-        horizontal = 50;
-        vertical = 20;
+        horizontal = 960;   # 1920 屏居中（像素）
+        vertical = 216;     # 距顶 20%
+      };
+      size = {
+        width = 300;
+        height = 300;
       };
     }
   ];
