@@ -52,7 +52,7 @@
       library = "org.kde.kwin.aurorae";
       theme = "MacTahoe-Dark";
     };
-    Plugins.roundedcornersEnabled = true;
+    Plugins.shapecornersEnabled = true;
   };
 
   # GTK 应用（Firefox/Thunderbird 等）用 MacTahoe 主题
