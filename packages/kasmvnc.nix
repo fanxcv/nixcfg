@@ -113,6 +113,9 @@ stdenv.mkDerivation {
   '';
 
   postFixup = ''
+    # deb postinst 用 update-alternatives 建 /usr/bin/Xvnc → Xkasmvnc（generic 名去 kasm 前缀），
+    # 解包无此 symlink，kasmvncserver 硬找 $exedir/Xvnc → 必须补
+    ln -s Xkasmvnc $out/bin/Xvnc
     # perl 脚本 shebang → nix perl（kasmvncserver；select-de.sh 是 bash）
     patchShebangs $out
     # 硬编码路径 → store（kasmvncserver 读 defaults yaml、调 select-de.sh）
