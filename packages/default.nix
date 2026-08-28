@@ -37,4 +37,8 @@ rustdesk
   # McMojave 图标/KDE 主题（macOS 风格，GitHub tarball fetchzip）
   mcmojave-circle = pkgs.callPackage ./mcmojave-circle.nix { };
   mcmojave-kde = pkgs.callPackage ./mcmojave-kde.nix { };
+  # MacTahoe KDE/GTK 主题 + Catppuccin KDE（vendor 到 assets/kde-sources/，本地文件）
+  mactahoe-kde = pkgs.callPackage ./mactahoe-kde.nix { };
+  mactahoe-gtk = pkgs.callPackage ./mactahoe-gtk.nix { };
+  catppuccin-kde = pkgs.callPackage ./catppuccin-kde.nix { };
 }
