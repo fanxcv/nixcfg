@@ -120,12 +120,14 @@ stdenv.mkDerivation {
     # 注：auto-patchelf 注册在 postFixupHooks（postFixup 之后跑），此处勿再改 NEEDED——
     # glibc 组 libxcrypt soname 即 libcrypt.so.1，与 deb 二进制原始 NEEDED 匹配，auto-patchelf 自会找到
     # perl 模块（自带 + perlPackages 外部依赖）+ 运行时命令（xkbcomp/xauth）+ xkb 数据
+    # 坑：perlPackages 模块装在 site_perl/<perl.version>/ 子目录，PERL5LIB 不自动追加版本目录
+    #   （只有编译期 @INC 才追加），必须显式指 site_perl/${perl.version}
     wrapProgram $out/bin/kasmvncserver \
       --prefix PERL5LIB : "$out/share/perl5" \
       --prefix PERL5LIB : "${perl.withPackages (pp: [
         pp.Switch pp.YAMLTiny pp.HashMergeSimple pp.ScalarListUtils pp.ListMoreUtils
         pp.TryTiny pp.DateTime pp.DateTimeTimeZone
-      ])}/lib/perl5/site_perl" \
+      ])}/lib/perl5/site_perl/${perl.version}" \
       --prefix PATH : "${xkbcomp}/bin:${xauth}/bin" \
       --set XKB_BASE "${xkeyboard_config}/share/X11/xkb"
   '';
