@@ -300,9 +300,10 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # 时序坑：xfdesktop 启动可能早于 xfconfd 就绪（读到空值→默认壁纸），故 sleep 后设置并二次兑底
     sleep 3
     # 壁纸：kde-wallpaper.jpg（激活时从仓库 assets/ 复制）→ 竖屏 1080x1920 macOS 风格（模糊填充 + 居中裁切）
+    # 坑：composite 输出尺寸 = 较大输入，须用 \(...\) 子图像 + -extent 强制 1080x1920（否则输出源图尺寸 3350x1920）
     if [ ! -f /root/.config/background.png ]; then
-      ${imagemagick}/bin/magick /root/.config/kde-wallpaper.jpg -resize 1080x1920 -blur 0x30 /tmp/bg-blur.png 2>/dev/null \
-        && ${imagemagick}/bin/magick /tmp/bg-blur.png /root/.config/kde-wallpaper.jpg -resize 1080x1920^ -gravity center -composite /root/.config/background.png 2>/dev/null \
+      ${imagemagick}/bin/magick /root/.config/kde-wallpaper.jpg -resize 1080x1920! -blur 0x30 /tmp/bg-blur.png 2>/dev/null \
+        && ${imagemagick}/bin/magick /tmp/bg-blur.png \( /root/.config/kde-wallpaper.jpg -resize 1080x1920^ -gravity center -extent 1080x1920 \) -gravity center -composite /root/.config/background.png 2>/dev/null \
         && rm -f /tmp/bg-blur.png \
         || echo "警告: 壁纸生成失败"
     fi
@@ -319,7 +320,9 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     pkill -f '[x]fdesktop' 2>/dev/null || true
     sleep 1
     xfdesktop &
-    # Plank dock 配置（macOS 风格：底部居中、图标缩放、WhiteSur 主题；Failsafe 会话已拉起 plank）
+    # Plank dock 配置（macOS 风格：底部居中、图标缩放、WhiteSur 主题）
+    # 注意：plank 由 Failsafe 会话拉起（Client4=plank，环境含 XAUTHORITY），此处只写配置不碰进程
+    #   （手动 pkill+plank & 会因缺 XAUTHORITY 报 'Only X11 environments are supported' 退出）
     mkdir -p /root/.config/plank/dock1
     cat > /root/.config/plank/dock1/settings <<'PLANKEOF'
     [PlankDockPreferences]
@@ -331,10 +334,6 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     theme=WhiteSur-Dark
     hide-mode=none
     PLANKEOF
-    # 配置变更后重启 plank 生效（Failsafe 会话的客户端监控会重新拉起）
-    pkill -f '[p]lank' 2>/dev/null || true
-    sleep 1
-    plank &
     EOF
     chmod +x /root/.config/autostart/theme-setup.sh
 
@@ -430,6 +429,9 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # （xfce4-session.xml 的 Failsafe 会话定义；缺则 xfconfd 报 PropertyNotFound →
     #   xfsm_manager_load_failsafe 失败 → 弹模态错误对话框阻塞启动）
     export XDG_CONFIG_DIRS="${xfce4-session}/etc/xdg:/etc/xdg"
+    # XDG_CURRENT_DESKTOP：plank 等应用检测桌面环境（缺则报 'Only X11 environments are supported'）
+    export XDG_CURRENT_DESKTOP=XFCE
+    export XDG_SESSION_DESKTOP=xfce
     export DBUS_SESSION_BUS_ADDRESS=\$(${pkgs.dbus}/bin/dbus-daemon --fork --print-address --config-file=${pkgs.dbus}/share/dbus-1/session.conf)
     exec ${xfce4-session}/bin/xfce4-session
     EOF
