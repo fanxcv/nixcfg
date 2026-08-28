@@ -64,7 +64,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     EOF
     chmod +x /root/.vnc/xstartup
 
-    # ── 2. 用户级配置（覆盖 defaults：分辨率/端口/httpd_directory/字体）──
+    # ── 2. 用户级配置（覆盖 defaults：分辨率/端口/httpd_directory/字体/SSL）──
+    # defaults 的 ssl 指 Debian snakeoil（容器无），须生成自签名证书并覆盖；require_ssl: false（http 访问）
+    if [ ! -f /root/.vnc/kasmvnc-cert.pem ]; then
+      ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:2048 -nodes \
+        -keyout /root/.vnc/kasmvnc-key.pem -out /root/.vnc/kasmvnc-cert.pem \
+        -days 3650 -subj "/CN=lenovo-ide" 2>/dev/null
+    fi
     cat > /root/.vnc/kasmvnc.yaml <<EOF
     desktop:
       resolution:
@@ -74,6 +80,10 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     network:
       protocol: http
       websocket_port: 6901
+      ssl:
+        pem_certificate: /root/.vnc/kasmvnc-cert.pem
+        pem_key: /root/.vnc/kasmvnc-key.pem
+        require_ssl: false
     server:
       http:
         httpd_directory: ${kasmvnc}/share/kasmvnc/www
