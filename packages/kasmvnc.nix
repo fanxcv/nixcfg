@@ -124,9 +124,11 @@ stdenv.mkDerivation {
     # perl 脚本 shebang → nix perl（kasmvncserver；select-de.sh 是 bash）
     patchShebangs $out
     # 硬编码路径 → store（kasmvncserver 读 defaults yaml、调 select-de.sh、读系统配置目录）
+    # IsThisSystemBinary 检查 $0 =~ ^/usr（store 路径不匹配）→ 走 LocalSelectDePath 相对路径，一并 sed
     substituteInPlace $out/bin/kasmvncserver \
       --replace "/usr/share/kasmvnc/kasmvnc_defaults.yaml" "$out/share/kasmvnc/kasmvnc_defaults.yaml" \
       --replace "/usr/lib/kasmvncserver/select-de.sh" "$out/lib/kasmvncserver/select-de.sh" \
+      --replace "\$dirname/../builder/startup/deb/select-de.sh" "$out/lib/kasmvncserver/select-de.sh" \
       --replace "/etc/kasmvnc" "$out/etc/kasmvnc"
     # defaults yaml 的 httpd_directory 写死 /usr/share/kasmvnc/www → 指 store
     substituteInPlace $out/share/kasmvnc/kasmvnc_defaults.yaml \
