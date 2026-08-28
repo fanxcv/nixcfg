@@ -1,6 +1,6 @@
 # 面板布局重排（tsln→帖子方案）：上：启动器/窗口列表/全局菜单/间隙/数字时钟/间隙/托盘；下：图标任务栏 Dock
 # Panel-colorizer 挂件给面板做透明/配色（nixpkgs plasma-panel-colorizer，插件 ID org.github.luisbocanegra.plasma.panelcolorizer）
-# 透明度 85（接近全透明）：globalSettings JSON 的 panel.*.opacity（7.2 的配置是 JSON，preset 键插件不读）
+# 透明度 60（不透明度 60% = 40% 透明；100=不透明）：globalSettings JSON 的 stockPanelSettings.opacity（7.2 的配置是 JSON，preset 键插件不读）
 {
   programs.plasma.panels = [
     # ── 上面板 ──
@@ -79,7 +79,7 @@
             globalSettings = builtins.toJSON {
               stockPanelSettings.opacity = {
                 enabled = true;
-                value = "85";
+                value = "60";
               };
             };
           };
@@ -122,7 +122,7 @@
             globalSettings = builtins.toJSON {
               stockPanelSettings.opacity = {
                 enabled = true;
-                value = "85";
+                value = "60";
               };
             };
           };
