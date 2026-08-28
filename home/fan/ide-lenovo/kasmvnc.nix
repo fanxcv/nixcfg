@@ -303,11 +303,9 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # 壁纸：kde-wallpaper.jpg（激活时从仓库 assets/ 复制）→ 横屏 1920x1080 macOS 风格（模糊填充 + 居中裁切）
     # 坑：composite 输出尺寸 = 较大输入，须用 \(...\) 子图像 + -extent 强制 1920x1080（否则输出源图尺寸 3350x1920）
     # 旧竖屏版（1080x1920）存在时删除重生成（分辨率变更迁移）
-    if [ -f /root/.config/background.png ]; then
-      bg_size=$(${imagemagick}/bin/identify -format '%wx%h' /root/.config/background.png 2>/dev/null)
-      if [ "$bg_size" != "1920x1080" ]; then
-        rm -f /root/.config/background.png
-      fi
+    # 坑：identify 失败时 bg_size 未赋值 → 激活 set -u 中止（unbound variable）→ 须 || echo 兑底
+    if [ -f /root/.config/background.png ] && [ "$(${imagemagick}/bin/identify -format '%wx%h' /root/.config/background.png 2>/dev/null || echo x)" != "1920x1080" ]; then
+      rm -f /root/.config/background.png
     fi
     if [ ! -f /root/.config/background.png ]; then
       ${imagemagick}/bin/magick /root/.config/kde-wallpaper.jpg -resize 1920x1080! -blur 0x30 /tmp/bg-blur.png 2>/dev/null \
