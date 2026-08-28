@@ -400,7 +400,6 @@ nixos:
       power: tsln powerdevil 计划  # AC=performance（15min 挂起/10min 关屏）、电池=balanced（10min/5min）、低电=powerSaving（5min/2min 亮度 15）；低电 20% / 危机 5% → hibernate（swap 8G 支持）；无系统层 TLP（→ home/fan/nix-book/plasma.powerdevil.nix）
       comin: false          # 笔记本移动设备，手动 nixos-rebuild switch
       syncthing: true       # 忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-book/syncthing.nix）
-      autologin: fan        # SDDM 自动登录（笔记本自用）
       nix_gc: 30 天自动清理
       nix_optimise: 自动
       fstrim: weekly

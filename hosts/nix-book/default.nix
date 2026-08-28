@@ -24,12 +24,6 @@
   # Wayland 默认会话（无 RustDesk 被控需求，无需 X11 妥协；RustDesk 仅作 client 远程其他机器）
   services.xserver.enable = false;
 
-  # SDDM 自动登录 fan：开机直进桌面（笔记本自用，无锁屏风险可接受）
-  services.displayManager.autoLogin = {
-    enable = true;
-    user = "fan";
-  };
-
   # nix 下载走国内镜像（手动 rebuild 用；root 的 nix.conf 由 NixOS 生成，天然 trusted）
   nix.settings.substituters = tools.config.nixSubstituters;
   nix.settings.extra-substituters = tools.config.nixCachixSubstituters;
