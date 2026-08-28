@@ -278,8 +278,9 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
 
     # 7. fontconfig：容器无 /etc/fonts（字体全不生效，中文方块/edge 字体报错）
     #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf 指 store 字体目录
+    #    注意：fontconfig 默认输出是 bin（fc-* 命令），fonts.conf 在 out 输出 → 显式 .out
     mkdir -p /etc/fonts/conf.d
-    cp -f ${fontconfig}/etc/fonts/fonts.conf /etc/fonts/fonts.conf
+    cp -f ${fontconfig.out}/etc/fonts/fonts.conf /etc/fonts/fonts.conf
     cat > /etc/fonts/conf.d/30-nix-fonts.conf <<EOF
     <?xml version="1.0"?>
     <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
@@ -289,7 +290,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       <dir prefix="xdg">fonts</dir>
     </fontconfig>
     EOF
-    ${fontconfig}/bin/fc-cache -f >/dev/null 2>&1 || echo "警告: fc-cache 失败（字体缓存未建）"
+    ${fontconfig.bin}/bin/fc-cache -f >/dev/null 2>&1 || echo "警告: fc-cache 失败（字体缓存未建）"
 
     # 8. locale：容器 /usr/share/i18n 被裁剪（无 locale-gen 源），用 nix glibc 的 localedef 生成到 /root/.locale
     #    xstartup export LOCPATH 指过去；--no-archive 目录形式，不污染系统 locale-archive
