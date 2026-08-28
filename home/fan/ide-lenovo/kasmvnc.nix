@@ -359,7 +359,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     mkdir -p /root/.config/plank/dock1/launchers
     cat > /root/.config/plank/dock1/launchers/edge.dockitem <<'DOCKEOF'
     [PlankDockItemPreferences]
-    Launcher=file://${pkgs.microsoft-edge}/share/applications/microsoft-edge.desktop
+    Launcher=file:///root/.local/share/applications/microsoft-edge.desktop
     DOCKEOF
     cat > /root/.config/plank/dock1/launchers/thunar.dockitem <<'DOCKEOF'
     [PlankDockItemPreferences]
