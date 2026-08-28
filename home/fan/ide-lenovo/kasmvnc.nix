@@ -33,7 +33,8 @@ let
   whitesurCursors = pkgs.whitesur-cursors; # 鼠标（目录名 WhiteSur-cursors）
   plank = pkgs.plank; # macOS 风格 dock（底部，替代底部面板）
   albert = pkgs.albert; # 搜索（帖子第 4 步）
-  notoCjk = pkgs.noto-fonts-cjk-sans; # 中文渲染
+  notoCjk = pkgs.noto-fonts-cjk-sans; # 中文渲染（兜底）
+  sarasa = pkgs.sarasa-gothic; # 更纱黑体（等宽+中文，界面主字体，用户选定）
   imagemagick = pkgs.imagemagick; # 壁纸生成
   fontconfig = pkgs.fontconfig; # 字体配置（容器无 /etc/fonts，字体全不生效）
   glibc = pkgs.glibc; # localedef 生成 zh_CN.UTF-8（容器 /usr/share/i18n 被裁剪）
@@ -122,6 +123,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     plank
     albert
     notoCjk
+    sarasa
     imagemagick
     # 系统支撑：fontconfig（/etc/fonts 缺失，字体全不生效）、glibc（localedef 生成中文 locale）
     fontconfig
@@ -154,7 +156,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     [Settings]
     gtk-theme-name=${gtkTheme}
     gtk-icon-theme-name=${iconTheme}
-    gtk-font-name=Noto Sans CJK SC 11
+    gtk-font-name=Sarasa Gothic SC 11
     gtk-cursor-theme-name=${cursorTheme}
     gtk-cursor-theme-size=24
     gtk-application-prefer-dark-theme=1
@@ -163,7 +165,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     cat > /root/.gtkrc-2.0 <<EOF
     gtk-theme-name = "${gtkTheme}"
     gtk-icon-theme-name = "${iconTheme}"
-    gtk-font-name = "Noto Sans CJK SC 11"
+    gtk-font-name = "Sarasa Gothic SC 11"
     EOF
 
     # 2. xfce4-session Failsafe 会话（去掉 xfsettingsd——它写默认覆盖主题；键盘布局回默认，容器远程桌面无碍）
@@ -223,7 +225,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       <property name="general" type="empty">
         <property name="theme" type="string" value="${gtkTheme}"/>
         <property name="button_layout" type="string" value="O|HMC"/>
-        <property name="title_font" type="string" value="Noto Sans CJK SC 10"/>
+        <property name="title_font" type="string" value="Sarasa Gothic SC 10"/>
       </property>
     </channel>
     EOF
@@ -411,6 +413,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     <fontconfig>
       <dir>${pkgs.dejavu_fonts}/share/fonts/truetype</dir>
       <dir>${notoCjk}/share/fonts/opentype/noto-cjk</dir>
+      <dir>${sarasa}/share/fonts/truetype</dir>
       <dir prefix="xdg">fonts</dir>
     </fontconfig>
     EOF
