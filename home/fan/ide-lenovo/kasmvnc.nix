@@ -260,6 +260,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
           <property name="icon-size" type="uint" value="18"/>
           <property name="size" type="uint" value="30"/>
           <property name="background-alpha" type="uint" value="190"/>
+          <property name="reserve-space" type="bool" value="true"/>
           <property name="plugin-ids" type="array">
             <value type="int" value="1"/>
             <value type="int" value="2"/>

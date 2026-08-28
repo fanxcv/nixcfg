@@ -16,9 +16,13 @@ let
     exec ${edge}/bin/microsoft-edge --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=/root/.config/edge-debug "$@"
   '';
   # 常驻脚本：edge 崩溃（容器 crashpad 偶发 SIGTRAP）后 3 秒自动重启，保证 9222 一直在
+  # 坑：while true 无脑循环会把用户手动关闭的 edge 也拉起（正常退出 rc=0）→ 仅崩溃（rc≠0）才重启
   edgeRun = pkgs.writeShellScriptBin "edge-run" ''
     while true; do
       ${edgeWrapper}/bin/microsoft-edge
+      rc=$?
+      # 正常退出（用户手动关闭）不重启；崩溃（SIGTRAP 等非零）3 秒后自愈
+      [ "$rc" -eq 0 ] && exit 0
       sleep 3
     done
   '';
