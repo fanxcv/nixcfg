@@ -31,7 +31,18 @@
       size = 24;
     };
     # 壁纸：用户图片（截图，拷入 assets/kde-wallpaper.jpg，1920x1100；preserveAspectCrop 缩放裁切填满）
-    wallpaper = ../../../../assets/kde-wallpaper.jpg;
+    wallpaper = ../../../../../../assets/kde-wallpaper.jpg;
     wallpaperFillMode = "preserveAspectCrop";
   };
+
+  # 桌面时钟（帖子方案：Redmi Clock 放桌面，非面板）
+  programs.plasma.desktop.widgets = [
+    {
+      name = "Redmi.Clock";
+      position = {
+        horizontal = 50;
+        vertical = 20;
+      };
+    }
+  ];
 }
