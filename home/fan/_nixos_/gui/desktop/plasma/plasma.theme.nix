@@ -37,8 +37,10 @@
 
   # macOS 化窗口：MacTahoe aurorae 装饰（红绿灯+圆角+毛玻璃，装饰自带，无需额外圆角效果）+ blur + 最大化无边框
   programs.plasma.kwin = {
-    # 红绿灯按钮（mac 顺序：红关闭/黄最小化/绿最大化，左置）
+    # 红绿灯按钮（mac 顺序：红关闭/黄最小化/绿最大化，左置）；
+    # right 显式置空（空列表≠null，plasma-manager 会写 ButtonsOnRight=""），清掉 kwin 默认的右侧按钮组（否则左右成双）
     titlebarButtons.left = [ "close" "minimize" "maximize" ];
+    titlebarButtons.right = [ ];
     # 最大化无边框（mac 风格）
     borderlessMaximizedWindows = true;
     # 毛玻璃：窗口半透明时背景模糊
