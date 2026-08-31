@@ -33,3 +33,6 @@ docker/ide/*
 # 部署日志产物
 .deploy*.log
 .audit/
+
+# === 设计会谈产物 ===
+.design-review/

@@ -1,187 +1,121 @@
 # fan 的 Nix 配置仓库
 
-多机 Nix 配置，当前管理三台 Mac、NixOS 真机 nix-pve、两个 Docker 开发容器与六台 PVE 宿主机。
+多机 Nix 配置：3 台 Mac、2 台 NixOS 真机、2 个 Docker 开发容器、6 台 PVE 宿主机。
 
-**宗旨：能 nix 就 nix**——软件包、配置、环境变量尽量全部交给 nix 声明式管理；实在不行的（systemd、sshd、登录 shell 这类系统级依赖）才留在 Dockerfile/系统层。改配置 = 容器内重建激活，不用重新 build 镜像。
+**宗旨：能 nix 就 nix**——软件包、配置、环境变量尽量全交 nix 声明式管理；实在不行的（systemd、sshd、登录 shell）才留在 Dockerfile/系统层。`wanted.yaml` 是唯一事实来源，nix 配置是它的实现，两侧必须同步（见 AGENTS.md）。
+
+## 机器矩阵（13 台）
+
+| 平台 | 机器 | 部署命令 | comin 自动 |
+|---|---|---|---|
+| macOS | mba-m5 / mbp-m1 / mini-m4 | `nix run .#mba-m5`（余同） | mini-m4 |
+| NixOS | nix-pve / nix-book | `nixos-rebuild switch --flake .#nix-pve` | nix-pve |
+| IDE 容器 | ide-si / ide-lenovo | 容器内 `nix run .#ide-si`（余同） | — |
+| PVE 宿主 | ds2 / desktop / fan / hp / mi / razer | `nix run .#ds2`（余同） | — |
+
+## 分层模型
+
+```
+系统层  hosts/          darwin/NixOS 系统（_darwin_/_nixos_ 公共层 + <机> 微调）
+用户层  home/fan/       home-manager（平台层 + <机> 微调，module-list.nix 组装）
+机器层  hosts/<机>/ + home/fan/<机>/   机器专属（目录可留空，flakes 自动跳过）
+```
+
+平台继承链：`_common_`（全平台）→ `_linux_`（Linux 系公共）→ `_${platform}_`（nixos / ubuntu / container / darwin / pve，container 继承 ubuntu）→ `<host>`（机器微调）。用户身份：nixos/darwin = fan；容器（isContainer）强制 root。
+
+## 快速命令
+
+| 场景 | 命令 |
+|---|---|
+| IDE 容器构建+激活 | 容器内 `nix run .#ide-si` 或 `.#ide-lenovo` |
+| macOS 构建+激活 | `nix run .#mba-m5` / `.#mbp-m1` / `.#mini-m4`（激活内置 sudo） |
+| NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-pve` / `.#nix-book` |
+| PVE 宿主部署 | `nix run .#ds2` / `.#desktop` / `.#fan` / `.#hp` / `.#mi` / `.#razer` |
+| 升级依赖 | `nix flake update` |
+
+## 分平台部署
+
+### IDE 容器（Ubuntu 24.04 + systemd + sshd + nix）
+
+compose 是**两个具名文件**（无默认 docker-compose.yml），在 `docker/ide/` 目录下执行：
+
+```bash
+docker compose -f docker/ide/docker-compose-si.yml up -d   # lenovo 用 -lenovo.yml
+docker exec -it ide bash                                   # 首次无公钥时
+git pull && nix run .#ide-si                               # 容器内：拉配置 + 构建激活
+```
+
+密钥前置（宿主机，容器重建不丢）：
+
+```bash
+mkdir -p /root/.secrets && chmod 700 /root/.secrets
+cat > /root/.secrets/ai.env <<'EOF'
+export AI_FAN_CLAUDE=sk-...   # claude key
+export AI_FAN_CODEX=sk-...    # codex key
+export AI_FAN_CHAT=sk-...     # chat key
+EOF
+chmod 600 /root/.secrets/ai.env
+# 另需 age 私钥 /root/.secrets/age-keys.txt（chmod 600，缺了 activation 直接失败）
+```
+
+日常改配置只需 `git pull && nix run .#<容器>`，**不用重建镜像**——只有动 systemd/sshd/登录 shell 才改 `docker/ide/ubuntu/Dockerfile` 并 rebuild。
+
+### NixOS 真机
+
+nix-pve（PVE 上的虚拟，disko 分区 + impermanence）comin 轮询 `main` 自动部署，手动命令用于首次接入/故障恢复；nix-book（无界14S 笔记本）无 comin，手动 `nixos-rebuild`。
+
+### macOS
+
+`nix run .#<机器>` 一步构建+激活（nix-darwin 系统层 + home-manager 用户层）；mini-m4 已启用 comin。系统层结构见 `hosts/README.md`。
+
+### PVE 宿主机
+
+`nix run .#<机器>` = bootstrap nix → 推 git 凭据 → clone 仓库 → 远程构建 HM + activate → 系统层 apply（机制见 `pve/deploy.nix`，机器目录 `pve/<机>/`）。
+
+## 密钥与环境变量
+
+`secrets/` 用 age 加密入库（明文在 `secrets/source/`，`./secrets/encrypt.sh` 生成 .age；公钥明文入库，私钥在 `$HOME/.secrets/age-keys.txt`）。激活时 `home.activation` 用 age 私钥解密 `ai-env` 到三平台同一位置，**私钥缺失或解密失败即部署中止**：
+
+| 平台 | 解密产物 | 内容 |
+|---|---|---|
+| 容器（root） | `/root/.secrets/ai.env` | AI_FAN_CLAUDE / AI_FAN_CODEX / AI_FAN_CHAT + 派生的工具变量 |
+| NixOS 真机（fan） | `/home/fan/.secrets/ai.env` | 同上 |
+| mac（fan） | `/Users/fan/.secrets/ai.env` | 同上 |
+
+命名/位置规则（公共 vs 机器独有、跨机引用）见 `secrets/README.md`。
 
 ## 仓库结构
 
 ```
 nixcfg/
-├── flake.nix                  # 多机器入口：注册 + 命令别名（nix run .#<机器名>）
-├── docker/ide/                # ide 容器定义（docker-compose.yml + ubuntu/Dockerfile + entrypoint.sh）
-├── hosts/                     # 系统层（NixOS / nix-darwin，见 hosts/README.md）
-├── modules/home/              # 可复用 Home Manager 软件模块（ai/codex/mise/pi/ssh/tmux/vscode）
-└── home/fan/                  # home-manager 配置
-    ├── default.nix            # 入口：用户身份按平台（nixos/darwin=fan，容器由 isContainer 强制 root）
-    ├── _common_/              # 跨平台共享（所有机器生效）
-    │   ├── base.nix           #   git 配置 + CLI 工具（rg/fd/jq/rtk，nix 管理）
-    │   ├── container.nix      #   容器身份/PATH 适配
-    │   ├── mirrors.nix        #   npm/pip/uv/go/flutter 镜像
-    │   ├── path.nix           #   激活环境 PATH 修复
-    │   ├── secrets.nix        #   age 解密 + AI 环境变量映射
-    │   └── shells.nix         #   oh-my-zsh + 插件（gh-proxy 镜像开关）
-    ├── _linux_/               # Linux 系公共（git/vim/curl + docker，NixOS/Ubuntu 共用）
-    ├── _nixos_/               # NixOS 平台（真机桌面：Plasma/gui/i18n）
-    ├── _ubuntu_/              # Ubuntu 平台（服务器/真机基础：make/net-tools/inetutils）
-    ├── _container_/           # 容器平台（ide-si/ide-lenovo：skemate 公共，继承 _ubuntu_）
-    ├── _darwin_/              # macOS 平台（三台 Mac 生效）
-    ├── ide-si/                # 机器微调：ide-si 容器（原 si-11-ide，代理+hosts 接管）
-    ├── ide-lenovo/            # 机器微调：ide-lenovo 容器（mise 组件差异）
-    └── mba-m5/ mbp-m1/ mini-m4/ nix-pve/   # 真机微调（可留空，flake 自动跳过不存在的目录）
+├── flake.nix              # 入口：机器注册 + 命令别名 + formatter/checks
+├── wanted.yaml            # 意图清单（唯一事实源，与 nix 双向同步）
+├── hosts/                 # 系统层：_darwin_/_nixos_ 公共 + <机>（darwin 见 hosts/README.md）
+├── home/fan/              # 用户层：_common_/_<平台>_ 公共 + <机> 微调（module-list.nix 组装）
+├── users/fan/             # NixOS 真机用户层（复用 home/fan 模块清单）
+├── modules/               # 可复用模块库：home/（ai/codex/mise/pi/ssh/tmux/vscode/catppuccin）、darwin/、nixos/
+├── overlays/              # nixpkgs overlay：skemate（构建期解析版本）、unstable/vscode 市场、comin 等
+├── packages/              # 本地自打包（kasmvnc、rustdesk-bin、KDE 商店主题等）
+├── docker/ide/            # IDE 容器定义（compose si/lenovo 双文件 + ubuntu/Dockerfile）
+├── pve/                   # PVE 宿主系统层 + 部署脚本（apply.sh/deploy.sh/deploy.nix）
+├── secrets/               # age 加密密钥（encrypt.sh 生成，git 可公开）
+├── tools/                 # flake 工具库：config.nix（镜像/代理唯一入口）、目录扫描、syncthing 配置
+├── scripts/               # 运维脚本（switch-github-proxy.sh）
+├── tests/                 # 回归检查（rustdesk-injector）
+├── docs/                  # 部署记录等文档
+└── assets/                # 静态资源（catppuccin 渐变壁纸等）
 ```
 
-**平台矩阵**：`_common_`（全平台）+ `_linux_`（Linux 系公共，NixOS/Ubuntu 共用）+ `_${platform}_`（nixos/ubuntu/container/darwin，container 继承 ubuntu）+ `<host>`（机器微调，可选）。用户身份：nixos/darwin = fan；容器（isContainer=true）强制 root。
+## 镜像与网络
 
-## 构建 ide 容器（Docker 开发容器）
-
-### 1. 宿主机准备（首次）
-
-```bash
-# 宿主机：clone 仓库（compose 在仓库内 docker/ide/，挂载整个仓库进容器）
-git clone <你的仓库地址> /root/nixcfg && cd /root/nixcfg/docker/ide
-
-# 可选：预创建 IDE 挂载目录（不建 Docker 会自动创建空目录）
-mkdir -p vsc JetBrains/cache JetBrains/config JetBrains/share
-
-# 容器定义：Ubuntu 24.04 + systemd(PID1) + sshd + nix（清华镜像安装，单用户模式）
-# 系统层只保留"实在不行"的部分，软件包全部由 nix 管理
-
-# AI 密钥文件（宿主机，chmod 600；容器内由 nix 的 secrets.nix 自动注入）
-mkdir -p /root/.secrets && chmod 700 /root/.secrets
-cat > /root/.secrets/ai.env <<'EOF'
-export AI_FAN_CLAUDE=sk-...                  # claude key（claude code / pi）
-export AI_FAN_CODEX=sk-...                   # codex key（pi）
-export AI_FAN_CHAT=sk-...                    # chat key（codex CLI / pi）
-export PI_CONFIG_GIT_TOKEN=6aef...           # pi 配置仓库只读密钥（git.fan-x.fun，可选）
-EOF
-chmod 600 /root/.secrets/ai.env
-
-# git 凭据（可选，~/.git-credentials 由 nix 从该文件生成）
-# 每行一个：https://user:token@host
-cat > /root/.secrets/git-credentials <<'EOF'
-https://fan:xxxxx@git.fan-x.fun
-EOF
-chmod 600 /root/.secrets/git-credentials
-```
-
-### 2. 构建 + 启动
-
-```bash
-docker compose build
-docker compose up -d        # systemd 启动，sshd 自启（端口 2222→22）
-```
-
-### 3. 容器内首次激活
-
-```bash
-docker exec -it ide bash     # 首次 SSH 还没公钥，用 docker exec
-
-cd /root/nixcfg            # 配置仓库已由宿主机拉取并挂载，无需 clone
-nix run .#ide-si          # ide-si 容器（原 si-11-ide）；lenovo 容器用 .#ide-lenovo（构建 + 激活：拉公钥、加固 sshd、oh-my-zsh/tmux 配置就位）
-# mise 组件由 home/fan/_container_/mise.nix 按 hostName 声明，激活自动写入 ~/.config/mise/config.toml
-```
-
-### 4. 验证
-
-```bash
-zsh -ic 'echo $ZSH_THEME'    # fishy-custom
-git config user.name         # fan
-which claude codex pi        # 都应指向 /nix/store/... 或 ~/.nix-profile/bin
-rg --version                 # ripgrep（nix 安装，全平台）
-```
-
-之后 SSH 用公钥进入（`ssh -p 2222 root@<宿主>`；authorized_keys 由激活时自动拉取）。
-
-### 5. 日常更新（改配置 / 升级工具）
-
-```bash
-# 宿主机（推荐）或容器内（挂载目录，同一份文件）更新配置仓库
-git -C ./nixcfg pull         # 宿主机
-# 或容器内：cd /root/nixcfg && git pull
-
-# 容器内应用配置改动（ide-si / lenovo 分别用 .#ide-si / .#ide-lenovo）
-nix run .#ide-si
-
-# 升级 nixpkgs 里的工具版本（claude/codex/pi 等新版本）
-# 稳定版 nixos-26.05 不锁 rev，nix flake update 直接跟随分支点更新（构建命中镜像缓存）
-nix flake update && nix run .#ide-si
-```
-
-**不需要重新 build 镜像**——只有动 systemd/sshd 本体/zsh 登录 shell 时才需要改 `docker/ide/ubuntu/Dockerfile` 并重建。
-
-### 6. 多台部署
-
-每台服务器只需 flake.nix 两行 + 部署层各管各的（hostname 在 compose 里设，密钥在各自宿主机）：
-
-```nix
-"fan@ide-si" = mkHomeConfig { hostName = "ide-si"; platform = "container"; isContainer = true; };
-"fan@ide-lenovo" = mkHomeConfig { hostName = "ide-lenovo"; platform = "container"; isContainer = true; };
-# packages 块内：ide-si = ...（mise 组件见 home/fan/_container_/mise.nix 的 hostName 分支）
-```
-
-→ ide-si 容器内 `nix run .#ide-si`，lenovo 用 `.#ide-lenovo`。机器专属微调放 home/fan/<host>/（ide-si 含 sysenv.nix 代理+hosts；ide-lenovo 仅 mise 差异）。
-
-## 构建 NixOS 真机（已接入 nix-pve）
-
-`nix-pve` 已由 `nixosConfigurations.nix-pve` 管理；系统层见 `hosts/nix-pve/`，用户层见 `home/fan/nix-pve/`。
-
-```bash
-sudo nixos-rebuild switch --flake .#nix-pve
-```
-
-comin 已启用，会轮询 `main` 自动部署；手动命令用于首次接入和故障恢复。
-
-## 构建 macOS（已接入三台）
-
-系统层由 nix-darwin 管理，用户层由 Home Manager 管理；当前目标为 `mba-m5`、`mbp-m1`、`mini-m4`。
-
-```bash
-nix run .#mba-m5
-nix run .#mbp-m1
-nix run .#mini-m4
-```
-
-mini-m4 已启用 comin 自动部署；三台机器的系统层结构见 `hosts/README.md`。
-
-## 密钥与环境变量（三平台通用）
-
-| 平台 | 密钥文件 | 来源 |
-|---|---|---|
-| 容器（root） | `/root/.secrets/ai.env` | `secrets/ai-env.age`（activation 解密；私钥由宿主机挂载） |
-| NixOS 真机（fan） | `/home/fan/.secrets/ai.env` | `secrets/ai-env.age`（activation 解密） |
-| mac（fan） | `/Users/fan/.secrets/ai-env` | `secrets/ai-env.age`（activation 解密） |
-
-`_common_/secrets.nix` 在 activation 阶段用 `$HOME/.secrets/age-keys.txt` 解密 `ai-env` 与 git 凭据；私钥缺失或解密失败会中止部署。zsh 启动时仅在 `ai-env` 已存在时 source。`ai-env` 只存三个源 key（AI_FAN_CLAUDE / AI_FAN_CODEX / AI_FAN_CHAT），工具变量（ANTHROPIC_AUTH_TOKEN、PIPI_*）由 secrets.nix 映射派生；`PI_CONFIG_GIT_TOKEN` 供 pi 配置仓库拉取（`modules/home/pi.nix`）。非敏感全局变量用 `home.sessionVariables`。
-
-## 镜像控制
-
-| 层级 | 国内环境（默认） |
-|---|---|
-| Dockerfile 装 nix | 清华镜像（install 脚本 + tarball + binary cache） |
-| home 配置 | `fan@ide-si` / `fan@ide-lenovo`（mise 走 npmmirror、git 走 gh-proxy） |
-
-所有容器网络环境各管各的：ide-si 走代理（nix 接管：sysenv.nix 环境变量+hosts），lenovo 国内直连。
-
-优先级：命令行 `--option` > `NIX_CONFIG` > `/etc/nix/nix.conf` > flake `nixConfig`。
+镜像/代理策略集中 `tools/config.nix`（`useChinaMirror` / `githubFetchBase` 唯一入口，机器级可覆盖）；容器网络各管各的：ide-si 走代理（nix 接管环境变量+hosts），lenovo 国内直连；nix 安装/二进制缓存走国内镜像（清华等），git 拉取走 ghfast.top 前缀。切换 GitHub 代理见 `scripts/switch-github-proxy.sh`。
 
 ## 常用命令
 
 ```bash
-nix run .#ide-si          # ide-si 构建 + 激活（一步）；lenovo 用 .#ide-lenovo
-nix build .#ide-si && ./result/activate   # 两步法
-nix flake update            # 升级全部依赖（nixpkgs 稳定版点更新，构建走国内缓存）
-nix flake check              # 语法检查（有 nix 的机器上）
+nix run .#<机器>            # 一步构建+激活（容器/mac/PVE）；NixOS 用 nixos-rebuild
+nix build .#ide-si && ./result/activate   # 两步法（构建 + 手动激活）
+nix flake update            # 升级全部依赖（稳定版跟随分支点，构建命中镜像缓存）
+nix fmt                     # treefmt 一键格式化（nixfmt + statix）
+nix flake check             # 格式 + 回归检查（含 tests/rustdesk-injector，非纯语法检查）
 ```
-
-## 与旧初始化脚本的迁移对照
-
-| 旧脚本步骤 | 本仓库 |
-|---|---|
-| install_packages（apt 基础包） | `_linux_/base.nix`（git/vim/curl）+ `_ubuntu_/base.nix`（make/net-tools，容器经 `_container_` 继承） |
-| git config --global | `_common_/base.nix` programs.git |
-| install_oh_my_zsh（gh-proxy） | `_common_/shells.nix`（clone + 插件 + 主题） |
-| install_mise | `modules/home/mise.nix`（mise 本体；组件清单由 `_container_/mise.nix` 按机器确定） |
-| install_docker + compose + network fan | `_linux_/docker.nix`（仅 Linux 系，容器跳过） |
-| ssh_config（公钥 + 禁密码） | `modules/home/ssh.nix`（activation，防锁死回滚） |
-| BBR / TUN / root shell / apt 源 | 系统级，装机时处理（Dockerfile / 系统层） |
