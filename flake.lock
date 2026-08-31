@@ -219,10 +219,10 @@
     "homebrew": {
       "flake": false,
       "locked": {
-        "lastModified": 1788112679,
-        "narHash": "sha256-lIiBgK+Vy3nxOJVfq6SDLtbNLUwM43XM5oGxlD1lQaM=",
+        "lastModified": 1788143965,
+        "narHash": "sha256-0hjyEaE9xOSk0GVSmvwemQ1WJwFy3Eq65LqJGjyKPv4=",
         "ref": "main",
-        "rev": "db1f209a106f404a65cef0766ae07f9f099a0996",
+        "rev": "6bf9a47106220bc907579a9aa7c47faac070ea40",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/Homebrew/brew.git"
@@ -237,10 +237,10 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1788130444,
-        "narHash": "sha256-zlF3+b/KD334e+w2xlWZC1eHOKL7H2aYCLFHeXEEuI0=",
+        "lastModified": 1788147638,
+        "narHash": "sha256-u6rOdZzP8/Sv4S46xCREHMDTJtXtYok2O9UdFyPvHbw=",
         "ref": "main",
-        "rev": "052c719b0679b41b7d40eeeef42d875c409a5e72",
+        "rev": "8816dfad003c2575512ce2d7868c0d10b56c1c40",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/homebrew/homebrew-cask.git"
@@ -255,10 +255,10 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1788137236,
-        "narHash": "sha256-R7Adj6P35pPOD/zX+5T2DLBMk+F+LTu8noIw8toZCP4=",
+        "lastModified": 1788147546,
+        "narHash": "sha256-/kmBXE/wdC0nj47HMx3pNF84pO7wDuG52zu4veTsPss=",
         "ref": "main",
-        "rev": "3908cde8dc0c2acdc8b98133fd564de41631ca3b",
+        "rev": "49fcba2de7d786c436782d253856caf7c0d189d1",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/homebrew/homebrew-core.git"
@@ -422,7 +422,7 @@
     "skemate-latest": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-fldlFgbssahh233Uo+uZCTrzyWUIKkaK7luNo5x4f3s=",
+        "narHash": "sha256-j5J6nZd2w2GDI8Fbolzb+r321bW3bOAJJSDQfak3Sd8=",
         "type": "file",
         "url": "https://w-apis.qksxin.com/terminal/latest.json"
       },
