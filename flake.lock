@@ -413,22 +413,9 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-darwin": "nixpkgs-darwin",
         "plasma-manager": "plasma-manager",
-        "skemate-latest": "skemate-latest",
         "treefmt-nix": "treefmt-nix",
         "unstable": "unstable",
         "vscode-extensions": "vscode-extensions"
-      }
-    },
-    "skemate-latest": {
-      "flake": false,
-      "locked": {
-        "narHash": "sha256-j5J6nZd2w2GDI8Fbolzb+r321bW3bOAJJSDQfak3Sd8=",
-        "type": "file",
-        "url": "https://w-apis.qksxin.com/terminal/latest.json"
-      },
-      "original": {
-        "type": "file",
-        "url": "https://w-apis.qksxin.com/terminal/latest.json"
       }
     },
     "systems": {

@@ -126,15 +126,6 @@
       url = "git+https://ghfast.top/https://github.com/cirruslabs/homebrew-cli.git?ref=master&shallow=1";
       flake = false;
     };
-
-    # skemate 发布元数据（自研终端复用服务，官方 latest.json）：
-    # flake=false 纯文件 input，overlay 动态解析 version/sha256（见 overlays/skemate.nix）。
-    # 升级：nix flake update skemate-latest 即重新下载 latest.json 并重算 narHash（实测 nix 2.34
-    # 对 URL 不变的 http input 也会重新获取，无需 ?v= 参数/脚本；内容不变时幂等跳过）。
-    skemate-latest = {
-      url = "https://w-apis.qksxin.com/terminal/latest.json";
-      flake = false;
-    };
   };
 
   outputs =
@@ -157,11 +148,8 @@
       # 全局镜像/代理集中配置（tools/config.nix，唯一配置入口）—— useChinaMirror 注入默认值取自这里
       netConfig = tools.config;
       # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
-      # overlay 无法在 home 模块层注册（pkgs 先于模块构造），只能在此注入
-      skemateOverlay = import ./overlays/skemate.nix {
-        inherit lib;
-        skemateLatest = inputs.skemate-latest;
-      };
+      # 元数据 latest.json 构建期实时拉取（无 flake input，每次构建自动跟随官方新版本）
+      skemateOverlay = import ./overlays/skemate.nix;
       # unstable/vscode 市场 overlay（pkgs.repos.unstable / pkgs.repos.vscode，定义见 overlays/）
       # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ codex/pi（_common_）
       unstableOverlay = import ./overlays/unstable.nix { inherit inputs; };
@@ -318,7 +306,10 @@
           hostName = "ide-lenovo";
           platform = "container";
           isContainer = true;
-          extraUnfree = [ "microsoft-edge" "albert" ];
+          extraUnfree = [
+            "microsoft-edge"
+            "albert"
+          ];
         };
 
         # --- 多台 ide 开发容器：一行注册即可（机器目录可选），hostname 在部署层 docker-compose 里设 ---
@@ -433,8 +424,6 @@
         };
       };
 
-
-
       # --- 简短命令别名：nix build .#<机器名> && ./result/activate（两步）---
       # homeConfigurations 标准名保留（兼容 home-manager switch --flake 等工具）
 
@@ -474,7 +463,10 @@
               inherit system;
               platform = "container";
               isContainer = true;
-              extraUnfree = [ "microsoft-edge" "albert" ];
+              extraUnfree = [
+                "microsoft-edge"
+                "albert"
+              ];
             }).activationPackage
           }/activate";
           # PVE 宿主机部署（ds2 / desktop）：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply
