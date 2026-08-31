@@ -11,6 +11,7 @@
   tools,
   config,
   platform ? "container",
+  hostName,
   ...
 }:
 let
@@ -22,6 +23,24 @@ let
   # 安装 + 后期更新的仓库地址（对应脚本 REMOTE=...ohmyzsh.git）
   ohMyZshRepo = tools.githubUrl "https://github.com/ohmyzsh/ohmyzsh.git";
   themeSource = "${self}/home/fan/_common_/themes/fishy.zsh-theme";
+  # nixcfg 快捷命令（alias）：进仓库目录 → 强制对齐 origin/main → 执行本机部署。
+  #   对齐 = git fetch origin main && git reset --hard origin/main：丢弃本地未提交改动/未推送
+  #   commit，保证部署的就是 origin 最新；fetch 失败（断网/凭据）短路，不动本地。
+  #   --impure 仅对装了 skemate 的机器追加（eval 触达 overlays/skemate.nix 的 eval 期 fetchurl，
+  #   见 modules/home/skemate.nix 门控）；没装的机器保持纯 eval，不联网拉元数据。
+  #   nixos 仓库固定 /etc/nixcfg；container/pve 在 root 家目录 ~/nixcfg，无 sudo。
+  #   pve 本机自部署走 -- --self（同 pve/self-deploy.sh）。
+  impureFlag = lib.optionalString config.softwares.skemate.enable " --impure";
+  syncCmd = "git fetch origin main && git reset --hard origin/main";
+  deployCmd =
+    {
+      darwin = "cd ~/nixcfg && ${syncCmd} && sudo darwin-rebuild switch --flake .#${hostName}${impureFlag}";
+      nixos = "cd /etc/nixcfg && ${syncCmd} && sudo nixos-rebuild switch --flake /etc/nixcfg#${hostName}";
+      container = "cd ~/nixcfg && ${syncCmd} && nix run${impureFlag} .#${hostName}";
+      pve = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName} -- --self";
+    }
+    .${platform}
+    or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/pve）");
 in
 {
   programs.zsh = {
@@ -53,6 +72,9 @@ in
       alias ll='eza -lah --git --group-directories-first --time-style=long-iso'
       alias la='ls -A'
       alias untar='tar -xzf'
+
+      # nixcfg：一键进仓库目录 + git pull 更新到最新 + 部署本机（命令见 shells.nix 的 deployCmd，按平台分支）
+      alias nixcfg='${deployCmd}'
 
       # nix 双保险（envExtra 已 source 过，此处幂等；NixOS 无该路径，跳过）
       ${lib.optionalString (platform != "nixos") ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh"}

@@ -16,6 +16,9 @@
 {
   home.packages = [ pkgs.skemate ];
 
+  # 安装了 skemate → 部署命令须 --impure（shells.nix deployCmd 按 softwares.skemate.enable 门控）
+  softwares.skemate.enable = true;
+
   # 配置解密（先于 writeBoundary → 早于 setupLaunchAgents 的 agent 加载；失败即部署失败，
   # 与 _common_/secrets.nix 的统一 secrets 架构一致）
   home.activation.setupSkemateConfig = lib.hm.dag.entryBefore [ "writeBoundary" ] ''

@@ -68,7 +68,8 @@ common:
   zsh:                      # shell（→ shells.nix；oh-my-zsh git clone 自动装）
     theme: fishy-custom
     plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]  # mise 插件机器门控：softwares.mise.enable=true 才加（见 modules/home/mise.nix + shells.nix）
-    aliases: cat=bat -p, ls=eza --icons --group-directories-first, ll=eza -lah --git --group-directories-first --time-style=long-iso
+    aliases: cat=bat -p, ls=eza --icons --group-directories-first, ll=eza -lah --git --group-directories-first --time-style=long-iso, nixcfg=进仓库目录→git pull→部署本机
+    # nixcfg 命令：进仓库 → git fetch origin main + reset --hard（强对齐远端，丢弃本地未提交/未推送改动）→ 部署；darwin=~/nixcfg+sudo darwin-rebuild switch；nixos=/etc/nixcfg+sudo nixos-rebuild；container/pve=~/nixcfg+nix run .#<机器>（pve 加 -- --self）——按平台分支生成（见 shells.nix deployCmd）；装了 skemate 的机器才追加 --impure（softwares.skemate.enable 门控，见 modules/home/skemate.nix）
     disable_compfix: true   # nix store 目录 compaudit 误报，跳过补全安全检查
     enable_completion: false  # HM 不生成 compinit（omz 接管）
 
@@ -326,7 +327,7 @@ linux:
     file_backup: ".backup"  # 手配文件冲突自动备份再覆盖
     secrets: agenix         # docker/ide/.secrets/age-keys → 解密 ai-env/git-credentials
     skemate:                # 终端复用服务（→ overlays/skemate.nix + _container_/skemate.nix，两台共用）
-      version: 构建期解析  # 版本由构建期 curl latest.json 动态解析（overlays/skemate.nix，无 flake input），每次构建自动跟随官方新版本（不手写版本号）
+      version: eval 期解析  # 版本由 eval 期 fetchurl latest.json 动态解析（overlays/skemate.nix，无 flake input）；须 --impure（darwin-rebuild switch --impure），发布即 drv 变自动跟随，不手写版本号
       service: systemd      # serve 前台 + Restart=always + SHELL=/bin/zsh
       config: 宿主机挂载      # docker/ide/skemate/ → /root/.config/skemate
     container_pkgs:         # 容器专属工具（→ packages.nix）

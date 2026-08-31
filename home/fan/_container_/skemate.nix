@@ -13,6 +13,9 @@
 {
   home.packages = [ pkgs.skemate ];
 
+  # 安装了 skemate → 部署命令须 --impure（shells.nix deployCmd 按 softwares.skemate.enable 门控）
+  softwares.skemate.enable = true;
+
   home.activation.skemateService = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     unit=/etc/systemd/system/skemate.service
     tmp=$(mktemp)
