@@ -68,7 +68,7 @@ common:
   zsh:                      # shell（→ shells.nix；oh-my-zsh git clone 自动装）
     theme: fishy-custom
     plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]  # mise 插件机器门控：softwares.mise.enable=true 才加（见 modules/home/mise.nix + shells.nix）
-    aliases: cat=bat, ls=eza --icons --group-directories-first, ll=eza -lah --git --group-directories-first --time-style=long-iso
+    aliases: cat=bat -p, ls=eza --icons --group-directories-first, ll=eza -lah --git --group-directories-first --time-style=long-iso
     disable_compfix: true   # nix store 目录 compaudit 误报，跳过补全安全检查
     enable_completion: false  # HM 不生成 compinit（omz 接管）
 
