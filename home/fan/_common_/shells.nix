@@ -46,8 +46,9 @@ in
       export ZSH_DISABLE_COMPFIX="true"
       source "$ZSH/oh-my-zsh.sh"
 
-      # 常用别名（cat/ls/ll 用 bat/eza 增强版，见 global.pkgs）
-      alias cat='bat'
+      # 常用别名（cat/ls/ll 用 bat/eza 增强版，见 global.pkgs）；bat -p = plain（无行号/装饰，
+      # 行为与 cat 一致，适合管道/重定向）
+      alias cat='bat -p'
       alias ls='eza --icons --group-directories-first'
       alias ll='eza -lah --git --group-directories-first --time-style=long-iso'
       alias la='ls -A'
