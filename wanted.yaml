@@ -63,6 +63,7 @@ common:
     fetch_prune: true
     rerere_enabled: true
     credential_helper: store  # 凭据存 ~/.git-credentials（由 secrets 解密，→ secrets.nix）
+    safe_directory: [/root/nixcfg, /etc/nixos]  # dubious ownership 放行（后者=NixOS 机器仓库，fan 用户 git 操作）
 
   zsh:                      # shell（→ shells.nix；oh-my-zsh git clone 自动装）
     theme: fishy-custom
@@ -367,7 +368,7 @@ nixos:
       nix_gc: 30 天自动清理
       nix_optimise: 自动
       fstrim: weekly
-      persist_dirs: # 跨重启持久化（→ immutable.nix；/mnt/code 代码目录）
+      persist_dirs: # 跨重启持久化（系统层→impermanence；home 层→immutable.nix 含 .zsh_history/.oh-my-zsh/.claude 等；/mnt/code 代码目录）
         - /etc/nixos
         - /etc/ssh/keys
         - /etc/NetworkManager/system-connections
@@ -410,7 +411,7 @@ nixos:
       nix_gc: 30 天自动清理
       nix_optimise: 自动
       fstrim: weekly
-      persist_dirs: # 跨重启持久化（→ immutable.nix；/mnt/code 代码目录）
+      persist_dirs: # 跨重启持久化（系统层→impermanence；home 层→immutable.nix 含 .zsh_history/.oh-my-zsh/.claude 等；/mnt/code 代码目录）
         - /etc/nixos
         - /etc/ssh/keys
         - /etc/NetworkManager/system-connections

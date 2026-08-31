@@ -58,6 +58,7 @@ _: {
     ];
     files = [
       ".claude.json"
+      ".zsh_history" # zsh 历史（oh-my-zsh 默认路径），tmpfs 根下跨重启保留
     ];
   };
 }

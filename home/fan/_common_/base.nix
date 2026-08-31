@@ -48,7 +48,8 @@
       fetch.prune = true; # fetch 时清理已删远端分支
       rerere.enabled = true; # 冲突解决记忆（同冲突只解一次）
       # 配置仓库挂载自宿主机，owner 可能与容器用户不同，避免 dubious ownership 报错
-      safe.directory = "/root/nixcfg";
+      # /etc/nixos = NixOS 机器仓库（/persist/etc/nixos 挂载，root 所有），fan 用户 git 操作需放行
+      safe.directory = [ "/root/nixcfg" "/etc/nixos" ];
     };
   };
 }
