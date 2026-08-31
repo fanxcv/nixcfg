@@ -148,7 +148,7 @@
       # 全局镜像/代理集中配置（tools/config.nix，唯一配置入口）—— useChinaMirror 注入默认值取自这里
       netConfig = tools.config;
       # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
-      # 元数据 latest.json 构建期实时拉取（无 flake input，每次构建自动跟随官方新版本）
+      # 元数据 latest.json eval 期实时拉取（无 flake input；须 --impure，发布即自动跟随官方新版本）
       skemateOverlay = import ./overlays/skemate.nix;
       # unstable/vscode 市场 overlay（pkgs.repos.unstable / pkgs.repos.vscode，定义见 overlays/）
       # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ codex/pi（_common_）
