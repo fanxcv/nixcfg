@@ -35,6 +35,12 @@ let
   albert = pkgs.albert; # 搜索（帖子第 4 步）
   notoCjk = pkgs.noto-fonts-cjk-sans; # 中文渲染（兜底）
   sarasa = pkgs.sarasa-gothic; # 更纱黑体（等宽+中文，界面主字体，用户选定）
+  # fcitx5 中文输入法（参考 nix-pve i18n.inputMethod.fcitx5：全拼默认 + 云拼音/标点策略）
+  fcitx5 = pkgs.qt6Packages.fcitx5-with-addons.override {
+    addons = [ pkgs.kdePackages.fcitx5-chinese-addons ];
+  };
+  fcitx5-gtk = pkgs.fcitx5-gtk; # GTK IM module（GTK_IM_MODULE=fcitx 加载）
+  fcitx5-qt = pkgs.qt6Packages.fcitx5-qt; # QT IM module（QT_IM_MODULE=fcitx 加载）
   imagemagick = pkgs.imagemagick; # 壁纸生成
   fontconfig = pkgs.fontconfig; # 字体配置（容器无 /etc/fonts，字体全不生效）
   glibc = pkgs.glibc; # localedef 生成 zh_CN.UTF-8（容器 /usr/share/i18n 被裁剪）
@@ -63,6 +69,7 @@ let
     xarchiver
     plank
     albert
+    fcitx5
     pkgs.dbus
     pkgs.xauth
     pkgs.xkbcomp
@@ -87,6 +94,7 @@ let
     "${whitesurIcon}/share"
     "${whitesurCursors}/share"
     "${plank}/share"
+    "${fcitx5}/share"
     "${pkgs.adwaita-icon-theme}/share"
   ];
 in
@@ -125,6 +133,10 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     notoCjk
     sarasa
     imagemagick
+    # 中文输入法（fcitx5 + 拼音引擎 + GTK/QT IM module）
+    fcitx5
+    fcitx5-gtk
+    fcitx5-qt
     # 系统支撑：fontconfig（/etc/fonts 缺失，字体全不生效）、glibc（localedef 生成中文 locale）
     fontconfig
     glibc
@@ -316,8 +328,62 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       fi
     fi
 
+    # fcitx5 中文输入法配置（参考 nix-pve i18n.inputMethod.fcitx5 settings：全拼默认 + 云拼音/标点策略）
+    # profile 省略 Enabled Addons → fcitx5 启用全部可用 addons（pinyin 来自 fcitx5-chinese-addons）
+    mkdir -p /root/.config/fcitx5/conf
+    cat > /root/.config/fcitx5/profile <<EOF
+    [Profile]
+    Groups=Default
+    Active Group=Default
+
+    [Groups/0]
+    Name=Default
+    Default Layout=us
+    DefaultIM=pinyin
+
+    [Groups/0/Items/0]
+    Name=keyboard-us
+    Layout=
+
+    [Groups/0/Items/1]
+    Name=pinyin
+    Layout=
+    EOF
+    cat > /root/.config/fcitx5/conf/pinyin.conf <<EOF
+    [Global]
+    FirstRun=False
+    PageSize=9
+    SpellEnabled=True
+    SymbolsEnabled=True
+    ChaiziEnabled=True
+    CloudPinyinEnabled=True
+    CloudPinyinIndex=2
+    CloudPinyinAnimation=True
+    EOF
+    cat > /root/.config/fcitx5/conf/cloudpinyin.conf <<EOF
+    [Global]
+    MinimumPinyinLength=4
+    Backend=Baidu
+    Toggle Key=
+    EOF
+    cat > /root/.config/fcitx5/conf/punctuation.conf <<EOF
+    [Global]
+    Enabled=True
+    HalfWidthPuncAfterLetterOrNumber=True
+    TypePairedPunctuationsTogether=False
+    EOF
+
     # 6. autostart 脚本（壁纸生成 + xfwm4/壁纸设置兜底；GTK 主题走 settings.ini 不需 xfconf）
     mkdir -p /root/.config/autostart
+    # fcitx5 中文输入法（会话启动即拉起；配置见上方 fcitx5 配置段）
+    cat > /root/.config/autostart/fcitx5.desktop <<EOF
+    [Desktop Entry]
+    Type=Application
+    Name=Fcitx5
+    Comment=Chinese Input Method
+    Exec=${fcitx5}/bin/fcitx5
+    X-GNOME-Autostart-enabled=true
+    EOF
     cat > /root/.config/autostart/theme-setup.desktop <<EOF
     [Desktop Entry]
     Type=Application
@@ -486,6 +552,12 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     export LOCPATH=/root/.locale
     export LANG=zh_CN.UTF-8
     export LC_ALL=zh_CN.UTF-8
+    # fcitx5 中文输入法：GTK/QT IM module + XIM；GTK_PATH 指 fcitx5-gtk immodule（GTK 默认路径找不到）
+    export GTK_IM_MODULE=fcitx
+    export QT_IM_MODULE=fcitx
+    export XMODIFIERS=@im=fcitx
+    export GTK_PATH="${fcitx5-gtk}/lib/gtk-3.0"
+    export QT_PLUGIN_PATH="${fcitx5-qt}/lib/qt5/plugins:${fcitx5-qt}/lib/qt6/plugins"
     # xfconfd 靠 dbus 激活（org.xfce.Xfconf.service 在 xfconf 包 share/dbus-1/services），
     # dbus 标准目录找不到 store 路径 → XDG_DATA_DIRS 指 xfconf share（standard_session_servicedirs 读它）
     # 同时指各包 share：GTK 主题/图标/翻译查找（容器无 /usr/share）
