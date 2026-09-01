@@ -260,7 +260,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     fi
     rm -f "$tmp_desktop"
 
-    # 5. 面板（单条底部半透明 + 深色模式：whisker 菜单/任务列表/时钟/托盘/剪贴板）
+    # 5. 面板（单条顶部半透明 + 深色模式：whisker 菜单/任务列表/时钟/托盘/剪贴板）
     cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml <<EOF
     <?xml version="1.0" encoding="UTF-8"?>
     <channel name="xfce4-panel" version="1.0">
@@ -272,8 +272,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
           <property name="position" type="string" value="p=11;x=0;y=0"/>
           <property name="length" type="uint" value="100"/>
           <property name="position-locked" type="bool" value="true"/>
-          <property name="icon-size" type="uint" value="18"/>
-          <property name="size" type="uint" value="30"/>
+          <property name="icon-size" type="uint" value="16"/>
+          <property name="size" type="uint" value="24"/>
           <property name="background-alpha" type="uint" value="190"/>
           <property name="enable-struts" type="bool" value="true"/>
           <property name="plugin-ids" type="array">
