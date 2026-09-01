@@ -329,10 +329,12 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     fi
 
     # fcitx5 中文输入法配置（参考 nix-pve i18n.inputMethod.fcitx5 settings：全拼默认 + 云拼音/标点策略）
-    # profile 省略 Enabled Addons → fcitx5 启用全部可用 addons（pinyin 来自 fcitx5-chinese-addons）
+    # 坑：Enabled Addons 必须显式列出 keyboard,pinyin——fcitx5 5.1 addon 懒加载，
+    #   缺此行时组构建早于 pinyin addon 加载完成（晚约 1.3s）→ pinyin 被剔出组 → DefaultIM 回退 keyboard-us
     mkdir -p /root/.config/fcitx5/conf
     cat > /root/.config/fcitx5/profile <<EOF
     [Profile]
+    Enabled Addons=keyboard,pinyin
     Groups=Default
     Active Group=Default
 
@@ -372,6 +374,9 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     HalfWidthPuncAfterLetterOrNumber=True
     TypePairedPunctuationsTogether=False
     EOF
+    # GTK3 immodule cache：fcitx5-gtk 包不带 cache，GTK3 只按 cache 加载 IM module
+    #   → GTK_IM_MODULE=fcitx 静默失败（客户端永不连接）。生成含 fcitx5 的 cache，xstartup GTK_IM_MODULE_FILE 指 it
+    ${pkgs.gtk3.dev}/bin/gtk-query-immodules-3.0 ${fcitx5-gtk}/lib/gtk-3.0/3.0.0/immodules/im-fcitx5.so > /root/.config/fcitx5/gtk-immodules.cache
 
     # 6. autostart 脚本（壁纸生成 + xfwm4/壁纸设置兜底；GTK 主题走 settings.ini 不需 xfconf）
     mkdir -p /root/.config/autostart
@@ -558,6 +563,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     export XMODIFIERS=@im=fcitx
     export GTK_PATH="${fcitx5-gtk}/lib/gtk-3.0"
     export QT_PLUGIN_PATH="${fcitx5-qt}/lib/qt5/plugins:${fcitx5-qt}/lib/qt6/plugins"
+    # 坑：GTK3 只按 immodules.cache 加载 IM module，fcitx5-gtk 包不带 cache → GTK_IM_MODULE=fcitx 静默失败
+    #   → 激活脚本生成含 fcitx5 的 cache（见下方 GTK cache 生成段），此处指向之
     # xfconfd 靠 dbus 激活（org.xfce.Xfconf.service 在 xfconf 包 share/dbus-1/services），
     # dbus 标准目录找不到 store 路径 → XDG_DATA_DIRS 指 xfconf share（standard_session_servicedirs 读它）
     # 同时指各包 share：GTK 主题/图标/翻译查找（容器无 /usr/share）
