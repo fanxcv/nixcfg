@@ -35,6 +35,9 @@ let
     razer = [
       "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
     ];
+    ali-ai = [
+      "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
+    ];
   };
 in
 {

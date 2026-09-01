@@ -316,6 +316,14 @@
         # "fan@ide-eu" = mkHomeConfig { hostName = "ide-eu"; isContainer = true; };
         # "fan@ide-us" = mkHomeConfig { hostName = "ide-us"; isContainer = true; };
 
+        # --- 云服务器（Ubuntu 底，B 路线：系统层归发行版，nix 管用户态）---
+        # 部署：nix run .#ali-ai（服务器上仓库副本 + USER=root 激活）
+        "root@ali-ai" = mkHomeConfig {
+          hostName = "ali-ai";
+          system = "x86_64-linux";
+          platform = "ubuntu";
+        };
+
         # --- 以后加真机：一行注册 + 对应目录，例如 ---
         # "fan@macbook" = mkHomeConfig { hostName = "macbook"; system = "aarch64-darwin"; platform = "darwin"; };
         # "fan@laptop"  = mkHomeConfig { hostName = "laptop"; system = "x86_64-linux"; };
@@ -467,6 +475,14 @@
                 "microsoft-edge"
                 "albert"
               ];
+            }).activationPackage
+          }/activate";
+          # 云服务器（ali-ai）：服务器上仓库副本 + nix run .#ali-ai（USER=root 激活，同 ide 模式）
+          ali-ai = pkgs.writeShellScriptBin "ali-ai-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
+            (mkHomeConfig {
+              hostName = "ali-ai";
+              inherit system;
+              platform = "ubuntu";
             }).activationPackage
           }/activate";
           # PVE 宿主机部署（ds2 / desktop）：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply

@@ -1,5 +1,5 @@
 # 用户身份与 Home Manager 全局路径策略（所有平台共用）
-# container / pve 使用 root 且没有 user systemd；其他平台使用 fan。
+# container / pve / ubuntu（云服务器 root 登录）使用 root 且没有 user systemd；其他平台使用 fan。
 {
   lib,
   platform ? "nixos",
@@ -7,7 +7,7 @@
   ...
 }:
 let
-  isRootHome = isContainer || platform == "pve";
+  isRootHome = isContainer || platform == "pve" || platform == "ubuntu";
   userName = if isRootHome then "root" else "fan";
   homeDirectory =
     if isRootHome then

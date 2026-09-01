@@ -37,10 +37,11 @@ let
       darwin = "cd ~/nixcfg && ${syncCmd} && sudo darwin-rebuild switch --flake .#${hostName}${impureFlag}";
       nixos = "cd /etc/nixcfg && ${syncCmd} && sudo nixos-rebuild switch --flake /etc/nixcfg#${hostName}";
       container = "cd ~/nixcfg && ${syncCmd} && nix run${impureFlag} .#${hostName}";
+      ubuntu = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName}";
       pve = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName} -- --self";
     }
     .${platform}
-    or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/pve）");
+    or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/ubuntu/pve）");
 in
 {
   programs.zsh = {

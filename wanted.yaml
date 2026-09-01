@@ -69,7 +69,7 @@ common:
     theme: fishy-custom
     plugins: [git, zsh-syntax-highlighting, zsh-autosuggestions]  # mise 插件机器门控：softwares.mise.enable=true 才加（见 modules/home/mise.nix + shells.nix）
     aliases: cat=bat -p, ls=eza --icons --group-directories-first, ll=eza -lah --git --group-directories-first --time-style=long-iso, nixcfg=进仓库目录→git pull→部署本机
-    # nixcfg 命令：进仓库 → git fetch origin main + reset --hard（强对齐远端，丢弃本地未提交/未推送改动）→ 部署；darwin=~/nixcfg+sudo darwin-rebuild switch；nixos=/etc/nixcfg+sudo nixos-rebuild；container/pve=~/nixcfg+nix run .#<机器>（pve 加 -- --self）——按平台分支生成（见 shells.nix deployCmd）；装了 skemate 的机器才追加 --impure（softwares.skemate.enable 门控，见 modules/home/skemate.nix）
+    # nixcfg 命令：进仓库 → git fetch origin main + reset --hard（强对齐远端，丢弃本地未提交/未推送改动）→ 部署；darwin=~/nixcfg+sudo darwin-rebuild switch；nixos=/etc/nixcfg+sudo nixos-rebuild；container/pve=~/nixcfg+nix run .#<机器>（pve 加 -- --self）——按平台分支生成（见 shells.nix deployCmd）
     disable_compfix: true   # nix store 目录 compaudit 误报，跳过补全安全检查
     enable_completion: false  # HM 不生成 compinit（omz 接管）
 
@@ -327,7 +327,7 @@ linux:
     file_backup: ".backup"  # 手配文件冲突自动备份再覆盖
     secrets: agenix         # docker/ide/.secrets/age-keys → 解密 ai-env/git-credentials
     skemate:                # 终端复用服务（→ overlays/skemate.nix + _container_/skemate.nix，两台共用）
-      version: eval 期解析  # 版本由 eval 期 fetchurl latest.json 动态解析（overlays/skemate.nix，无 flake input）；须 --impure（darwin-rebuild switch --impure），发布即 drv 变自动跟随，不手写版本号
+      version: flake.lock 锁定 # 锁 skemate 仓库 rev（input 声明 flake.nix；升级 nix flake update skemate）；仓库内 latest.json 只随发版提交更新，纯 eval 无 --impure
       service: systemd      # serve 前台 + Restart=always + SHELL=/bin/zsh
       config: 宿主机挂载      # docker/ide/skemate/ → /root/.config/skemate
     container_pkgs:         # 容器专属工具（→ packages.nix）
@@ -349,6 +349,11 @@ linux:
         kasmvnc: 浏览器远程桌面  # xfce4 + KasmVNC（→ kasmvnc.nix；compose 6901:6901，http://<host>:6901/vnc.html，root + 密码 nix 管理 secrets/source/kasmvnc-passwd；含基础应用 thunar/appfinder/whisker/notifyd/截图/任务管理/剪贴板/mousepad/xarchiver + fontconfig + zh_CN locale；美化 WhiteSur 主题/图标/光标 + Plank dock + Albert 搜索（linux265 仿 macOS 帖）+ 壁纸 assets/kde-wallpaper.jpg + 竖屏 1080x1920）
         edge: 浏览器（9222 调试端口）  # Microsoft Edge（→ edge.nix；wrapper 默认带 --remote-debugging-port=9222 --disable-gpu --disable-dev-shm-usage，autostart 自启）
         skemate: last_state 兜底  # 部署后覆盖 tunnel.yaml 的 last_state=running（→ ide-lenovo/skemate.nix，仅本机）
+  server:                   # → home/fan/ali-ai/（云服务器分类，B 路线：系统层归发行版，nix 管用户态）
+    machines:
+      ali-ai:               # Ubuntu 24.04 云服务器（139.224.59.140，2C/3.4G，阿里云；激活：nix run .#ali-ai）
+        tailscale: nix 包    # docker 容器停用 → nix 接管（state 加密入 secrets/hosts/ali-ai/，恢复同 IP 10.1.0.18；systemd unit 由 activation 写）
+        gitea-act: docker compose  # act_runner（hc-git.qksxin.com；compose+config 由 nix 渲染派发，token age 加密 → /opt/gitea-act/.env）
 
 # ════════════════════════════════════════════════════════════
 # ④ NixOS 真机 → hosts/nix-pve/ + home/fan/nix-pve/
