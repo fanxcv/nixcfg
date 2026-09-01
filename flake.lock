@@ -219,10 +219,10 @@
     "homebrew": {
       "flake": false,
       "locked": {
-        "lastModified": 1788143965,
-        "narHash": "sha256-0hjyEaE9xOSk0GVSmvwemQ1WJwFy3Eq65LqJGjyKPv4=",
+        "lastModified": 1788248461,
+        "narHash": "sha256-AxyeG+pra52ET6imNWzIfUKPOnxyEJwNu2D288cDUXU=",
         "ref": "main",
-        "rev": "6bf9a47106220bc907579a9aa7c47faac070ea40",
+        "rev": "624cf710bdbe07acf9d6f893f7376df7f8c22663",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/Homebrew/brew.git"
@@ -237,10 +237,10 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1788147638,
-        "narHash": "sha256-u6rOdZzP8/Sv4S46xCREHMDTJtXtYok2O9UdFyPvHbw=",
+        "lastModified": 1788253962,
+        "narHash": "sha256-YkBtkD+tlSCdVjWlu8VpYdpU0pYkXOa09A8kZj5B6ek=",
         "ref": "main",
-        "rev": "8816dfad003c2575512ce2d7868c0d10b56c1c40",
+        "rev": "6ebe28553d1f03f38d6867df4d9e319686b5032d",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/homebrew/homebrew-cask.git"
@@ -255,10 +255,10 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1788147546,
-        "narHash": "sha256-/kmBXE/wdC0nj47HMx3pNF84pO7wDuG52zu4veTsPss=",
+        "lastModified": 1788254182,
+        "narHash": "sha256-3gW/RojRz7TsYZwJWlyGKXxRE2g7VyHLsMK/u8In2kU=",
         "ref": "main",
-        "rev": "49fcba2de7d786c436782d253856caf7c0d189d1",
+        "rev": "b19508d75f84dc8b2bdfbc67444c1203bb10a008",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/homebrew/homebrew-core.git"
@@ -426,11 +426,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788248637,
-        "narHash": "sha256-hsfh+Faf1ds2ECNVgta0ImFFBvv89n6reVMJLuxPEFM=",
+        "lastModified": 1788251847,
+        "narHash": "sha256-192H89jJKg70XzJ/s8yk4RWZgjvZbhmElfquUHXCqpg=",
         "ref": "deploy",
-        "rev": "94d2d8d3048e3e7790554981895edc47bffd0811",
-        "revCount": 629,
+        "rev": "24704f334e8292f50272849a4a8deb121490f271",
+        "revCount": 639,
         "type": "git",
         "url": "https://hc-git.qksxin.com/wangyu/skemate.git"
       },
@@ -501,10 +501,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1788121445,
-        "narHash": "sha256-inNtxZxJupq7IguYBtgwivnJEQxpqWoE4Z46fe5y6Ng=",
+        "lastModified": 1788237531,
+        "narHash": "sha256-u25EYPwDX41xtn4/cE+XDGQg9t1WOXK0WC7hh33sadA=",
         "ref": "master",
-        "rev": "ca50daa26be960067fe9205ea917a0e87be48e09",
+        "rev": "835647e781aa71e7ea1b21169daed842a3ca0142",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-community/nix-vscode-extensions.git"
