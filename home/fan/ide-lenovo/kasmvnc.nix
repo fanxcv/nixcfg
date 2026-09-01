@@ -272,8 +272,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
           <property name="position" type="string" value="p=11;x=0;y=0"/>
           <property name="length" type="uint" value="100"/>
           <property name="position-locked" type="bool" value="true"/>
-          <property name="icon-size" type="uint" value="12"/>
-          <property name="size" type="uint" value="16"/>
+          <property name="icon-size" type="uint" value="14"/>
+          <property name="size" type="uint" value="20"/>
           <property name="background-alpha" type="uint" value="190"/>
           <property name="enable-struts" type="bool" value="true"/>
           <property name="plugin-ids" type="array">
@@ -311,8 +311,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       if [ -n "$sess_dbus" ] && [ -n "$sess_display" ]; then
         export DBUS_SESSION_BUS_ADDRESS="$sess_dbus" DISPLAY="$sess_display"
         # || true：会话刚启动 xfconfd 未就绪属预期（下次激活/会话重启自然生效）
-        ${xfconf}/bin/xfconf-query -c xfce4-panel -p /panels/panel-1/size -s 16 || true
-        ${xfconf}/bin/xfconf-query -c xfce4-panel -p /panels/panel-1/icon-size -s 12 || true
+        ${xfconf}/bin/xfconf-query -c xfce4-panel -p /panels/panel-1/size -s 20 || true
+        ${xfconf}/bin/xfconf-query -c xfce4-panel -p /panels/panel-1/icon-size -s 14 || true
       fi
     fi
 
