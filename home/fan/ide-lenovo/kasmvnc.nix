@@ -272,8 +272,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
           <property name="position" type="string" value="p=11;x=0;y=0"/>
           <property name="length" type="uint" value="100"/>
           <property name="position-locked" type="bool" value="true"/>
-          <property name="icon-size" type="uint" value="14"/>
-          <property name="size" type="uint" value="20"/>
+          <property name="icon-size" type="uint" value="12"/>
+          <property name="size" type="uint" value="16"/>
           <property name="background-alpha" type="uint" value="190"/>
           <property name="enable-struts" type="bool" value="true"/>
           <property name="plugin-ids" type="array">
