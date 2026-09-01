@@ -565,6 +565,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     export QT_PLUGIN_PATH="${fcitx5-qt}/lib/qt5/plugins:${fcitx5-qt}/lib/qt6/plugins"
     # 坑：GTK3 只按 immodules.cache 加载 IM module，fcitx5-gtk 包不带 cache → GTK_IM_MODULE=fcitx 静默失败
     #   → 激活脚本生成含 fcitx5 的 cache（见下方 GTK cache 生成段），此处指向之
+    export GTK_IM_MODULE_FILE=/root/.config/fcitx5/gtk-immodules.cache
     # xfconfd 靠 dbus 激活（org.xfce.Xfconf.service 在 xfconf 包 share/dbus-1/services），
     # dbus 标准目录找不到 store 路径 → XDG_DATA_DIRS 指 xfconf share（standard_session_servicedirs 读它）
     # 同时指各包 share：GTK 主题/图标/翻译查找（容器无 /usr/share）
