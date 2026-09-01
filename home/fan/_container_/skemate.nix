@@ -7,6 +7,9 @@
 #         激活时 sed 注入 skemate store 路径，内容不变则跳过（幂等）；
 #         unit 变更（skemate 升级，store 路径变）强制 restart 换新二进制；
 #         unit 未变但服务挂了（崩溃循环）也自动拉起并输出 journalctl
+#   last_state 策略：触发重启（升级/服务异常拉起）→ 强制 tunnel.yaml 的
+#         last_state=running（无视之前状态，部署即意图运行，serve 启动 AutoStart 自动连隧道）；
+#         不触发重启 → 不动该字段（尊重用户手动 tunnel stop）
 #   原在 ide-si/ide-lenovo 各一份，移入容器平台层去重（平台层即容器语义，不再需要 isContainer 门控）
 
 { pkgs, lib, ... }:
@@ -34,6 +37,14 @@
     # 用 ActiveState 判断而非 is-active：崩溃循环时 unit 处于 auto-restart（activating），is-active 会误判为 active
     state=$(/usr/bin/systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
     if [ "$unit_changed" = "1" ] || [ "$state" != "active" ]; then
+      # 触发重启 = 部署升级/服务异常拉起 → 隧道强制恢复 running（无视之前状态）；
+      # 不触发重启则不动 last_state（尊重用户手动 tunnel stop）。
+      # 先改后重启：serve 启动时 AutoStart 读到的即 running，自动连隧道。
+      tunnel=/root/.config/skemate/tunnel.yaml
+      if [ -f "$tunnel" ] && grep -q '^last_state:' "$tunnel"; then
+        sed -i 's/^last_state:.*/last_state: running/' "$tunnel"
+        echo "===> tunnel.yaml last_state 已强制为 running（本次部署触发重启）"
+      fi
       if /usr/bin/systemctl restart skemate.service; then
         sleep 2
         state=$(/usr/bin/systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
