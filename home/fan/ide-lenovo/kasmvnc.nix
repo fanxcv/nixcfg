@@ -301,6 +301,21 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     </channel>
     EOF
 
+    # 面板配置推送：运行中的 panel 不重读 XML（xfconfd 未运行时文件修改无广播），
+    # xfce4-session failsafe 也不重启 panel → 会话在跑则经 dbus 直推，panel 实时生效
+    # 值须与上方 xfce4-panel.xml 的 size/icon-size 同步（改 XML 时一并改这里）
+    if pgrep -f xfce4-session >/dev/null 2>&1; then
+      sess_pid=$(pgrep -f xfce4-session | head -1)
+      sess_dbus=$(tr '\0' '\n' < /proc/$sess_pid/environ 2>/dev/null | grep '^DBUS_SESSION_BUS_ADDRESS=' | cut -d= -f2-)
+      sess_display=$(tr '\0' '\n' < /proc/$sess_pid/environ 2>/dev/null | grep '^DISPLAY=' | cut -d= -f2-)
+      if [ -n "$sess_dbus" ] && [ -n "$sess_display" ]; then
+        export DBUS_SESSION_BUS_ADDRESS="$sess_dbus" DISPLAY="$sess_display"
+        # || true：会话刚启动 xfconfd 未就绪属预期（下次激活/会话重启自然生效）
+        ${xfconf}/bin/xfconf-query -c xfce4-panel -p /panels/panel-1/size -s 16 || true
+        ${xfconf}/bin/xfconf-query -c xfce4-panel -p /panels/panel-1/icon-size -s 12 || true
+      fi
+    fi
+
     # 6. autostart 脚本（壁纸生成 + xfwm4/壁纸设置兜底；GTK 主题走 settings.ini 不需 xfconf）
     mkdir -p /root/.config/autostart
     cat > /root/.config/autostart/theme-setup.desktop <<EOF
