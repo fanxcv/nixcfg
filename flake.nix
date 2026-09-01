@@ -93,6 +93,17 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # skemate（自研终端复用服务）官方二进制分发：skemate 仓库（hc-git.qksxin.com/wangyu/skemate）
+    # 自带 flake.nix，读仓库内提交的 latest.json（version/url/sha256 快照）产出 packages.<system>.skemate。
+    # ref=deploy：发版流程在 deploy 分支（make release → 版本化目录推 CDN + 更新 latest.json → push deploy），
+    # main 不更新 latest.json，故必须锁 deploy 分支。
+    # flake.lock 锁 git rev：升级 = nix flake update skemate（rev 变必重拉，无 fetcher-cache 缓存坑），
+    # 纯 eval 无需 --impure；nixpkgs 跟随本仓库避免双节点。
+    skemate = {
+      url = "git+https://hc-git.qksxin.com/wangyu/skemate.git?ref=deploy";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # --- macOS（nix-darwin）：三台 Mac 的系统层，见 hosts/_darwin_/ 与 hosts/<host>/ ---
     # nix-darwin 用配套分支：nix-darwin-26.05 ↔ nixpkgs-26.05-darwin（checkRelease 强制匹配）
     nixpkgs-darwin = {
@@ -148,8 +159,8 @@
       # 全局镜像/代理集中配置（tools/config.nix，唯一配置入口）—— useChinaMirror 注入默认值取自这里
       netConfig = tools.config;
       # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
-      # 元数据 latest.json eval 期实时拉取（无 flake input；须 --impure，发布即自动跟随官方新版本）
-      skemateOverlay = import ./overlays/skemate.nix;
+      # flake.lock 锁定 skemate 仓库 rev（input 声明见上方 inputs.skemate，升级 nix flake update skemate）
+      skemateOverlay = import ./overlays/skemate.nix inputs;
       # unstable/vscode 市场 overlay（pkgs.repos.unstable / pkgs.repos.vscode，定义见 overlays/）
       # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ codex/pi（_common_）
       unstableOverlay = import ./overlays/unstable.nix { inherit inputs; };

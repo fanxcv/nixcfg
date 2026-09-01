@@ -1,5 +1,5 @@
 # skemate（自研终端复用服务）——mini-m4 专属：包 + 配置 + LaunchAgent 自启
-#   安装：overlays/skemate.nix 提供 pkgs.skemate（官方构建，platforms 含 aarch64-darwin）
+#   安装：overlays/skemate.nix 提供 pkgs.skemate（官方构建，flake.lock 锁定 rev，升级 nix flake update skemate）
 #   配置：tunnel.yaml 整文件由 nix 管理（age 加密，明文在 secrets/source/hosts/mini-m4/）；
 #         config.json 仅 password 字段由 nix 管理——存在则只覆盖 password（保留用户手动
 #         配置的其他字段），不存在则新建仅含 password 的文件；其余字段用户自管
@@ -10,14 +10,10 @@
 {
   pkgs,
   lib,
-  config,
   ...
 }:
 {
   home.packages = [ pkgs.skemate ];
-
-  # 安装了 skemate → 部署命令须 --impure（shells.nix deployCmd 按 softwares.skemate.enable 门控）
-  softwares.skemate.enable = true;
 
   # 配置解密（先于 writeBoundary → 早于 setupLaunchAgents 的 agent 加载；失败即部署失败，
   # 与 _common_/secrets.nix 的统一 secrets 架构一致）

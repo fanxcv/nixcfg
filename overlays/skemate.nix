@@ -1,58 +1,27 @@
 # skemate（自研终端复用服务）分发 overlay
-# 二进制托管在 w-apis.qksxin.com/terminal，version/url/sha256 来自官方 latest.json：
-# 【eval 期】解析（builtins.fetchurl 无 hash 拉取，须 --impure）——三字段全部进入 drv：
-#   官方发布新版 → latest.json 内容变 → store 路径变 → drv 变 → 自动重建跟随（零手动，无需 flake update）
-#   无发布 → json 内容不变 → drv 不变 → 复用旧构建（不重复下载二进制）
-# 代价：eval 必须联网且带 --impure（darwin-rebuild switch --impure / nix build --impure /
-#       home-manager switch --impure），纯 eval 直接报 fetchurl 错（比静默用旧版强）。
-# 历史：早期在【build 期】curl latest.json（version 恒 "unstable"），drv 输入不变，
-#       nix 直接复用旧 output、buildCommand 永不重跑——官方发版后不跟随（假自动），故弃。
-# 平台：以 latest.json 的 platforms 键为准（当前 linux-amd64 / darwin-arm64 / linux-arm64），
-#       未发布的平台直接构建失败并提示
-
-final: prev:
+# 二进制从 skemate 仓库 flake output 取（flake.lock 锁定 rev，纯 eval 无 --impure）：
+#   skemate 仓库（hc-git.qksxin.com/wangyu/skemate）flake.nix 读仓库内提交的 latest.json
+#   （version/url/sha256 发版快照，builtins.readFile 纯操作）→ packages.<system>.skemate 直接 cp 二进制
+#   → nixcfg 升级 = nix flake update skemate（锁 deploy 分支 rev，见 flake.nix inputs.skemate）
+#   发版流程（skemate 仓库，deploy 分支）：make release → 版本化目录推 CDN + 更新仓库内 latest.json → push deploy
+# 历史：早期【build 期】curl latest.json（version 恒 "unstable"，drv 不变假自动）；
+#       中期【eval 期】fetchurl 无 hash 拉 w-apis.qksxin.com/terminal/latest.json（--impure，
+#       每次 eval 联网；API 源站 latest.json 走 API 缓存易不更新）；
+#       现改 flake.lock 锁定 git rev（正解）。
+# 平台：skemate 仓库 flake 只发 x86_64-linux / aarch64-darwin / aarch64-linux，其余平台直接构建失败并提示
+inputs: final: prev:
 let
-  # nix system → latest.json platforms 键
-  platformKey =
-    {
-      "x86_64-linux" = "linux-amd64";
-      "aarch64-darwin" = "darwin-arm64";
-      "aarch64-linux" = "linux-arm64";
-    }
-    .${final.stdenv.hostPlatform.system}
-      or (throw "skemate: 平台 ${final.stdenv.hostPlatform.system} 无官方构建（latest.json platforms 键）");
-  # eval 期拉取官方元数据（impure fetchurl：内容寻址，json 变则路径变 → drv 变）
-  meta = builtins.fromJSON (builtins.readFile (builtins.fetchurl "https://w-apis.qksxin.com/terminal/latest.json"));
-  platform =
-    meta.platforms.${platformKey}
-      or (throw "skemate: latest.json 缺 ${platformKey} 平台条目（version=${meta.version}），请检查 w-apis.qksxin.com");
+  system = final.stdenv.hostPlatform.system;
 in
 {
-  skemate = final.stdenvNoCC.mkDerivation {
-    pname = "skemate";
-    inherit (meta) version;
-
-    nativeBuildInputs = [
-      final.pkgs.curl
-      final.pkgs.cacert # 沙箱内 curl 无默认 CA，需显式 --cacert
-    ];
-
-    buildCommand = ''
-      cacert=${final.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
-      mkdir -p "$out/bin"
-      ${final.pkgs.curl}/bin/curl -fsSL --cacert "$cacert" "${platform.url}" -o "$out/bin/skemate"
-      echo "${platform.sha256}  $out/bin/skemate" | sha256sum -c -
-      chmod +x "$out/bin/skemate"
-    '';
-
-    meta = {
-      description = "自研终端复用服务（skemate）";
-      mainProgram = "skemate";
-      platforms = [
-        "x86_64-linux"
-        "aarch64-darwin"
-        "aarch64-linux"
-      ];
-    };
-  };
+  # 取 skemate 仓库 flake 的 packages.<system>.skemate（二进制 eval 期 fetchurl 带 sha256 内容寻址，
+  # store 复用不重复下载；构建期纯 cp 零网络）
+  skemate =
+    if builtins.elem system [
+      "x86_64-linux"
+      "aarch64-darwin"
+      "aarch64-linux"
+    ]
+    then inputs.skemate.packages.${system}.skemate
+    else throw "skemate: 平台 ${system} 无官方构建（skemate flake 只发 x86_64-linux / aarch64-darwin / aarch64-linux）";
 }

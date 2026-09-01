@@ -94,7 +94,7 @@ nixcfg/
 ├── home/fan/              # 用户层：_common_/_<平台>_ 公共 + <机> 微调（module-list.nix 组装）
 ├── users/fan/             # NixOS 真机用户层（复用 home/fan 模块清单）
 ├── modules/               # 可复用模块库：home/（ai/codex/mise/pi/ssh/tmux/vscode/catppuccin）、darwin/、nixos/
-├── overlays/              # nixpkgs overlay：skemate（eval 期解析版本，需 --impure）、unstable/vscode 市场、comin 等
+├── overlays/              # nixpkgs overlay：skemate（flake.lock 锁定 rev，见 inputs）、unstable/vscode 市场、comin 等
 ├── packages/              # 本地自打包（kasmvnc、rustdesk-bin、KDE 商店主题等）
 ├── docker/ide/            # IDE 容器定义（compose si/lenovo 双文件 + ubuntu/Dockerfile）
 ├── pve/                   # PVE 宿主系统层 + 部署脚本（apply.sh/deploy.sh/deploy.nix）

@@ -1,5 +1,5 @@
 # skemate（自研终端复用服务）——容器平台层公共（ide-si / ide-lenovo 共用一份）
-#   安装：overlays/skemate.nix 提供 pkgs.skemate（平台匹配 latest.json 官方构建）
+#   安装：overlays/skemate.nix 提供 pkgs.skemate（官方构建，flake.lock 锁定 rev，升级 nix flake update skemate）
 #   配置：Nix 不管理——宿主机 compose 挂载 ./skemate → /root/.config/skemate，
 #         config.json / tunnel.yaml 等由用户在宿主机 docker/ide/skemate/ 自行维护
 #   自启：容器 PID1 即 systemd，写 /etc/systemd/system/skemate.service（serve 前台 +
@@ -12,9 +12,6 @@
 { pkgs, lib, ... }:
 {
   home.packages = [ pkgs.skemate ];
-
-  # 安装了 skemate → 部署命令须 --impure（shells.nix deployCmd 按 softwares.skemate.enable 门控）
-  softwares.skemate.enable = true;
 
   home.activation.skemateService = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     unit=/etc/systemd/system/skemate.service

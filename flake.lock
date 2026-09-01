@@ -413,9 +413,31 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-darwin": "nixpkgs-darwin",
         "plasma-manager": "plasma-manager",
+        "skemate": "skemate",
         "treefmt-nix": "treefmt-nix",
         "unstable": "unstable",
         "vscode-extensions": "vscode-extensions"
+      }
+    },
+    "skemate": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1788245847,
+        "narHash": "sha256-1F2fU0TxMjcMd0ZAd5b6XyTxdGg9EoR6v7sPsQnNeDA=",
+        "ref": "deploy",
+        "rev": "eb2ab6b1014675288606a6718d39b6f142d9aed8",
+        "revCount": 621,
+        "type": "git",
+        "url": "https://hc-git.qksxin.com/wangyu/skemate.git"
+      },
+      "original": {
+        "ref": "deploy",
+        "type": "git",
+        "url": "https://hc-git.qksxin.com/wangyu/skemate.git"
       }
     },
     "systems": {

@@ -327,7 +327,7 @@ linux:
     file_backup: ".backup"  # 手配文件冲突自动备份再覆盖
     secrets: agenix         # docker/ide/.secrets/age-keys → 解密 ai-env/git-credentials
     skemate:                # 终端复用服务（→ overlays/skemate.nix + _container_/skemate.nix，两台共用）
-      version: flake.lock 锁定 # 锁 skemate 仓库 rev（input 声明 flake.nix；升级 nix flake update skemate）；仓库内 latest.json 只随发版提交更新，纯 eval 无 --impure
+      version: flake.lock 锁定 # 锁 skemate 仓库 deploy 分支 rev（input 声明 flake.nix，ref=deploy；升级 nix flake update skemate）；latest.json 由发布 CI 提交回 deploy 分支，纯 eval 无 --impure
       service: systemd      # serve 前台 + Restart=always + SHELL=/bin/zsh
       config: 宿主机挂载      # docker/ide/skemate/ → /root/.config/skemate
     container_pkgs:         # 容器专属工具（→ packages.nix）
