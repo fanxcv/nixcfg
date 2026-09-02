@@ -24,7 +24,6 @@ with kdePackages;
     khelpcenter
     plasma-browser-integration
     plasma-workspace-wallpapers
-    # 注意：aurorae 不能排除——用户层 MacTahoe 窗口装饰依赖 org.kde.kwin.aurorae 引擎（fa6ca7f 误排除致装饰回退 Breeze）
     gwenview # 图片查看器（koko 替代）
     kate # 文本编辑器（vscode 替代）
     ktexteditor # kate 的库

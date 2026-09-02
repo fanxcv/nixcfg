@@ -330,7 +330,6 @@ linux:
       version: flake.lock 锁定 # 锁 skemate 仓库 deploy 分支 rev（input 声明 flake.nix，ref=deploy；升级 nix flake update skemate）；latest.json 由发布 CI 提交回 deploy 分支，纯 eval 无 --impure
       service: systemd      # serve 前台 + Restart=always + SHELL=/bin/zsh
       config: 宿主机挂载      # docker/ide/skemate/ → /root/.config/skemate
-      last_state: 重启才覆盖  # 部署触发重启（升级/服务异常）→ 强制 tunnel.yaml last_state=running；不重启不动（尊重手动 stop）
     container_pkgs:         # 容器专属工具（→ packages.nix）
       http-server: nix 包
       unzip: nix 包
@@ -363,9 +362,9 @@ nixos:
     system:                 # → hosts/nix-pve/
       platform: qemu-vm     # virtio 磁盘 / GRUB EFI / OVMF（→ hardware.nix）
       disk: 128G            # LVM：boot 1G + nix 48G + persist 40G + tmpfs 根（→ disks.nix）
-      desktop: plasma6      # KDE Plasma 6 + SDDM，默认 X11 会话（RustDesk Wayland capturer bug #13374，1.4.9 未修）+ fcitx5 拼音；预装应用精简（→ _nixos_/gui/desktop/plasma.nix excludePackages：qrca/elisa/discover/khelpcenter/plasma-browser-integration/plasma-workspace-wallpapers/gwenview/kate/ktexteditor/krdp/plasma-keyboard/qtvirtualkeyboard/qttools；保留 konsole/ark/okular/dolphin/spectacle/kwin-x11；aurorae 不可排除——MacTahoe 装饰引擎依赖）
+      desktop: plasma6      # KDE Plasma 6 + SDDM，默认 X11 会话（RustDesk Wayland capturer bug #13374，1.4.9 未修）+ fcitx5 拼音；预装应用精简（→ _nixos_/gui/desktop/plasma.nix excludePackages：qrca/elisa/discover/khelpcenter/plasma-browser-integration/plasma-workspace-wallpapers/gwenview/kate/ktexteditor/krdp/plasma-keyboard/qtvirtualkeyboard/qttools；保留 konsole/ark/okular/dolphin/spectacle/kwin-x11；aurorae 不可排除——catppuccin 主题无需装饰引擎，排除亦可但保留默认）
       im_env: fcitx5 系统层 i18n.inputMethod  # NixOS 模块自动设 GTK/QT_IM_MODULE + XMODIFIERS（SDDM 图形会话生效）+ 生成 /etc/gtk-3.0/immodules.cache；HM 层 waylandFrontend=false（X11 会话）补登录 shell 变量
-      theme: mactahoe 全系（全局主题/颜色/plasma样式/窗口装饰/欢迎屏幕）+ mcmojave-circle 图标 + 用户壁纸  # → plasma.theme.nix/plasma.panels.nix；mactahoe-kde/mactahoe-gtk/catppuccin-kde/mcmojave-circle/mcmojave-kde/redmi-clock 自打包→packages/，numix-circle 用 nixpkgs 备用；catppuccin-kde（Classic+Modern 两变体）已装备用不启用；macOS 化：MacTahoe aurorae 装饰自带红绿灯（左置，titlebarButtons.right=[] 清默认右侧按钮组）+圆角+毛玻璃（无需 kde-rounded-corners），kwin blur + 最大化无边框；GTK 应用用 MacTahoe；面板透明度 60（Panel-colorizer globalSettings JSON，overlay 修 tools/*.sh 可执行位 + python3 运行时）；上面板无 globalmenu（该 applet 在目标机加载失败报“软件包不存在”，已移除）
+      theme: catppuccin 全系（tsln 原版：Plasma 配色/开机画面/光标 + fcitx5 皮肤 + Konsole mocha）+ mcmojave-circle 图标 + 用户壁纸 + 上下双面板  # 主题/配色/窗口装饰回退 tsln（→ _nixos_/themes/catppuccin.nix，aurorae/kwin 回默认 Breeze，删 MacTahoe/mcmojave-kde/redmi-clock/panel-colorizer）；保留项：mcmojave-circle 图标（→ plasma.icon.nix，packages/mcmojave-circle.nix 自打包）、assets/kde-wallpaper.jpg 壁纸、plasma.panels.nix 上下分栏；上面板无 globalmenu（该 applet 在目标机加载失败报“软件包不存在”，已移除）
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文（plasma-localerc 声明式；终端/SSH 保持 en_US）
       apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；root 服务声明式（→ services/rustdesk.nix，免 GUI 请求权限 sudo）；SDDM 自动登录 fan → 开机直进桌面 → GUI 由 systemd user service 守护（graphical-session.target，替代系统层 autostart——autostart 仅登录时执行一次，部署 activation 的 pkill 杀 GUI 后不复活致"离线"；user service Restart=on-failure 自动拉起，ExecStartPre 复制 SDDM 新 xauth 为 ~/.Xauthority）；包内 /etc 用默认 tmpfs（container-init 写 ld.so.conf/ldconfig 需可写）+ bind 宿主 /etc/pam 与 /etc/pam.d（sudo PAM + pam_env LD_LIBRARY_PATH 注入）；libPaths 含 mesa（flutter 窗口需 EGL/dri）
       comin: true           # git 驱动自动部署（180s 轮询，与 mini-m4 对齐）
@@ -403,7 +402,7 @@ nixos:
       disk: 476.9G 全盘格   # LVM：boot 1G + swap 8G（hibernate）+ nix 100G + persist 100G + 余量 ~267G 可扩 + tmpfs 根（→ disks.nix）
       desktop: plasma6      # KDE Plasma 6 + SDDM，Wayland 默认会话（无 RustDesk 被控需求，不切 X11）+ fcitx5 拼音（→ _nixos_/gui/desktop/plasma.nix）
       im_env: fcitx5 系统层 i18n.inputMethod  # 同 nix-pve
-      theme: mactahoe 全系（全局主题/颜色/plasma样式/窗口装饰/欢迎屏幕）+ mcmojave-circle 图标 + 用户壁纸  # 同 nix-pve（→ plasma.theme.nix；mactahoe-kde/mactahoe-gtk/catppuccin-kde/mcmojave-circle/mcmojave-kde/redmi-clock 自打包→packages/，numix-circle 用 nixpkgs 备用；catppuccin-kde（Classic+Modern 两变体）已装备用不启用；macOS 化：MacTahoe aurorae 装饰自带红绿灯（左置，titlebarButtons.right=[] 清默认右侧按钮组）+圆角+毛玻璃（无需 kde-rounded-corners），kwin blur + 最大化无边框；GTK 应用用 MacTahoe；面板透明度 60（Panel-colorizer globalSettings JSON，overlay 修 tools/*.sh 可执行位 + python3 运行时）；上面板无 globalmenu（该 applet 加载失败已移除）
+      theme: catppuccin 全系（tsln 原版：Plasma 配色/开机画面/光标 + fcitx5 皮肤 + Konsole mocha）+ mcmojave-circle 图标 + 用户壁纸 + 上下双面板  # 同 nix-pve（→ _nixos_/themes/catppuccin.nix 回退 tsln；保留 mcmojave-circle 图标 → plasma.icon.nix、assets/kde-wallpaper.jpg 壁纸、plasma.panels.nix 上下分栏）
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文
       apps: [edge, bitwarden, vscode, rustdesk, wechat, qq, mpv]  # rustdesk 仅 client（远程其他机器，非被控端）：官方 release 二进制 + 共享注入器，无 root 服务/无系统层 autostart（→ home/fan/nix-book/rustdesk.nix）；wechat/qq unfree（flake extraUnfree 放行）；mpv VAAPI 硬解（780M vcn，hwdec=vaapi）
       power: tsln powerdevil 计划  # AC=performance（15min 挂起/10min 关屏）、电池=balanced（10min/5min）、低电=powerSaving（5min/2min 亮度 15）；低电 20% / 危机 5% → hibernate（swap 8G 支持）；无系统层 TLP（→ home/fan/nix-book/plasma.powerdevil.nix）

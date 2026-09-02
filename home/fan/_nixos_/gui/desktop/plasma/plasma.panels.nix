@@ -1,8 +1,6 @@
-# 面板布局：上：启动器/窗口列表/间隙/数字时钟/间隙/托盘；下：图标任务栏 Dock
+# 面板布局：上：启动器/窗口列表/间隙/数字时钟/间隙/托盘；下：图标任务栏 Dock（上下分栏为 nixcfg 保留项）
 # 注：globalmenu 曾在此（org.kde.plasma.globalmenu 在目标机加载失败报“软件包不存在”，已移除；
 #     需要 macOS 顶栏菜单效果时须先查该 applet 在对应 Plasma 版本是否随 plasma-workspace 提供）
-# Panel-colorizer 挂件给面板做透明/配色（nixpkgs plasma-panel-colorizer，插件 ID org.github.luisbocanegra.plasma.panelcolorizer）
-# 透明度 60（不透明度 60% = 40% 透明；100=不透明）：globalSettings JSON 的 stockPanelSettings.opacity（7.2 的配置是 JSON，preset 键插件不读）
 {
   programs.plasma.panels = [
     # ── 上面板 ──
@@ -111,15 +109,7 @@
           };
         }
         {
-          name = "luisbocanegra.panel.colorizer";
-          config = {
-            globalSettings = builtins.toJSON {
-              stockPanelSettings.opacity = {
-                enabled = true;
-                value = "60";
-              };
-            };
-          };
+          name = "org.kde.plasma.showdesktop";
         }
       ];
     }

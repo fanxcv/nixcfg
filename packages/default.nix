@@ -26,14 +26,6 @@ rustdesk
   # 网络：fetchFromGitHub 默认直连 github.com（国内不稳），githubBase 换加速前缀（代理不改内容，hash 不重算）
   catppuccin-konsole = pkgs.callPackage ./catppuccin/konsole.nix { githubBase = githubFetchBase; };
 
-  # --- KDE 帖子美化主题（blog.sotkg.com/2025/08/kde-customization，仅 nix-pve/nix-book 用）---
-  # Redmi Clock plasmoid（vendor 到 assets/kde-sources/，本地文件）
-  redmi-clock = pkgs.callPackage ./redmi-clock.nix { };
-  # McMojave 图标/KDE 主题（macOS 风格，GitHub tarball fetchzip）
+  # McMojave-circle 图标（macOS 风格，GitHub tarball fetchzip；→ home/fan/_nixos_/gui/desktop/plasma/plasma.icon.nix）
   mcmojave-circle = pkgs.callPackage ./mcmojave-circle.nix { };
-  mcmojave-kde = pkgs.callPackage ./mcmojave-kde.nix { };
-  # MacTahoe KDE/GTK 主题 + Catppuccin KDE（vendor 到 assets/kde-sources/，本地文件）
-  mactahoe-kde = pkgs.callPackage ./mactahoe-kde.nix { };
-  mactahoe-gtk = pkgs.callPackage ./mactahoe-gtk.nix { };
-  catppuccin-kde = pkgs.callPackage ./catppuccin-kde.nix { };
 }

@@ -167,8 +167,6 @@
       vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
       # comin 包共享构建（消除 nixos/mini-m4 两处 buildGoModule 重复，见 overlays/comin.nix）
       cominOverlay = import ./overlays/comin.nix { inherit lib inputs; };
-      # plasma-panel-colorizer 修复（tools/*.sh 可执行位，见 overlays/panel-colorizer.nix）
-      panelColorizerOverlay = import ./overlays/panel-colorizer.nix { };
       # 本地包统一注入，供所有配置构造器复用
       localPkgsOverlay =
         final: prev:
@@ -200,7 +198,6 @@
             unstableOverlay
             vscodeOverlay
             cominOverlay
-            panelColorizerOverlay
             localPkgsOverlay
           ];
         };
