@@ -62,6 +62,7 @@ common:
     push_auto_setup_remote: true
     fetch_prune: true
     rerere_enabled: true
+    beads_role: maintainer  # beads 工作流角色标记（→ base.nix settings）
     credential_helper: store  # 凭据存 ~/.git-credentials（由 secrets 解密，→ secrets.nix）
     safe_directory: [/root/nixcfg, /etc/nixos]  # dubious ownership 放行（后者=NixOS 机器仓库，fan 用户 git 操作）
 
