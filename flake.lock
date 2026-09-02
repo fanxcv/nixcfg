@@ -432,12 +432,12 @@
         "rev": "ac7a838c97ff8f9a5addd3b7c53ad48be64d78a0",
         "revCount": 683,
         "type": "git",
-        "url": "https://hc-git.qksxin.com/wangyu/skemate.git"
+        "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git"
       },
       "original": {
         "ref": "deploy",
         "type": "git",
-        "url": "https://hc-git.qksxin.com/wangyu/skemate.git"
+        "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git"
       }
     },
     "systems": {

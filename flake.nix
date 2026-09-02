@@ -100,7 +100,8 @@
     # flake.lock 锁 git rev：升级 = nix flake update skemate（rev 变必重拉，无 fetcher-cache 缓存坑），
     # 纯 eval 无需 --impure；nixpkgs 跟随本仓库避免双节点。
     skemate = {
-      url = "git+https://hc-git.qksxin.com/wangyu/skemate.git?ref=deploy";
+      # token 内嵌 URL：免 git 交互式询问账号密码（hc-git 私有仓库）
+      url = "git+https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git?ref=deploy";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
