@@ -12,7 +12,7 @@
       lengthMode = "fill";
       location = "top";
       offset = 0;
-      opacity = "adaptive";
+      opacity = "translucent";
       widgets = [
         {
           name = "org.kde.plasma.kickoff";
@@ -76,7 +76,7 @@
       lengthMode = "fit";
       location = "bottom";
       offset = 0;
-      opacity = "adaptive";
+      opacity = "translucent";
       widgets = [
         {
           name = "org.kde.plasma.icontasks";
