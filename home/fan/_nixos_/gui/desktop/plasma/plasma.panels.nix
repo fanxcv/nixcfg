@@ -67,12 +67,12 @@
         }
       ];
     }
-    # ── 下面板：图标任务管理器 Dock ──
+    # ── 下面板：图标任务管理器 Dock（dodgewindows：窗口贴近时隐藏，最大化窗口必然贴近 → 应用最大化时 Dock 自动让位）──
     {
       alignment = "center";
       floating = true;
       height = 48;
-      hiding = "none";
+      hiding = "dodgewindows";
       lengthMode = "fit";
       location = "bottom";
       offset = 0;
