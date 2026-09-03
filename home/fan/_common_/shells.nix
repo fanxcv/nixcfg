@@ -27,13 +27,13 @@ let
   #   对齐 = git fetch origin main && git reset --hard origin/main：丢弃本地未提交改动/未推送
   #   commit，保证部署的就是 origin 最新；fetch 失败（断网/凭据）短路，不动本地。
   #   纯 eval（skemate 已改 flake.lock 锁定，不再需要 --impure）。
-  #   nixos 仓库固定 /etc/nixcfg；container/pve 在 root 家目录 ~/nixcfg，无 sudo。
+  #   nixos 仓库固定 /etc/nixos（impermanence 持久化 /persist/etc/nixos）；container/pve 在 root 家目录 ~/nixcfg，无 sudo。
   #   pve 本机自部署走 -- --self（同 pve/self-deploy.sh）。
   syncCmd = "git fetch origin main && git reset --hard origin/main";
   deployCmd =
     {
       darwin = "cd ~/nixcfg && ${syncCmd} && sudo darwin-rebuild switch --flake .#${hostName}";
-      nixos = "cd /etc/nixcfg && ${syncCmd} && sudo nixos-rebuild switch --flake /etc/nixcfg#${hostName}";
+      nixos = "cd /etc/nixos && ${syncCmd} && sudo nixos-rebuild switch --flake /etc/nixos#${hostName}";
       container = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName}";
       ubuntu = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName}";
       pve = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName} -- --self";
