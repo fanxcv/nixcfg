@@ -30,7 +30,8 @@ with kdePackages;
     krdp # RDP 远程桌面（rustdesk 替代）
     plasma-keyboard # 触摸键盘（无触摸屏）
     qtvirtualkeyboard # plasma-keyboard 依赖
-    qttools # qdbus 等 Qt 调试工具
+    # qttools 不可排除：plasma-manager 的 panels/wallpaper 脚本依赖 qdbus（qttools 提供），
+    # 排除后布局/壁纸全部静默失败（qdbus: command not found）
   ];
 
   environment.systemPackages = [
