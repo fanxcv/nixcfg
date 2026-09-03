@@ -65,17 +65,6 @@
             };
           };
         }
-        {
-          name = "luisbocanegra.panel.colorizer";
-          config = {
-            globalSettings = builtins.toJSON {
-              stockPanelSettings.opacity = {
-                enabled = true;
-                value = "60";
-              };
-            };
-          };
-        }
       ];
     }
     # ── 下面板：图标任务管理器 Dock ──

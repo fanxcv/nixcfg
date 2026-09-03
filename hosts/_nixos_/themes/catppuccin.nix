@@ -1,5 +1,6 @@
 # Catppuccin 系统级主题（tsln 同款策略）：enable 总开关 + autoEnable 关（target 手动开）
 # 全局 flavor mocha（grub/plymouth 深色），SDDM 显式 latte；用户层（home/_common_）flavor latte
+# SDDM 背景：用户壁纸 assets/kde-wallpaper.jpg（与桌面壁纸一致，见 home/fan/_nixos_/gui/desktop/plasma/plasma.icon.nix）
 { lib, ... }:
 {
   catppuccin = {
@@ -18,5 +19,6 @@
 
     sddm.enable = lib.mkDefault true;
     sddm.flavor = lib.mkDefault "latte";
+    sddm.background = ../../../assets/kde-wallpaper.jpg;
   };
 }
