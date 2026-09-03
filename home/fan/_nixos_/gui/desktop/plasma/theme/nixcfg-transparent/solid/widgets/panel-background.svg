@@ -24,12 +24,12 @@
      inkscape:pagecheckerboard="1"
      inkscape:blackoutopacity="0.0"
      showgrid="true"
-     inkscape:current-layer="right"
+     inkscape:current-layer="svg2"
      inkscape:showpageshadow="2"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="21.88679"
-     inkscape:cx="18.024571"
-     inkscape:cy="27.52802"
+     inkscape:zoom="16.003662"
+     inkscape:cx="18.027124"
+     inkscape:cy="34.210921"
      inkscape:window-width="1920"
      inkscape:window-height="1127"
      inkscape:window-x="0"
@@ -242,11 +242,17 @@
     <rect
        id="rect4152"
        height="6"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        width="32"
        x="0"
        y="0" />
+    <path
+       style="opacity:0;fill:currentColor"
+       d="M 0,0 V 1 H 32 V 0 Z"
+       id="path1337"
+       class="ColorScheme-Background"
+       fill="none" />
   </g>
   <g
      id="bottom"
@@ -254,11 +260,17 @@
     <rect
        id="rect4148"
        height="6"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        width="32"
        x="0"
        y="0" />
+    <path
+       style="opacity:0;fill:none"
+       d="M 0,5 V 6 H 32 V 5 Z"
+       id="path1671"
+       class="ColorScheme-Background"
+       fill="none" />
   </g>
   <g
      id="left"
@@ -266,11 +278,17 @@
     <rect
        id="rect4144"
        height="32"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        width="6"
        x="0"
        y="0" />
+    <path
+       style="opacity:0;fill:none"
+       d="M 0,32 H 1 V 0 H 0 Z"
+       id="path1785"
+       class="ColorScheme-Background"
+       fill="none" />
   </g>
   <g
      id="right"
@@ -278,11 +296,17 @@
     <rect
        id="rect4140"
        height="32"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        width="6"
        x="0"
        y="0" />
+    <path
+       style="opacity:0;fill:none"
+       d="M 5,32 H 6 V 0 H 5 Z"
+       id="path1902"
+       class="ColorScheme-Background"
+       fill="none" />
   </g>
   <g
      id="center"
@@ -290,7 +314,7 @@
     <rect
        id="rect4138"
        height="32"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        width="32"
        x="0"
@@ -301,7 +325,7 @@
      transform="translate(0,10)">
     <path
        d="M 0,6 H 6 V 0 C 2,0 0,2 0,6 Z"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        id="path3115"
        sodipodi:nodetypes="cccc" />
@@ -311,7 +335,7 @@
      transform="translate(38,10)">
     <path
        d="M 0,0 V 6 H 6 C 6,2 4,0 0,0 Z"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        id="path3118"
        sodipodi:nodetypes="cccc" />
@@ -321,7 +345,7 @@
      transform="translate(0,48)">
     <path
        d="M 6,6 V 0 H 0 c 0,4 2,6 6,6 z"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        id="path3124"
        sodipodi:nodetypes="cccc" />
@@ -331,7 +355,7 @@
      transform="translate(38,48)">
     <path
        d="M 0,6 V 0 H 6 C 6,4 4,6 0,6 Z"
-       style="fill:currentColor"
+       style="opacity:0;fill:none"
        class="ColorScheme-Background"
        id="path3121"
        sodipodi:nodetypes="cccc" />
