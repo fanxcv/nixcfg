@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Id": "nixcfg-transparent",
+    "Name": "Nixcfg Transparent",
+    "Description": "Breeze-based theme with fully transparent panel background (macOS style)",
+    "Version": "1.0",
+    "License": "LGPL"
+  },
+  "X-Plasma-API": "5.0"
+}
