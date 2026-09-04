@@ -1,8 +1,8 @@
 # cli-proxy-api（docker compose，声明由 nix 渲染派发）
 # 参考：ali-ai /opt/cli-proxy/（同镜像 eceasy/cli-proxy-api-plus，:4321）
 # 容器运行时仍 docker（B 路线）；compose 由 nix 生成，config.yaml 走 secrets（age 加密，含 secret-key）
-# auth-dir（账号 token）/logs 是状态，不归 nix（与 tailscale state 同哲学）；static 面板页入库 assets/
-# 更新流：改本文件 → 部署 → activation 覆盖 compose/config/static → docker compose up -d 重建
+# auth-dir（账号 token）/logs/static 是状态，不归 nix（static 面板页由服务自 panel-github-repository 下载）
+# 更新流：改本文件 → 部署 → activation 覆盖 compose/config → docker compose up -d 重建
 
 {
   lib,
@@ -17,7 +17,7 @@ let
 
     services:
       cli-proxy-api:
-        image: eceasy/cli-proxy-api-plus
+        image: eceasy/cli-proxy-api
         container_name: cli-proxy-api
         restart: always
         volumes:
@@ -51,10 +51,7 @@ in
     "$AGE_BIN" -d -i "$AGE_KEY" -o "$CPA_DIR/config.yaml" ${../../..}/secrets/hosts/hc-pro-pve-2/cli-proxy-config.yaml.age
     chmod 600 "$CPA_DIR/config.yaml"
 
-    # 3) static 面板页（仓库 assets/ 入库，幂等覆盖）
-    cp -f ${../../..}/assets/cli-proxy/management.html "$CPA_DIR/static/management.html"
-
-    # 4) 幂等拉起（已跑则 no-op；配置变更时 compose 自动重建）
+    # 3) 幂等拉起（已跑则 no-op；配置变更时 compose 自动重建）
     cd "$CPA_DIR" && "$DOCKER" compose up -d \
       || echo "警告: cli-proxy-api 容器启动失败（docker daemon 未运行？fan 网络不存在？）"
   '';
