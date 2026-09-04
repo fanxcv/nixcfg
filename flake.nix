@@ -332,6 +332,11 @@
           system = "x86_64-linux";
           platform = "ubuntu";
         };
+        "root@hc-pro-pve-2" = mkHomeConfig {
+          hostName = "hc-pro-pve-2";
+          system = "x86_64-linux";
+          platform = "ubuntu";
+        };
 
         # --- 以后加真机：一行注册 + 对应目录，例如 ---
         # "fan@macbook" = mkHomeConfig { hostName = "macbook"; system = "aarch64-darwin"; platform = "darwin"; };
@@ -490,6 +495,14 @@
           ali-ai = pkgs.writeShellScriptBin "ali-ai-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
             (mkHomeConfig {
               hostName = "ali-ai";
+              inherit system;
+              platform = "ubuntu";
+            }).activationPackage
+          }/activate";
+          # 云服务器（hc-pro-pve-2）：同 ali-ai 模式
+          hc-pro-pve-2 = pkgs.writeShellScriptBin "hc-pro-pve-2-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
+            (mkHomeConfig {
+              hostName = "hc-pro-pve-2";
               inherit system;
               platform = "ubuntu";
             }).activationPackage
