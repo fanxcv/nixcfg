@@ -361,7 +361,7 @@ linux:
         hostname: hc-pro-pve-2  # activation hostnamectl 固定（原 HC-Prod-2；→ modules/home/hostname.nix）
         ssh_host_key: nix 管理  # 提取现有 ed25519 key age 加密入 secrets/hosts/hc-pro-pve-2/，activation 落盘 /etc/ssh/（→ modules/home/ssh-host-key.nix）
         tailscale: nix 包    # apt 旧包已卸载（dpkg purge，见 modules/home/tailscale.nix）→ 由 nix 起 service（state 加密入 secrets/hosts/hc-pro-pve-2/，恢复同 IP 10.1.0.34；systemd unit 由 activation 写）
-        cli-proxy-api: docker compose  # eceasy/cli-proxy-api-plus（:4321；compose+config 由 nix 渲染派发，config 最小配置 age 加密 → /opt/cli-proxy/）
+        cli-proxy-api: docker compose  # eceasy/cli-proxy-api-plus（:4321；compose 由 nix 渲染派发，config 仅首装时补（age 加密，缺失才写，此后用户维护）→ /opt/cli-proxy/）
 
 # ════════════════════════════════════════════════════════════
 # ④ NixOS 真机 → hosts/nix-pve/ + home/fan/nix-pve/
