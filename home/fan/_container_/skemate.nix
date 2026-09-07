@@ -36,7 +36,19 @@
     state=$(/usr/bin/systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
     if [ "$unit_changed" = "1" ] || [ "$state" != "active" ]; then
       # last_state 由 skemate 自身维护，此处只管重启
-      if /usr/bin/systemctl restart skemate.service; then
+      if [ "$unit_changed" = "1" ]; then
+        # 更新（store 路径变）：serve 与 agent 一起换血。agent 是 serve 用 systemd-run
+        # 拉起的独立 transient 单元（skemate-agent-*），serve 重启不连带，旧 agent 会
+        # 一直跑旧二进制并累积孤儿 pane。顺序：先停 serve（防其复活旧 agent）→ 杀
+        # agent → 起新 serve（启动时自动从新二进制拉起新 agent）。
+        /usr/bin/systemctl stop skemate.service
+        /usr/bin/pkill -f "skemate agent" || true # 预期失败：agent 可能本就没在跑
+        /usr/bin/systemctl start skemate.service
+      else
+        # 崩溃恢复：只拉起 serve，不动 agent（保留 agent 内会话）
+        /usr/bin/systemctl restart skemate.service
+      fi
+      if /usr/bin/systemctl is-active skemate.service >/dev/null 2>&1; then
         sleep 2
         state=$(/usr/bin/systemctl show -p ActiveState --value skemate.service 2>/dev/null || echo unknown)
         if [ "$state" = "active" ]; then
@@ -46,7 +58,7 @@
           /usr/bin/journalctl -u skemate.service -n 10 --no-pager 2>/dev/null || true
         fi
       else
-        echo "警告: systemctl restart skemate.service 失败（错误如上），unit 状态："
+        echo "警告: skemate.service 启动失败（错误如上），unit 状态："
         /usr/bin/systemctl status skemate.service --no-pager -n 5 2>&1 | head -12 || true
         /usr/bin/journalctl -u skemate.service -n 10 --no-pager 2>/dev/null || true
       fi

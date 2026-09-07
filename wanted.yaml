@@ -293,7 +293,7 @@ macos:
           - node@24
           - python@3
         android_emulator: 声明式  # 模拟器（→ android-emulator.nix；镜像 android-36 ps16k）
-        skemate: 包+配置+自启      # 终端复用服务（→ skemate.nix；tunnel.yaml 整文件 + config.json 仅 password 字段，age 加密）
+        skemate: 包+配置+自启      # 终端复用服务（→ skemate.nix；tunnel.yaml 整文件 + config.json 仅 password 字段，age 加密；更新后自动重启 agent 换新二进制）
         ssh_keys: agenix          # id_rsa 对（→ modules/home/ssh.nix；私钥加密入库，公钥明文）
         keystore: agenix          # bill-app 签名密钥（→ keystore.nix）
     mba-m5:                 # → hosts/mba-m5/（用户层无机器差异，省略 home/fan/mba-m5/）
@@ -329,7 +329,7 @@ linux:
     secrets: agenix         # docker/ide/.secrets/age-keys → 解密 ai-env/git-credentials
     skemate:                # 终端复用服务（→ overlays/skemate.nix + _container_/skemate.nix，两台共用）
       version: flake.lock 锁定 # 锁 skemate 仓库 deploy 分支 rev（input 声明 flake.nix，ref=deploy；升级 nix flake update skemate）；latest.json 由发布 CI 提交回 deploy 分支，纯 eval 无 --impure
-      service: systemd      # serve 前台 + Restart=always + SHELL=/bin/zsh
+      service: systemd      # serve 前台 + Restart=always + SHELL=/bin/zsh；更新（store 路径变）时连带重启 agent（stop serve → 杀 agent → start serve）
       config: 宿主机挂载      # docker/ide/skemate/ → /root/.config/skemate
     container_pkgs:         # 容器专属工具（→ packages.nix）
       http-server: nix 包

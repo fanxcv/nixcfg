@@ -6,7 +6,9 @@
 #       其他文件（agent.sock/devices.json/layout.json/preferences.json/session.json/log/pid）
 #       是运行时文件，skemate 自管，不声明
 #   服务：LaunchAgent（launchd.agents.skemate，RunAtLoad + KeepAlive）——登录即启、崩溃自动重启；
-#         配置解密先于 agent 加载（entryBefore writeBoundary），部署后配置与服务同步就位
+#         配置解密先于 agent 加载（entryBefore writeBoundary），部署后配置与服务同步就位；
+#         更新后 agent 换血见下方 skemateAgentRefresh（serve 由 nix-darwin launchd reload 换新，
+#         agent 是 setsid 独立进程不随 serve 重启，须显式杀旧 agent 让新 serve 拉起新 agent）
 {
   pkgs,
   lib,
@@ -40,6 +42,27 @@
       echo "[skemate] 配置已写入（tunnel.yaml 整文件；config.json 仅 password 字段，nix 管理）"
     }
     setup_skemate_config
+  '';
+
+  # 更新后 agent 换血：nix-darwin 的 launchd reload（userLaunchd）先于 HM 激活
+  # （postActivation）执行，故此处 serve 已是新二进制；agent 是 serve 用 setsid 拉起的
+  # 独立进程，不随 serve 重启，旧 agent 会一直跑旧二进制。检测 agent 进程二进制路径
+  # != 当前 store 路径 → 杀掉，新 serve 的重连循环自动从新二进制拉起新 agent
+  # （skemate 自身逻辑）。serve 仍是旧二进制（单独跑 home-manager switch 未走
+  # darwin-rebuild）时跳过，避免杀 agent 破坏 serve 内存中的会话树。
+  home.activation.skemateAgentRefresh = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    new_bin="${pkgs.skemate}/bin/skemate"
+    serve_pid=$(pgrep -f "skemate serve" 2>/dev/null | head -1 || true)
+    serve_bin=$(ps -p "$serve_pid" -o comm= 2>/dev/null | tr -d ' ' || true)
+    if [ -n "$serve_bin" ] && [ "$serve_bin" = "$new_bin" ]; then
+      for pid in $(pgrep -f "skemate agent" 2>/dev/null || true); do
+        bin=$(ps -p "$pid" -o comm= 2>/dev/null | tr -d ' ' || true)
+        if [ -n "$bin" ] && [ "$bin" != "$new_bin" ]; then
+          echo "[skemate] 旧 agent 二进制 ($bin) 与当前版本 ($new_bin) 不一致，重启 agent"
+          kill "$pid" 2>/dev/null || true
+        fi
+      done
+    fi
   '';
 
   # LaunchAgent：登录即启 + KeepAlive 常驻（改配置后 launchctl kickstart -k 重启生效）
