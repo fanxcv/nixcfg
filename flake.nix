@@ -459,6 +459,30 @@
             "x86_64-linux"
             "aarch64-linux"
           ];
+          # 机器别名构造器：nix run .#<机器> 一步构建+激活（消除 homeConfigurations 与 packages 的重复构造）
+          mkHomeAlias =
+            {
+              hostName,
+              system,
+              platform,
+              isContainer ? false,
+              extraUnfree ? [ ],
+            }:
+            pkgs.writeShellScriptBin "${hostName}-activate" ''
+              export USER=root
+              export HOME_MANAGER_BACKUP_EXT=backup
+              exec ${
+                (mkHomeConfig {
+                  inherit
+                    hostName
+                    system
+                    platform
+                    isContainer
+                    extraUnfree
+                    ;
+                }).activationPackage
+              }/activate
+            '';
         in
         (import ./packages {
           inherit pkgs;
@@ -467,42 +491,34 @@
         // lib.optionalAttrs isLinux {
           # 机器专属别名：mise 组件共享 _container_/mise.nix（hostName 分支差异），si/lenovo 各一份
           # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
-          ide-si = pkgs.writeShellScriptBin "ide-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
-            (mkHomeConfig {
-              hostName = "ide-si";
-              inherit system;
-              platform = "container";
-              isContainer = true;
-            }).activationPackage
-          }/activate";
-          ide-lenovo = pkgs.writeShellScriptBin "ide-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
-            (mkHomeConfig {
-              hostName = "ide-lenovo";
-              inherit system;
-              platform = "container";
-              isContainer = true;
-              extraUnfree = [
-                "microsoft-edge"
-                "albert"
-              ];
-            }).activationPackage
-          }/activate";
+          ide-si = mkHomeAlias {
+            hostName = "ide-si";
+            inherit system;
+            platform = "container";
+            isContainer = true;
+          };
+          ide-lenovo = mkHomeAlias {
+            hostName = "ide-lenovo";
+            inherit system;
+            platform = "container";
+            isContainer = true;
+            extraUnfree = [
+              "microsoft-edge"
+              "albert"
+            ];
+          };
           # 云服务器（ali-ai）：服务器上仓库副本 + nix run .#ali-ai（USER=root 激活，同 ide 模式）
-          ali-ai = pkgs.writeShellScriptBin "ali-ai-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
-            (mkHomeConfig {
-              hostName = "ali-ai";
-              inherit system;
-              platform = "ubuntu";
-            }).activationPackage
-          }/activate";
+          ali-ai = mkHomeAlias {
+            hostName = "ali-ai";
+            inherit system;
+            platform = "ubuntu";
+          };
           # 云服务器（hc-pro-pve-2）：同 ali-ai 模式
-          hc-pro-pve-2 = pkgs.writeShellScriptBin "hc-pro-pve-2-activate" "export USER=root; export HOME_MANAGER_BACKUP_EXT=backup; exec ${
-            (mkHomeConfig {
-              hostName = "hc-pro-pve-2";
-              inherit system;
-              platform = "ubuntu";
-            }).activationPackage
-          }/activate";
+          hc-pro-pve-2 = mkHomeAlias {
+            hostName = "hc-pro-pve-2";
+            inherit system;
+            platform = "ubuntu";
+          };
           # PVE 宿主机部署（ds2 / desktop）：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply
           # （apt 源/DNS/去 nag/pve-assist，见 pve/ 目录；host 参数决定机器层）
           ds2 = import ./pve/deploy.nix {
@@ -559,6 +575,12 @@
           formatting = (treefmt-nix.lib.evalModule pkgs ./formatter.nix).config.build.check self;
           rustdesk-injector = pkgs.runCommand "rustdesk-injector-test" { } ''
             ${pkgs.python3}/bin/python3 ${./tests/rustdesk-injector.py} ${./tools/rustdesk-inject.py}
+            touch "$out"
+          '';
+          # 镜像/缓存配置三方一致性（tools/config.nix 源头 ↔ flake.nix nixConfig ↔ Dockerfile nix.conf）：
+          # 两处手写静态层解析期读不到 tools，只能靠检查防漂移（见 tests/mirror-consistency.py、AGENTS.md）
+          mirror-consistency = pkgs.runCommand "mirror-consistency-check" { } ''
+            ${pkgs.python3}/bin/python3 ${./tests/mirror-consistency.py} ${./tools/config.nix} ${./flake.nix} ${./docker/ide/ubuntu/Dockerfile}
             touch "$out"
           '';
         }

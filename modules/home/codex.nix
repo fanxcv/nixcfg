@@ -24,6 +24,7 @@
 
   config = lib.mkIf config.softwares.codex.enable {
     # codex 包（Rust 编译，unstable 通道——周级 flake update 跟随，与 vscode 同机制）
+    # 注：官方 flake 的 outputHashes 与 Cargo.lock 持续失同步（#7863/#7759 等），2026-09 实测 0.153.4 求值即崩，故不走
     home.packages = [ pkgs.repos.unstable.codex ];
 
     # 默认模板写实体文件（install 先 unlink 旧 symlink，天然幂等）

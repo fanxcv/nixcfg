@@ -6,4 +6,9 @@
 { tools, ... }:
 {
   imports = [ ../_ubuntu_ ] ++ tools.scan ./.;
+
+  softwares.sshHostKey = {
+    enable = true;
+    syncToSshDir = true;
+  };
 }

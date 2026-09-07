@@ -94,6 +94,7 @@ common:
 
   nix:                      # 二进制缓存/源码拉取（列表集中 tools/config.nix；flake.nix nixConfig 保持静态入口，模块/Dockerfile/PVE shell 按边界格式对齐）
     substituters: [USTC, TUNA, cache.nixos.org]  # SJTU 已移除（2026-08 超时拖死 build）；另有 numtide/nix-community cachix
+    mirror_consistency: nix flake check 断言三方一致  # 源头 tools/config.nix ↔ flake.nix nixConfig ↔ docker/ide/ubuntu/Dockerfile（→ tests/mirror-consistency.py）
     inputs_proxy: ghfast.top  # 15 个 inputs 走加速前缀（换域名跑 scripts/switch-github-proxy.sh）
     gc: 30 天自动清理 + 硬链接优化  # darwin 周级定时器（→ modules/darwin/nix.nix）；PVE 周级 systemd timer（→ pve/apply.sh）；容器重建即弃仅 auto-optimise（→ Dockerfile）
 
@@ -352,14 +353,14 @@ linux:
   server:                   # → home/fan/ali-ai/（云服务器分类，B 路线：系统层归发行版，nix 管用户态）
     machines:
       ali-ai:               # Ubuntu 24.04 云服务器（139.224.59.140，2C/3.4G，阿里云；激活：nix run .#ali-ai）
-        hostname: ali-ai    # activation hostnamectl 固定（B 路线系统层归发行版，HM hostName 只是元数据不设系统 hostname）
-        ssh_host_key: nix 管理  # 提取现有 ed25519 key age 加密入 secrets/hosts/ali-ai/，activation 落盘 /etc/ssh/（重装后指纹不变）
-        tailscale: nix 包    # docker 容器停用 → nix 接管（state 加密入 secrets/hosts/ali-ai/，恢复同 IP 10.1.0.18；systemd unit 由 activation 写）
+        hostname: ali-ai    # activation hostnamectl 固定（B 路线系统层归发行版，HM hostName 只是元数据不设系统 hostname；→ modules/home/hostname.nix）
+        ssh_host_key: nix 管理  # 提取现有 ed25519 key age 加密入 secrets/hosts/ali-ai/，activation 落盘 /etc/ssh/（重装后指纹不变；→ modules/home/ssh-host-key.nix）
+        tailscale: nix 包    # docker 容器停用 → nix 接管（state 加密入 secrets/hosts/ali-ai/，恢复同 IP 10.1.0.18；systemd unit 由 activation 写；→ modules/home/tailscale.nix）
         gitea-act: docker compose  # act_runner（hc-git.qksxin.com；compose+config 由 nix 渲染派发，token age 加密 → /opt/gitea-act/.env）
       hc-pro-pve-2:         # Ubuntu 24.04 服务器（10.2.241.139，内网；激活：nix run .#hc-pro-pve-2）
-        hostname: hc-pro-pve-2  # activation hostnamectl 固定（原 HC-Prod-2）
-        ssh_host_key: nix 管理  # 提取现有 ed25519 key age 加密入 secrets/hosts/hc-pro-pve-2/，activation 落盘 /etc/ssh/
-        tailscale: nix 包    # apt 系统包 → nix 接管（state 加密入 secrets/hosts/hc-pro-pve-2/，恢复同 IP 10.1.0.34；systemd unit 由 activation 写）
+        hostname: hc-pro-pve-2  # activation hostnamectl 固定（原 HC-Prod-2；→ modules/home/hostname.nix）
+        ssh_host_key: nix 管理  # 提取现有 ed25519 key age 加密入 secrets/hosts/hc-pro-pve-2/，activation 落盘 /etc/ssh/（→ modules/home/ssh-host-key.nix）
+        tailscale: nix 包    # apt 旧包已卸载（dpkg purge，见 modules/home/tailscale.nix）→ 由 nix 起 service（state 加密入 secrets/hosts/hc-pro-pve-2/，恢复同 IP 10.1.0.34；systemd unit 由 activation 写）
         cli-proxy-api: docker compose  # eceasy/cli-proxy-api-plus（:4321；compose+config 由 nix 渲染派发，config 最小配置 age 加密 → /opt/cli-proxy/）
 
 # ════════════════════════════════════════════════════════════
@@ -376,7 +377,7 @@ nixos:
       ui_lang: zh_CN        # 系统 locale + KDE 界面中文（plasma-localerc 声明式；终端/SSH 保持 en_US）
       apps: [edge, bitwarden, vscode, rustdesk]  # rustdesk 走官方 release 二进制 + 共享注入器；不预写 Mac trusted_devices；root 服务声明式（→ services/rustdesk.nix，免 GUI 请求权限 sudo）；SDDM 自动登录 fan → 开机直进桌面 → GUI 由 systemd user service 守护（graphical-session.target，替代系统层 autostart——autostart 仅登录时执行一次，部署 activation 的 pkill 杀 GUI 后不复活致"离线"；user service Restart=on-failure 自动拉起，ExecStartPre 复制 SDDM 新 xauth 为 ~/.Xauthority）；包内 /etc 用默认 tmpfs（container-init 写 ld.so.conf/ldconfig 需可写）+ bind 宿主 /etc/pam 与 /etc/pam.d（sudo PAM + pam_env LD_LIBRARY_PATH 注入）；libPaths 含 mesa（flutter 窗口需 EGL/dri）
       comin: true           # git 驱动自动部署（180s 轮询，与 mini-m4 对齐）
-      syncthing: true       # 系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384；忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-pve/syncthing.nix）
+      syncthing: true       # 系统级服务以 fan 用户跑，GUI 仅 127.0.0.1:8384；忽略规则 .stignore 与 Mac 一致（→ home/fan/_nixos_/syncthing.nix）
       autologin: fan        # SDDM 自动登录（RustDesk 开机即用；内网 VM 无锁屏风险可接受）
       nix_gc: 30 天自动清理
       nix_optimise: 自动
@@ -420,7 +421,7 @@ nixos:
       modemmanager: 禁用  # 无 WWAN 模块（26.05 选项 networking.modemmanager.enable=false）
       fwupd: 启用  # BIOS/EC 固件更新（Linux Vendor Firmware Service）
       comin: false          # 笔记本移动设备，手动 nixos-rebuild switch
-      syncthing: true       # 忽略规则 .stignore 与 Mac 一致（→ home/fan/nix-book/syncthing.nix）
+      syncthing: true       # 忽略规则 .stignore 与 Mac 一致（→ home/fan/_nixos_/syncthing.nix）
       nix_gc: 30 天自动清理
       nix_optimise: 自动
       fstrim: weekly

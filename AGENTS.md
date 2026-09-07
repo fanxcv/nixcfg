@@ -71,6 +71,13 @@
 
 ## 架构约定（2025-08 整理，新增/修改模块必须遵守）
 
+### 目录扫描（tools.scan）规范
+
+- **scan 目录内禁止放置需要 import 传参的模块**：隐式导入即 `import <dir>` 到 default.nix，模块无法在 import 时传参，只能吃 specialArgs 全局注入（self/inputs/outputs/tools/useChinaMirror/hostName/isContainer/platform）。需要参数的模块一律用显式 `imports` 列表组装（如 hosts/<机>/default.nix、module-list.nix）。
+- **无 default.nix 的嵌套目录被整目录静默跳过**：scan 只导入「直接子 .nix 文件」或「含 default.nix 的子目录」，不含 default.nix 的子目录里埋的 .nix 一律不生效，且不报错。勿在 scan 目录里埋无 default.nix 的嵌套 layer；要生效就给它补 default.nix 或用显式 imports。
+- **import 顺序 = 字典序（builtins.readDir + attrNames）**：模块间如依赖顺序（lib.mkOrder / 覆盖等）请用显式 imports 保证，勿依赖 scan 的字典序。
+- 验证：`nix flake check`（含 tests/mirror-consistency.py 镜像一致性断言，见下方强制动作清单）。
+
 ### secrets 架构（无兑底链，单一机制）
 
 - **fan 域 secrets**（ai-env / git-credentials / tailscale authkey / ssh 私钥 / keystore / skemate 配置）：
@@ -104,6 +111,7 @@
 
 ## 强制动作清单
 
+- [ ] 镜像/缓存配置（tools/config.nix 的 substituters/cachix/公钥）改动后：同步 flake.nix nixConfig 与 docker/ide/ubuntu/Dockerfile，并跑 `nix flake check`（tests/mirror-consistency.py 断言三方一致）
 - [ ] 改 nix 模块后：同步 wanted.yaml（先）→ eval 变更影响的配置目标（后）
 - [ ] wanted.yaml 语法校验（yaml.safe_load）
 - [ ] 机器专属新增：wanted.yaml 加 `<机器名>:` 区段 + 对应目录建模块（tools.scan 自动导入）
