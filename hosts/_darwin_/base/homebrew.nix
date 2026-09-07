@@ -5,7 +5,7 @@
 
 { inputs, config, ... }:
 let
-  inherit (inputs) homebrew-core homebrew-cask cirruslabs-cli;
+  inherit (inputs) homebrew-core homebrew-cask;
 in
 {
   nix-homebrew = {
@@ -24,26 +24,15 @@ in
     taps = {
       "homebrew/homebrew-core" = homebrew-core;
       "homebrew/homebrew-cask" = homebrew-cask;
-      # 必须用完整仓库名（brew 6 按 user/homebrew-<repo> 推导 tap 目录）；
-      # 实机当年手动 brew tap 留下的 homebrew-cli 目录恰好一致，全新部署重放验证暴露
-      "cirruslabs/homebrew-cli" = cirruslabs-cli; # tart 等（mini-m4 用）
+      # cirruslabs/cli tap 已移除：上游 tart.rb 旧语法被 Homebrew 禁用，tart 改 nixpkgs 原生包
+      # （hosts/mini-m4/homebrew.nix environment.systemPackages）
     };
 
     # tap 全声明化：禁止手动 brew tap
     mutableTaps = false;
-
     # 网络策略：bottles 走国内镜像（USTC）；cask 的 app 安装包无镜像，由用户侧代理环境变量自行处理
     extraEnv = {
       HOMEBREW_BOTTLE_DOMAIN = "https://mirrors.ustc.edu.cn/homebrew-bottles";
-    };
-
-    trust = {
-      # tap 整体信任：全新部署时 brew 拒绝 untrusted tap 的 formula（实机因包已装未触发，
-      # 重放验证暴露）；激活时执行 brew trust --tap
-      taps = [ "cirruslabs/cli" ];
-      formulae = [ ];
-      casks = [ ];
-      commands = [ ];
     };
   };
 
@@ -53,7 +42,6 @@ in
     taps = [
       "homebrew/homebrew-core"
       "homebrew/homebrew-cask"
-      "cirruslabs/homebrew-cli"
     ];
     # brew 命令行公式（三台 Mac 公共；自启走 launchd.agents → home/fan/_darwin_/syncthing.nix）
     brews = [

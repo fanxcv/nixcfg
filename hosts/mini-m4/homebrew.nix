@@ -2,13 +2,13 @@
 # 共享清单在 hosts/_darwin_/base/apps.nix（wanted.yaml macos.all_macs.apps 维护）
 # 这里用 mkAfter 在共享清单上追加，避免全量 mkForce 重复维护
 
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
   homebrew.casks = lib.mkAfter [
     { name = "blender"; } # 3D 建模
   ];
 
-  homebrew.brews = lib.mkAfter [
-    "tart" # macOS 虚拟机（cirruslabs/homebrew-cli tap 由 flake input 声明自动处理）
-  ];
+  # macOS 虚拟机：nixpkgs 原生包（2.36.0）。弃 cirruslabs tap——上游 tart.rb 仍用
+  # depends_on :macos => :ventura 旧语法，新版 Homebrew 已禁用致 brew bundle 失败
+  environment.systemPackages = [ pkgs.tart ];
 }

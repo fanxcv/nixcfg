@@ -274,7 +274,7 @@ macos:
     mini-m4:                # → hosts/mini-m4/ + home/fan/mini-m4/
       system:
         apps: [blender]     # 3D 建模
-        formulae: [tart]    # macOS 虚拟机（cirruslabs tap）
+        pkgs: [tart]        # macOS 虚拟机（nixpkgs 原生；弃 cirruslabs tap：上游旧语法被 Homebrew 禁用）
         power:              # 电源策略（pmset，→ power.nix）
           ac_sleep: 0
           ac_display_sleep: 10

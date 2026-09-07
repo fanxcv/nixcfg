@@ -133,11 +133,6 @@
       url = "git+https://ghfast.top/https://github.com/homebrew/homebrew-cask.git?ref=main&shallow=1";
       flake = false;
     };
-    # tart 等公式的 tap（mini-m4 的 hosts/mini-m4/homebrew.nix 声明）
-    cirruslabs-cli = {
-      url = "git+https://ghfast.top/https://github.com/cirruslabs/homebrew-cli.git?ref=master&shallow=1";
-      flake = false;
-    };
   };
 
   outputs =
@@ -183,6 +178,7 @@
         "vscode-extension-MS-python-vscode-pylance"
         "vscode-extension-ms-ceintl-vscode-language-pack-zh-hans"
         "vscode-extension-mhutchie-git-graph"
+        "tart" # macOS 虚拟机（fsl11Asl20，nixpkgs 原生，mini-m4）
       ];
       # 统一构造 pkgs；通道与额外 unfree 差异由调用点显式传入
       mkPkgs =
