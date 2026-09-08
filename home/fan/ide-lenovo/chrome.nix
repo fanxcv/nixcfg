@@ -27,9 +27,12 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   home.packages = [ chromeWrapper ];
 
   home.activation.chrome = lib.hm.dag.entryAfter [ "kasmvncBeautify" ] ''
-    # ── 1. 不自动开 chrome（用户手动打开；autostart 残留清理，幂等）──
-    #    手动打开走 chromeWrapper（PATH 里 chrome），自动带 9222 调试端口/禁 GPU 等参数
-    rm -f /root/.config/autostart/chrome.desktop
+    # ── 1. 不自动开 chrome，清理旧 Edge 残留（幂等）──
+    rm -f \
+      /root/.config/autostart/chrome.desktop \
+      /root/.config/autostart/microsoft-edge.desktop \
+      /root/.local/share/applications/microsoft-edge.desktop \
+      /root/.config/plank/dock1/launchers/edge.dockitem
 
     # ── 2. 应用菜单项（xfce whisker 菜单可见，图标用 chrome 包自带）──
     mkdir -p /root/.local/share/applications
