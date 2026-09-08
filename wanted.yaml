@@ -295,6 +295,7 @@ macos:
         skemate: 包+配置+自启      # 终端复用服务（→ skemate.nix；tunnel.yaml 整文件 + config.json 仅 password 字段，age 加密；更新后自动重启 agent 换新二进制）
         ssh_keys: agenix          # id_rsa 对（→ modules/home/ssh.nix；私钥加密入库，公钥明文）
         keystore: agenix          # bill-app 签名密钥（→ keystore.nix）
+        openlist_token: agenix    # alist/OpenList 访问凭据（→ openlist-env.nix：age 解密→zsh 导出 OPENLIST_TOKEN）
     mba-m5:                 # → hosts/mba-m5/（用户层无机器差异，省略 home/fan/mba-m5/）
       system:
         apps: [qq, wechat, jetbrains-toolbox, microsoft-remote-desktop, bilibili, steam]
