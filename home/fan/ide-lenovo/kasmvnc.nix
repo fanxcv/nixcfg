@@ -441,13 +441,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     theme=WhiteSur-Dark
     hide-mode=none
     PLANKEOF
-    # Plank 固定应用（dock 默认只显示运行中窗口——edge 未开时 dock 空/残桩；固定常用应用才有 macOS dock 观感）
+    # Plank 固定应用（dock 默认只显示运行中窗口——未开时 dock 空/残桩；固定常用应用才有 macOS dock 观感）
     # dockitem 格式：[PlankDockItemPreferences] Launcher=file://<store>/share/applications/<name>.desktop
     # plank 用 GFileMonitor 监听 launchers 目录，写入后自动刷新（无需重启进程）
     mkdir -p /root/.config/plank/dock1/launchers
-    cat > /root/.config/plank/dock1/launchers/edge.dockitem <<'DOCKEOF'
+    cat > /root/.config/plank/dock1/launchers/chrome.dockitem <<'DOCKEOF'
     [PlankDockItemPreferences]
-    Launcher=file:///root/.local/share/applications/microsoft-edge.desktop
+    Launcher=file:///root/.local/share/applications/chrome.desktop
     DOCKEOF
     cat > /root/.config/plank/dock1/launchers/thunar.dockitem <<'DOCKEOF'
     [PlankDockItemPreferences]
@@ -488,7 +488,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so /root/.local/share/xfce4/panel/plugins/
     ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so /root/.local/lib/xfce4/panel/plugins/
 
-    # 7. fontconfig：容器无 /etc/fonts（字体全不生效，中文方块/edge 字体报错）
+    # 7. fontconfig：容器无 /etc/fonts（字体全不生效，中文方块/浏览器字体报错）
     #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf 指 store 字体目录
     #    注意：fontconfig 默认输出是 bin（fc-* 命令），fonts.conf 在 out 输出 → 显式 .out
     mkdir -p /etc/fonts/conf.d
@@ -532,7 +532,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     fi
   '';
 
-  home.activation.kasmvnc = lib.hm.dag.entryAfter [ "edge" ] ''
+  home.activation.kasmvnc = lib.hm.dag.entryAfter [ "chrome" ] ''
     # ── 0. Xvnc 硬编码系统路径（ELF 内嵌，无法 sed/wrap）：
     #    /usr/share/X11/xkb（xkb 数据）与 /usr/bin/xkbcomp（keymap 编译器）
     #    nix 的 xkeyboard_config/xkbcomp 在 store，容器无此路径 → symlink 指 store（幂等）
