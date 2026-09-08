@@ -280,7 +280,6 @@ macos:
           ac_display_sleep: 10
           ac_powernap: true
           ac_wake_on_lan: true
-        comin: 实验（自动部署）  # git 驱动自动部署（→ comin.nix；180s 轮询，token 与 nix-pve 共用）
       user:
         mise:               # 运行时组件（→ mise.nix；ANDROID_HOME 插件注入，config.toml 补齐策略）
           - android-sdk@22.0

@@ -60,7 +60,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # git 驱动自动部署：mini-m4 与 nix-pve 已启用（服务器轮询仓库自动切换配置）
+    # git 驱动自动部署：仅 NixOS 真机（nix-pve）启用（mini-m4 2026-09 移除）
     comin = {
       url = "git+https://ghfast.top/https://github.com/nlewo/comin.git?ref=refs/tags/v0.14.0&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
