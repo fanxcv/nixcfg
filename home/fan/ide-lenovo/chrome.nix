@@ -6,7 +6,7 @@
 # 坑3：容器里 Chromium 系偶发 SIGTRAP 崩溃（crashpad 转储失败 tag not found，容器环境）——如需 autostart 保常驻则用循环重启脚本，但本机浏览器手动打开不自启
 # 坑4：容器 /dev/shm 仅 64M（Docker 默认）→ Chromium 共享内存不足 SIGTRAP 崩溃（rc=133）→ --disable-dev-shm-usage
 # 坑5：无 GPU 容器 GLX 缺失 → GPU 进程初始化失败连锁崩溃 → --disable-gpu（软渲染，已验证 rc 133→稳定）
-# 包：nixpkgs google-chrome（unfree，flake.nix mkHomeConfig extraUnfree 放行 "google-chrome"）
+# 包：nixpkgs google-chrome（unfree，flake.nix 放行 "google-chrome"）
 
 { pkgs, lib, ... }:
 let
@@ -17,10 +17,9 @@ let
       [ "tar --no-same-permissions -xf data.tar.xz" ]
       old.unpackPhase;
   });
-  # 包装脚本：名字叫 chrome，PATH 里唯一入口（不装原包 bin，避免同名冲突）；
-  # 包装二元是 chromium（google-chrome 是 chromium wrapper，makeWrapper 到 $out/bin/chromium）
+  # 仅暴露 chrome 入口，避免原包命令名进入 PATH。
   chromeWrapper = pkgs.writeShellScriptBin "chrome" ''
-    exec ${chrome}/bin/chromium --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=/root/.config/chrome-debug "$@"
+    exec ${chrome}/bin/google-chrome-stable --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=/root/.config/chrome-debug "$@"
   '';
 in
 # 仅 x86_64-linux（lenovo 真机架构）；aarch64 上 eval 门控

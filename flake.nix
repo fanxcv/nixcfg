@@ -503,7 +503,7 @@
             platform = "container";
             isContainer = true;
             extraUnfree = [
-              "google-chrome" # 浏览器（Microsoft Edge 已于 2026-09 换 Google Chrome，edge 放行清除）
+              "google-chrome" # 浏览器
               "albert"
             ];
           };
