@@ -35,9 +35,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # --- unstable 通道：需要新版本的包使用（vscode 本体 + 扩展市场、codex/pi，→ pkgs.repos.unstable）---
+    # --- unstable 通道：需要新版本的包使用（vscode 本体 + 扩展市场、codex，→ pkgs.repos.unstable）---
     # 锁 rev（flake.lock）+ 周级 nix flake update：unstable 滚动快、二进制保留期短于稳定分支，长时间不更新会掉缓存
-    # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix、home/fan/_common_/{claude,codex,pi}.nix）
+    # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix、modules/home/{codex,pi}.nix）
     unstable = {
       url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&shallow=1";
     };

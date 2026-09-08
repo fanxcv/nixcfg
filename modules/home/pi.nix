@@ -16,8 +16,8 @@
   options.softwares.pi.enable = lib.mkEnableOption "pi agent（配置仓库拉取 + fpi-install 同步）";
 
   config = lib.mkIf config.softwares.pi.enable {
-    # pi-coding-agent 包（npm 打包 buildNpmPackage，自带 node；unstable 通道——周级 flake update 跟随）
-    home.packages = [ pkgs.repos.unstable.pi-coding-agent ];
+    # pi 本体不随 nix 管理：交由 fpi-install（~/.pi/agent/bin/fpi-install）经 npm 全局安装，走 npmmirror 国内镜像。
+    # 故此处不再有 home.packages = [ pkgs.repos.unstable.pi-coding-agent ]。
 
     # ~/.pi/agent/bin 入 PATH（lib.mkAfter 排在 ~/.local/bin 之后）：
     # fpi/fpi-install/fpi-doctor 等启动器与辅助脚本由 pi-config 仓库管理，nix 不再接管 fpi wrapper
@@ -63,6 +63,7 @@
         if [ -e "$PI_DIR/bin/fpi-install" ]; then
           if ( export PATH="$HOME/.nix-profile/bin:$PATH"; command -v node >/dev/null 2>&1 ); then
             ( export PATH="$HOME/.nix-profile/bin:$PATH"
+              export FPI_MIRROR=1   # pi-coding-agent 经 npm 安装走 npmmirror 国内镜像（跳过官方源）
               bash "$PI_DIR/bin/fpi-install" ) \
               || echo "警告: fpi-install 更新失败，可稍后手动运行 $PI_DIR/bin/fpi-install"
           else
