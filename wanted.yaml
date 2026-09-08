@@ -78,7 +78,7 @@ common:
   codex:                    # 默认模板（→ modules/home/codex.nix；config.toml 已存在不覆盖，实体文件可写回）
     model: gpt-5.6-sol
     provider: fan
-  pi:                       # pi agent（→ modules/home/pi.nix；~/.pi/agent 从 git.fan-x.fun 拉取，switch 后 fpi-install 更新）
+  pi:                       # pi agent（→ modules/home/pi.nix；~/.pi/agent 从 git.fan-x.fun 拉取，switch 后 fpi-install 更新；fpi 启动器由 pi-config 仓库管理，nix 不接管）
     token_env: PI_CONFIG_GIT_TOKEN  # 从 ~/.secrets/ai-env 读取，clone 后清 origin
   mise:                     # 运行时管理器（→ modules/home/mise.nix；config.toml 策略：不存在→模板，存在→补齐缺失键保留用户版本）
   ai:                       # beads/dolt（→ modules/home/ai.nix）

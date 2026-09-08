@@ -20,22 +20,8 @@
     home.packages = [ pkgs.repos.unstable.pi-coding-agent ];
 
     # ~/.pi/agent/bin 入 PATH（lib.mkAfter 排在 ~/.local/bin 之后）：
-    # fpi 优先用 .local/bin 的 nix wrapper（本模块下方定义），.pi/agent/bin 仅补充 fpi-install/fpi-doctor 等
+    # fpi/fpi-install/fpi-doctor 等启动器与辅助脚本由 pi-config 仓库管理，nix 不再接管 fpi wrapper
     home.sessionPath = lib.mkAfter [ "$HOME/.pi/agent/bin" ];
-
-    # ---- pi 启动 wrapper（本机 ~/.pi/agent/bin/fpi 的 nix 化）----
-    # fff 覆盖模式（PI_FFF_MODE=override），pi 由 nix 提供（原生二进制），不再依赖 mise node@22
-    home.file.".local/bin/fpi" = {
-      executable = true;
-      text = ''
-        #!/usr/bin/env zsh
-        # 由 nix 管理（pi.nix）；原版见 ~/.pi/agent/bin/fpi（pi-config 仓库）
-
-        export PI_FFF_MODE=override
-
-        exec pi $@
-      '';
-    };
 
     home.activation.setupPi = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       setup_pi() {
