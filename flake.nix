@@ -312,7 +312,7 @@
           platform = "container";
           isContainer = true;
           extraUnfree = [
-            "microsoft-edge"
+            "google-chrome"
             "albert"
           ];
         };
