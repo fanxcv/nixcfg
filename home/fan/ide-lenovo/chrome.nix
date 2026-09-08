@@ -10,7 +10,13 @@
 
 { pkgs, lib, ... }:
 let
-  chrome = pkgs.google-chrome;
+  # 容器构建文件系统不允许恢复 deb 内 chrome-sandbox 的 setuid 位；运行时已显式 --no-sandbox。
+  chrome = pkgs.google-chrome.overrideAttrs (old: {
+    unpackPhase = lib.replaceStrings
+      [ "tar xf data.tar.xz" ]
+      [ "tar --no-same-permissions -xf data.tar.xz" ]
+      old.unpackPhase;
+  });
   # 包装脚本：名字叫 chrome，PATH 里唯一入口（不装原包 bin，避免同名冲突）；
   # 包装二元是 chromium（google-chrome 是 chromium wrapper，makeWrapper 到 $out/bin/chromium）
   chromeWrapper = pkgs.writeShellScriptBin "chrome" ''
