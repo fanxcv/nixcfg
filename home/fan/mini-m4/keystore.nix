@@ -1,19 +1,31 @@
-# bill-app（橘子账本）Android release 签名密钥由 nix 管理（agenix）
-#   源文件：secrets/source/hosts/mini-m4/bill-app-android-release.p12（明文，gitignore）
-#   加密：  secrets/hosts/mini-m4/bill-app-android-release.p12.age（age 加密入库，可提交 git）
-#   部署：  激活自动解密到 ~/.config/bill-app-android-release.p12（600）
-#   （路径与 bill-app Makefile 的 RELEASE_KEYSTORE_PATH 默认值一致，见 ~/code/bill-app/Makefile）
+# Android release 签名密钥与凭据由 nix 管理（age 加密，无兜底链）
+#   明文源：secrets/source/hosts/mini-m4/{<app>-android-release.p12,<app>-android-key.properties}（gitignore）
+#   加密件：secrets/hosts/mini-m4/*.age（可提交 git）
+#   部署：  激活解密到 ~/.config/（600），失败即部署失败
+#   keystore 路径与各 app 构建配置的默认值一致：
+#     bill-app  → ~/.config/bill-app-android-release.p12（~/code/bill-app/Makefile RELEASE_KEYSTORE_PATH）
+#     hc-sh-app → ~/.config/hc-sh-app-android-release.p12（hc-flutter/android/key.properties 指向）
 {
   pkgs,
   lib,
   config,
   ...
 }:
-{
-  # 统一 secrets 架构（见 _common_/secrets.nix）：activation 直接 age -d，失败即部署失败
-  home.activation.decryptBillKeystore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+let
+  decrypt = name: ''
     umask 077
     ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
-      -o "${config.home.homeDirectory}/.config/bill-app-android-release.p12" ${../../../secrets/hosts/mini-m4/bill-app-android-release.p12.age}
+      -o "${config.home.homeDirectory}/.config/${name}" ${../../../secrets/hosts/mini-m4/${name}.age}
   '';
+in
+{
+  # 统一 secrets 架构（见 _common_/secrets.nix）：activation 直接 age -d，失败即部署失败
+  home.activation.decryptAndroidKeystores = lib.hm.dag.entryAfter [ "writeBoundary" ] (
+    builtins.concatStringsSep "\n" [
+      (decrypt "bill-app-android-release.p12")
+      (decrypt "bill-app-android-key.properties")
+      (decrypt "hc-sh-app-android-release.p12")
+      (decrypt "hc-sh-app-android-key.properties")
+    ]
+  );
 }

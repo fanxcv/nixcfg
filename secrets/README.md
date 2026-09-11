@@ -33,7 +33,8 @@ secrets/
     ├── ide-si/      ssh-host-key.age + .pub（明文）
     ├── mba-m5/      ssh-user-key.age + .pub
     ├── mbp-m1/      ssh-user-key.age + .pub
-    ├── mini-m4/     bill-app-android-release.p12.age（签名密钥）
+    ├── mini-m4/     bill-app-android-release.p12.age + bill-app-android-key.properties.age
+    │                hc-sh-app-android-release.p12.age + hc-sh-app-android-key.properties.age  # Android 签名密钥+凭据
     │                skemate-config.age + skemate-tunnel.age  # config.json 仅 password 字段由 nix 管理，其余用户自管
     │                ssh-user-key.age + .pub
     ├── nix-pve/     comin-token.age（mini-m4 共用）、fan-password.age
