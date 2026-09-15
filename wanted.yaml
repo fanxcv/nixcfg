@@ -338,6 +338,7 @@ linux:
       libatomic1: maven 关联  # apt 专属（nixpkgs 无），激活脚本 grep maven 才装
     auto_deploy: timer 轮询 60s  # git pull → HEAD 变更才 nix run（→ ide-auto-deploy.*）
     journald_limits: 100M 保留 1 周  # 容器内 journal 不归 docker logging 管，不限额无限涨
+    locale: [en_US.UTF-8, zh_CN.UTF-8]  # 容器系统 locale（→ _container_/locale.nix；Ubuntu 基础镜像只有 C/C.UTF-8，激活时用 nix glibc i18n 源 + 系统 localedef 写入 locale-archive）
     login_shell: /bin/zsh   # root 登录 shell（Dockerfile chsh + entrypoint 兜底）
     machines:
       ide-si:               # → home/fan/ide-si/（激活：nix run .#ide-si）
