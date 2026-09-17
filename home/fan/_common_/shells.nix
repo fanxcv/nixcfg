@@ -23,20 +23,32 @@ let
   # 安装 + 后期更新的仓库地址（对应脚本 REMOTE=...ohmyzsh.git）
   ohMyZshRepo = tools.githubUrl "https://github.com/ohmyzsh/ohmyzsh.git";
   themeSource = "${self}/home/fan/_common_/themes/fishy.zsh-theme";
-  # nixcfg 快捷命令（alias）：进仓库目录 → 强制对齐 origin/main → 执行本机部署。
-  #   对齐 = git fetch origin main && git reset --hard origin/main：丢弃本地未提交改动/未推送
-  #   commit，保证部署的就是 origin 最新；fetch 失败（断网/凭据）短路，不动本地。
+  # nixcfg 快捷命令（zsh 函数）：进仓库目录 → 完全切到 origin/<分支> → 执行本机部署。
+  #   必须显式带分支名：nixcfg main（对齐 origin/main，原 alias 行为）/ nixcfg test（切到 test 分支）。
+  #   不传分支名 → 打印用法并拒绝部署（防在本地随意状态下误部署）。
+  #   切换语义 = fetch origin <分支> + checkout -B <分支> origin/<分支> + reset --hard origin/<分支>：
+  #   丢弃本地未提交改动与该分支未推送 commit，保证部署的就是 origin 最新；
+  #   fetch 失败（分支不存在/断网/凭据）即短路，不动本地。
   #   纯 eval（skemate 已改 flake.lock 锁定，不再需要 --impure）。
   #   nixos 仓库固定 /etc/nixos（impermanence 持久化 /persist/etc/nixos）；container/pve 在 root 家目录 ~/nixcfg，无 sudo。
   #   pve 本机自部署走 -- --self（同 pve/self-deploy.sh）。
-  syncCmd = "git fetch origin main && git reset --hard origin/main";
+  repoDir =
+    {
+      darwin = "$HOME/nixcfg";
+      nixos = "/etc/nixos";
+      container = "$HOME/nixcfg";
+      ubuntu = "$HOME/nixcfg";
+      pve = "$HOME/nixcfg";
+    }
+    .${platform}
+    or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/ubuntu/pve）");
   deployCmd =
     {
-      darwin = "cd ~/nixcfg && ${syncCmd} && sudo darwin-rebuild switch --flake .#${hostName}";
-      nixos = "cd /etc/nixos && ${syncCmd} && sudo nixos-rebuild switch --flake /etc/nixos#${hostName}";
-      container = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName}";
-      ubuntu = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName}";
-      pve = "cd ~/nixcfg && ${syncCmd} && nix run .#${hostName} -- --self";
+      darwin = "sudo darwin-rebuild switch --flake .#${hostName}";
+      nixos = "sudo nixos-rebuild switch --flake /etc/nixos#${hostName}";
+      container = "nix run .#${hostName}";
+      ubuntu = "nix run .#${hostName}";
+      pve = "nix run .#${hostName} -- --self";
     }
     .${platform}
     or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/ubuntu/pve）");
@@ -72,8 +84,24 @@ in
       alias la='ls -A'
       alias untar='tar -xzf'
 
-      # nixcfg：一键进仓库目录 + git pull 更新到最新 + 部署本机（命令见 shells.nix 的 deployCmd，按平台分支）
-      alias nixcfg='${deployCmd}'
+      # nixcfg：切分支 + 部署本机（仓库目录/部署命令见 shells.nix 的 repoDir/deployCmd，按平台分支）
+      # 必须显式给分支名，不传拒绝部署：nixcfg main（原行为）| nixcfg test
+      nixcfg() {
+        if [ -z "$1" ]; then
+          echo "用法: nixcfg <分支名>   例: nixcfg main / nixcfg test" >&2
+          echo "拒绝部署：必须显式指定分支名，避免在本地随意状态下误部署。" >&2
+          return 1
+        fi
+        local branch="$1"
+        cd "${repoDir}" || return 1
+        git fetch origin "$branch" || {
+          echo "nixcfg: git fetch origin $branch 失败（分支不存在/断网/凭据）" >&2
+          return 1
+        }
+        git checkout -B "$branch" "origin/$branch" || return 1
+        git reset --hard "origin/$branch" || return 1
+        ${deployCmd}
+      }
 
       # nix 双保险（envExtra 已 source 过，此处幂等；NixOS 无该路径，跳过）
       ${lib.optionalString (platform != "nixos") ". /nix/var/nix/profiles/default/etc/profile.d/nix.sh"}
