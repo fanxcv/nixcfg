@@ -1,7 +1,7 @@
 # macOS 系统层公共模块（nix-darwin）
 # 模块自动扫描：新增 .nix 文件即生效（tools.scan）
 # 结构对应原仓库 hosts/_darwin_/：base（homebrew/系统基础）+ gui（quartz 桌面声明）
-# + i18n（字体）+ kernel（电源/启动）+ services（tailscale 等）
+# + i18n（字体）+ kernel（电源/启动）;services 子目录已删（无内容）
 
 {
   inputs,
