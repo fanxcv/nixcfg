@@ -1,4 +1,4 @@
-# Microsoft Edge 扩展数据备份 + 更新服务禁用（三台 Mac 共享；清单 ↔ wanted.yaml edge_extensions/edge_extension_backups）
+# Microsoft Edge 扩展数据备份 + 更新服务禁用（三台 Mac 共享；扩展清单见 ./edge-ext/data.nix）
 # 安装机制：Edge 129+ 已禁用 External Extensions JSON（disable_reasons=8192，见 hosts/_darwin_/base/edge-policy.nix），
 #   扩展安装由系统层 ExtensionSettings 策略接管（edge-policy.nix，root 写 Managed Preferences）
 # 本文件职责：

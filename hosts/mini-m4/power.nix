@@ -1,6 +1,6 @@
 # mini-m4 电源策略（pmset）：用户确认保持实机现状
 # 台式机无电池，只设交流供电：永不睡眠 / 10 分钟关屏 / 睡眠跑维护 / 局域网唤醒
-# 其他 Mac 不声明电源策略（wanted.yaml 的 macos.all_macs 无 pmset 段）
+# 其他 Mac 不声明电源策略
 
 { lib, ... }:
 let

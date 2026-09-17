@@ -1,5 +1,5 @@
 # mini-m4 专属 Homebrew 条目（cask + formula）
-# 共享清单在 hosts/_darwin_/base/apps.nix（wanted.yaml macos.all_macs.apps 维护）
+# 共享清单在 hosts/_darwin_/base/apps.nix
 # 这里用 mkAfter 在共享清单上追加，避免全量 mkForce 重复维护
 
 { lib, pkgs, ... }:

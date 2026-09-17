@@ -2,7 +2,7 @@
 
 多机 Nix 配置：3 台 Mac、2 台 NixOS 真机、2 个 Docker 开发容器、6 台 PVE 宿主机。
 
-**宗旨：能 nix 就 nix**——软件包、配置、环境变量尽量全交 nix 声明式管理；实在不行的（systemd、sshd、登录 shell）才留在 Dockerfile/系统层。`wanted.yaml` 是唯一事实来源，nix 配置是它的实现，两侧必须同步（见 AGENTS.md）。
+**宗旨：能 nix 就 nix**——软件包、配置、环境变量尽量全交 nix 声明式管理；实在不行的（systemd、sshd、登录 shell）才留在 Dockerfile/系统层。nix 模块即配置的唯一载体，改配置就是改 nix（见 AGENTS.md）。
 
 ## 机器矩阵（13 台）
 
@@ -89,7 +89,6 @@ nix-pve（PVE 上的虚拟，disko 分区 + impermanence）comin 轮询 `main` �
 ```
 nixcfg/
 ├── flake.nix              # 入口：机器注册 + 命令别名 + formatter/checks
-├── wanted.yaml            # 意图清单（唯一事实源，与 nix 双向同步）
 ├── hosts/                 # 系统层：_darwin_/_nixos_ 公共 + <机>（darwin 见 hosts/README.md）
 ├── home/fan/              # 用户层：_common_/_<平台>_ 公共 + <机> 微调（module-list.nix 组装）
 ├── users/fan/             # NixOS 真机用户层（复用 home/fan 模块清单）

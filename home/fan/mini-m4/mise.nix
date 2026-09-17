@@ -1,4 +1,4 @@
-# mini-m4 mise 组件声明（wanted.yaml 的 mini_m4.mise 维护）
+# mini-m4 mise 组件声明（本机专属）
 # dart/flutter SDK 下载走国内镜像（storage.flutter-io.cn，与 mirrors.nix 的 FLUTTER_STORAGE_BASE_URL 同源）；
 #   dart 的 version_list_url（GCS JSON API）无镜像，保留官方直连（仅版本探测，低频小流量）
 # 注意：接管 config.toml 后，age/fd/ripgrep/rtk/ruby/uv 不再由 mise 管理

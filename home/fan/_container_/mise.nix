@@ -1,4 +1,4 @@
-# ide 容器 mise 组件声明（共享；wanted.yaml 的 linux.ubuntu.ide-si/ide-lenovo.mise 维护）
+# ide 容器 mise 组件声明（共享；ide-si / ide-lenovo 各自主机分支取用）
 #   组件清单从容器实测导出（mise ls --installed），纳入 nix 管理：
 #     bun/go/java/maven/node/python/uv + 机器差异（lenovo：pipx + java oracle-17；si：java zulu-8）
 #   激活时自动 mise install：config.toml 写入后安装缺失组件（幂等，已装版本秒级跳过）
