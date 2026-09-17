@@ -1,6 +1,12 @@
 # 不可变系统持久化（impermanence）：/persist 只保留需要跨重启的数据
 # 根目录是 tmpfs，重启即还原；新增需要持久化的路径在这里登记
-_: {
+# 由 hosts/_nixos_/base/default.nix 扫描导入，nix-pve/nix-book 共用
+# comin 状态（/var/lib/comin）仅 comin 启用机器（nix-pve）持久化
+{
+  lib,
+  config,
+  ...
+}: {
   fileSystems."/persist" = {
     neededForBoot = true;
   };
@@ -29,10 +35,6 @@ _: {
         mode = "0755";
       }
       {
-        directory = "/var/lib/comin";
-        mode = "0755";
-      }
-      {
         directory = "/var/lib/tailscale";
         mode = "0755";
       }
@@ -54,6 +56,12 @@ _: {
       }
       {
         directory = "/opt";
+        mode = "0755";
+      }
+    ]
+    ++ lib.optionals config.services.comin.enable [
+      {
+        directory = "/var/lib/comin";
         mode = "0755";
       }
     ];

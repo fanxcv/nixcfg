@@ -14,6 +14,8 @@
       "hosts/_nixos_/themes"
       "hosts/_nixos_/kernel"
       "hosts/_nixos_/services/openssh.nix"
+      "hosts/_nixos_/services/podman.nix"
+      "hosts/_nixos_/services/syncthing.nix"
 
       "users/fan"
     ]
