@@ -540,7 +540,6 @@
 
       # --- 多台机器部署别名：nix run .#ide-si / .#mba-m5 等（packages 块内由 mkHomeAlias / genAttrs 统一生成）---
 
-
       # 代码格式化：nix fmt 一键格式化（treefmt：nixfmt + statix，配置见 formatter.nix）
       formatter = forAllSystems (
         system:
