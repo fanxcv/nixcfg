@@ -299,7 +299,7 @@
 
       homeConfigurations = {
         # Docker 开发容器（Ubuntu，ide-si / ide-lenovo）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
-        # 代理：仅 ide-si 走（sysenv.nix 接管环境变量+hosts，与 compose 无关）；lenovo 国内直连
+        # 代理：仅 ide-si 走（sysenv.nix 接管环境变量，与 compose 无关）；内网 hosts 两台共用（_container_/extra-hosts.nix）；lenovo 国内直连
         # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异），容器内 nix run .#ide-si / .#ide-lenovo
         # 容器平台层（_container_，继承 _ubuntu_ 系统基础）：Ubuntu 层留给服务器/真机，_nixos_ 仅 NixOS 真机
         "fan@ide-si" = mkHomeConfig {
