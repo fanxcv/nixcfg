@@ -28,8 +28,8 @@
 
     CustomUserPreferences = {
       NSGlobalDomain = {
-        # 全屏模式下自动隐藏菜单栏（鼠标悬停顶部时显示）
-        AppleMenuBarVisibleInFullscreen = false;
+        # 全屏时菜单栏常驻显示（不自动隐藏）
+        AppleMenuBarVisibleInFullscreen = true;
       };
     };
 
