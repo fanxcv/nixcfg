@@ -12,6 +12,7 @@ _: {
     { name = "tencent-lemon"; } # 系统清理
     { name = "bitwarden"; } # 密码管理
     { name = "tailscale-app"; } # 组网（App 版；旧名 tailscale 已被 homebrew 重命名）
+    { name = "wetype"; } # 微信输入法（WeType，鹅厂；cask 装到 /Library/Input Methods，激活时可能多要一次 sudo 密码）
     { name = "visual-studio-code"; } # vscode（商店版；扩展/设置由 nix 锁定 → home/fan/_darwin_/gui/apps/vscode.nix）
   ];
 }
