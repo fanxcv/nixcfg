@@ -10,6 +10,9 @@ services:
     hostname: ide-si
     privileged: true
     restart: always
+    # core dump 关闭：rtk EPIPE panic 会在业务目录落 core.<pid>
+    ulimits:
+      core: 0
     environment:
       - TZ=Asia/Shanghai
       - LC_ALL=C.UTF-8
