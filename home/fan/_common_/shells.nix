@@ -26,6 +26,7 @@ let
   # nixcfg 快捷命令（zsh 函数）：进仓库目录 → 完全切到 origin/<分支> → 执行本机部署。
   #   必须显式带分支名：nixcfg main（对齐 origin/main，原 alias 行为）/ nixcfg test（切到 test 分支）。
   #   不传分支名 → 打印用法并拒绝部署（防在本地随意状态下误部署）。
+  #   分支名由函数消费，其余参数原样透传给部署命令：nixcfg main --dry-run。
   #   切换语义 = fetch origin <分支> + checkout -B <分支> origin/<分支> + reset --hard origin/<分支>：
   #   丢弃本地未提交改动与该分支未推送 commit，保证部署的就是 origin 最新；
   #   fetch 失败（分支不存在/断网/凭据）即短路，不动本地。
@@ -86,6 +87,10 @@ in
 
       # nixcfg：切分支 + 部署本机（仓库目录/部署命令见 shells.nix 的 repoDir/deployCmd，按平台分支）
       # 必须显式给分支名，不传拒绝部署：nixcfg main（原行为）| nixcfg test
+      # 分支名由函数消费（shift），其余参数透传部署命令：nixcfg main --dry-run
+      # unalias：55aa109 之前本命令是 alias，长驻 shell 里残留的同名 alias 会让函数定义
+      #   报 "defining function based on alias" parse error 并中断 .zshrc 后续行，故先清再定义。
+      unalias nixcfg 2>/dev/null || true
       nixcfg() {
         if [ -z "$1" ]; then
           echo "用法: nixcfg <分支名>   例: nixcfg main / nixcfg test" >&2
@@ -93,6 +98,7 @@ in
           return 1
         fi
         local branch="$1"
+        shift
         cd "${repoDir}" || return 1
         git fetch origin "$branch" || {
           echo "nixcfg: git fetch origin $branch 失败（分支不存在/断网/凭据）" >&2
@@ -100,7 +106,7 @@ in
         }
         git checkout -B "$branch" "origin/$branch" || return 1
         git reset --hard "origin/$branch" || return 1
-        ${deployCmd}
+        ${deployCmd} "$@"
       }
 
       # nix 双保险（envExtra 已 source 过，此处幂等；NixOS 无该路径，跳过）
