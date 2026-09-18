@@ -489,8 +489,12 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so /root/.local/lib/xfce4/panel/plugins/
 
     # 7. fontconfig：容器无 /etc/fonts（字体全不生效，中文方块/浏览器字体报错）
-    #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf 指 store 字体目录
+    #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf：
+    #    指 store 字体目录 + 中文选字与渲染规则
     #    注意：fontconfig 默认输出是 bin（fc-* 命令），fonts.conf 在 out 输出 → 显式 .out
+    #    中文选字为何必须显式声明：只给 <dir> 而不给 prefer 时，fc-match -s sans-serif:lang=zh
+    #    会挑到 Sarasa Mono CL（等宽＋繁体字形）→ 界面中英混排字重字宽不一致。
+    #    全部规则带 lang contains zh 判定，只改请求中文的场合，不动拉丁选字
     mkdir -p /etc/fonts/conf.d
     cp -f ${fontconfig.out}/etc/fonts/fonts.conf /etc/fonts/fonts.conf
     cat > /etc/fonts/conf.d/30-nix-fonts.conf <<EOF
@@ -501,6 +505,54 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       <dir>${notoCjk}/share/fonts/opentype/noto-cjk</dir>
       <dir>${sarasa}/share/fonts/truetype</dir>
       <dir prefix="xdg">fonts</dir>
+
+      <!-- 简体中文选字：GTK 已设 Sarasa Gothic SC，此处让 fontconfig 层一致
+           binding=same 必带，否则 prepend 出去的族名会以弱绑定回落，规则形同虚设 -->
+      <match target="pattern">
+        <test name="lang" compare="contains"><string>zh</string></test>
+        <test name="family"><string>sans-serif</string></test>
+        <edit name="family" mode="prepend" binding="same"><string>Sarasa Gothic SC</string></edit>
+      </match>
+      <match target="pattern">
+        <test name="lang" compare="contains"><string>zh</string></test>
+        <test name="family"><string>monospace</string></test>
+        <edit name="family" mode="prepend" binding="same"><string>Sarasa Mono SC</string></edit>
+      </match>
+      <!-- 容器内无中文衬线字体：serif 请求中文时退回 Noto Sans CJK SC（无衬线）
+           总好过落到不含 CJK 的 DejaVu Serif 出方框 -->
+      <match target="pattern">
+        <test name="lang" compare="contains"><string>zh</string></test>
+        <test name="family"><string>serif</string></test>
+        <edit name="family" mode="prepend" binding="same"><string>Noto Sans CJK SC</string></edit>
+      </match>
+
+      <!-- 旧字体名别名：网页/CSS 写死这些名字时不至于掉到 DejaVu Sans -->
+      <match target="pattern">
+        <test name="family"><string>Microsoft YaHei</string></test>
+        <edit name="family" mode="assign" binding="same"><string>Sarasa Gothic SC</string></edit>
+      </match>
+      <match target="pattern">
+        <test name="family"><string>PingFang SC</string></test>
+        <edit name="family" mode="assign" binding="same"><string>Sarasa Gothic SC</string></edit>
+      </match>
+      <match target="pattern">
+        <test name="family"><string>system-ui</string></test>
+        <edit name="family" mode="assign" binding="same"><string>Sarasa Gothic SC</string></edit>
+      </match>
+
+      <!-- 中文渲染：灰度 + 关内嵌点阵
+           VNC 是有损视频编码，子像素（rgb/lcddefault）产生的彩边会被编码糊成彩色毛边，
+           灰度抗锯齿在 KasmVNC 下更干净；autohint 对小字号笔画对齐更稳 -->
+      <match target="font">
+        <test name="lang" compare="contains"><string>zh</string></test>
+        <edit name="embeddedbitmap" mode="assign"><bool>false</bool></edit>
+        <edit name="antialias" mode="assign"><bool>true</bool></edit>
+        <edit name="hinting" mode="assign"><bool>true</bool></edit>
+        <edit name="hintstyle" mode="assign"><const>hintslight</const></edit>
+        <edit name="autohint" mode="assign"><bool>true</bool></edit>
+        <edit name="rgba" mode="assign"><const>none</const></edit>
+        <edit name="lcdfilter" mode="assign"><const>lcdnone</const></edit>
+      </match>
     </fontconfig>
     EOF
     ${fontconfig.bin}/bin/fc-cache -f >/dev/null 2>&1 || echo "警告: fc-cache 失败（字体缓存未建）"
