@@ -1,7 +1,8 @@
 #!/bin/sh
 # ide 容器配置自动部署（pull 轮询模型，轻量替代 comin——comin 只认 nixos/darwin 配置输出且需 NixOS 系统）
 # 由 ide-auto-deploy.nix 激活时安装到 /usr/local/bin/（sed 替换 @hostName@）
-# 逻辑：/root/nixcfg（compose bind mount，不 clone）git pull --ff-only → HEAD 变更才 nix run .#<hostName>
+# 逻辑：/root/nixcfg（compose bind mount，不 clone）当前分支为 main 时 git pull --ff-only → HEAD 变更才 nix run .#<hostName>
+# 分支限制：只自动部署 main；test 等分支一律跳过，留手动部署（本仓库是宿主工作树，分支由人工切换，自动轮询不得跟随）
 # 状态：/var/lib/ide-auto-deploy/last 记录上次激活 commit；容器重建后清空 → 首次轮询自动激活
 # 代理：ide-si 的 all_proxy 由 sysenv.nix 写 /etc/environment.d/zz-ide-proxy.conf，systemd 服务启动自动注入，无需重复处理
 # 失败重试：激活失败不更新 last，下次轮询自动重试
@@ -11,6 +12,17 @@ REPO=/root/nixcfg
 STATE=/var/lib/ide-auto-deploy
 mkdir -p "$STATE"
 cd "$REPO" || { echo "[ide-auto-deploy] $REPO 不存在"; exit 0; }
+
+# 只认 main：非 main 分支不 pull、不激活（分支名变化时提示一次，避免每 60s 刷日志）
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+if [ "$BRANCH" != "main" ]; then
+  if [ "$(cat "$STATE/skip" 2>/dev/null || echo "")" != "$BRANCH" ]; then
+    echo "[ide-auto-deploy] 当前分支 $BRANCH ≠ main，跳过自动部署（手动：nix run .#@hostName@）"
+    echo "$BRANCH" > "$STATE/skip"
+  fi
+  exit 0
+fi
+rm -f "$STATE/skip"
 
 git pull --ff-only -q 2>/dev/null || true
 HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
