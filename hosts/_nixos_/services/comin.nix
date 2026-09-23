@@ -32,6 +32,10 @@ in
           access_token_path = "/run/agenix/comin-token";
         };
         branches.main.name = "main";
+        # 只自动部署 main：test 等分支一律手动（nixos-rebuild switch --flake .#nix-pve）。
+        # 空 testing 名 = comin 跳过 testing 分支（repository.go: if remote.Testing.Name == "" { continue }），
+        # 否则默认 testing-<hostname> 会被轮询并自动 test 部署
+        branches.testing.name = "";
         # 轮询周期 180s（默认 60s；与 mini-m4 对齐，降低对 git 服务器打扰）
         poller.period = 180;
       }
