@@ -19,14 +19,14 @@ services:
       - USER=root   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
     volumes:
       - ./vsc:/root/.vscode-server
+      - ./skemate:/root/.config/skemate
       - ./JetBrains/cache:/root/.cache/JetBrains
       - ./JetBrains/config:/root/.config/JetBrains
       - ./JetBrains/share:/root/.local/share/JetBrains
-      - ./skemate:/root/.config/skemate
-      - ~/.local/state/mise:/root/.local/state/mise
-      - ~/.local/share/mise:/root/.local/share/mise
-      - ~/.config/mise:/root/.config/mise
-      - ~/.cache/mise:/root/.cache/mise
+      - ./mise/share:/root/.local/share/mise
+      - ./mise/state:/root/.local/state/mise
+      - ./mise/config:/root/.config/mise
+      - ./mise/cache:/root/.cache/mise
       - ~/.claude.json:/root/.claude.json
       - ~/.claude:/root/.claude
       - ~/.codex:/root/.codex
