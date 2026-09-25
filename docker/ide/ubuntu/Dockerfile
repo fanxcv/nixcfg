@@ -31,7 +31,12 @@ RUN apt update -y \
 # fan 用户 + NOPASSWD sudo 兜底：桌面会话（KasmVNC，见各机器 kasmvnc.nix 的 sessionHome=/home/fan）
 #   以 fan 运行；镜像层先建好用户，避免 HM 激活（_container_/session-user.nix）之前桌面/命令无 fan 可用。
 #   与激活脚本幂等共存（脚本以 id -u 判存、重复写 sudoers 无副作用）；/home/fan 属主移交由脚本负责。
-RUN useradd -m -u 1000 -s /bin/bash fan \
+# 坑：ubuntu:24.04 基础镜像自带 ubuntu 用户（uid/gid 1000）→ 直接 useradd -u 1000 报 “UID 1000 is not unique”。
+#   容器内无任何东西使用该用户，故先移除让位；组 1000 一并改名 fan，使 fan 的 gid 也是 1000（与宿主约定一致）。
+#   id 探测失败即「无该用户」，属预期（幂等探测，非吞错）。
+RUN u=$(id -nu 1000 2>/dev/null); [ -z "$u" ] || userdel -r "$u"; \
+    g=$(getent group 1000 | cut -d: -f1); [ -z "$g" ] || [ "$g" = fan ] || groupmod -n fan "$g"; \
+    useradd -m -u 1000 -s /bin/bash fan \
     && usermod -aG sudo fan \
     && printf 'fan ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/fan \
     && chmod 0440 /etc/sudoers.d/fan \
