@@ -7,8 +7,7 @@
   # 临时跳过：nix run --option substituters https://cache.nixos.org/ ...
   nixConfig = {
     substituters = [
-      "https://mirrors.ustc.edu.cn/nix-channels/store"
-      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+      "https://mirrors.cernet.edu.cn/nix-channels/store"
       "https://cache.nixos.org/"
     ];
     # 补充 cachix（treefmt-nix / nix-community 等项目的预构建缓存，显著提速）
@@ -26,7 +25,7 @@
     # git+https 走 GitHub 加速前缀（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
     # 前缀由 tools/config.nix 的 githubProxy 声明（flake 解析器限制 inputs.url 必须字符串字面量，
     # 换代理：改 tools/config.nix + 跑 scripts/switch-github-proxy.sh 同步 inputs/lock）
-    # 稳定版 nixos-26.05：闭包二进制在镜像/官方永久缓存 → 构建命中 USTC/TUNA；
+    # 稳定版 nixos-26.05：闭包二进制在镜像/官方永久缓存 → 构建命中 CERNET 镜像；
     # 不锁 rev：分支点更新慢（几周一次），nix flake update 自动跟随（升级=全量 nix flake update）
     nixpkgs.url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixos-26.05&shallow=1";
     home-manager = {
@@ -579,10 +578,10 @@
             ${pkgs.python3}/bin/python3 ${./tests/rustdesk-injector.py} ${./tools/rustdesk-inject.py}
             touch "$out"
           '';
-          # 镜像/缓存配置三方一致性（tools/config.nix 源头 ↔ flake.nix nixConfig ↔ Dockerfile nix.conf）：
-          # 两处手写静态层解析期读不到 tools，只能靠检查防漂移（见 tests/mirror-consistency.py、AGENTS.md）
+          # 镜像/缓存配置一致性（tools/config.nix 源头 ↔ flake.nix nixConfig ↔ Dockerfile nix.conf ↔ entrypoint.sh nix.conf ↔ pve/deploy.sh nix.conf）：
+          # 四处手写静态层解析期读不到 tools（PVE 层按子集比对），只能靠检查防漂移（见 tests/mirror-consistency.py、AGENTS.md）
           mirror-consistency = pkgs.runCommand "mirror-consistency-check" { } ''
-            ${pkgs.python3}/bin/python3 ${./tests/mirror-consistency.py} ${./tools/config.nix} ${./flake.nix} ${./docker/ide/ubuntu/Dockerfile}
+            ${pkgs.python3}/bin/python3 ${./tests/mirror-consistency.py} ${./tools/config.nix} ${./flake.nix} ${./docker/ide/ubuntu/Dockerfile} ${./docker/ide/ubuntu/entrypoint.sh} ${./pve/deploy.sh}
             touch "$out"
           '';
         }

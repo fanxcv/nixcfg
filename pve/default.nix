@@ -7,7 +7,7 @@
     "119.29.29.29"
     "223.5.5.5"
   ];
-  mirror = "https://mirrors.ustc.edu.cn"; # 中科大镜像
+  mirror = "https://mirrors.cernet.edu.cn"; # CERNET 联合镜像（按就近成员站转发）
   suite = "trixie"; # PVE 9 = Debian 13
   gateway = "10.2.241.254"; # 默认网关；HP ProBook 使用其 10.2.237.254 覆盖
   pveAssistBase = "https://help.quanshan.cn/pve-assist";

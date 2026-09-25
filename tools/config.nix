@@ -17,9 +17,9 @@
   ];
 
   # Nix 二进制缓存（Nix 模块直接读取；flake.nix/Dockerfile/PVE shell 属解析边界，手写对齐）
+  # CERNET 联合镜像（mirrors.cernet.edu.cn）按就近成员站 302 转发（实测 nix-channels 落 chinanet.mirrors.ustc.edu.cn）
   nixSubstituters = [
-    "https://mirrors.ustc.edu.cn/nix-channels/store"
-    "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+    "https://mirrors.cernet.edu.cn/nix-channels/store"
     "https://cache.nixos.org/"
   ];
   nixCachixSubstituters = [

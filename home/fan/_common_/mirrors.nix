@@ -1,6 +1,6 @@
 # 开发工具国内镜像（npm/pip/uv/go/flutter，挂 useChinaMirror 开关，所有机器通用）
-#   useChinaMirror=true（默认，ide 容器 / mini-m4 等）→ npm→npmmirror、pip/uv→清华 TUNA、
-#     go→goproxy.cn、flutter→flutter-io.cn 镜像
+#   useChinaMirror=true（默认，ide 容器 / mini-m4 等）→ npm/pip/uv/flutter→CERNET 联合镜像（mirrors.cernet.edu.cn）、
+#     go→goproxy.cn（CERNET 无 Go module proxy）
 #   useChinaMirror=false（国外直连场景）→ 不写配置文件/不注入变量，工具默认官方源
 # 用配置文件而非环境变量：npm/pip/uv/go 自动读取，不依赖 shell 环境加载
 # flutter 的 pub/engine 下载走环境变量（PUB_HOSTED_URL/FLUTTER_STORAGE_BASE_URL，CLI 读取）；
@@ -16,21 +16,22 @@
 {
   # ~/.npmrc：mise 装的 node 的 npm/pnpm/yarn 均读此文件
   # better-sqlite3 预编译二进制默认从 GitHub releases 下载（国内不可达），
-  #   改走 npmmirror 的 binary 镜像（/-/binary/<pkg>，npm config 键 → npm_config_better_sqlite3_binary_host 环境变量）
+  #   改走 npmmirror 的 binary 镜像（/-/binary/<pkg>，npm config 键 → npm_config_better_sqlite3_binary_host 环境变量）：
+  #   CERNET 的 /npm/ 只代理 registry 本体（元数据 tarball 指向成员站），无 /-/binary/ 目录，此项保留 npmmirror
   # ~/.config/pip/pip.conf：pip 用户级配置（XDG 路径，https 源证书有效无需 trusted-host）
   # ~/.config/uv/uv.toml：uv 用户级配置（index-url 键自 uv 0.1 起均支持）
   # ~/.config/go/env：go env 持久化文件（go 自动读取，等价 go env -w）
   home.file = lib.mkIf useChinaMirror {
     ".npmrc".text = ''
-      registry=https://registry.npmmirror.com
+      registry=https://mirrors.cernet.edu.cn/npm/
       better_sqlite3_binary_host=https://registry.npmmirror.com/-/binary/better-sqlite3
     '';
     ".config/pip/pip.conf".text = ''
       [global]
-      index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+      index-url = https://mirrors.cernet.edu.cn/pypi/web/simple
     '';
     ".config/uv/uv.toml".text = ''
-      index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+      index-url = "https://mirrors.cernet.edu.cn/pypi/web/simple"
     '';
     ".config/go/env".text = ''
       GOPROXY=https://goproxy.cn,direct
@@ -38,8 +39,10 @@
   };
 
   # flutter/dart pub 包与 engine 下载镜像（CLI 读环境变量，写 .zshenv 由 HM 注入所有 shell）
+  # FLUTTER_STORAGE_BASE_URL 下 flutter 拼 /flutter_infra_release/、/dart-archive/ 子路径（CERNET 两者均镜像）
+  # PUB_HOSTED_URL 无 CERNET 对应镜像，保留 flutter-io.cn
   home.sessionVariables = lib.mkIf useChinaMirror {
     PUB_HOSTED_URL = "https://pub.flutter-io.cn";
-    FLUTTER_STORAGE_BASE_URL = "https://storage.flutter-io.cn";
+    FLUTTER_STORAGE_BASE_URL = "https://mirrors.cernet.edu.cn/flutter";
   };
 }

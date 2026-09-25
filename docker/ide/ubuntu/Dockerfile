@@ -11,12 +11,12 @@ FROM ubuntu:24.04
 
 # 配置APT源并安装系统级包
 # 关键：arm64/非 amd64 架构官方走 ports.ubuntu.com，镜像对应 ubuntu-ports 目录（主源只有 amd64）
-# 统一 http + USTC：ca-certificates 尚未安装（https 握手失败）；security 套件镜像也同步
+# 统一 http + CERNET：ca-certificates 尚未安装（https 握手失败）；security 套件镜像也同步
 ARG TARGETARCH
 RUN arch_dir="ubuntu"; [ "$TARGETARCH" = "arm64" ] && arch_dir="ubuntu-ports"; \
     cat << EOF > /etc/apt/sources.list.d/ubuntu.sources
 Types: deb
-URIs: http://mirrors.ustc.edu.cn/${arch_dir}
+URIs: http://mirrors.cernet.edu.cn/${arch_dir}
 Suites: noble noble-updates noble-backports noble-security
 Components: main restricted universe multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
@@ -28,17 +28,17 @@ RUN apt update -y \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-# 安装 nix（单用户模式，全部走清华镜像：install 脚本 + tarball + binary cache）
+# 安装 nix（单用户模式，全部走 CERNET 镜像：install 脚本 + tarball + binary cache）
 # 注意：root 下安装脚本不会自动创建 /nix（会尝试 sudo），需先手动建好；
 #       2.35 起 root 跑 nix 按多用户语义解析配置（build-users-group=nixbld），需先建组；
-#       --tarball-url-prefix 不被真实安装器接受（打印 usage 静默退出），省略（包装脚本默认即清华 URL）
+#       --tarball-url-prefix 不被真实安装器接受（打印 usage 静默退出），省略（CERNET 包装脚本默认即 NJU tarball 源）
 # nix.conf 必须写 /etc/nix/nix.conf（系统级）：compose 挂载 ./kde-config → /root/.config 会遮蔽
 #   镜像内 /root/.config/nix/nix.conf（重建后 nix-command disabled 报错的根因）；/etc/nix 不在挂载路径
 RUN groupadd -r nixbld && useradd -g nixbld nixbld \
     && mkdir -m 0755 /nix \
     && mkdir -p /etc/nix \
-    && printf 'build-users-group =\nsubstituters = https://mirrors.ustc.edu.cn/nix-channels/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/\nextra-substituters = https://cache.numtide.com https://nix-community.cachix.org\nextra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\nexperimental-features = nix-command flakes\nauto-optimise-store = true\n' > /etc/nix/nix.conf \
-    && curl -fsL https://mirrors.tuna.tsinghua.edu.cn/nix/latest/install -o /tmp/nix-install.sh \
+    && printf 'build-users-group =\nsubstituters = https://mirrors.cernet.edu.cn/nix-channels/store https://cache.nixos.org/\nextra-substituters = https://cache.numtide.com https://nix-community.cachix.org\nextra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\nexperimental-features = nix-command flakes\nauto-optimise-store = true\n' > /etc/nix/nix.conf \
+    && curl -fsL https://mirrors.cernet.edu.cn/nix/latest/install -o /tmp/nix-install.sh \
     && sh /tmp/nix-install.sh --no-daemon --no-channel-add --yes \
     && rm -f /tmp/nix-install.sh
 
