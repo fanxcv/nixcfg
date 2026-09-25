@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
-Environment=HOME=/root
+User=fan
+Environment=HOME=/home/fan
 # systemd 默认 PATH 不含 nix bin；@path@ 由激活脚本注入（kasmvnc + xfce 组件 + dbus + xauth/xkbcomp）
 Environment=PATH=@path@
 ExecStart=@kasmvnc@/bin/kasmvncserver -fg :1 -geometry 1920x1080 -select-de manual

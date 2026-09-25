@@ -1,5 +1,5 @@
 # ide-lenovo 专属：KasmVNC 浏览器远程桌面（xfce4 桌面，无 GPU 软渲染）
-# 访问：http://<lenovo-ip>:6901/vnc.html（compose 映射 6901:6901），用户名 root + 密码
+# 访问：http://<lenovo-ip>:6901/vnc.html（compose 映射 6901:6901），用户名 fan + 密码
 # 密码：nix 管理（secrets/source/kasmvnc-passwd → encrypt.sh → .age，激活 age 解密写入）
 # 包：packages/kasmvnc.nix（官方 deb 解包自打包，nixpkgs 无此包）
 # 桌面：xfce4（GTK 软渲染稳定，KasmVNC 官方默认；KDE 黑屏坑多已弃）
@@ -9,6 +9,9 @@
 { pkgs, lib, ... }:
 let
   kasmvnc = pkgs.kasmvnc;
+  # 桌面会话身份（KasmVNC 会话迁 fan）：显式常量，避免依赖 identity.nix 落地
+  sessionUser = "fan";
+  sessionHome = "/home/fan";
   # 26.05 起 xfce 组件移顶层（pkgs.xfce4-session 等，xfce.* 已 deprecated）
   xfce4-session = pkgs.xfce4-session;
   xfwm4 = pkgs.xfwm4;
@@ -149,22 +152,22 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   # 其余（xfwm4 窗口/壁纸/面板）走 xfconf 频道，xfsettingsd 不管，直接生效
   home.activation.kasmvncBeautify = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     # 0. 主题/图标/鼠标 symlink 到传统路径（GTK 查找 ~/.themes ~/.icons，不依赖 XDG_DATA_DIRS 顺序）
-    mkdir -p /root/.themes /root/.icons /root/.local/share/plank/themes
-    ln -sfn ${whitesurGtk}/share/themes/${gtkTheme} /root/.themes/${gtkTheme}
-    ln -sfn ${whitesurIcon}/share/icons/${iconTheme} /root/.icons/${iconTheme}
-    ln -sfn ${whitesurCursors}/share/icons/${cursorTheme} /root/.icons/${cursorTheme}
-    ln -sfn ${pkgs.adwaita-icon-theme}/share/icons/Adwaita /root/.icons/Adwaita
-    ln -sfn ${pkgs.adwaita-icon-theme}/share/icons/hicolor /root/.icons/hicolor
+    mkdir -p ${sessionHome}/.themes ${sessionHome}/.icons ${sessionHome}/.local/share/plank/themes
+    ln -sfn ${whitesurGtk}/share/themes/${gtkTheme} ${sessionHome}/.themes/${gtkTheme}
+    ln -sfn ${whitesurIcon}/share/icons/${iconTheme} ${sessionHome}/.icons/${iconTheme}
+    ln -sfn ${whitesurCursors}/share/icons/${cursorTheme} ${sessionHome}/.icons/${cursorTheme}
+    ln -sfn ${pkgs.adwaita-icon-theme}/share/icons/Adwaita ${sessionHome}/.icons/Adwaita
+    ln -sfn ${pkgs.adwaita-icon-theme}/share/icons/hicolor ${sessionHome}/.icons/hicolor
     # Plank 主题：WhiteSur 的 dock.theme 在主题目录 plank/ 子目录 → symlink 到 plank 主题查找路径
-    ln -sfn ${whitesurGtk}/share/themes/${gtkTheme}/plank /root/.local/share/plank/themes/${gtkTheme}
+    ln -sfn ${whitesurGtk}/share/themes/${gtkTheme}/plank ${sessionHome}/.local/share/plank/themes/${gtkTheme}
 
     # 0.5 壁纸源：仓库 assets/kde-wallpaper.jpg（声明式，容器重建不丢）
-    mkdir -p /root/.config
-    cp -f ${../../..}/assets/kde-wallpaper.jpg /root/.config/kde-wallpaper.jpg
+    mkdir -p ${sessionHome}/.config
+    cp -f ${../../..}/assets/kde-wallpaper.jpg ${sessionHome}/.config/kde-wallpaper.jpg
 
     # 1. GTK 主题（xfsettingsd 不启动后 GTK 读 settings.ini；GTK2 读 ~/.gtkrc-2.0）
-    mkdir -p /root/.config/gtk-3.0
-    cat > /root/.config/gtk-3.0/settings.ini <<EOF
+    mkdir -p ${sessionHome}/.config/gtk-3.0
+    cat > ${sessionHome}/.config/gtk-3.0/settings.ini <<EOF
     [Settings]
     gtk-theme-name=${gtkTheme}
     gtk-icon-theme-name=${iconTheme}
@@ -174,22 +177,22 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     gtk-application-prefer-dark-theme=1
     gtk-xft-dpi=147456
     EOF
-    cat > /root/.gtkrc-2.0 <<EOF
+    cat > ${sessionHome}/.gtkrc-2.0 <<EOF
     gtk-theme-name = "${gtkTheme}"
     gtk-icon-theme-name = "${iconTheme}"
     gtk-font-name = "Noto Sans CJK SC 11"
     EOF
 
     # 1.5 终端字体：JetBrains Mono（中文由 fontconfig fallback 到 Noto Sans CJK SC）
-    mkdir -p /root/.config/xfce4/terminal
-    cat > /root/.config/xfce4/terminal/terminalrc <<EOF
+    mkdir -p ${sessionHome}/.config/xfce4/terminal
+    cat > ${sessionHome}/.config/xfce4/terminal/terminalrc <<EOF
     [Configuration]
     FontName=JetBrains Mono 12
     EOF
 
     # 2. xfce4-session Failsafe 会话（去掉 xfsettingsd——它写默认覆盖主题；键盘布局回默认，容器远程桌面无碍）
-    mkdir -p /root/.config/xfce4/xfconf/xfce-perchannel-xml
-    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml <<EOF
+    mkdir -p ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml
+    cat > ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml <<EOF
     <?xml version="1.0" encoding="UTF-8"?>
     <channel name="xfce4-session" version="1.0">
       <property name="general" type="empty">
@@ -228,7 +231,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # 2.5 HiDPI：Xft.dpi 144（1.5x 字体缩放，VNC 自适应分辨率下界面不溢出）
     #    xfsettingsd 不启动（写默认覆盖主题）→ xsettings 频道手动写文件（xfconfd 启动时读）
     #    GTK 应用读 xsettings 频道的 Xft/DPI（dbus 经 xfconfd）；gtk-xft-dpi 在 settings.ini（GTK3 直读）
-    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml <<EOF
+    cat > ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml <<EOF
     <?xml version="1.0" encoding="UTF-8"?>
     <channel name="xsettings" version="1.0">
       <property name="Xft" type="empty">
@@ -238,7 +241,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     EOF
 
     # 3. xfwm4 窗口装饰（WhiteSur 主题 + 右侧按钮）
-    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml <<EOF
+    cat > ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml <<EOF
     <?xml version="1.0" encoding="UTF-8"?>
     <channel name="xfwm4" version="1.0">
       <property name="general" type="empty">
@@ -253,7 +256,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     #    坑：xfdesktop 4.20 的 backdrop 属性路径用 RandR connector 名（xfw_monitor_get_connector），
     #    非 monitor0——Xvnc 的 connector 是 VNC-0（xdpyinfo/RandR 查询实证），写 monitor0 读不到 → 默认壁纸
     #    image-style=5 = XFCE_BACKDROP_IMAGE_ZOOMED（4.20 枚举：0 none/1 centered/2 tiled/3 stretched/4 scaled/5 zoomed/6 spanning）
-    mkdir -p /root/.config/xfce4/xfconf/xfce-perchannel-xml
+    mkdir -p ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml
     tmp_desktop=$(mktemp)
     cat > "$tmp_desktop" <<EOF
     <?xml version="1.0" encoding="UTF-8"?>
@@ -262,7 +265,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
         <property name="screen0" type="empty">
           <property name="monitorVNC-0" type="empty">
             <property name="workspace0" type="empty">
-              <property name="last-image" type="string" value="/root/.config/background.png"/>
+              <property name="last-image" type="string" value="${sessionHome}/.config/background.png"/>
               <property name="image-style" type="int" value="5"/>
             </property>
           </property>
@@ -272,15 +275,15 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     EOF
     desktop_changed=0
     # 语义检测（xfconfd 回写会加 last-settings-migration-version/改 XML 版本，cmp 恒不同 → 每次部署重启 VNC）
-    if ! grep -q "monitorVNC-0" /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml 2>/dev/null \
-      || ! grep -q "background.png" /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml 2>/dev/null; then
-      cp "$tmp_desktop" /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+    if ! grep -q "monitorVNC-0" ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml 2>/dev/null \
+      || ! grep -q "background.png" ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml 2>/dev/null; then
+      cp "$tmp_desktop" ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
       desktop_changed=1
     fi
     rm -f "$tmp_desktop"
 
     # 5. 面板（单条顶部半透明 + 深色模式：whisker 菜单/任务列表/时钟/托盘/剪贴板）
-    cat > /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml <<EOF
+    cat > ${sessionHome}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml <<EOF
     <?xml version="1.0" encoding="UTF-8"?>
     <channel name="xfce4-panel" version="1.0">
       <property name="configver" type="int" value="2"/>
@@ -338,8 +341,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # fcitx5 中文输入法配置（参考 nix-pve i18n.inputMethod.fcitx5 settings：全拼默认 + 云拼音/标点策略）
     # 坑：Enabled Addons 必须显式列出 keyboard,pinyin——fcitx5 5.1 addon 懒加载，
     #   缺此行时组构建早于 pinyin addon 加载完成（晚约 1.3s）→ pinyin 被剔出组 → DefaultIM 回退 keyboard-us
-    mkdir -p /root/.config/fcitx5/conf
-    cat > /root/.config/fcitx5/profile <<EOF
+    mkdir -p ${sessionHome}/.config/fcitx5/conf
+    cat > ${sessionHome}/.config/fcitx5/profile <<EOF
     [Profile]
     Enabled Addons=keyboard,pinyin
     Groups=Default
@@ -358,7 +361,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     Name=pinyin
     Layout=
     EOF
-    cat > /root/.config/fcitx5/conf/pinyin.conf <<EOF
+    cat > ${sessionHome}/.config/fcitx5/conf/pinyin.conf <<EOF
     [Global]
     FirstRun=False
     PageSize=9
@@ -369,13 +372,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     CloudPinyinIndex=2
     CloudPinyinAnimation=True
     EOF
-    cat > /root/.config/fcitx5/conf/cloudpinyin.conf <<EOF
+    cat > ${sessionHome}/.config/fcitx5/conf/cloudpinyin.conf <<EOF
     [Global]
     MinimumPinyinLength=4
     Backend=Baidu
     Toggle Key=
     EOF
-    cat > /root/.config/fcitx5/conf/punctuation.conf <<EOF
+    cat > ${sessionHome}/.config/fcitx5/conf/punctuation.conf <<EOF
     [Global]
     Enabled=True
     HalfWidthPuncAfterLetterOrNumber=True
@@ -383,12 +386,12 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     EOF
     # GTK3 immodule cache：fcitx5-gtk 包不带 cache，GTK3 只按 cache 加载 IM module
     #   → GTK_IM_MODULE=fcitx 静默失败（客户端永不连接）。生成含 fcitx5 的 cache，xstartup GTK_IM_MODULE_FILE 指 it
-    ${pkgs.gtk3.dev}/bin/gtk-query-immodules-3.0 ${fcitx5-gtk}/lib/gtk-3.0/3.0.0/immodules/im-fcitx5.so > /root/.config/fcitx5/gtk-immodules.cache
+    ${pkgs.gtk3.dev}/bin/gtk-query-immodules-3.0 ${fcitx5-gtk}/lib/gtk-3.0/3.0.0/immodules/im-fcitx5.so > ${sessionHome}/.config/fcitx5/gtk-immodules.cache
 
     # 6. autostart 脚本（壁纸生成 + xfwm4/壁纸设置兜底；GTK 主题走 settings.ini 不需 xfconf）
-    mkdir -p /root/.config/autostart
+    mkdir -p ${sessionHome}/.config/autostart
     # fcitx5 中文输入法（会话启动即拉起；配置见上方 fcitx5 配置段）
-    cat > /root/.config/autostart/fcitx5.desktop <<EOF
+    cat > ${sessionHome}/.config/autostart/fcitx5.desktop <<EOF
     [Desktop Entry]
     Type=Application
     Name=Fcitx5
@@ -396,14 +399,14 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     Exec=${fcitx5}/bin/fcitx5
     X-GNOME-Autostart-enabled=true
     EOF
-    cat > /root/.config/autostart/theme-setup.desktop <<EOF
+    cat > ${sessionHome}/.config/autostart/theme-setup.desktop <<EOF
     [Desktop Entry]
     Type=Application
     Name=Theme Setup
-    Exec=/root/.config/autostart/theme-setup.sh
+    Exec=${sessionHome}/.config/autostart/theme-setup.sh
     X-GNOME-Autostart-enabled=true
     EOF
-    cat > /root/.config/autostart/theme-setup.sh <<EOF
+    cat > ${sessionHome}/.config/autostart/theme-setup.sh <<EOF
     #!/bin/sh
     # Catppuccin Mocha 壁纸/窗口设置（xfce4-session autostart 阶段执行，环境继承会话）
     # 时序坑：xfdesktop 启动可能早于 xfconfd 就绪（读到空值→默认壁纸），故 sleep 后设置并二次兑底
@@ -412,23 +415,23 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # 坑：composite 输出尺寸 = 较大输入，须用 \(...\) 子图像 + -extent 强制 1920x1080（否则输出源图尺寸 3350x1920）
     # 旧竖屏版（1080x1920）存在时删除重生成（分辨率变更迁移）
     # 坑：identify 失败时 bg_size 未赋值 → 激活 set -u 中止（unbound variable）→ 须 || echo 兑底
-    if [ -f /root/.config/background.png ] && [ "$(${imagemagick}/bin/identify -format '%wx%h' /root/.config/background.png 2>/dev/null || echo x)" != "1920x1080" ]; then
-      rm -f /root/.config/background.png
+    if [ -f ${sessionHome}/.config/background.png ] && [ "$(${imagemagick}/bin/identify -format '%wx%h' ${sessionHome}/.config/background.png 2>/dev/null || echo x)" != "1920x1080" ]; then
+      rm -f ${sessionHome}/.config/background.png
     fi
-    if [ ! -f /root/.config/background.png ]; then
-      ${imagemagick}/bin/magick /root/.config/kde-wallpaper.jpg -resize 1920x1080! -blur 0x30 /tmp/bg-blur.png 2>/dev/null \
-        && ${imagemagick}/bin/magick /tmp/bg-blur.png \( /root/.config/kde-wallpaper.jpg -resize 1920x1080^ -gravity center -extent 1920x1080 \) -gravity center -composite /root/.config/background.png 2>/dev/null \
+    if [ ! -f ${sessionHome}/.config/background.png ]; then
+      ${imagemagick}/bin/magick ${sessionHome}/.config/kde-wallpaper.jpg -resize 1920x1080! -blur 0x30 /tmp/bg-blur.png 2>/dev/null \
+        && ${imagemagick}/bin/magick /tmp/bg-blur.png \( ${sessionHome}/.config/kde-wallpaper.jpg -resize 1920x1080^ -gravity center -extent 1920x1080 \) -gravity center -composite ${sessionHome}/.config/background.png 2>/dev/null \
         && rm -f /tmp/bg-blur.png \
         || echo "警告: 壁纸生成失败"
     fi
     # 窗口装饰/壁纸（xfsettingsd 不管这些频道，设置即生效；xfdesktop 监听变更自动重载）
     # 路径用 monitorVNC-0（RandR connector 名，见上注释；monitor0 读不到）
     ${xfconf}/bin/xfconf-query -c xfwm4 -p /general/theme -s '${gtkTheme}'
-    ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitorVNC-0/workspace0/last-image -s /root/.config/background.png
+    ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitorVNC-0/workspace0/last-image -s ${sessionHome}/.config/background.png
     ${xfconf}/bin/xfconf-query -c xfce4-desktop --create -p /backdrop/screen0/monitorVNC-0/workspace0/image-style -s 5
     sleep 2
     # 二次兑底：首次设置时 xfconfd 可能未就绪（PropertyNotFound），重设确保生效
-    ${xfconf}/bin/xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitorVNC-0/workspace0/last-image -s /root/.config/background.png 2>/dev/null || true
+    ${xfconf}/bin/xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitorVNC-0/workspace0/last-image -s ${sessionHome}/.config/background.png 2>/dev/null || true
     # xfdesktop 4.20 只监听启动时读过的属性路径（monitorVNC-0），设置后不重载 → 重启 xfdesktop 生效
     # （xfce4-session 的 failsafe 客户端监控不重启 xfdesktop，须手动拉起；SESSION_MANAGER 缺失仅告警不影响）
     pkill -f '[x]fdesktop' 2>/dev/null || true
@@ -437,8 +440,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # Plank dock 配置（macOS 风格：底部居中、图标缩放、WhiteSur 主题）
     # 注意：plank 由 Failsafe 会话拉起（Client4=plank，环境含 XAUTHORITY），此处只写配置不碰进程
     #   （手动 pkill+plank & 会因缺 XAUTHORITY 报 'Only X11 environments are supported' 退出）
-    mkdir -p /root/.config/plank/dock1
-    cat > /root/.config/plank/dock1/settings <<'PLANKEOF'
+    mkdir -p ${sessionHome}/.config/plank/dock1
+    cat > ${sessionHome}/.config/plank/dock1/settings <<'PLANKEOF'
     [PlankDockPreferences]
     position=bottom
     alignment=center
@@ -451,42 +454,42 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # Plank 固定应用（dock 默认只显示运行中窗口——未开时 dock 空/残桩；固定常用应用才有 macOS dock 观感）
     # dockitem 格式：[PlankDockItemPreferences] Launcher=file://<store>/share/applications/<name>.desktop
     # plank 用 GFileMonitor 监听 launchers 目录，写入后自动刷新（无需重启进程）
-    mkdir -p /root/.config/plank/dock1/launchers
+    mkdir -p ${sessionHome}/.config/plank/dock1/launchers
     # chrome.dockitem 由 chrome.nix 的 activation 写入（Launcher 指 store 内 .desktop，避免被 Plank 删除）
-    cat > /root/.config/plank/dock1/launchers/thunar.dockitem <<'DOCKEOF'
+    cat > ${sessionHome}/.config/plank/dock1/launchers/thunar.dockitem <<'DOCKEOF'
     [PlankDockItemPreferences]
     Launcher=file://${thunar}/share/applications/thunar.desktop
     DOCKEOF
-    cat > /root/.config/plank/dock1/launchers/terminal.dockitem <<'DOCKEOF'
+    cat > ${sessionHome}/.config/plank/dock1/launchers/terminal.dockitem <<'DOCKEOF'
     [PlankDockItemPreferences]
     Launcher=file://${xfce4-terminal}/share/applications/xfce4-terminal.desktop
     DOCKEOF
-    cat > /root/.config/plank/dock1/launchers/mousepad.dockitem <<'DOCKEOF'
+    cat > ${sessionHome}/.config/plank/dock1/launchers/mousepad.dockitem <<'DOCKEOF'
     [PlankDockItemPreferences]
     Launcher=file://${mousepad}/share/applications/org.xfce.mousepad.desktop
     DOCKEOF
     # settings/appfinder 不再固定到 dock（用户裁决）：容器内旧文件持久存在 → 幂等清理（同 Edge 残留处理）
     rm -f \
-      /root/.config/plank/dock1/launchers/settings.dockitem \
-      /root/.config/plank/dock1/launchers/appfinder.dockitem
+      ${sessionHome}/.config/plank/dock1/launchers/settings.dockitem \
+      ${sessionHome}/.config/plank/dock1/launchers/appfinder.dockitem
     EOF
-    chmod +x /root/.config/autostart/theme-setup.sh
+    chmod +x ${sessionHome}/.config/autostart/theme-setup.sh
 
     # 6.5 外部面板插件 .desktop+.so 同目录 symlink（XDG_DATA_HOME 优先于 XDG_DATA_DIRS）
     #    坑1：nix 包布局 .desktop 在 share/、.so 在 lib/，xfce4-panel 按 .desktop 目录找 .so 会失败（弹'无法加载插件'）
     #    坑2：xfce4-panel 的模块表 key = .desktop 文件名（去 .desktop）——配置名 'clipman' 须有 clipman.desktop
     #        （包内文件名是 xfce4-clipman-plugin.desktop → key=xfce4-clipman-plugin，与配置名不匹配 → 弹窗）
-    #    坑3：user datadir（/root/.local/share）的 libdir 配对是 /root/.local/lib/xfce4/panel/plugins——.so 须放那
+    #    坑3：user datadir（${sessionHome}/.local/share）的 libdir 配对是 ${sessionHome}/.local/lib/xfce4/panel/plugins——.so 须放那
     #    坑4：nix run 的 flake 求值 GC 可能删旧 store 路径（broken symlink），激活每次重写 symlink 指向当前路径
-    mkdir -p /root/.local/share/xfce4/panel/plugins /root/.local/lib/xfce4/panel/plugins
+    mkdir -p ${sessionHome}/.local/share/xfce4/panel/plugins ${sessionHome}/.local/lib/xfce4/panel/plugins
     # whiskermenu：文件名即配置名，symlink 即可
-    ln -sfn ${whiskermenu}/share/xfce4/panel/plugins/whiskermenu.desktop /root/.local/share/xfce4/panel/plugins/
-    ln -sfn ${whiskermenu}/lib/xfce4/panel/plugins/libwhiskermenu.so /root/.local/share/xfce4/panel/plugins/
-    ln -sfn ${whiskermenu}/lib/xfce4/panel/plugins/libwhiskermenu.so /root/.local/lib/xfce4/panel/plugins/
+    ln -sfn ${whiskermenu}/share/xfce4/panel/plugins/whiskermenu.desktop ${sessionHome}/.local/share/xfce4/panel/plugins/
+    ln -sfn ${whiskermenu}/lib/xfce4/panel/plugins/libwhiskermenu.so ${sessionHome}/.local/share/xfce4/panel/plugins/
+    ln -sfn ${whiskermenu}/lib/xfce4/panel/plugins/libwhiskermenu.so ${sessionHome}/.local/lib/xfce4/panel/plugins/
     # clipman：包内 .desktop 文件名（xfce4-clipman-plugin.desktop）≠ 配置名（clipman）→ 复制改名
-    cp -f ${xfce4-clipman}/share/xfce4/panel/plugins/xfce4-clipman-plugin.desktop /root/.local/share/xfce4/panel/plugins/clipman.desktop
-    ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so /root/.local/share/xfce4/panel/plugins/
-    ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so /root/.local/lib/xfce4/panel/plugins/
+    cp -f ${xfce4-clipman}/share/xfce4/panel/plugins/xfce4-clipman-plugin.desktop ${sessionHome}/.local/share/xfce4/panel/plugins/clipman.desktop
+    ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so ${sessionHome}/.local/share/xfce4/panel/plugins/
+    ln -sfn ${xfce4-clipman}/lib/xfce4/panel/plugins/libclipman.so ${sessionHome}/.local/lib/xfce4/panel/plugins/
 
     # 7. fontconfig：容器无 /etc/fonts（字体全不生效，中文方块/浏览器字体报错）
     #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf：
@@ -554,16 +557,16 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     EOF
     ${fontconfig.bin}/bin/fc-cache -f >/dev/null 2>&1 || echo "警告: fc-cache 失败（字体缓存未建）"
 
-    # 8. locale：容器 /usr/share/i18n 被裁剪（无 locale-gen 源），用 nix glibc 的 localedef 生成到 /root/.locale
+    # 8. locale：容器 /usr/share/i18n 被裁剪（无 locale-gen 源），用 nix glibc 的 localedef 生成到 ${sessionHome}/.locale
     #    xstartup export LOCPATH 指过去；--no-archive 目录形式，不污染系统 locale-archive
     #    注意：localedef 在 glibc 的 bin 输出（${glibc}/bin 主输出无），i18n 源数据在主输出
-    mkdir -p /root/.locale
+    mkdir -p ${sessionHome}/.locale
     export I18NPATH=${glibc}/share/i18n
-    if [ ! -d /root/.locale/zh_CN.UTF-8 ]; then
-      ${glibc.bin}/bin/localedef --no-archive -i zh_CN -f UTF-8 /root/.locale/zh_CN.UTF-8 || echo "警告: zh_CN.UTF-8 locale 生成失败"
+    if [ ! -d ${sessionHome}/.locale/zh_CN.UTF-8 ]; then
+      ${glibc.bin}/bin/localedef --no-archive -i zh_CN -f UTF-8 ${sessionHome}/.locale/zh_CN.UTF-8 || echo "警告: zh_CN.UTF-8 locale 生成失败"
     fi
-    if [ ! -d /root/.locale/en_US.UTF-8 ]; then
-      ${glibc.bin}/bin/localedef --no-archive -i en_US -f UTF-8 /root/.locale/en_US.UTF-8 || echo "警告: en_US.UTF-8 locale 生成失败"
+    if [ ! -d ${sessionHome}/.locale/en_US.UTF-8 ]; then
+      ${glibc.bin}/bin/localedef --no-archive -i en_US -f UTF-8 ${sessionHome}/.locale/en_US.UTF-8 || echo "警告: en_US.UTF-8 locale 生成失败"
     fi
 
     # 9. nix.conf 防 GC：nix run 的 flake 求值 GC 曾删掉被 profile 引用的插件 store 路径（broken symlink）
@@ -594,7 +597,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     #   → dbus-daemon 直起，--config-file 显式指 nix store 的 session.conf；
     #   坑：不能带 --session（隐含默认 /etc/dbus-1/session.conf，与 --config-file 冲突报错）
     # 变更检测：xstartup 内容变更 → 重启 service（新会话才读新 xstartup）
-    mkdir -p /root/.vnc
+    mkdir -p ${sessionHome}/.vnc
     tmp_xstartup=$(mktemp)
     cat > "$tmp_xstartup" <<EOF
     #!/bin/sh
@@ -602,8 +605,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     unset SESSION_MANAGER
     unset DBUS_SESSION_BUS_ADDRESS
     export PATH="${runPath}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    # 中文 locale（激活时 localedef 生成到 /root/.locale；容器系统 locale 只有 C.UTF-8）
-    export LOCPATH=/root/.locale
+    # 中文 locale（激活时 localedef 生成到 ${sessionHome}/.locale；容器系统 locale 只有 C.UTF-8）
+    export LOCPATH=${sessionHome}/.locale
     export LANG=zh_CN.UTF-8
     export LC_ALL=zh_CN.UTF-8
     # fcitx5 中文输入法：GTK/QT IM module + XIM；GTK_PATH 指 fcitx5-gtk immodule（GTK 默认路径找不到）
@@ -614,7 +617,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     export QT_PLUGIN_PATH="${fcitx5-qt}/lib/qt5/plugins:${fcitx5-qt}/lib/qt6/plugins"
     # 坑：GTK3 只按 immodules.cache 加载 IM module，fcitx5-gtk 包不带 cache → GTK_IM_MODULE=fcitx 静默失败
     #   → 激活脚本生成含 fcitx5 的 cache（见下方 GTK cache 生成段），此处指向之
-    export GTK_IM_MODULE_FILE=/root/.config/fcitx5/gtk-immodules.cache
+    export GTK_IM_MODULE_FILE=${sessionHome}/.config/fcitx5/gtk-immodules.cache
     # xfconfd 靠 dbus 激活（org.xfce.Xfconf.service 在 xfconf 包 share/dbus-1/services），
     # dbus 标准目录找不到 store 路径 → XDG_DATA_DIRS 指 xfconf share（standard_session_servicedirs 读它）
     # 同时指各包 share：GTK 主题/图标/翻译查找（容器无 /usr/share）
@@ -631,20 +634,20 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     EOF
     chmod +x "$tmp_xstartup"
     xstartup_changed=0
-    if ! cmp -s "$tmp_xstartup" /root/.vnc/xstartup; then
-      cp "$tmp_xstartup" /root/.vnc/xstartup
+    if ! cmp -s "$tmp_xstartup" ${sessionHome}/.vnc/xstartup; then
+      cp "$tmp_xstartup" ${sessionHome}/.vnc/xstartup
       xstartup_changed=1
     fi
     rm -f "$tmp_xstartup"
 
     # ── 2. 用户级配置（覆盖 defaults：分辨率/端口/httpd_directory/字体/SSL）──
     # defaults 的 ssl 指 Debian snakeoil（容器无），须生成自签名证书并覆盖；require_ssl: false（http 访问）
-    if [ ! -f /root/.vnc/kasmvnc-cert.pem ]; then
+    if [ ! -f ${sessionHome}/.vnc/kasmvnc-cert.pem ]; then
       ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:2048 -nodes \
-        -keyout /root/.vnc/kasmvnc-key.pem -out /root/.vnc/kasmvnc-cert.pem \
+        -keyout ${sessionHome}/.vnc/kasmvnc-key.pem -out ${sessionHome}/.vnc/kasmvnc-cert.pem \
         -days 3650 -subj "/CN=lenovo-ide" 2>/dev/null
     fi
-    cat > /root/.vnc/kasmvnc.yaml <<EOF
+    cat > ${sessionHome}/.vnc/kasmvnc.yaml <<EOF
     desktop:
       resolution:
         width: 1920
@@ -656,8 +659,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       protocol: http
       websocket_port: 6901
       ssl:
-        pem_certificate: /root/.vnc/kasmvnc-cert.pem
-        pem_key: /root/.vnc/kasmvnc-key.pem
+        pem_certificate: ${sessionHome}/.vnc/kasmvnc-cert.pem
+        pem_key: ${sessionHome}/.vnc/kasmvnc-key.pem
         require_ssl: false
     server:
       http:
@@ -669,13 +672,13 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # ── 3. 密码：age 解密（secrets/source/hosts/ide-lenovo/kasmvnc-passwd → encrypt.sh 生成 .age，git 可公开）──
     #    私钥 $HOME/.secrets/age-keys.txt（compose 挂载，容器重建不丢）；解密失败即部署失败
     #    hash 标记比较，密码变更才重写（声明式收敛：手改密码下次激活回滚；无变更不打扰运行中会话）
-    pass_file=/root/.kasmpasswd
-    pass_hash=/root/.vnc/kasmvnc-passwd.sha256
+    pass_file=${sessionHome}/.kasmpasswd
+    pass_hash=${sessionHome}/.vnc/kasmvnc-passwd.sha256
     tmp=$(mktemp)
     ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" ${../../..}/secrets/hosts/ide-lenovo/kasmvnc-passwd.age
     new_hash=$(${pkgs.coreutils}/bin/sha256sum "$tmp" | cut -d' ' -f1)
     if [ ! -f "$pass_hash" ] || [ "$(cat "$pass_hash" 2>/dev/null)" != "$new_hash" ]; then
-      printf '%s\n%s\n' "$(cat "$tmp")" "$(cat "$tmp")" | ${kasmvnc}/bin/kasmvncpasswd -u root -w
+      printf '%s\n%s\n' "$(cat "$tmp")" "$(cat "$tmp")" | ${kasmvnc}/bin/kasmvncpasswd -u ${sessionUser} -w
       echo "$new_hash" > "$pass_hash"
       echo "===> kasmvnc 密码已更新（nix 管理，secrets/source/kasmvnc-passwd）"
     fi
