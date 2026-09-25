@@ -10,9 +10,9 @@
 let
   sessionUser = "fan";
   sessionHome = "/home/fan";
-  # 桌面会话会读写的宿主挂载点（compose 双挂载的 /home/fan 侧目标）：
-  #   chown 会经 bind mount 波及宿主目录属主——Linux 宿主上这些目录本就属主用户（uid 1000），
-  #   预期无副作用；mac 宿主（virtiofs/osxfs）可能忽略或报错，按非关键失败警告。
+  # 桌面会话会读写的宿主挂载点（compose 双挂载的 /home/fan 侧目标）。
+  #   仅对其顶层做非递归 chown（保持顶层属主 fan），不递归进入——递归会波及宿主用户文件属主，
+  #   且 mac 宿主（virtiofs/osxfs）可能不支持 chown，故按非关键失败仅警告。
   sessionMounts = [
     ".cache/JetBrains"
     ".config/JetBrains"
@@ -29,6 +29,8 @@ let
     ".m2"
     ".secrets"
   ];
+  # find 排除式：-xdev 已不下降进入挂载点，此处再排除挂载点自身，避免容器层 chown 触及宿主目录
+  mountExcludes = lib.concatMapStringsSep " " (rel: ''! -path "${sessionHome}/${rel}"'') sessionMounts;
 in
 {
   # 在桌面配置写入脚本之后执行（kasmvncBeautify → chrome → kasmvnc；ide-si 无桌面会话，DAG 容忍缺失名）
@@ -65,16 +67,22 @@ in
     chown ${sessionUser}:${sessionUser} ${sessionHome}
     chmod 0755 ${sessionHome}
 
-    # 4) 属主移交：HM 以 root 写下的桌面配置（.config/xfce4、plank、fcitx5、.vnc、.locale、.themes…）
-    #    连同双挂载目标一并改属 fan；失败非关键（会话或仍只读），警告不中止
-    chown -R ${sessionUser}:${sessionUser} ${sessionHome} \
-      || echo "警告: chown -R ${sessionHome} 失败（部分文件仍属 root，桌面会话可能无法回写）"
+    # 4) 属主移交（容器层）：HM 以 root 写下的桌面配置（.config/xfce4、plank、fcitx5、.vnc、.locale、.themes…）改属 fan。
+    #    -xdev 使 find 停在其它文件系统（=双挂载点），不递归穿越宿主目录：否则每次激活都要遍历宿主大目录，
+    #    且 Linux 宿主上会把宿主用户文件属主改成 1000:1000（宿主 uid≠1000 即改坏）。
+    #    ! -path 排除挂载点自身，其顶层属主交由下面的非递归 chown（失败仅警告，见 step 5）。
+    #    容器层属主是本次降权的功能前提（fan 连自身 .config/.vnc/plank 都写不了即功能静默失效），失败即中止。
+    if ! find ${sessionHome} -xdev ${mountExcludes} -exec chown ${sessionUser}:${sessionUser} {} +; then
+      echo "错误: find ${sessionHome} -xdev -exec chown ${sessionUser}:${sessionUser} 失败（容器层属主未移交，桌面会话无法回写），激活中止"
+      exit 1
+    fi
 
-    # 5) 双挂载 /home/fan 侧宿主目录目标（递归已覆盖，此处显式列出，幂等；属主变更波及宿主属主，预期）
+    # 5) 挂载点顶层属主（非递归）：保持 fan 可写其顶层；不递归进入（宿主目录属主变更属预期）。
+    #    mac 宿主 virtiofs/osxfs 可能不支持 chown，属非关键失败——仅警告，不中止。
     for rel in ${lib.concatStringsSep " " sessionMounts}; do
       [ -e "${sessionHome}/$rel" ] || continue
       chown ${sessionUser}:${sessionUser} "${sessionHome}/$rel" \
-        || echo "警告: chown ${sessionHome}/$rel 失败（宿主目录属主未变更）"
+        || echo "警告: chown ${sessionHome}/$rel 失败（宿主目录属主未变更；mac virtiofs 可能不支持，属预期）"
     done
   '';
 }

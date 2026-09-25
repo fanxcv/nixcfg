@@ -10,8 +10,7 @@
 
 { pkgs, lib, ... }:
 let
-  # 桌面会话身份（KasmVNC 会话迁 fan）：显式常量，避免依赖 identity.nix 落地
-  sessionUser = "fan";
+  # 桌面会话 home（KasmVNC 会话迁 fan）：显式常量，避免依赖 identity.nix 落地
   sessionHome = "/home/fan";
   # 容器构建文件系统不允许恢复 deb 内 chrome-sandbox 的 setuid 位；运行时已显式 --no-sandbox。
   chrome = pkgs.google-chrome.overrideAttrs (old: {

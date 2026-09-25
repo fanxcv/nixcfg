@@ -11,8 +11,7 @@
 
 { pkgs, lib, ... }:
 let
-  # 桌面会话身份（KasmVNC 会话迁 fan）：显式常量，避免依赖 identity.nix 落地
-  sessionUser = "fan";
+  # 桌面会话 home（KasmVNC 会话迁 fan）：显式常量，避免依赖 identity.nix 落地
   sessionHome = "/home/fan";
   isX86 = pkgs.stdenv.hostPlatform.system == "x86_64-linux";
   browser =
