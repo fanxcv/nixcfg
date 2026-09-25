@@ -682,8 +682,10 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" ${../../..}/secrets/hosts/ide-lenovo/kasmvnc-passwd.age
     new_hash=$(${pkgs.coreutils}/bin/sha256sum "$tmp" | cut -d' ' -f1)
     # 口令变更、或口令文件缺失（自愈：文件没了即使 hash 未变也要重建）才重写
+    pass_changed=0
     if [ ! -f "$pass_hash" ] || [ "$(cat "$pass_hash" 2>/dev/null)" != "$new_hash" ] || [ ! -f "$pass_file" ]; then
       printf '%s\n%s\n' "$(cat "$tmp")" "$(cat "$tmp")" | ${kasmvnc}/bin/kasmvncpasswd -u ${sessionUser} -w "$pass_file"
+      pass_changed=1
       chown ${sessionUser}:${sessionUser} "$pass_file"
       chmod 600 "$pass_file"
       rm -f "$HOME/.kasmpasswd"
@@ -708,9 +710,11 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     if ! /usr/bin/systemctl enable kasmvnc.service; then
       echo "警告: systemctl enable kasmvnc.service 失败，错误如上（容器重启后不会自启）"
     fi
-    # 重启条件：unit 变更（kasmvnc 升级，旧进程仍跑旧二进制）、xstartup 变更（新会话配置）或服务未存活（崩溃循环）
+    # 重启条件：unit 变更（kasmvnc 升级，旧进程仍跑旧二进制）、xstartup 变更（新会话配置）、
+    #   口令文件刚重建（旧进程虽 active 却卡在交互提问循环里空转、不监听 6901，不会自行重读口令；
+    #   2026-09-25 ide-mac 实测：激活写好了口令但服务未重启 → 页面一直访问不了）或服务未存活（崩溃循环）
     state=$(/usr/bin/systemctl show -p ActiveState --value kasmvnc.service 2>/dev/null || echo unknown)
-    if [ "$unit_changed" = "1" ] || [ "$xstartup_changed" = "1" ] || [ "$state" != "active" ]; then
+    if [ "$unit_changed" = "1" ] || [ "$xstartup_changed" = "1" ] || [ "$pass_changed" = "1" ] || [ "$state" != "active" ]; then
       if /usr/bin/systemctl restart kasmvnc.service; then
         sleep 2
         state=$(/usr/bin/systemctl show -p ActiveState --value kasmvnc.service 2>/dev/null || echo unknown)
