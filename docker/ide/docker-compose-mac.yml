@@ -37,6 +37,22 @@ services:
       - ./nixcfg:/root/nixcfg
       # AI 密钥等敏感环境变量（chmod 600，不进 nix 配置）
       - ./.secrets:/root/.secrets
+      # 桌面会话降权（fan）：同一宿主源同时挂到 fan 的 home（与上方 /root 侧同源、内容互通），
+      #   使以 fan 运行的 KasmVNC 桌面能读写同一批配置；vsc/nixcfg 属 root 服务，保持单挂。
+      - ./JetBrains/cache:/home/fan/.cache/JetBrains
+      - ./JetBrains/config:/home/fan/.config/JetBrains
+      - ./JetBrains/share:/home/fan/.local/share/JetBrains
+      - ./skemate:/home/fan/.config/skemate
+      - ./mise/share:/home/fan/.local/share/mise
+      - ./mise/state:/home/fan/.local/state/mise
+      - ./mise/config:/home/fan/.config/mise
+      - ./mise/cache:/home/fan/.cache/mise
+      - ~/.claude.json:/home/fan/.claude.json
+      - ~/.claude:/home/fan/.claude
+      - ~/.codex:/home/fan/.codex
+      - ~/.pi:/home/fan/.pi
+      - ~/.m2:/home/fan/.m2
+      - ./.secrets:/home/fan/.secrets
       # nix store 持久化：容器重建后不重新下载（named volume 首次创建自动拷贝镜像内 /nix）
       - nix-store:/nix
     ports:

@@ -23,10 +23,19 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 EOF
 
 RUN apt update -y \
-    && echo -e "Asia\nShanghai" | apt install -y tzdata ca-certificates systemd openssh-server git curl zsh xz-utils \
+    && echo -e "Asia\nShanghai" | apt install -y tzdata ca-certificates systemd openssh-server git curl zsh xz-utils sudo \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+# fan 用户 + NOPASSWD sudo 兜底：桌面会话（KasmVNC，见各机器 kasmvnc.nix 的 sessionHome=/home/fan）
+#   以 fan 运行；镜像层先建好用户，避免 HM 激活（_container_/session-user.nix）之前桌面/命令无 fan 可用。
+#   与激活脚本幂等共存（脚本以 id -u 判存、重复写 sudoers 无副作用）；/home/fan 属主移交由脚本负责。
+RUN useradd -m -u 1000 -s /bin/bash fan \
+    && usermod -aG sudo fan \
+    && printf 'fan ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/fan \
+    && chmod 0440 /etc/sudoers.d/fan \
+    && visudo -cf /etc/sudoers.d/fan
 
 # 安装 nix（单用户模式，全部走 CERNET 镜像：install 脚本 + tarball + binary cache）
 # 注意：root 下安装脚本不会自动创建 /nix（会尝试 sudo），需先手动建好；
