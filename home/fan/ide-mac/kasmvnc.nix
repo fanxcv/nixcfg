@@ -672,13 +672,21 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     # ── 3. 密码：age 解密（secrets/source/hosts/ide-mac/kasmvnc-passwd → encrypt.sh 生成 .age，git 可公开）──
     #    私钥 $HOME/.secrets/age-keys.txt（compose 挂载，容器重建不丢）；解密失败即部署失败
     #    hash 标记比较，密码变更才重写（声明式收敛：手改密码下次激活回滚；无变更不打扰运行中会话）
+    #    坑：kasmvncpasswd 不按 -u 解析家目录，写的是 $HOME/.kasmpasswd——而激活以 root 跑（HOME=/root），
+    #        不给位置就会落到 /root/.kasmpasswd；会话却以 fan（HOME=/home/fan）读 /home/fan/.kasmpasswd
+    #        → 找不到口令文件 → kasmvncserver 转交互式提问（TextUI.pm）且不监听 6901，桌面不可达（空转吃 CPU）。
+    #        故显式传 password_file（工具第三参数）并移交属主；末尾清掉旧写法误写到 $HOME 的那份。
     pass_file=${sessionHome}/.kasmpasswd
     pass_hash=${sessionHome}/.vnc/kasmvnc-passwd.sha256
     tmp=$(mktemp)
     ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" ${../../..}/secrets/hosts/ide-mac/kasmvnc-passwd.age
     new_hash=$(${pkgs.coreutils}/bin/sha256sum "$tmp" | cut -d' ' -f1)
-    if [ ! -f "$pass_hash" ] || [ "$(cat "$pass_hash" 2>/dev/null)" != "$new_hash" ]; then
-      printf '%s\n%s\n' "$(cat "$tmp")" "$(cat "$tmp")" | ${kasmvnc}/bin/kasmvncpasswd -u ${sessionUser} -w
+    # 口令变更、或口令文件缺失（自愈：文件没了即使 hash 未变也要重建）才重写
+    if [ ! -f "$pass_hash" ] || [ "$(cat "$pass_hash" 2>/dev/null)" != "$new_hash" ] || [ ! -f "$pass_file" ]; then
+      printf '%s\n%s\n' "$(cat "$tmp")" "$(cat "$tmp")" | ${kasmvnc}/bin/kasmvncpasswd -u ${sessionUser} -w "$pass_file"
+      chown ${sessionUser}:${sessionUser} "$pass_file"
+      chmod 600 "$pass_file"
+      rm -f "$HOME/.kasmpasswd"
       echo "$new_hash" > "$pass_hash"
       echo "===> kasmvnc 密码已更新（nix 管理，secrets/source/kasmvnc-passwd）"
     fi
