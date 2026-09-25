@@ -11,6 +11,7 @@ let
   sessionUser = "fan";
   sessionHome = "/home/fan";
   # 桌面会话会读写的宿主挂载点（compose 双挂载的 /home/fan 侧目标）。
+  #   本清单须与 docker/ide/docker-compose-*.yml 的 /home/fan 侧挂载一一对应（各 15 条）。
   #   仅对其顶层做非递归 chown（保持顶层属主 fan），不递归进入——递归会波及宿主用户文件属主，
   #   且 mac 宿主（virtiofs/osxfs）可能不支持 chown，故按非关键失败仅警告。
   sessionMounts = [
@@ -28,6 +29,8 @@ let
     ".pi"
     ".m2"
     ".secrets"
+    # chrome 主 profile：桌面会话写 .config/chrome（chrome.nix wrapper 的 --user-data-dir）
+    ".config/chrome"
   ];
   # find 排除式：-xdev 已不下降进入挂载点，此处再排除挂载点自身，避免容器层 chown 触及宿主目录
   mountExcludes = lib.concatMapStringsSep " " (rel: ''! -path "${sessionHome}/${rel}"'') sessionMounts;

@@ -4,7 +4,7 @@
 # 架构：x86_64-linux 用 nixpkgs google-chrome（unfree，flake.nix 放行）；
 #   aarch64-linux（本机）nixpkgs 无 google-chrome → 用 chromium（hydraPlatforms 含 aarch64-linux）
 # 坑1：容器 fan 跑 Chromium 系必须 --no-sandbox（无 user namespace）
-# 坑2：DevTools 远程调试要求非默认数据目录（否则报 requires a non-default data directory）→ --user-data-dir
+# 坑2：DevTools 远程调试要求非默认数据目录（否则报 requires a non-default data directory）→ --user-data-dir；此目录即唯一主 profile（书签/登录所在）
 # 坑3：容器里 Chromium 系偶发 SIGTRAP 崩溃（crashpad 转储失败 tag not found，容器环境）——如需 autostart 保常驻则用循环重启脚本，但本机浏览器手动打开不自启
 # 坑4：容器 /dev/shm 仅 64M（Docker 默认）→ Chromium 共享内存不足 SIGTRAP 崩溃（rc=133）→ --disable-dev-shm-usage
 # 坑5：无 GPU 容器 GLX 缺失 → GPU 进程初始化失败连锁崩溃 → --disable-gpu（软渲染，已验证 rc 133→稳定）
@@ -31,7 +31,7 @@ let
   browserDesktopName = if isX86 then "google-chrome" else "chromium";
   # 仅暴露 chrome 入口，避免原包命令名进入 PATH。
   chromeWrapper = pkgs.writeShellScriptBin "chrome" ''
-    exec ${browserBin} --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=${sessionHome}/.config/chrome-debug "$@"
+    exec ${browserBin} --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=${sessionHome}/.config/chrome "$@"
   '';
   # store 内桌面项：Plank 的 dockitem Launcher 指向它 → 路径永不缺失，不会被 Plank 自动删除
   chromeDesktop = pkgs.makeDesktopItem {
