@@ -1,6 +1,7 @@
 # KasmVNC 官方 deb 解包（nixpkgs 无此包；kasmweb 是完整 Workspaces 发行版，太重且 unfree）
 # 用途：容器/无 GPU 机器浏览器远程桌面（Xvnc + 内置 web 客户端，http://<host>:6901/vnc.html）
-# 版本升级：改 version + 下载后重算 sha256（shasum -a 256；deb 的 data.tar 是 zst，见 unpackPhase）
+# 架构：官方 noble 同时提供 amd64/arm64 deb（x86_64 容器/真机与 Apple Silicon 容器各取一份）
+# 版本升级：改 version + 两架构各自重算 sha256（shasum -a 256；deb 的 data.tar 是 zst，见 unpackPhase）
 # 网络：官方 release 直连国内不稳，主 URL 用 ghfast.top 镜像，官方作备用（fetchurl 按序尝试）
 #
 # 结构：usr/bin/{Xkasmvnc,kasmvncserver(perl),kasmvncconfig(ELF),kasmvncpasswd(ELF),kasmxproxy} +
@@ -54,10 +55,23 @@
 }:
 let
   version = "1.5.0";
+  debArch =
+    {
+      x86_64-linux = "amd64";
+      aarch64-linux = "arm64";
+    }
+    .${stdenv.hostPlatform.system} or (throw "kasmvnc: 官方未提供 ${stdenv.hostPlatform.system} 的 deb");
+  debFile = "kasmvncserver_noble_${version}_${debArch}.deb";
+  debSha256 =
+    {
+      amd64 = "f599fe02e2175b9817b6165f74a5d2bebdc73118dde9181ba3410963bed7ae1e";
+      arm64 = "c9199cf4753208bfb69fd016a9780242bebfc43370cc38c97d61e90a3c783e04";
+    }
+    .${debArch};
   # nixpkgs 默认 --enable-hashes=strong 只含 [y gy sm3y 7 2b 2y 2a 6]，无 sha256crypt（$5$）
   # KasmVNC 密码哈希用 $5$kasm$ 盐 → crypt() 返回 NULL → kasmvncpasswd 段错误
   # glibc 组 = descrypt/md5crypt/sha256crypt/sha512crypt（传统 libcrypt 全集），
-  # 且含 descrypt → obsolete-api 保留 → soname libcrypt.so.1，与 deb 二进制 NEEDED 匹配
+  # 且含 descrypt → obsolete-api 保留 → soname libcrypt.so.1，与 deb 二进制 NEEDED 匹配（两架构同）
   libxcryptCompat = libxcrypt.override { enableHashes = "glibc"; };
 in
 stdenv.mkDerivation {
@@ -66,10 +80,10 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     urls = [
-      "https://ghfast.top/https://github.com/kasmtech/KasmVNC/releases/download/v${version}/kasmvncserver_noble_${version}_amd64.deb"
-      "https://github.com/kasmtech/KasmVNC/releases/download/v${version}/kasmvncserver_noble_${version}_amd64.deb"
+      "https://ghfast.top/https://github.com/kasmtech/KasmVNC/releases/download/v${version}/${debFile}"
+      "https://github.com/kasmtech/KasmVNC/releases/download/v${version}/${debFile}"
     ];
-    sha256 = "f599fe02e2175b9817b6165f74a5d2bebdc73118dde9181ba3410963bed7ae1e";
+    sha256 = debSha256;
   };
 
   nativeBuildInputs = [ dpkg autoPatchelfHook makeWrapper ];
@@ -159,6 +173,9 @@ stdenv.mkDerivation {
     description = "KasmVNC: web-based remote desktop (Xvnc + built-in browser client)";
     homepage = "https://github.com/kasmtech/KasmVNC";
     license = lib.licenses.mit;
-    platforms = [ "x86_64-linux" ];
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
   };
 }

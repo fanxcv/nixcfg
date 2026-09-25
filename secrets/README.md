@@ -5,7 +5,7 @@
 - **secrets/ 根**：公共/多机共享文件（所有机器、跨平台通用）
 - **secrets/hosts/<machine>/**：机器独有文件（一个机器/部署单元一个目录）
   - 不只放公私钥：skemate 配置、lucky 归档、tailscale state 等一切机器独有物都进这里
-  - 当前机器清单：`ide-lenovo` `ide-si`（ide 容器）、`mba-m5` `mbp-m1` `mini-m4`（mac）、
+  - 当前机器清单：`ide-lenovo` `ide-si` `ide-mac`（ide 容器）、`mba-m5` `mbp-m1` `mini-m4`（mac）、
     `nix-pve`（NixOS 真机）、`fan` `mi`（PVE 宿主机，见 pve/）
   - 跨机器共用而非常见文件（如 comin-token 被 mini-m4/nix-pve 共用）：
     文件本体放主机器目录（nix-pve），其他机器跨引用并注释说明
@@ -30,6 +30,7 @@ secrets/
 ├── encrypt.sh / keys.nix / README.md
 └── hosts/
     ├── ide-lenovo/  ssh-host-key.age + .pub（明文）、kasmvnc-passwd.age（KasmVNC 远程桌面密码）
+    ├── ide-mac/     ssh-host-key.age + .pub（明文）、kasmvnc-passwd.age（KasmVNC 远程桌面密码）
     ├── ide-si/      ssh-host-key.age + .pub（明文）
     ├── mba-m5/      ssh-user-key.age + .pub
     ├── mbp-m1/      ssh-user-key.age + .pub
