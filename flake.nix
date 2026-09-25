@@ -326,9 +326,9 @@
       homeModules.default = import ./modules/home;
 
       homeConfigurations = {
-        # Docker 开发容器（Ubuntu，ide-si / ide-lenovo）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
-        # 代理：仅 ide-si 走（sysenv.nix 接管环境变量，与 compose 无关）；内网 hosts 两台共用（_container_/extra-hosts.nix）；lenovo 国内直连
-        # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异），容器内 nix run .#ide-si / .#ide-lenovo
+        # Docker 开发容器（Ubuntu，ide-si / ide-lenovo / ide-mac）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
+        # 代理：仅 ide-si 走（sysenv.nix 接管环境变量，与 compose 无关）；内网 hosts 三台共用（_container_/extra-hosts.nix）；lenovo / mac 国内直连
+        # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异），容器内 nix run .#ide-si / .#ide-lenovo / .#ide-mac
         # 容器平台层（_container_，继承 _ubuntu_ 系统基础）：Ubuntu 层留给服务器/真机，_nixos_ 仅 NixOS 真机
         "fan@ide-si" = mkHomeConfig {
           hostName = "ide-si";
@@ -341,6 +341,17 @@
           isContainer = true;
           extraUnfree = [
             "google-chrome"
+            "albert"
+          ];
+        };
+        # ide-mac：Apple Silicon mac 上的 arm64 原生容器（aarch64-linux）
+        # 桌面走 KasmVNC arm64 deb（packages/kasmvnc.nix 架构分支）+ chromium 替代 google-chrome（nixpkgs 无 aarch64 google-chrome）
+        "fan@ide-mac" = mkHomeConfig {
+          hostName = "ide-mac";
+          platform = "container";
+          isContainer = true;
+          extraUnfree = [
+            "google-chrome" # 仅 x86_64 分支用到；arm64 走 chromium
             "albert"
           ];
         };
@@ -486,7 +497,7 @@
         })
         // lib.optionalAttrs isLinux (
           {
-            # 机器专属别名：mise 组件共享 _container_/mise.nix（hostName 分支差异），si/lenovo 各一份
+            # 机器专属别名：mise 组件共享 _container_/mise.nix（hostName 分支差异），si/lenovo/mac 各一份
             # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
             ide-si = mkHomeAlias {
               hostName = "ide-si";
@@ -501,6 +512,16 @@
               isContainer = true;
               extraUnfree = [
                 "google-chrome" # 浏览器
+                "albert"
+              ];
+            };
+            ide-mac = mkHomeAlias {
+              hostName = "ide-mac";
+              inherit system;
+              platform = "container";
+              isContainer = true;
+              extraUnfree = [
+                "google-chrome" # 仅 x86_64 分支用到；arm64 走 chromium
                 "albert"
               ];
             };

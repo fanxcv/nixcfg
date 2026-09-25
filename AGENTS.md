@@ -90,7 +90,7 @@
 |---|---|
 | hosts/_darwin_/、home/fan/_darwin_/、users/fan、hosts/<mac机>/、home/fan/<mac机>/ | darwinConfigurations（改共享层 → 三台；改机器专属 → 仅该机器） |
 | home/fan/_common_/、home/fan/default.nix | darwinConfigurations + homeConfigurations（跨平台共享层，两边都受影响） |
-| home/fan/_linux_/、_ubuntu_/、_container_/、_nixos_/、_alpine_/、ide-si/、ide-lenovo/ | homeConfigurations（ide-si / ide-lenovo） |
+| home/fan/_linux_/、_ubuntu_/、_container_/、_nixos_/、_alpine_/、ide-si/、ide-lenovo/、ide-mac/ | homeConfigurations（ide-si / ide-lenovo / ide-mac） |
 | hosts/_nixos_/ | nixosConfigurations（当前未接入真机，暂无目标） |
 | secrets/、flake.nix、AGENTS.md | 按实际影响面判断；不确定时跑受影响平台的 eval |
 

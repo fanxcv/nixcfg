@@ -1,0 +1,59 @@
+networks:
+  fan:
+    external: true
+
+services:
+  ide:
+    build: ./nixcfg/docker/ide/ubuntu
+    container_name: mac-ide
+    hostname: mac-ide
+    privileged: true
+    restart: always
+    # core dump 关闭：rtk EPIPE panic 会在业务目录落 core.<pid>
+    ulimits:
+      core: 0
+    environment:
+      - TZ=Asia/Shanghai
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+      - USER=root   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
+    volumes:
+      - ./vsc:/root/.vscode-server
+      - ./JetBrains/cache:/root/.cache/JetBrains
+      - ./JetBrains/config:/root/.config/JetBrains
+      - ./JetBrains/share:/root/.local/share/JetBrains
+      - ./skemate:/root/.config/skemate
+      - ~/.local/state/mise:/root/.local/state/mise
+      - ~/.local/share/mise:/root/.local/share/mise
+      - ~/.config/mise:/root/.config/mise
+      - ~/.cache/mise:/root/.cache/mise
+      - ~/.claude.json:/root/.claude.json
+      - ~/.claude:/root/.claude
+      - ~/.codex:/root/.codex
+      - ~/.pi:/root/.pi
+      - ~/.m2:/root/.m2
+      - ~/code:/mnt
+      # nix 配置仓库：compose 位于仓库内 docker/ide/，挂载仓库根（../../）；容器内不 clone
+      - ./nixcfg:/root/nixcfg
+      # AI 密钥等敏感环境变量（chmod 600，不进 nix 配置）
+      - ./.secrets:/root/.secrets
+      # nix store 持久化：容器重建后不重新下载（named volume 首次创建自动拷贝镜像内 /nix）
+      - nix-store:/nix
+    ports:
+      - 2222:22
+      - 6901:6901 # KasmVNC 浏览器远程桌面（http://<host>:6901/vnc.html）
+    networks:
+      - fan
+    deploy:
+      resources:
+        limits:
+          memory: 22G
+        reservations:
+          memory: 22G
+    logging:
+      options:
+        max-size: 10m
+        max-file: 1
+
+volumes:
+  nix-store:
