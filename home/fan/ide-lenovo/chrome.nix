@@ -1,7 +1,7 @@
 # ide-lenovo 专属：Google Chrome 浏览器（远程桌面主浏览器，手动打开，不自启）
 # 9222 调试端口：wrapper 包装 chromium，用户手动启动（panel/终端）都带
 #   --remote-debugging-port=9222（DevTools 协议，http://127.0.0.1:9222/json/version 验证）
-# 坑1：容器 fan 跑 Chromium 系必须 --no-sandbox（无 user namespace）
+# 坑1：容器 fan 跑 Chromium 系必须 --no-sandbox（无 user namespace）；提示条由 --test-type 抑制（Chromium issue 40205764），不改变沙箱状态
 # 坑2：DevTools 远程调试要求非默认数据目录（否则报 requires a non-default data directory）→ --user-data-dir；此目录即唯一主 profile（书签/登录所在）
 # 坑3：容器里 Chromium 系偶发 SIGTRAP 崩溃（crashpad 转储失败 tag not found，容器环境）——如需 autostart 保常驻则用循环重启脚本，但本机浏览器手动打开不自启
 # 坑4：容器 /dev/shm 仅 64M（Docker 默认）→ Chromium 共享内存不足 SIGTRAP 崩溃（rc=133）→ --disable-dev-shm-usage
@@ -21,7 +21,7 @@ let
   });
   # 仅暴露 chrome 入口，避免原包命令名进入 PATH。
   chromeWrapper = pkgs.writeShellScriptBin "chrome" ''
-    exec ${chrome}/bin/google-chrome-stable --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=${sessionHome}/.config/chrome "$@"
+    exec ${chrome}/bin/google-chrome-stable --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=${sessionHome}/.config/chrome --test-type "$@"
   '';
   # store 内桌面项：Plank 的 dockitem Launcher 指向它 → 路径永不缺失，不会被 Plank 自动删除
   # 图标名 google-chrome：nixpkgs google-chrome installPhase 把 product_logo_*.png 装为
