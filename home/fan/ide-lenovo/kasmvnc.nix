@@ -34,7 +34,7 @@ let
   plank = pkgs.plank; # macOS 风格 dock（底部，替代底部面板）
   albert = pkgs.albert; # 搜索（帖子第 4 步）
   notoCjk = pkgs.noto-fonts-cjk-sans; # 中文渲染（兜底）
-  sarasa = pkgs.sarasa-gothic; # 更纱黑体（等宽+中文，界面主字体，用户选定）
+  jetbrainsMono = pkgs.jetbrains-mono; # 等宽字体（终端/编辑器，用户选定）
   # fcitx5 中文输入法（参考 nix-pve i18n.inputMethod.fcitx5：全拼默认 + 云拼音/标点策略）
   fcitx5 = pkgs.qt6Packages.fcitx5-with-addons.override {
     addons = [ pkgs.kdePackages.fcitx5-chinese-addons ];
@@ -131,7 +131,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     plank
     albert
     notoCjk
-    sarasa
+    jetbrainsMono
     imagemagick
     # 中文输入法（fcitx5 + 拼音引擎 + GTK/QT IM module）
     fcitx5
@@ -168,7 +168,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     [Settings]
     gtk-theme-name=${gtkTheme}
     gtk-icon-theme-name=${iconTheme}
-    gtk-font-name=Sarasa Gothic SC 11
+    gtk-font-name=Noto Sans CJK SC 11
     gtk-cursor-theme-name=${cursorTheme}
     gtk-cursor-theme-size=24
     gtk-application-prefer-dark-theme=1
@@ -177,7 +177,14 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     cat > /root/.gtkrc-2.0 <<EOF
     gtk-theme-name = "${gtkTheme}"
     gtk-icon-theme-name = "${iconTheme}"
-    gtk-font-name = "Sarasa Gothic SC 11"
+    gtk-font-name = "Noto Sans CJK SC 11"
+    EOF
+
+    # 1.5 终端字体：JetBrains Mono（中文由 fontconfig fallback 到 Noto Sans CJK SC）
+    mkdir -p /root/.config/xfce4/terminal
+    cat > /root/.config/xfce4/terminal/terminalrc <<EOF
+    [Configuration]
+    FontName=JetBrains Mono 12
     EOF
 
     # 2. xfce4-session Failsafe 会话（去掉 xfsettingsd——它写默认覆盖主题；键盘布局回默认，容器远程桌面无碍）
@@ -237,7 +244,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       <property name="general" type="empty">
         <property name="theme" type="string" value="${gtkTheme}"/>
         <property name="button_layout" type="string" value="O|HMC"/>
-        <property name="title_font" type="string" value="Sarasa Gothic SC 10"/>
+        <property name="title_font" type="string" value="Noto Sans CJK SC 10"/>
       </property>
     </channel>
     EOF
@@ -445,10 +452,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     # dockitem 格式：[PlankDockItemPreferences] Launcher=file://<store>/share/applications/<name>.desktop
     # plank 用 GFileMonitor 监听 launchers 目录，写入后自动刷新（无需重启进程）
     mkdir -p /root/.config/plank/dock1/launchers
-    cat > /root/.config/plank/dock1/launchers/chrome.dockitem <<'DOCKEOF'
-    [PlankDockItemPreferences]
-    Launcher=file:///root/.local/share/applications/chrome.desktop
-    DOCKEOF
+    # chrome.dockitem 由 chrome.nix 的 activation 写入（Launcher 指 store 内 .desktop，避免被 Plank 删除）
     cat > /root/.config/plank/dock1/launchers/thunar.dockitem <<'DOCKEOF'
     [PlankDockItemPreferences]
     Launcher=file://${thunar}/share/applications/thunar.desktop
@@ -461,14 +465,10 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     [PlankDockItemPreferences]
     Launcher=file://${mousepad}/share/applications/org.xfce.mousepad.desktop
     DOCKEOF
-    cat > /root/.config/plank/dock1/launchers/settings.dockitem <<'DOCKEOF'
-    [PlankDockItemPreferences]
-    Launcher=file://${xfce4-settings}/share/applications/xfce-settings-manager.desktop
-    DOCKEOF
-    cat > /root/.config/plank/dock1/launchers/appfinder.dockitem <<'DOCKEOF'
-    [PlankDockItemPreferences]
-    Launcher=file://${xfce4-appfinder}/share/applications/xfce4-appfinder.desktop
-    DOCKEOF
+    # settings/appfinder 不再固定到 dock（用户裁决）：容器内旧文件持久存在 → 幂等清理（同 Edge 残留处理）
+    rm -f \
+      /root/.config/plank/dock1/launchers/settings.dockitem \
+      /root/.config/plank/dock1/launchers/appfinder.dockitem
     EOF
     chmod +x /root/.config/autostart/theme-setup.sh
 
@@ -492,9 +492,8 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     #    fonts.conf 用 nix fontconfig 包自带模板（含 conf.d include），再补 30-nix-fonts.conf：
     #    指 store 字体目录 + 中文选字与渲染规则
     #    注意：fontconfig 默认输出是 bin（fc-* 命令），fonts.conf 在 out 输出 → 显式 .out
-    #    中文选字为何必须显式声明：只给 <dir> 而不给 prefer 时，fc-match -s sans-serif:lang=zh
-    #    会挑到 Sarasa Mono CL（等宽＋繁体字形）→ 界面中英混排字重字宽不一致。
-    #    全部规则带 lang contains zh 判定，只改请求中文的场合，不动拉丁选字
+    #    族名选字为何必须显式声明：只给 <dir> 而不给 prefer 时，fc-match 可能挑到不合意的族名
+    #    （如等宽＋繁体字形）→ 界面中英混排字重字宽不一致。
     mkdir -p /etc/fonts/conf.d
     cp -f ${fontconfig.out}/etc/fonts/fonts.conf /etc/fonts/fonts.conf
     cat > /etc/fonts/conf.d/30-nix-fonts.conf <<EOF
@@ -503,20 +502,18 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     <fontconfig>
       <dir>${pkgs.dejavu_fonts}/share/fonts/truetype</dir>
       <dir>${notoCjk}/share/fonts/opentype/noto-cjk</dir>
-      <dir>${sarasa}/share/fonts/truetype</dir>
+      <dir>${jetbrainsMono}/share/fonts/truetype</dir>
       <dir prefix="xdg">fonts</dir>
 
-      <!-- 简体中文选字：GTK 已设 Sarasa Gothic SC，此处让 fontconfig 层一致
+      <!-- 默认族（用户选定：UI=Noto Sans CJK SC，等宽=JetBrains Mono，中文 fallback=Noto Sans CJK SC）
            binding=same 必带，否则 prepend 出去的族名会以弱绑定回落，规则形同虚设 -->
       <match target="pattern">
-        <test name="lang" compare="contains"><string>zh</string></test>
         <test name="family"><string>sans-serif</string></test>
-        <edit name="family" mode="prepend" binding="same"><string>Sarasa Gothic SC</string></edit>
+        <edit name="family" mode="prepend" binding="same"><string>Noto Sans CJK SC</string></edit>
       </match>
       <match target="pattern">
-        <test name="lang" compare="contains"><string>zh</string></test>
         <test name="family"><string>monospace</string></test>
-        <edit name="family" mode="prepend" binding="same"><string>Sarasa Mono SC</string></edit>
+        <edit name="family" mode="prepend" binding="same"><string>JetBrains Mono</string><string>Noto Sans CJK SC</string></edit>
       </match>
       <!-- 容器内无中文衬线字体：serif 请求中文时退回 Noto Sans CJK SC（无衬线）
            总好过落到不含 CJK 的 DejaVu Serif 出方框 -->
@@ -529,15 +526,15 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       <!-- 旧字体名别名：网页/CSS 写死这些名字时不至于掉到 DejaVu Sans -->
       <match target="pattern">
         <test name="family"><string>Microsoft YaHei</string></test>
-        <edit name="family" mode="assign" binding="same"><string>Sarasa Gothic SC</string></edit>
+        <edit name="family" mode="assign" binding="same"><string>Noto Sans CJK SC</string></edit>
       </match>
       <match target="pattern">
         <test name="family"><string>PingFang SC</string></test>
-        <edit name="family" mode="assign" binding="same"><string>Sarasa Gothic SC</string></edit>
+        <edit name="family" mode="assign" binding="same"><string>Noto Sans CJK SC</string></edit>
       </match>
       <match target="pattern">
         <test name="family"><string>system-ui</string></test>
-        <edit name="family" mode="assign" binding="same"><string>Sarasa Gothic SC</string></edit>
+        <edit name="family" mode="assign" binding="same"><string>Noto Sans CJK SC</string></edit>
       </match>
 
       <!-- 中文渲染：灰度 + 关内嵌点阵

@@ -24,10 +24,23 @@ let
       pkgs.chromium;
   browserBin = if isX86 then "${browser}/bin/google-chrome-stable" else "${browser}/bin/chromium";
   browserName = if isX86 then "Google Chrome" else "Chromium";
+  # 桌面项文件名/图标名按包分支：google-chrome 装 google-chrome.png，chromium 装 chromium.png
+  # （nixpkgs installPhase：product_logo_*.png → $out/share/icons/hicolor/<size>x<size>/apps/<name>.png）
+  browserDesktopName = if isX86 then "google-chrome" else "chromium";
   # 仅暴露 chrome 入口，避免原包命令名进入 PATH。
   chromeWrapper = pkgs.writeShellScriptBin "chrome" ''
     exec ${browserBin} --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=/root/.config/chrome-debug "$@"
   '';
+  # store 内桌面项：Plank 的 dockitem Launcher 指向它 → 路径永不缺失，不会被 Plank 自动删除
+  chromeDesktop = pkgs.makeDesktopItem {
+    name = browserDesktopName;
+    desktopName = browserName;
+    exec = "${chromeWrapper}/bin/chrome %U";
+    icon = browserDesktopName;
+    terminal = false;
+    categories = [ "Network" "WebBrowser" ];
+    startupWMClass = "chromium";
+  };
 in
 # 仅 Linux（本机 aarch64-linux，浏览器按架构分支）；darwin 等门控跳过
 lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
@@ -41,18 +54,20 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
       /root/.local/share/applications/microsoft-edge.desktop \
       /root/.config/plank/dock1/launchers/edge.dockitem
 
-    # ── 2. 应用菜单项（xfce whisker 菜单可见，图标用浏览器包自带）──
+    # ── 2. 应用菜单项：symlink 到 store 桌面项（xfce whisker 菜单可见，与 dock 同源不漂移）──
     mkdir -p /root/.local/share/applications
-    cat > /root/.local/share/applications/chrome.desktop <<EOF
-    [Desktop Entry]
-    Type=Application
-    Name=${browserName}
-    Comment=Web Browser
-    Exec=${chromeWrapper}/bin/chrome %U
-    Icon=${browser}/share/icons/hicolor/256x256/apps/chromium.png
-    Terminal=false
-    Categories=Network;WebBrowser;
-    StartupWMClass=chromium
+    ln -sfn ${chromeDesktop}/share/applications/${browserDesktopName}.desktop /root/.local/share/applications/chrome.desktop
+
+    # ── 3. 图标：hicolor 主题目录 symlink 到 user icons，使图标名可解析 ──
+    mkdir -p /root/.local/share/icons
+    ln -sfn ${browser}/share/icons/hicolor /root/.local/share/icons/hicolor
+
+    # ── 4. Plank dock 固定 chrome：Launcher 指 store 内 .desktop（永不缺失 → 不被 Plank 自动删除）──
+    #     其余 3 个（thunar/terminal/mousepad）由 kasmvnc.nix 写入
+    mkdir -p /root/.config/plank/dock1/launchers
+    cat > /root/.config/plank/dock1/launchers/chrome.dockitem <<EOF
+    [PlankDockItemPreferences]
+    Launcher=file://${chromeDesktop}/share/applications/${browserDesktopName}.desktop
     EOF
   '';
 }
