@@ -107,7 +107,7 @@ nixcfg/
 
 ## 镜像与网络
 
-镜像/代理策略集中 `tools/config.nix`（`useChinaMirror` / `githubFetchBase` 唯一入口，机器级可覆盖）；容器网络各管各的：ide-si 走代理（nix 接管环境变量+hosts），lenovo / mac 国内直连；nix 安装/二进制缓存走国内镜像（清华等），git 拉取走 ghfast.top 前缀。切换 GitHub 代理见 `scripts/switch-github-proxy.sh`。
+镜像/代理策略集中 `tools/config.nix`（`useChinaMirror` / `githubFetchBase` 唯一入口，机器级可覆盖）；容器网络各管各的：ide-si 走代理（nix 接管环境变量+hosts），lenovo / mac 国内直连；nix 安装/二进制缓存走 CERNET 联合镜像（`mirrors.cernet.edu.cn`），git 拉取走 ghfast.top 前缀。切换 GitHub 代理见 `scripts/switch-github-proxy.sh`。
 
 ## 常用命令
 

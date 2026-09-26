@@ -136,7 +136,7 @@
 
 ## 强制动作清单
 
-- [ ] 镜像/缓存配置（tools/config.nix 的 substituters/cachix/公钥）改动后：同步 flake.nix nixConfig 与 docker/ide/ubuntu/Dockerfile，并跑 `nix flake check`（tests/mirror-consistency.py 断言三方一致）
+- [ ] 镜像/缓存配置（tools/config.nix 的 substituters/cachix/公钥）改动后：同步 flake.nix nixConfig、docker/ide/ubuntu/Dockerfile、docker/ide/ubuntu/entrypoint.sh 与 pve/deploy.sh，并跑 `nix flake check`（tests/mirror-consistency.py 断言四处全等 + PVE 层子集一致）
 - [ ] 改 nix 模块后：eval 变更影响的配置目标（见「验证目标选择」）
 - [ ] 机器专属新增：对应目录建模块（tools.scan 自动导入）+ flake.nix 注册
 - [ ] 密钥类文件（secrets/*.age）必须入库 git（flake 的 self 只打包已跟踪文件）

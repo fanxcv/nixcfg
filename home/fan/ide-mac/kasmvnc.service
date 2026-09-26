@@ -2,11 +2,14 @@
 Description=KasmVNC 浏览器远程桌面（xfce4）
 After=network-online.target
 Wants=network-online.target
+# 无口令文件不起（首启容器、激活尚未跑）：kasmvncserver 会转交互式提问、不监听 6901 且空转吃 CPU；
+# 激活第 3 段写好口令文件后 restart 即起（见 kasmvnc.nix）
+ConditionPathExists=/home/fan/.kasmpasswd
 
 [Service]
 Type=simple
-User=root
-Environment=HOME=/root
+User=fan
+Environment=HOME=/home/fan
 # systemd 默认 PATH 不含 nix bin；@path@ 由激活脚本注入（kasmvnc + xfce 组件 + dbus + xauth/xkbcomp）
 Environment=PATH=@path@
 ExecStart=@kasmvnc@/bin/kasmvncserver -fg :1 -geometry 1920x1080 -select-de manual

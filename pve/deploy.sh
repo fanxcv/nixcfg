@@ -41,10 +41,10 @@ ln -sf /nix/var/nix/profiles/default/bin/nix /usr/local/bin/nix
 ln -sf /nix/var/nix/profiles/default/bin/nix-store /usr/local/bin/nix-store
 ln -sf /nix/var/nix/profiles/default/bin/nix-build /usr/local/bin/nix-build
 # 镜像 substituters（幂等；与仓库 flake.nix nixConfig 一致）
-if [ ! -f /etc/nix/nix.conf ] || ! grep -q "mirrors.ustc.edu.cn" /etc/nix/nix.conf; then
+if [ ! -f /etc/nix/nix.conf ] || ! grep -q "mirrors.cernet.edu.cn" /etc/nix/nix.conf; then
   mkdir -p /etc/nix
   cat > /etc/nix/nix.conf <<'NIXCONF'
-substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/
+substituters = https://mirrors.cernet.edu.cn/nix-channels/store https://cache.nixos.org/
 experimental-features = nix-command flakes
 NIXCONF
 fi

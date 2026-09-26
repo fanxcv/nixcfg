@@ -11,34 +11,48 @@ FROM ubuntu:24.04
 
 # 配置APT源并安装系统级包
 # 关键：arm64/非 amd64 架构官方走 ports.ubuntu.com，镜像对应 ubuntu-ports 目录（主源只有 amd64）
-# 统一 http + USTC：ca-certificates 尚未安装（https 握手失败）；security 套件镜像也同步
+# 统一 http + CERNET：ca-certificates 尚未安装（https 握手失败）；security 套件镜像也同步
 ARG TARGETARCH
 RUN arch_dir="ubuntu"; [ "$TARGETARCH" = "arm64" ] && arch_dir="ubuntu-ports"; \
     cat << EOF > /etc/apt/sources.list.d/ubuntu.sources
 Types: deb
-URIs: http://mirrors.ustc.edu.cn/${arch_dir}
+URIs: http://mirrors.cernet.edu.cn/${arch_dir}
 Suites: noble noble-updates noble-backports noble-security
 Components: main restricted universe multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 EOF
 
 RUN apt update -y \
-    && echo -e "Asia\nShanghai" | apt install -y tzdata ca-certificates systemd openssh-server git curl zsh xz-utils \
+    && echo -e "Asia\nShanghai" | apt install -y tzdata ca-certificates systemd openssh-server git curl zsh xz-utils sudo \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-# 安装 nix（单用户模式，全部走清华镜像：install 脚本 + tarball + binary cache）
+# fan 用户 + NOPASSWD sudo 兜底：桌面会话（KasmVNC，见各机器 kasmvnc.nix 的 sessionHome=/home/fan）
+#   以 fan 运行；镜像层先建好用户，避免 HM 激活（_container_/session-user.nix）之前桌面/命令无 fan 可用。
+#   与激活脚本幂等共存（脚本以 id -u 判存、重复写 sudoers 无副作用）；/home/fan 属主移交由脚本负责。
+# 坑：ubuntu:24.04 基础镜像自带 ubuntu 用户（uid/gid 1000）→ 直接 useradd -u 1000 报 “UID 1000 is not unique”。
+#   容器内无任何东西使用该用户，故先移除让位；组 1000 一并改名 fan，使 fan 的 gid 也是 1000（与宿主约定一致）。
+#   id 探测失败即「无该用户」，属预期（幂等探测，非吞错）。
+RUN u=$(id -nu 1000 2>/dev/null); [ -z "$u" ] || userdel -r "$u"; \
+    g=$(getent group 1000 | cut -d: -f1); [ -z "$g" ] || [ "$g" = fan ] || groupmod -n fan "$g"; \
+    useradd -m -u 1000 -s /bin/bash fan \
+    && usermod -aG sudo fan \
+    && printf 'fan ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/fan \
+    && chmod 0440 /etc/sudoers.d/fan \
+    && visudo -cf /etc/sudoers.d/fan
+
+# 安装 nix（单用户模式，全部走 CERNET 镜像：install 脚本 + tarball + binary cache）
 # 注意：root 下安装脚本不会自动创建 /nix（会尝试 sudo），需先手动建好；
 #       2.35 起 root 跑 nix 按多用户语义解析配置（build-users-group=nixbld），需先建组；
-#       --tarball-url-prefix 不被真实安装器接受（打印 usage 静默退出），省略（包装脚本默认即清华 URL）
+#       --tarball-url-prefix 不被真实安装器接受（打印 usage 静默退出），省略（CERNET 包装脚本默认即 NJU tarball 源）
 # nix.conf 必须写 /etc/nix/nix.conf（系统级）：compose 挂载 ./kde-config → /root/.config 会遮蔽
 #   镜像内 /root/.config/nix/nix.conf（重建后 nix-command disabled 报错的根因）；/etc/nix 不在挂载路径
 RUN groupadd -r nixbld && useradd -g nixbld nixbld \
     && mkdir -m 0755 /nix \
     && mkdir -p /etc/nix \
-    && printf 'build-users-group =\nsubstituters = https://mirrors.ustc.edu.cn/nix-channels/store https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store https://cache.nixos.org/\nextra-substituters = https://cache.numtide.com https://nix-community.cachix.org\nextra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\nexperimental-features = nix-command flakes\nauto-optimise-store = true\n' > /etc/nix/nix.conf \
-    && curl -fsL https://mirrors.tuna.tsinghua.edu.cn/nix/latest/install -o /tmp/nix-install.sh \
+    && printf 'build-users-group =\nsubstituters = https://mirrors.cernet.edu.cn/nix-channels/store https://cache.nixos.org/\nextra-substituters = https://cache.numtide.com https://nix-community.cachix.org\nextra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\nexperimental-features = nix-command flakes\nauto-optimise-store = true\n' > /etc/nix/nix.conf \
+    && curl -fsL https://mirrors.cernet.edu.cn/nix/latest/install -o /tmp/nix-install.sh \
     && sh /tmp/nix-install.sh --no-daemon --no-channel-add --yes \
     && rm -f /tmp/nix-install.sh
 
