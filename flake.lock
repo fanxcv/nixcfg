@@ -407,11 +407,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790917404,
-        "narHash": "sha256-8gnywPbE8iSQE5Cv4bjeLIwQAwU1S3fxqsv42ATqAr0=",
+        "lastModified": 1791039714,
+        "narHash": "sha256-fA8tF7YTKCfGycIKgGIWbKNf/WQ3CaEbuBqujom85mc=",
         "ref": "deploy",
-        "rev": "7679b26652147e5c80a2f247fe7dcbd8622082a5",
-        "revCount": 2057,
+        "rev": "4d3872b88022313ec99bec81c2c820974733b42a",
+        "revCount": 2075,
         "type": "git",
         "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git"
       },
