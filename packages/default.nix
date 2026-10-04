@@ -7,24 +7,41 @@
   githubFetchBase ? "github.com",
 }:
 let
+  lib = pkgs.lib;
+  # 平铺包文件自动注册：新增 packages/<name>.nix 即生效，零注册改动
+  # 平台条件/需额外参数的包在下方显式注册，其文件从自动扫描排除（免被无条件注册）
+  explicitFiles = [
+    "kasmvnc.nix"
+    "rustdesk-bin.nix"
+  ];
+  autoPkgs =
+    lib.mapAttrs'
+      (
+        name: _: lib.nameValuePair (lib.removeSuffix ".nix" name) (pkgs.callPackage (./. + "/${name}") { })
+      )
+      (
+        lib.filterAttrs (
+          name: type:
+          type == "regular"
+          && lib.hasSuffix ".nix" name
+          && name != "default.nix"
+          && !(builtins.elem name explicitFiles)
+        ) (builtins.readDir ./.)
+      );
+in
+autoPkgs
+// lib.optionalAttrs (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   # 官方 GitHub Release 二进制（deb 解包），免 rustdesk 源码编译（无缓存，编译 ~1h）
   # 仅 x86_64-linux（nix-pve 用）；darwin 走 brew + 注入脚本（见 hosts/_darwin_/base/rustdesk.nix）
-  rustdesk = pkgs.lib.optionalAttrs (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
-    rustdesk-bin = pkgs.callPackage ./rustdesk-bin.nix { };
-  };
-in
-rustdesk
-// pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+  rustdesk-bin = pkgs.callPackage ./rustdesk-bin.nix { };
+}
+// lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   # KasmVNC：浏览器远程桌面（仅 linux：官方 deb 解包含 arm64/amd64 分支；nixpkgs 无此包）
   # → home/fan/ide-lenovo/kasmvnc.nix、home/fan/ide-mac/kasmvnc.nix
   kasmvnc = pkgs.callPackage ./kasmvnc.nix { };
 }
 // {
-
   # Catppuccin Konsole 配色（nixpkgs 26.05 无此包，固定 rev 自打包；→ home/fan/_nixos_/gui/plasma.nix）
   # 网络：fetchFromGitHub 默认直连 github.com（国内不稳），githubBase 换加速前缀（代理不改内容，hash 不重算）
   catppuccin-konsole = pkgs.callPackage ./catppuccin/konsole.nix { githubBase = githubFetchBase; };
-
-  # McMojave-circle 图标（macOS 风格，GitHub tarball fetchzip；→ home/fan/_nixos_/gui/desktop/plasma/plasma.icon.nix）
-  mcmojave-circle = pkgs.callPackage ./mcmojave-circle.nix { };
 }
