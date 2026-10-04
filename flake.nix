@@ -153,6 +153,12 @@
       tools = import ./tools { inherit lib self; };
       # 全局镜像/代理集中配置（tools/config.nix，唯一配置入口）—— useChinaMirror 注入默认值取自这里
       netConfig = tools.config;
+      # 机器注册表（单一事实来源，见 tools/machines.nix）：三大配置族与 packages 别名由此派生
+      machines = import ./tools/machines.nix;
+      # 按 kind 取机器（kind 同时是 home 层 platform 取值）
+      machinesOfKind = kinds: lib.filterAttrs (n: m: builtins.elem m.kind kinds) machines;
+      # 带 nix run .#<机名> 别名的机器，按 kind 取
+      aliasMachinesOfKind = kinds: lib.filterAttrs (n: m: m.alias) (machinesOfKind kinds);
       # skemate（自研终端复用服务）官方二进制分发，定义见 overlays/skemate.nix
       # flake.lock 锁定 skemate 仓库 rev（input 声明见上方 inputs.skemate，升级 nix flake update skemate）
       skemateOverlay = import ./overlays/skemate.nix inputs;
@@ -198,13 +204,15 @@
             localPkgsOverlay
           ];
         };
-      # 每个 system 生成一套可运行包（nix run 一步 build+activate）
-      forAllSystems = lib.genAttrs [
+      # 全部目标架构（checks 与 packages 共用）
+      allSystems = [
         "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
       ];
+      # 每个 system 生成一套可运行包（nix run 一步 build+activate）
+      forAllSystems = lib.genAttrs allSystems;
       # 生成指定机器上的 home 配置（模块清单由 home/fan/module-list.nix 统一组装）
       #   hostName:        机器名（容器 hostname 由部署层 docker-compose 决定，与此无关）
       #                     home/fan/<hostName>/ 目录可选：存在则注入机器微调，不存在自动跳过
@@ -325,131 +333,51 @@
       darwinModules.default = import ./modules/darwin;
       homeModules.default = import ./modules/home;
 
-      homeConfigurations = {
-        # Docker 开发容器（Ubuntu，ide-si / ide-lenovo / ide-mac）：容器里 docker daemon 跑不起来，isContainer=true 跳过 docker 安装
-        # 代理：仅 ide-si 走（sysenv.nix 接管环境变量，与 compose 无关）；内网 hosts 三台共用（_container_/extra-hosts.nix）；lenovo / mac 国内直连
-        # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异），容器内 nix run .#ide-si / .#ide-lenovo / .#ide-mac
-        # 容器平台层（_container_，继承 _ubuntu_ 系统基础）：Ubuntu 层留给服务器/真机，_nixos_ 仅 NixOS 真机
-        "fan@ide-si" = mkHomeConfig {
-          hostName = "ide-si";
-          platform = "container";
-          isContainer = true;
-        };
-        "fan@ide-lenovo" = mkHomeConfig {
-          hostName = "ide-lenovo";
-          platform = "container";
-          isContainer = true;
-          extraUnfree = [
-            "google-chrome"
-            "albert"
-          ];
-        };
-        # ide-mac：Apple Silicon mac 上的 arm64 原生容器（aarch64-linux）
-        # 桌面走 KasmVNC arm64 deb（packages/kasmvnc.nix 架构分支）+ chromium 替代 google-chrome（nixpkgs 无 aarch64 google-chrome）
-        "fan@ide-mac" = mkHomeConfig {
-          hostName = "ide-mac";
-          platform = "container";
-          isContainer = true;
-          extraUnfree = [
-            "google-chrome" # 仅 x86_64 分支用到；arm64 走 chromium
-            "albert"
-          ];
-        };
-
-        # --- 多台 ide 开发容器：一行注册即可（机器目录可选），hostname 在部署层 docker-compose 里设 ---
-        # "fan@ide-eu" = mkHomeConfig { hostName = "ide-eu"; isContainer = true; };
-        # "fan@ide-us" = mkHomeConfig { hostName = "ide-us"; isContainer = true; };
-
-        # --- 云服务器（Ubuntu 底，B 路线：系统层归发行版，nix 管用户态）---
-        # 部署：nix run .#ali-ai（服务器上仓库副本 + USER=root 激活）
-        "root@ali-ai" = mkHomeConfig {
-          hostName = "ali-ai";
-          system = "x86_64-linux";
-          platform = "ubuntu";
-        };
-        "root@hc-pro-pve-2" = mkHomeConfig {
-          hostName = "hc-pro-pve-2";
-          system = "x86_64-linux";
-          platform = "ubuntu";
-        };
-
-        # --- 以后加真机：一行注册 + 对应目录，例如 ---
-        # "fan@macbook" = mkHomeConfig { hostName = "macbook"; system = "aarch64-darwin"; platform = "darwin"; };
-        # "fan@laptop"  = mkHomeConfig { hostName = "laptop"; system = "x86_64-linux"; };
-
-        # --- PVE 宿主机（Debian 底，非 NixOS）：用户层 HM standalone（root），系统层见 pve/（渲染+推送）---
-        # 部署：nix run .#ds2 / .#desktop（bootstrap nix → nix copy → 系统层 apply，见 pve/deploy.nix）
-        "fan@ds2" = mkHomeConfig {
-          hostName = "ds2";
-          system = "x86_64-linux";
-          platform = "pve";
-        };
-        "fan@desktop" = mkHomeConfig {
-          hostName = "desktop";
-          system = "x86_64-linux";
-          platform = "pve";
-        };
-        "fan@fan" = mkHomeConfig {
-          hostName = "fan";
-          system = "x86_64-linux";
-          platform = "pve";
-        };
-        "fan@hp" = mkHomeConfig {
-          hostName = "hp";
-          system = "x86_64-linux";
-          platform = "pve";
-        };
-        "fan@mi" = mkHomeConfig {
-          hostName = "mi";
-          system = "x86_64-linux";
-          platform = "pve";
-        };
-        "fan@razer" = mkHomeConfig {
-          hostName = "razer";
-          system = "x86_64-linux";
-          platform = "pve";
-        };
-      };
+      # homeConfigurations（standalone HM：容器 / ubuntu / pve）由 registry 派生，键 = "<user>@<机名>"
+      # 容器：isContainer=true 跳过 docker 安装（容器里 daemon 起不来）；容器平台层 _container_ 继承 _ubuntu_，_nixos_ 仅 NixOS 真机
+      # 代理：仅 ide-si 走（sysenv.nix 接管环境变量，与 compose 无关）；内网 hosts 三台共用（_container_/extra-hosts.nix）
+      # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异）；ide-mac 桌面走 KasmVNC arm64 + chromium 替代 google-chrome
+      homeConfigurations =
+        lib.mapAttrs'
+          (
+            hostName: m:
+            lib.nameValuePair "${m.user}@${hostName}" (mkHomeConfig {
+              inherit hostName;
+              inherit (m) system;
+              platform = m.kind;
+              isContainer = m.kind == "container";
+              extraUnfree = m.extraUnfree or [ ];
+            })
+          )
+          (machinesOfKind [
+            "container"
+            "ubuntu"
+            "pve"
+          ]);
 
       # --- macOS：三台 nix-darwin（home-manager 内嵌，darwin-rebuild switch --flake .#<机器>）---
       # 系统层组装见 hosts/_darwin_/default.nix（公共）+ hosts/<host>/default.nix（差异）；
       # 用户层按 home/fan/module-list.nix 自动组装
-      darwinConfigurations = {
-        mba-m5 = mkDarwinConfig { hostName = "mba-m5"; };
-        mbp-m1 = mkDarwinConfig { hostName = "mbp-m1"; };
-        mini-m4 = mkDarwinConfig { hostName = "mini-m4"; };
-      };
+      darwinConfigurations = lib.mapAttrs (
+        hostName: m:
+        mkDarwinConfig {
+          inherit hostName;
+          inherit (m) system;
+        }
+      ) (machinesOfKind [ "darwin" ]);
 
-      nixosConfigurations = {
-        # --- NixOS 真机：nix-pve（Proxmox VE 上的虚拟机，128G 盘 + KDE Plasma 桌面）---
-        # 系统层：hosts/nix-pve/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面）
-        # 用户层：users/fan 复用 home/fan/module-list.nix（_common_ + _nixos_ + 可选 nix-pve 差异）
-        # 部署：nixos-rebuild switch --flake .#nix-pve；comin 已启用，轮询 main 自动部署
-        nix-pve = mkNixosConfig {
-          hostName = "nix-pve";
-          # 与 mkHomeConfig 同款 pkgs：overlay 注入 + unfree 放行
-          # （unfreeAllowlist + microsoft-edge / libsciter[clash-verge-rev]）
-          extraUnfree = [
-            "microsoft-edge"
-            "libsciter"
-          ];
-        };
-
-        # --- NixOS 真机：nix-book（无界14S 笔记本，476.9G NVMe + AMD 7840HS/780M + KDE Plasma 桌面）---
-        # 系统层：hosts/nix-book/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面 / Wayland）
-        # 用户层：users/fan 复用 home/fan/module-list.nix（_common_ + _nixos_ + 可选 nix-book 差异）
-        # 部署：nixos-rebuild switch --flake .#nix-book（手动，无 comin）
-        nix-book = mkNixosConfig {
-          hostName = "nix-book";
-          # unfree 放行：microsoft-edge / libsciter[clash-verge-rev] / wechat / qq
-          extraUnfree = [
-            "microsoft-edge"
-            "libsciter"
-            "wechat"
-            "qq"
-          ];
-        };
-      };
+      # --- NixOS 真机（nix-pve / nix-book）由 registry 派生 ---
+      # 系统层：hosts/<机>/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面）
+      # 用户层：users/fan 复用 home/fan/module-list.nix（_common_ + _nixos_ + 可选机器差异）
+      # 部署：nixos-rebuild switch --flake .#<机>；nix-pve 的 comin 轮询 main 自动部署
+      nixosConfigurations = lib.mapAttrs (
+        hostName: m:
+        mkNixosConfig {
+          inherit hostName;
+          inherit (m) system;
+          extraUnfree = m.extraUnfree or [ ];
+        }
+      ) (machinesOfKind [ "nixos" ]);
 
       # --- 一步到位：nix run .#<机器名>（构建 + activate 一条命令）---
       # homeConfigurations 标准名保留（兼容 home-manager switch --flake 等工具）
@@ -496,66 +424,33 @@
           githubFetchBase = tools.githubFetchBase;
         })
         // lib.optionalAttrs isLinux (
-          {
-            # 机器专属别名：mise 组件共享 _container_/mise.nix（hostName 分支差异），si/lenovo/mac 各一份
-            # HOME_MANAGER_BACKUP_EXT=backup：已存在的手配文件（如 .codex/config.toml）自动备份为 .backup 再覆盖
-            ide-si = mkHomeAlias {
-              hostName = "ide-si";
-              inherit system;
-              platform = "container";
-              isContainer = true;
-            };
-            ide-lenovo = mkHomeAlias {
-              hostName = "ide-lenovo";
-              inherit system;
-              platform = "container";
-              isContainer = true;
-              extraUnfree = [
-                "google-chrome" # 浏览器
-                "albert"
-              ];
-            };
-            ide-mac = mkHomeAlias {
-              hostName = "ide-mac";
-              inherit system;
-              platform = "container";
-              isContainer = true;
-              extraUnfree = [
-                "google-chrome" # 仅 x86_64 分支用到；arm64 走 chromium
-                "albert"
-              ];
-            };
-            # 云服务器（ali-ai）：服务器上仓库副本 + nix run .#ali-ai（USER=root 激活，同 ide 模式）
-            ali-ai = mkHomeAlias {
-              hostName = "ali-ai";
-              inherit system;
-              platform = "ubuntu";
-            };
-            # 云服务器（hc-pro-pve-2）：同 ali-ai 模式
-            hc-pro-pve-2 = mkHomeAlias {
-              hostName = "hc-pro-pve-2";
-              inherit system;
-              platform = "ubuntu";
-            };
-          }
+          # 容器/ubuntu 机器别名：HOME_MANAGER_BACKUP_EXT=backup 备份已存在的手配文件（如 .codex/config.toml）
+          # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异）
+          lib.mapAttrs
+            (
+              hostName: m:
+              mkHomeAlias {
+                inherit hostName system;
+                platform = m.kind;
+                isContainer = m.kind == "container";
+                extraUnfree = m.extraUnfree or [ ];
+              }
+            )
+            (aliasMachinesOfKind [
+              "container"
+              "ubuntu"
+            ])
           # PVE 宿主机部署：bootstrap nix → 推 git 凭据 + clone 仓库 → 远程构建 HM + activate → 系统层 apply
           # （apt 源/DNS/去 nag/pve-assist，见 pve/ 目录；host 参数决定机器层）
-          // lib.genAttrs [
-            "ds2"
-            "desktop"
-            "fan"
-            "hp"
-            "mi"
-            "razer"
-          ] (host: import ./pve/deploy.nix { inherit pkgs lib host; })
+          // lib.mapAttrs (host: _: import ./pve/deploy.nix { inherit pkgs lib host; }) (aliasMachinesOfKind [
+            "pve"
+          ])
         )
         // lib.optionalAttrs (!isLinux) (
           # Mac 一次性构建+激活别名：nix run .#mba-m5 等（activate 必须 root，内置 sudo）
-          lib.genAttrs [
-            "mba-m5"
-            "mbp-m1"
-            "mini-m4"
-          ] (m: pkgs.writeShellScriptBin m "exec sudo ${self.darwinConfigurations.${m}.system}/activate")
+          lib.mapAttrs (
+            m: _: pkgs.writeShellScriptBin m "exec sudo ${self.darwinConfigurations.${m}.system}/activate"
+          ) (aliasMachinesOfKind [ "darwin" ])
         )
       );
 
@@ -572,6 +467,23 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          # 全目标 eval：11 standalone HM + 3 darwin + 2 nixos = 16（求值失败则 check 实例化失败）
+          # unsafeDiscardStringContext：只 eval 不构建；否则 check 会把 16 个目标的 drv 当依赖，跨架构直接 platform mismatch
+          targetDrvs =
+            lib.mapAttrs (
+              n: c: builtins.unsafeDiscardStringContext c.activationPackage.drvPath
+            ) self.homeConfigurations
+            // lib.mapAttrs (
+              n: c: builtins.unsafeDiscardStringContext c.config.system.build.toplevel.drvPath
+            ) self.darwinConfigurations
+            // lib.mapAttrs (
+              n: c: builtins.unsafeDiscardStringContext c.config.system.build.toplevel.drvPath
+            ) self.nixosConfigurations;
+          # 别名实际存在性：registry 带 alias 的机器至少出现在一个 system 的 packages 中
+          aliasNames = builtins.attrNames (lib.filterAttrs (n: m: m.alias) machines);
+          aliasPresent = builtins.filter (
+            n: lib.any (s: builtins.hasAttr n self.packages.${s}) allSystems
+          ) aliasNames;
         in
         {
           formatting = (treefmt-nix.lib.evalModule pkgs ./formatter.nix).config.build.check self;
@@ -583,6 +495,20 @@
           # 四处手写静态层解析期读不到 tools（PVE 层按子集比对），只能靠检查防漂移（见 tests/mirror-consistency.py、AGENTS.md）
           mirror-consistency = pkgs.runCommand "mirror-consistency-check" { } ''
             ${pkgs.python3}/bin/python3 ${./tests/mirror-consistency.py} ${./tools/config.nix} ${./flake.nix} ${./docker/ide/ubuntu/Dockerfile} ${./docker/ide/ubuntu/entrypoint.sh} ${./pve/deploy.sh}
+            touch "$out"
+          '';
+          # 输出集合断言：三大配置族键集与机器别名集合 == 迁移前基线（防注册漏改，见 tests/machine-sets.py）
+          machine-sets = pkgs.runCommand "machine-sets-check" { } ''
+            ${pkgs.python3}/bin/python3 ${./tests/machine-sets.py} \
+              '${builtins.toJSON (builtins.attrNames self.homeConfigurations)}' \
+              '${builtins.toJSON (builtins.attrNames self.darwinConfigurations)}' \
+              '${builtins.toJSON (builtins.attrNames self.nixosConfigurations)}' \
+              '${builtins.toJSON aliasPresent}'
+            touch "$out"
+          '';
+          # 全目标 eval 门禁：16 台机器全部可求值（见 tests/eval-all-targets.py）
+          eval-all-targets = pkgs.runCommand "eval-all-targets-check" { } ''
+            ${pkgs.python3}/bin/python3 ${./tests/eval-all-targets.py} '${builtins.toJSON targetDrvs}'
             touch "$out"
           '';
         }
