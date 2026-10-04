@@ -14,10 +14,12 @@ let
   };
 in
 rustdesk
-// {
-
-  # KasmVNC：浏览器远程桌面（nixpkgs 无此包；→ home/fan/ide-lenovo/kasmvnc.nix）
+// pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+  # KasmVNC：浏览器远程桌面（仅 linux：官方 deb 解包含 arm64/amd64 分支；nixpkgs 无此包）
+  # → home/fan/ide-lenovo/kasmvnc.nix、home/fan/ide-mac/kasmvnc.nix
   kasmvnc = pkgs.callPackage ./kasmvnc.nix { };
+}
+// {
 
   # Catppuccin Konsole 配色（nixpkgs 26.05 无此包，固定 rev 自打包；→ home/fan/_nixos_/gui/plasma.nix）
   # 网络：fetchFromGitHub 默认直连 github.com（国内不稳），githubBase 换加速前缀（代理不改内容，hash 不重算）
