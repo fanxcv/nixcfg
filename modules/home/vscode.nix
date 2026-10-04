@@ -1,53 +1,28 @@
 # VSCode 封装模块（tsln1998/nixcfg 思路：hm 内置 programs.vscode 之上统一包源/市场/设置）
-# 扩展清单/设置/键位以本文件为准（原参考文档 docs/tsln-vscode.yaml 已删除）
+# 扩展清单以 modules/home/vscode-extensions.nix 为唯一维护点；本文件只读清单派生三 profile 扩展 /
+# server 端扩展 / extensions.json；设置与键位仍以本文件为准（原参考文档 docs/tsln-vscode.yaml 已删除）
 # 启用方式（平台层）：
 #   mac：vscode.enable = true            → package 默认 null，用商店版 App，扩展/设置由 nix 锁定
 #   nixos：vscode.enable = true; vscode.package = pkgs.repos.unstable.vscode
-# 扩展来源两路，禁本地自打包（packages/ 不再收 vscode 扩展）：
-#   主市场 pkgs.vscode-extensions（nixpkgs 内置，无 IFD）；
-#   补市场 pkgs.repos.vscode.vscode-marketplace-release（nix-community/nix-vscode-extensions，IFD）
-#   仅补 nixpkgs 缺失项：autopep8 / vscode-buf / csv-grid-editor / pencildev
 # 语言 profile：vscode --profile python / --profile go 启动，独立扩展+设置（公共部分自动并入）
 {
   config,
   lib,
   pkgs,
+  vscodeExtensionManifest,
   ...
 }:
 let
   cfg = config.vscode;
-  market = pkgs.vscode-extensions;
-  # 补市场（marketplace-release）：eval 时 IFD 拉取扩展清单（nix 2.18+ 默认允许），启用 vscode 的平台才会触发
-  release = pkgs.repos.vscode.vscode-marketplace-release;
+  # 扩展清单（唯一维护点，见 modules/home/vscode-extensions.nix；经 _module.args 注入）
+  manifest = vscodeExtensionManifest;
 
-  # 公共扩展（default/python/go 三个 profile 共用）
-  baseCommonExtensions = [
-    # 中文语言包
-    market.ms-ceintl.vscode-language-pack-zh-hans
-    # 主题/图标
-    market.github.github-vscode-theme
-    market.pkief.material-icon-theme
-    # 高亮
-    market.oderwat.indent-rainbow
-    # Git
-    market.codezombiech.gitignore
-    market.waderyan.gitblame
-    market.mhutchie.git-graph
-    # 通用
-    market.editorconfig.editorconfig
-    market.redhat.vscode-yaml
-    market.usernamehw.errorlens
-    market.humao.rest-client
-    market.yzhang.markdown-all-in-one
-    release.robinreiche.csv-grid-editor # CSV/TSV 网格查看编辑（nixpkgs 无；补市场 1.23.0）
-    release.highagency.pencildev # Pencil / pen.dev 设计稿编辑（nixpkgs 无；补市场 0.6.73）
-  ];
-  # 仅客户端 UI 类扩展（base 公共，但 server 端不装：remote-ssh 是客户端侧远程连接器）
-  clientOnlyExtensions = [
-    market.ms-vscode-remote.remote-ssh
-  ];
-  # 客户端扩展（default profile）＝公共 + 客户端专属
-  baseExtensions = baseCommonExtensions ++ clientOnlyExtensions;
+  # 清单 → 包引用；profile 取 client=true 且列入该 profile 的记录，server 取 server=true 的记录
+  extensionOf = r: r.pkg pkgs;
+  profileExtensions =
+    name: map extensionOf (builtins.filter (r: r.client && builtins.elem name r.profiles) manifest);
+  serverExtensions = map extensionOf (builtins.filter (r: r.server) manifest);
+  extensionIds = map (r: r.id) manifest;
 
   # 公共设置（mac/nixos/容器通用部分）
   baseSettings = {
@@ -104,38 +79,18 @@ let
     "update.showReleaseNotes" = false;
   };
 
-  # 语言扩展（server 端无 profile 概念，扩展平铺）
-  pythonExtensions = [
-    market.ms-python.python
-    market.ms-python.debugpy
-    market.ms-python.isort
-    market.ms-python.vscode-pylance
-    release.ms-python.autopep8 # 仅补市场有
-  ];
-  goExtensions = [
-    market.golang.go
-    release.bufbuild.vscode-buf # 仅补市场有
-  ];
-
   # 语言 profile 生成（tsln _vsc_profile_ 思路：公共 + 语言专属，独立完整配置）
   # 注意：enableUpdateCheck / enableExtensionUpdateCheck 仅 default profile 有效（hm 限制）
-  profile = p: {
-    extensions = baseExtensions ++ (p.extensions or [ ]);
-    userSettings = baseSettings // (p.userSettings or { });
-  };
-
-  # vscode-server 扩展集合（容器远程开发）：公共（剔除客户端 UI 类）+ 语言扩展平铺
-  # 主题/图标/状态栏类扩展 server 端无 UI 意义，但保留可避免两份清单；remote-ssh 等客户端扩展不装 server 端
-  # 客户端 UI 类剔除：errorlens（编辑器 UI）、github-theme、material-icon-theme（文件图标）
-  # pencildev 不剔除：.pen 编辑器与 MCP server 在 workspace 侧运行，远程开发时 server 端需要
-  serverExtensions =
-    (lib.subtractLists [
-      market.usernamehw.errorlens
-      market.github.github-vscode-theme
-      market.pkief.material-icon-theme
-    ] baseCommonExtensions)
-    ++ pythonExtensions
-    ++ goExtensions;
+  mkProfile =
+    {
+      name,
+      extraExtensions ? [ ],
+      extraSettings ? { },
+    }:
+    {
+      extensions = profileExtensions name ++ extraExtensions;
+      userSettings = baseSettings // extraSettings;
+    };
 in
 {
   options.vscode = {
@@ -166,6 +121,16 @@ in
   };
 
   config = lib.mkMerge [
+    # 清单唯一性：id 重复即求值失败（防止同名扩展双份）
+    {
+      assertions = [
+        {
+          assertion = lib.unique extensionIds == extensionIds;
+          message = "modules/home/vscode-extensions.nix 存在重复 id";
+        }
+      ];
+    }
+
     # 客户端（vscode.enable）：mac/nixos 平台层启用
     (lib.mkIf cfg.enable {
       # 界面语言中文：argv.json 的 locale（新版 VSCode 已不读 settings.json 的 locale 键）
@@ -189,9 +154,10 @@ in
         mutableExtensionsDir = false; # 扩展由 nix 锁定，编辑器内不可增删
         profiles = {
           default =
-            (profile {
-              extensions = cfg.extensions;
-              userSettings = cfg.settings;
+            (mkProfile {
+              name = "default";
+              extraExtensions = cfg.extensions;
+              extraSettings = cfg.settings;
             })
             // {
               # 键位：仅 cmd/ctrl+d → 删除当前行（editor.action.deleteLines）；其余全部默认
@@ -214,12 +180,10 @@ in
               enableExtensionUpdateCheck = false;
             };
           # 语言 profile（vscode --profile <名> 启动）
-          python = profile {
-            extensions = pythonExtensions;
-          };
-          go = profile {
-            extensions = goExtensions;
-            userSettings = {
+          python = mkProfile { name = "python"; };
+          go = mkProfile {
+            name = "go";
+            extraSettings = {
               "go.showWelcome" = false;
               "go.diagnostic.vulncheck" = "Off";
             };

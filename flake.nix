@@ -175,17 +175,17 @@
           pkgs = prev;
           githubFetchBase = tools.githubFetchBase;
         };
-      # unfree 白名单：vscode 本体/扩展（unstable 通道，见 modules/home/vscode.nix；
-      # pylance 为微软专有 license，remote-ssh 同理）
+      # unfree 白名单：vscode 本体 + 扩展（扩展名由 modules/home/vscode-extensions.nix 的 unfree 字段生成，
+      # 加插件只改该清单；该文件是 home 模块，清单经 _module.args 暴露，import 直读静态字段不需 pkgs；
+      # pylance 为微软专有 license，remote-ssh 同理）+ tart
       unfreeAllowlist = [
         "vscode"
-        "vscode-extension-ms-vscode-remote-remote-ssh"
-        "vscode-extension-MS-python-vscode-pylance"
-        "vscode-extension-ms-ceintl-vscode-language-pack-zh-hans"
-        "vscode-extension-mhutchie-git-graph"
-        "vscode-extension-highagency-pencildev" # Pencil / pen.dev 专有 license（补市场）
-        "tart" # macOS 虚拟机（fsl11Asl20，nixpkgs 原生，mini-m4）
-      ];
+      ]
+      ++ map (r: r.unfree) (
+        builtins.filter (r: r ? unfree)
+          (import ./modules/home/vscode-extensions.nix)._module.args.vscodeExtensionManifest
+      )
+      ++ [ "tart" ]; # macOS 虚拟机（fsl11Asl20，nixpkgs 原生，mini-m4）
       # 统一构造 pkgs；通道与额外 unfree 差异由调用点显式传入
       mkPkgs =
         {
