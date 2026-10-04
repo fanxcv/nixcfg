@@ -12,11 +12,11 @@ A fifth place is checked as a subset (it only declares the keys it needs):
 modules/darwin/nix.nix and hosts/nix-pve read tools.config.nix directly and therefore
 follow the source automatically; they need no assertion here.
 Additionally checked: tools/config.nix dockerRegistryMirrors vs the hand-written
-registries.conf.d drop-in in pve/apply.sh (sibling of the pve/deploy.sh argument;
-podman tries mirrors in order, so exact match).
+registries.conf.d drop-in in pve/apply.sh (6th argument, or sibling of the
+pve/deploy.sh argument when omitted; podman tries mirrors in order, so exact match).
 
 Any drift fails the check and prints the differing values.
-Usage: mirror-consistency.py <config.nix> <flake.nix> <Dockerfile> <entrypoint.sh> <pve-deploy.sh>
+Usage: mirror-consistency.py <config.nix> <flake.nix> <Dockerfile> <entrypoint.sh> <pve-deploy.sh> [pve-apply.sh]
 """
 
 from __future__ import annotations
@@ -124,7 +124,9 @@ def main() -> None:
     docker = dockerfile.read_text()
     entry = entrypoint.read_text()
     pve = pve_deploy.read_text()
-    pve_apply_path = pve_deploy.with_name("apply.sh")
+    # pve/apply.sh：第六参显式给出（flake check 传的是单文件 store 路径，其 parent
+    # 不含目录结构，无法从 deploy.sh 的 sibling 推导）；缺省时按同目录推导
+    pve_apply_path = Path(sys.argv[6]) if len(sys.argv) > 6 else pve_deploy.with_name("apply.sh")
     pve_apply = pve_apply_path.read_text() if pve_apply_path.exists() else ""
 
     source_values = {

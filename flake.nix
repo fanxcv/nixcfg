@@ -494,7 +494,7 @@
           # 镜像/缓存配置一致性（tools/config.nix 源头 ↔ flake.nix nixConfig ↔ Dockerfile nix.conf ↔ entrypoint.sh nix.conf ↔ pve/deploy.sh nix.conf）：
           # 四处手写静态层解析期读不到 tools（PVE 层按子集比对），只能靠检查防漂移（见 tests/mirror-consistency.py、AGENTS.md）
           mirror-consistency = pkgs.runCommand "mirror-consistency-check" { } ''
-            ${pkgs.python3}/bin/python3 ${./tests/mirror-consistency.py} ${./tools/config.nix} ${./flake.nix} ${./docker/ide/ubuntu/Dockerfile} ${./docker/ide/ubuntu/entrypoint.sh} ${./pve/deploy.sh}
+            ${pkgs.python3}/bin/python3 ${./tests/mirror-consistency.py} ${./tools/config.nix} ${./flake.nix} ${./docker/ide/ubuntu/Dockerfile} ${./docker/ide/ubuntu/entrypoint.sh} ${./pve/deploy.sh} ${./pve/apply.sh}
             touch "$out"
           '';
           # 输出集合断言：三大配置族键集与机器别名集合 == 迁移前基线（防注册漏改，见 tests/machine-sets.py）
