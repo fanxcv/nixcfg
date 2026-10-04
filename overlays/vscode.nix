@@ -1,5 +1,5 @@
 # nix-vscode-extensions 市场注入（pkgs.repos.vscode）
-# 扩展来源两路（见 modules/home/vscode.nix）：
+# 扩展来源两路（清单见 modules/home/vscode-extensions.nix）：
 #   1) pkgs.vscode-extensions —— nixpkgs 内置，主市场，无 IFD
 #   2) pkgs.repos.vscode.vscode-marketplace-release —— 本 flake 的 release 通道，补 nixpkgs 缺失/滞后项
 #      （autopep8 / vscode-buf / csv-grid-editor / pencildev）；禁本地自打包扩展
