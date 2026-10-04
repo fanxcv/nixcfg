@@ -511,6 +511,12 @@
             ${pkgs.python3}/bin/python3 ${./tests/eval-all-targets.py} '${builtins.toJSON targetDrvs}'
             touch "$out"
           '';
+          # scan 静默跳过门禁：tools.scan 只导入直接子 .nix 与含 default.nix 的子目录，
+          # 无 default.nix 子目录内的 .nix 若未被显式 import 即被静默忽略（见 tests/check-scan-imports.py、AGENTS.md）
+          scan-imports = pkgs.runCommand "scan-imports-check" { } ''
+            ${pkgs.python3}/bin/python3 ${./tests/check-scan-imports.py} ${./.}
+            touch "$out"
+          '';
         }
       );
     };
