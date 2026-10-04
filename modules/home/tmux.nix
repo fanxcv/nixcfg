@@ -3,7 +3,7 @@
 # 与 oh-my-zsh 同套路：activation git clone（GitHub 加速由 tools/config.nix 的 githubUrl 统一控制（含例外）），
 #   .tmux.conf 软链 + .tmux.conf.local 首次复制 + 追加定制（mouse / base-index）
 # 全平台生效（macOS 同样使用）
-# 启用：common 默认 enable=true；某台不装 → 机器层 softwares.tmux.enable = lib.mkForce false
+# 启用：本模块默认 enable=true；某台不装 → 机器层 softwares.tmux.enable = lib.mkForce false
 
 {
   config,
@@ -13,7 +13,9 @@
   ...
 }:
 {
-  options.softwares.tmux.enable = lib.mkEnableOption "tmux + gpakosz 配置";
+  options.softwares.tmux.enable = lib.mkEnableOption "tmux + gpakosz 配置" // {
+    default = true;
+  };
 
   config = lib.mkIf config.softwares.tmux.enable {
     home.packages = [ pkgs.tmux ];

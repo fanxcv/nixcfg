@@ -6,7 +6,7 @@
 # 全部配置变更都维持在 config.toml 这一个文件里：机器级普通赋值即覆盖，不引入 config.local.toml
 # shims 进 PATH 用 home.sessionPath（与 ~/.local/bin 同一机制，注入 HM 管理的所有 shell）
 # darwin 也装包：mini-m4 的组件由 nix 声明（config.toml 见 home/fan/mini-m4/mise.nix）
-# 启用：common 默认 enable=true；某台不装 → 机器层 softwares.mise.enable = lib.mkForce false
+# 启用：本模块默认 enable=true；某台不装 → 机器层 softwares.mise.enable = lib.mkForce false
 
 {
   config,
@@ -15,7 +15,9 @@
   ...
 }:
 {
-  options.softwares.mise.enable = lib.mkEnableOption "mise 运行时管理器（包 + shims PATH）";
+  options.softwares.mise.enable = lib.mkEnableOption "mise 运行时管理器（包 + shims PATH）" // {
+    default = true;
+  };
 
   config = lib.mkIf config.softwares.mise.enable {
     # usage 是 mise 的 shell 补全/激活辅助 CLI（mise 不自带），装 mise 必装 usage

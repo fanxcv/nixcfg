@@ -10,7 +10,7 @@
 #   如需回归 nix 默认，删除文件后部署一次即可
 #
 # 启用（各层引用）：
-#   common/_common_/default.nix 显式 enable=true（所有机器默认装）
+#   本模块默认 enable=true（所有机器默认装）
 #   某台不装 → 机器层 softwares.codex.enable = lib.mkForce false
 
 {
@@ -20,7 +20,9 @@
   ...
 }:
 {
-  options.softwares.codex.enable = lib.mkEnableOption "codex（CLI 编码 agent，config 默认模板由 nix 声明）";
+  options.softwares.codex.enable = lib.mkEnableOption "codex（CLI 编码 agent，config 默认模板由 nix 声明）" // {
+    default = true;
+  };
 
   config = lib.mkIf config.softwares.codex.enable {
     # codex 包（Rust 编译，unstable 通道——周级 flake update 跟随，与 vscode 同机制）

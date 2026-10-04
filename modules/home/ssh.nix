@@ -3,7 +3,7 @@
 #   1. 授权公钥拉取 + sshd 禁用密码（对应 alpine-init.sh 的 ssh_config()，所有平台；mac 的 uname 守卫自动跳过系统加固）
 #   2. darwin 用户身份密钥解密（~/.ssh/id_rsa，age 路径按 hostName 参数化 → secrets/hosts/<host>/ssh-user-key.age）
 #   3. ssh config 解密（~/.ssh/config ← secrets/ssh-config.age；mba-m5/mbp-m1/nix-pve 需要；nix-pve 额外删 orbstack include 行）
-# 启用：common 默认 enable=true；某台不装 → 机器层 softwares.ssh.enable = lib.mkForce false
+# 启用：本模块默认 enable=true；某台不装 → 机器层 softwares.ssh.enable = lib.mkForce false
 
 {
   config,
@@ -15,7 +15,9 @@
   ...
 }: # GitHub 加速/例外由 tools/config.nix 控制（tools.githubUrl）
 {
-  options.softwares.ssh.enable = lib.mkEnableOption "ssh 配置（公钥拉取 + sshd 加固 + 身份/ssh-config 解密）";
+  options.softwares.ssh.enable = lib.mkEnableOption "ssh 配置（公钥拉取 + sshd 加固 + 身份/ssh-config 解密）" // {
+    default = true;
+  };
 
   config = lib.mkIf config.softwares.ssh.enable {
     # ---------- 1) 授权公钥 + sshd 加固（common，mac 跳过） ----------
