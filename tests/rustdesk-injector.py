@@ -11,6 +11,7 @@ SERVER = "10.20.30.40:21116"
 KEY = "test-public-key"
 RELAY = "10.20.30.40"
 TRUSTED_DEVICE = "test-device-id"
+PIN = "123456"
 
 RD2_OPTIONS = {
     "key": KEY,
@@ -39,7 +40,9 @@ LOCAL_OPTIONS = {
 }
 
 
-def run_case(injector: Path, root: Path, trusted_devices: str | None) -> None:
+def run_case(
+    injector: Path, root: Path, trusted_devices: str | None, pin: str | None
+) -> None:
     root.mkdir(parents=True)
     rd2 = root / "RustDesk2.toml"
     rdlocal = root / "RustDesk_local.toml"
@@ -60,6 +63,8 @@ def run_case(injector: Path, root: Path, trusted_devices: str | None) -> None:
     ]
     if trusted_devices is not None:
         command += ["--trusted-devices", trusted_devices]
+    if pin is not None:
+        command += ["--pin", pin]
 
     # The second run proves idempotence: duplicate TOML keys would make tomllib fail.
     subprocess.run(command, check=True)
@@ -71,7 +76,11 @@ def run_case(injector: Path, root: Path, trusted_devices: str | None) -> None:
         local_config = tomllib.load(handle)
 
     assert rd2_config["rendezvous_server"] == SERVER
-    assert rd2_config["unlock_pin"] == ""
+    # --pin 传值则写入（Nix 管理）；不传则保留既有值，injector 不新增该键
+    if pin is None:
+        assert "unlock_pin" not in rd2_config
+    else:
+        assert rd2_config["unlock_pin"] == pin
     assert rd2_config["nat_type"] == 2
     assert rd2_config["options"]["existing"] == "preserved"
     for name, value in RD2_OPTIONS.items():
@@ -92,8 +101,8 @@ def main() -> None:
     injector = Path(sys.argv[1])
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory)
-        run_case(injector, root / "mac", TRUSTED_DEVICE)
-        run_case(injector, root / "nixos", None)
+        run_case(injector, root / "mac", TRUSTED_DEVICE, PIN)
+        run_case(injector, root / "nixos", None, None)
 
 
 if __name__ == "__main__":
