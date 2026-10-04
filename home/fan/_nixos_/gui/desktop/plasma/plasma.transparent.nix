@@ -5,10 +5,14 @@
 # 与 plasma.panels.nix 的 opacity=translucent 配合：面板背景由主题决定（透明），opacity 模式仅控制前缀选择
 {
   xdg.dataFile = {
-    "plasma/desktoptheme/nixcfg-transparent/metadata.json".source = ./theme/nixcfg-transparent/metadata.json;
-    "plasma/desktoptheme/nixcfg-transparent/widgets/panel-background.svg".source = ./theme/nixcfg-transparent/widgets/panel-background.svg;
-    "plasma/desktoptheme/nixcfg-transparent/solid/widgets/panel-background.svg".source = ./theme/nixcfg-transparent/solid/widgets/panel-background.svg;
-    "plasma/desktoptheme/nixcfg-transparent/translucent/widgets/panel-background.svg".source = ./theme/nixcfg-transparent/translucent/widgets/panel-background.svg;
+    "plasma/desktoptheme/nixcfg-transparent/metadata.json".source =
+      ./theme/nixcfg-transparent/metadata.json;
+    "plasma/desktoptheme/nixcfg-transparent/widgets/panel-background.svg".source =
+      ./theme/nixcfg-transparent/widgets/panel-background.svg;
+    "plasma/desktoptheme/nixcfg-transparent/solid/widgets/panel-background.svg".source =
+      ./theme/nixcfg-transparent/solid/widgets/panel-background.svg;
+    "plasma/desktoptheme/nixcfg-transparent/translucent/widgets/panel-background.svg".source =
+      ./theme/nixcfg-transparent/translucent/widgets/panel-background.svg;
   };
 
   programs.plasma.workspace.theme = "nixcfg-transparent";

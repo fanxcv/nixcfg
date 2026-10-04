@@ -1,8 +1,7 @@
 # syncthing 同步目录忽略规则（与 Mac 端一致：.DS_Store 等垃圾文件不参与同步）
 #   .stignore 本身被 syncthing 忽略，不跨设备同步 → 各设备各自配置（Mac 见 home/fan/_darwin_/syncthing.nix）
 #   ~/sync 整目录持久化（immutable.nix），.stignore 随目录持久
-{ ... }:
-{
+_: {
   home.file."sync/.stignore".text = ''
     // macOS 系统/垃圾文件
     .DS_Store

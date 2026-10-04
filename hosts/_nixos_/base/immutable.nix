@@ -6,7 +6,8 @@
   lib,
   config,
   ...
-}: {
+}:
+{
   fileSystems."/persist" = {
     neededForBoot = true;
   };

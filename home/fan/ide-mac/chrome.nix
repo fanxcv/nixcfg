@@ -40,7 +40,10 @@ let
     exec = "${chromeWrapper}/bin/chrome %U";
     icon = browserDesktopName;
     terminal = false;
-    categories = [ "Network" "WebBrowser" ];
+    categories = [
+      "Network"
+      "WebBrowser"
+    ];
     startupWMClass = "chromium";
   };
 in

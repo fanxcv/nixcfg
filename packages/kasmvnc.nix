@@ -86,7 +86,11 @@ stdenv.mkDerivation {
     sha256 = debSha256;
   };
 
-  nativeBuildInputs = [ dpkg autoPatchelfHook makeWrapper ];
+  nativeBuildInputs = [
+    dpkg
+    autoPatchelfHook
+    makeWrapper
+  ];
 
   # Xkasmvnc 的 DT_NEEDED 全链（ldd 核对）：libpng/libz/libunwind/libpixman/libXfont2/libXau/
   #   libsystemd/libxshmfence/libXdmcp/libGL/libgbm/libssl/libcrypto/libcrypt/libfreetype/libstdc++
@@ -154,10 +158,18 @@ stdenv.mkDerivation {
     #   （只有编译期 @INC 才追加），必须显式指 site_perl/${perl.version}
     # 坑2：XS 模块（DateTime 等）装在 site_perl/<version>/<archname>/，同样不自动追加，
     #   archname 由 perl -MConfig 动态获取（平台无关）
-    perlEnv="${perl.withPackages (pp: [
-      pp.Switch pp.YAMLTiny pp.HashMergeSimple pp.ScalarListUtils pp.ListMoreUtils
-      pp.TryTiny pp.DateTime pp.DateTimeTimeZone
-    ])}"
+    perlEnv="${
+      perl.withPackages (pp: [
+        pp.Switch
+        pp.YAMLTiny
+        pp.HashMergeSimple
+        pp.ScalarListUtils
+        pp.ListMoreUtils
+        pp.TryTiny
+        pp.DateTime
+        pp.DateTimeTimeZone
+      ])
+    }"
     archname=$(${perl}/bin/perl -MConfig -e 'print $Config{archname}')
     # 运行时命令：kasmvncserver 反引号调 cat/hostname/mcookie/uname/whoami/xdpyinfo
     #   （coreutils/hostname/util-linux/xdpyinfo），systemd 的 PATH 不含这些，须 wrapProgram 注入

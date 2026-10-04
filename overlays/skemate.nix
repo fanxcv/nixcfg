@@ -17,11 +17,14 @@ in
   # 取 skemate 仓库 flake 的 packages.<system>.skemate（二进制 eval 期 fetchurl 带 sha256 内容寻址，
   # store 复用不重复下载；构建期纯 cp 零网络）
   skemate =
-    if builtins.elem system [
-      "x86_64-linux"
-      "aarch64-darwin"
-      "aarch64-linux"
-    ]
-    then inputs.skemate.packages.${system}.skemate
-    else throw "skemate: 平台 ${system} 无官方构建（skemate flake 只发 x86_64-linux / aarch64-darwin / aarch64-linux）";
+    if
+      builtins.elem system [
+        "x86_64-linux"
+        "aarch64-darwin"
+        "aarch64-linux"
+      ]
+    then
+      inputs.skemate.packages.${system}.skemate
+    else
+      throw "skemate: 平台 ${system} 无官方构建（skemate flake 只发 x86_64-linux / aarch64-darwin / aarch64-linux）";
 }

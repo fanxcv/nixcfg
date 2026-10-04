@@ -14,10 +14,9 @@ let
   sessionHome = "/home/fan";
   # 容器构建文件系统不允许恢复 deb 内 chrome-sandbox 的 setuid 位；运行时已显式 --no-sandbox。
   chrome = pkgs.google-chrome.overrideAttrs (old: {
-    unpackPhase = lib.replaceStrings
-      [ "tar xf data.tar.xz" ]
-      [ "tar --no-same-permissions -xf data.tar.xz" ]
-      old.unpackPhase;
+    unpackPhase =
+      lib.replaceStrings [ "tar xf data.tar.xz" ] [ "tar --no-same-permissions -xf data.tar.xz" ]
+        old.unpackPhase;
   });
   # 仅暴露 chrome 入口，避免原包命令名进入 PATH。
   chromeWrapper = pkgs.writeShellScriptBin "chrome" ''
@@ -32,7 +31,10 @@ let
     exec = "${chromeWrapper}/bin/chrome %U";
     icon = "google-chrome";
     terminal = false;
-    categories = [ "Network" "WebBrowser" ];
+    categories = [
+      "Network"
+      "WebBrowser"
+    ];
     startupWMClass = "chromium";
   };
 in

@@ -113,8 +113,12 @@ let
       pkgs.glibc
     ];
     extraBwrapArgs = [
-      "--bind" "/etc/pam" "/etc/pam"
-      "--bind" "/etc/pam.d" "/etc/pam.d"
+      "--bind"
+      "/etc/pam"
+      "/etc/pam"
+      "--bind"
+      "/etc/pam.d"
+      "/etc/pam.d"
     ];
   };
 

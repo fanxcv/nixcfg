@@ -42,7 +42,7 @@ let
       pve = "$HOME/nixcfg";
     }
     .${platform}
-    or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/ubuntu/pve）");
+      or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/ubuntu/pve）");
   deployCmd =
     {
       darwin = "sudo darwin-rebuild switch --flake .#${hostName}";
@@ -52,7 +52,7 @@ let
       pve = "nix run .#${hostName} -- --self";
     }
     .${platform}
-    or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/ubuntu/pve）");
+      or (throw "shells.nix: 平台 ${platform} 未定义 nixcfg 命令（darwin/nixos/container/ubuntu/pve）");
 in
 {
   programs.zsh = {

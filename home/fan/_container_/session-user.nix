@@ -33,7 +33,9 @@ let
     ".config/chrome"
   ];
   # find 排除式：-xdev 已不下降进入挂载点，此处再排除挂载点自身，避免容器层 chown 触及宿主目录
-  mountExcludes = lib.concatMapStringsSep " " (rel: ''! -path "${sessionHome}/${rel}"'') sessionMounts;
+  mountExcludes = lib.concatMapStringsSep " " (
+    rel: ''! -path "${sessionHome}/${rel}"''
+  ) sessionMounts;
 in
 {
   # 在桌面配置写入脚本之后执行（kasmvncBeautify → chrome → kasmvnc；ide-si 无桌面会话，DAG 容忍缺失名）
