@@ -11,6 +11,9 @@ A fifth place is checked as a subset (it only declares the keys it needs):
 
 modules/darwin/nix.nix and hosts/nix-pve read tools.config.nix directly and therefore
 follow the source automatically; they need no assertion here.
+Additionally checked: tools/config.nix dockerRegistryMirrors vs the hand-written
+registries.conf.d drop-in in pve/apply.sh (sibling of the pve/deploy.sh argument;
+podman tries mirrors in order, so exact match).
 
 Any drift fails the check and prints the differing values.
 Usage: mirror-consistency.py <config.nix> <flake.nix> <Dockerfile> <entrypoint.sh> <pve-deploy.sh>
@@ -94,6 +97,18 @@ def pve_values(text: str) -> dict[str, list[str]] | None:
     return nix_conf_values(match.group(1))
 
 
+def pve_mirror_values(text: str) -> list[str] | None:
+    """Parse the registries.conf.d mirror drop-in heredoc of pve/apply.sh (None = block missing)."""
+    match = re.search(
+        r"cat > /etc/containers/registries.conf.d/mirror\.conf <<'MIRROR'\n(.*?)\nMIRROR",
+        text,
+        re.S,
+    )
+    if not match:
+        return None
+    return re.findall(r'\[\[registry\.mirror\]\]\s*\n\s*location = "([^"]*)"', match.group(1))
+
+
 def is_subsequence(actual: list[str], expected: list[str]) -> bool:
     """True when `actual` appears in `expected` in order (a layer may declare fewer keys/values)."""
     pool = iter(expected)
@@ -109,6 +124,8 @@ def main() -> None:
     docker = dockerfile.read_text()
     entry = entrypoint.read_text()
     pve = pve_deploy.read_text()
+    pve_apply_path = pve_deploy.with_name("apply.sh")
+    pve_apply = pve_apply_path.read_text() if pve_apply_path.exists() else ""
 
     source_values = {
         key: nix_list_values(source, SOURCE_VAR[key]) for key in CANONICAL
@@ -117,11 +134,27 @@ def main() -> None:
     docker_values = dockerfile_values(docker)
     entrypoint_conf_values = entrypoint_values(entry)
     pve_conf_values = pve_values(pve)
+    pve_mirrors = pve_mirror_values(pve_apply)
+    # 源头带 https:// 前缀，podman location 仅域名：按域名比较；podman 按声明顺序回退镜像，故顺序敏感，取全等（非子集）。
+    source_mirrors = [
+        re.sub(r"^https?://", "", mirror)
+        for mirror in nix_list_values(source, "dockerRegistryMirrors")
+    ]
 
     failures = []
     if pve_conf_values is None:
         failures.append(
             "pve/deploy.sh: 未找到 /etc/nix/nix.conf 的 NIXCONF heredoc 块（块被改名/删除？）"
+        )
+    if pve_mirrors is None:
+        failures.append(
+            "pve/apply.sh: 未找到 registries.conf.d/mirror.conf 的 MIRROR heredoc 块（块被改名/删除？）"
+        )
+    elif pve_mirrors != source_mirrors:
+        failures.append(
+            f"[dockerRegistryMirrors] pve/apply.sh mirror.conf 不一致:\n"
+            f"    tools/config.nix: {source_mirrors}\n"
+            f"    pve/apply.sh:      {pve_mirrors}"
         )
 
     for key in CANONICAL:
