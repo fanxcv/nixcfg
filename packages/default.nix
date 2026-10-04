@@ -16,9 +16,6 @@ in
 rustdesk
 // {
 
-  # VSCode 扩展：CSV Grid Editor（补市场缓存滞后 → 官方 vsix 直链 1.18.4）
-  csv-grid-editor = pkgs.callPackage ./csv-grid-editor.nix { };
-
   # KasmVNC：浏览器远程桌面（nixpkgs 无此包；→ home/fan/ide-lenovo/kasmvnc.nix）
   kasmvnc = pkgs.callPackage ./kasmvnc.nix { };
 

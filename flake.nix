@@ -34,7 +34,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # --- unstable 通道：需要新版本的包使用（vscode 本体 + 扩展市场、codex，→ pkgs.repos.unstable）---
+    # --- unstable 通道：需要新版本的包使用（vscode 本体、codex，→ pkgs.repos.unstable）---
     # 锁 rev（flake.lock）+ 周级 nix flake update：unstable 滚动快、二进制保留期短于稳定分支，长时间不更新会掉缓存
     # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix、modules/home/{codex,pi}.nix）
     unstable = {
@@ -177,6 +177,7 @@
         "vscode-extension-MS-python-vscode-pylance"
         "vscode-extension-ms-ceintl-vscode-language-pack-zh-hans"
         "vscode-extension-mhutchie-git-graph"
+        "vscode-extension-highagency-pencildev" # Pencil / pen.dev 专有 license（补市场）
         "tart" # macOS 虚拟机（fsl11Asl20，nixpkgs 原生，mini-m4）
       ];
       # 统一构造 pkgs；通道与额外 unfree 差异由调用点显式传入

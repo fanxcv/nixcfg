@@ -1,10 +1,12 @@
 # VSCode 封装模块（tsln1998/nixcfg 思路：hm 内置 programs.vscode 之上统一包源/市场/设置）
-# 清单/设置以 docs/tsln-vscode.yaml 为准（用户维护该文件，调整后同步本模块）
+# 扩展清单/设置/键位以本文件为准（原参考文档 docs/tsln-vscode.yaml 已删除）
 # 启用方式（平台层）：
 #   mac：vscode.enable = true            → package 默认 null，用商店版 App，扩展/设置由 nix 锁定
 #   nixos：vscode.enable = true; vscode.package = pkgs.repos.unstable.vscode
-# 扩展主市场 pkgs.repos.unstable.vscode-extensions（unstable 通道，扩展版本较新）；
-#   补市场 pkgs.repos.vscode.vscode-marketplace-release 仅给 nixpkgs 缺失的扩展（autopep8 / vscode-buf）
+# 扩展来源两路，禁本地自打包（packages/ 不再收 vscode 扩展）：
+#   主市场 pkgs.vscode-extensions（nixpkgs 内置，无 IFD）；
+#   补市场 pkgs.repos.vscode.vscode-marketplace-release（nix-community/nix-vscode-extensions，IFD）
+#   仅补 nixpkgs 缺失项：autopep8 / vscode-buf / csv-grid-editor / pencildev
 # 语言 profile：vscode --profile python / --profile go 启动，独立扩展+设置（公共部分自动并入）
 {
   config,
@@ -14,11 +16,11 @@
 }:
 let
   cfg = config.vscode;
-  market = pkgs.repos.unstable.vscode-extensions;
+  market = pkgs.vscode-extensions;
   # 补市场（marketplace-release）：eval 时 IFD 拉取扩展清单（nix 2.18+ 默认允许），启用 vscode 的平台才会触发
   release = pkgs.repos.vscode.vscode-marketplace-release;
 
-  # 公共扩展（docs/tsln-vscode.yaml extensions.base）
+  # 公共扩展（default/python/go 三个 profile 共用）
   baseCommonExtensions = [
     # 中文语言包
     market.ms-ceintl.vscode-language-pack-zh-hans
@@ -37,16 +39,17 @@ let
     market.usernamehw.errorlens
     market.humao.rest-client
     market.yzhang.markdown-all-in-one
-    pkgs.csv-grid-editor # CSV/TSV 网格查看编辑（官方 vsix 直链自打包 1.18.4，见 packages/csv-grid-editor.nix；补市场缓存滞后）
+    release.robinreiche.csv-grid-editor # CSV/TSV 网格查看编辑（nixpkgs 无；补市场 1.23.0）
+    release.highagency.pencildev # Pencil / pen.dev 设计稿编辑（nixpkgs 无；补市场 0.6.73）
   ];
   # 仅客户端 UI 类扩展（base 公共，但 server 端不装：remote-ssh 是客户端侧远程连接器）
   clientOnlyExtensions = [
     market.ms-vscode-remote.remote-ssh
   ];
-  # 客户端扩展（default profile）＝公共 14 个
+  # 客户端扩展（default profile）＝公共 + 客户端专属
   baseExtensions = baseCommonExtensions ++ clientOnlyExtensions;
 
-  # 公共设置（docs/tsln-vscode.yaml settings，mac/nixos 通用部分）
+  # 公共设置（mac/nixos/容器通用部分）
   baseSettings = {
     "chat.disableAIFeatures" = true;
 
@@ -101,7 +104,7 @@ let
     "update.showReleaseNotes" = false;
   };
 
-  # 语言扩展（docs/tsln-vscode.yaml extensions.profiles；server 端无 profile 概念，扩展平铺）
+  # 语言扩展（server 端无 profile 概念，扩展平铺）
   pythonExtensions = [
     market.ms-python.python
     market.ms-python.debugpy
@@ -124,6 +127,7 @@ let
   # vscode-server 扩展集合（容器远程开发）：公共（剔除客户端 UI 类）+ 语言扩展平铺
   # 主题/图标/状态栏类扩展 server 端无 UI 意义，但保留可避免两份清单；remote-ssh 等客户端扩展不装 server 端
   # 客户端 UI 类剔除：errorlens（编辑器 UI）、github-theme、material-icon-theme（文件图标）
+  # pencildev 不剔除：.pen 编辑器与 MCP server 在 workspace 侧运行，远程开发时 server 端需要
   serverExtensions =
     (lib.subtractLists [
       market.usernamehw.errorlens
@@ -209,7 +213,7 @@ in
               enableUpdateCheck = false;
               enableExtensionUpdateCheck = false;
             };
-          # 语言 profile（docs/tsln-vscode.yaml extensions.profiles，vscode --profile <名> 启动）
+          # 语言 profile（vscode --profile <名> 启动）
           python = profile {
             extensions = pythonExtensions;
           };
