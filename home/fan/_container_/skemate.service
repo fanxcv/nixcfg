@@ -8,7 +8,11 @@ Type=simple
 User=root
 Environment=HOME=/root
 Environment=SHELL=/bin/zsh
-ExecStart=@skemate@/bin/skemate serve
+# pi 系子进程（skemate ffpi 面板）继承本服务 env 取密钥：models.json 以 $PIPI_* 引用，
+# 而密钥只在交互 shell 里导出（_common_/secrets.nix 的 zsh initContent）→ 服务侧必须显式注入。
+# systemd 的 Environment= 不做变量展开（255 实测亦不展开 EnvironmentFile 变量），故用 sh -c 包一层；
+# $$ 是 systemd 的「字面 $」转义，否则 systemd 先展开成空串。
+ExecStart=/bin/sh -c 'set -a; [ -f /root/.secrets/ai.env ] && . /root/.secrets/ai.env; export PIPI_CHAT_KEY="$$AI_FAN_CHAT" PIPI_CODEX_KEY="$$AI_FAN_CODEX" PIPI_CLAUDE_KEY="$$AI_FAN_CLAUDE"; exec @skemate@/bin/skemate serve'
 Restart=always
 RestartSec=3
 
