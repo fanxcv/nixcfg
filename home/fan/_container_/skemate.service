@@ -8,10 +8,18 @@ Type=simple
 User=root
 Environment=HOME=/root
 Environment=SHELL=/bin/zsh
-# pi 系子进程（skemate ffpi 面板）继承本服务 env 取密钥：models.json 以 $PIPI_* 引用，
-# 而密钥只在交互 shell 里导出（_common_/secrets.nix 的 zsh initContent）→ 服务侧必须显式注入。
+# pi 系子进程（skemate ffpi 面板）取密钥：models.json 以 $PIPI_* 引用，而密钥只在交互 shell 里
+# 导出（_common_/secrets.nix 的 zsh initContent）→ 服务侧必须显式注入。
 # systemd 的 Environment= 不做变量展开（255 实测亦不展开 EnvironmentFile 变量），故用 sh -c 包一层；
 # $$ 是 systemd 的「字面 $」转义，否则 systemd 先展开成空串。
+#
+# 两层都要：serve 自己一份（ExecStart），管理器环境一份（ExecStartPre）——ffpi 面板的 pi 子进程
+# 真正的父是 `skemate agent`，而 agent 由 serve 用 systemd-run 起成 **transient unit**，不继承
+# serve 的进程环境；cmd_agent.go 的 agentEnvPassthrough 是**按名枚举**的白名单（含
+# ANTHROPIC_API_KEY 等，不含 PIPI_*），所以只设 serve 那份仍到不了 pi。transient unit 会继承
+# systemd 管理器环境，故启动前把三个变量塞进管理器环境（2026-10-05 实测：--setenv 白名单外的
+# 变量确实由管理器环境补齐）。
+ExecStartPre=/bin/sh -c 'set -a; [ -f /root/.secrets/ai.env ] && . /root/.secrets/ai.env; exec /usr/bin/systemctl set-environment PIPI_CHAT_KEY="$$AI_FAN_CHAT" PIPI_CODEX_KEY="$$AI_FAN_CODEX" PIPI_CLAUDE_KEY="$$AI_FAN_CLAUDE"'
 ExecStart=/bin/sh -c 'set -a; [ -f /root/.secrets/ai.env ] && . /root/.secrets/ai.env; export PIPI_CHAT_KEY="$$AI_FAN_CHAT" PIPI_CODEX_KEY="$$AI_FAN_CODEX" PIPI_CLAUDE_KEY="$$AI_FAN_CLAUDE"; exec @skemate@/bin/skemate serve'
 Restart=always
 RestartSec=3
