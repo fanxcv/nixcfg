@@ -8,7 +8,15 @@ Type=simple
 User=root
 Environment=HOME=/root
 Environment=SHELL=/bin/zsh
-ExecStart=@skemate@/bin/skemate serve
+# pi 系子进程（skemate ffpi 面板）取密钥：models.json 以 $PIPI_* 引用，而密钥只在交互 shell 里
+# 导出（_common_/secrets.nix 的 zsh initContent）→ 服务侧必须显式注入。
+# systemd 的 Environment= 不做变量展开（255 实测亦不展开 EnvironmentFile 变量），故用 sh -c 包一层；
+# $$ 是 systemd 的「字面 $」转义，否则 systemd 先展开成空串。
+#
+# 只需 serve 这一份：ffpi 面板的 pi 子进程父是 serve 用 systemd-run 起的 transient unit
+# skemate-agent-*（不继承 serve 进程环境），而 cmd_agent.go 的 agentEnvPassthrough 白名单
+# 自 skemate 0.5.267 起含 PIPI_*（提交 0c25322c）→ serve 有就能带到 agent 与 pi。
+ExecStart=/bin/sh -c 'set -a; [ -f /root/.secrets/ai.env ] && . /root/.secrets/ai.env; export PIPI_CHAT_KEY="$$AI_FAN_CHAT" PIPI_CODEX_KEY="$$AI_FAN_CODEX" PIPI_CLAUDE_KEY="$$AI_FAN_CLAUDE"; exec @skemate@/bin/skemate serve'
 Restart=always
 RestartSec=3
 
