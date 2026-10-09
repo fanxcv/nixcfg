@@ -73,6 +73,12 @@
         fi
 
         # 2) sshd 禁用密码认证（公钥未就位则跳过，防止禁密码后无法登录）
+        #    NixOS 跳过：/etc/ssh/sshd_config 是只读 store 链接，改不动；
+        #    该平台的密码认证开关与授权公钥由 hosts/_nixos_/services/openssh.nix 在 nix 层声明
+        if [ "${platform}" = "nixos" ]; then
+          echo "NixOS：sshd 加固与授权公钥均走 nix 层声明，跳过运行时改写"
+          return 0
+        fi
         if [ ! -s "$HOME/.ssh/authorized_keys" ]; then
           echo "警告: authorized_keys 为空，跳过 sshd 加固"
           return 0
