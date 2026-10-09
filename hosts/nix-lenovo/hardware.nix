@@ -1,4 +1,4 @@
-# 硬件配置：无界14S 笔记本（AMD Ryzen 7 7840HS + Radeon 780M 核显 + Intel AX200 WiFi）
+# 硬件配置：Lenovo ThinkBook 14 G6+ AHP（AMD Ryzen 7 8845H + Radeon 780M 核显 + MediaTek MT7921 无线 + Realtek RTL8111 有线）
 # 真机（非 VM）：无 qemu-guest profile；amdgpu 用户态驱动 + 核显固件（linux-firmware 默认带）
 { lib, pkgs, ... }:
 {
@@ -16,10 +16,10 @@
   hardware.graphics.enable = true;
 
   # 无线固件：nixpkgs 26.05 起默认 firmware 仅 wireless-regdb，linux-firmware 需显式启用
-  # （iwlwifi AX200 缺固件则接口不出现：dmesg 'iwlwifi-cc-a0-77.ucode failed'）
+  # （MT7921 缺固件则接口不出现：dmesg mt7921e ... failed）
   hardware.enableRedistributableFirmware = true;
 
-  # 12G 内存，zram 压缩提效
+  # 27G 内存，zram 压缩提效
   zramSwap.enable = true;
   zramSwap.memoryPercent = 50;
   zramSwap.algorithm = "zstd";
@@ -28,7 +28,7 @@
     "vm.swappiness" = 15;
   };
 
-  # 笔记本电源：系统层无 TLP（tsln 同款，电源计划全在 plasma.powerdevil，见 home/fan/nix-book/）
+  # 笔记本电源：系统层无 TLP（tsln 同款，电源计划全在 plasma.powerdevil，见 home/fan/nix-lenovo/）
   # 休眠恢复：swap LV 已标 resumeDevice（disks.nix），内核 initrd 自动带 resume 参数
   boot.resumeDevice = "/dev/pool/swap";
 }

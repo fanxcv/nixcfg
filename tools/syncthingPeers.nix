@@ -37,10 +37,10 @@
     ];
   }
   {
-    name = "nix-book";
+    name = "nix-lenovo";
     id = "3BUAVRP-MP4LTY6-7Q72EOI-HRCOYYK-V2NQ54J-POLLKSW-FMJY7E3-IHJOFQW";
     addr = [
-      "tcp://nix-book:22000"
+      "tcp://nix-lenovo:22000"
       "dynamic"
     ];
   }

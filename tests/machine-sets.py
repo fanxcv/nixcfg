@@ -28,7 +28,7 @@ EXPECTED_HOME = [
     "root@hc-pro-pve-2",
 ]
 EXPECTED_DARWIN = ["mba-m5", "mbp-m1", "mini-m4"]
-EXPECTED_NIXOS = ["nix-pve", "nix-book"]
+EXPECTED_NIXOS = ["nix-pve", "nix-lenovo"]
 EXPECTED_ALIAS = [
     "ide-si",
     "ide-lenovo",

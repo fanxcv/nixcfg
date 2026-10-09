@@ -1,8 +1,8 @@
-# RustDesk 客户端（NixOS 真机：nix-pve / nix-book 共用，_nixos_ 层扫描导入）——官方二进制包 + 自建 hbbs 配置注入
+# RustDesk 客户端（NixOS 真机：nix-pve / nix-lenovo 共用，_nixos_ 层扫描导入）——官方二进制包 + 自建 hbbs 配置注入
 # 机器差异：
 #   - nix-pve：被控端。KDE 自动启动改系统层 /etc/xdg/autostart（见 hosts/nix-pve/services/rustdesk.nix），
 #     且 root 服务（systemd Restart=on-failure）与 GUI user service 双守护，进程被杀后 5s 自动复活。
-#   - nix-book：笔记本，仅作 client 远程其他机器（非被控端）——无 root 服务、无系统层 autostart，需要时手动启动。
+#   - nix-lenovo：笔记本，仅作 client 远程其他机器（非被控端）——无 root 服务、无系统层 autostart，需要时手动启动。
 # 包源：packages/rustdesk-bin.nix（GitHub release deb 解包，免源码编译；nixpkgs 的 rustdesk
 #   无二进制缓存，虚拟机本地编译 ~1h）
 # 与 mac 版共用 tools/rustdesk-inject.py 与 tools/config.nix.rustdesk；差异：
@@ -47,7 +47,7 @@ in
       # 进程未运行时 pkill 失败属幂等预期：
       #   nix-pve：root 服务（systemd Restart=on-failure）与 GUI（systemd user service，
       #     见 hosts/nix-pve/services/rustdesk.nix）均有守护，被杀后 5s 自动复活，配置注入即时生效；
-      #   nix-book：client 模式无系统层服务，桌面会话手动启动。
+      #   nix-lenovo：client 模式无系统层服务，桌面会话手动启动。
       ${pkgs.procps}/bin/pkill -x rustdesk 2>/dev/null || true
       echo "[rustdesk] 配置已注入 ~/.config/rustdesk（${hostName}，hbbs ${rustdesk.server}；进程已重启或待手动启动）"
     }

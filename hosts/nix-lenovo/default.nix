@@ -1,7 +1,7 @@
-# nix-book（无界14S 笔记本，476.9G NVMe + AMD 7840HS/780M 核显 + KDE Plasma 桌面）—— 机器组装清单
+# nix-lenovo（Lenovo ThinkBook 14 G6+ AHP 笔记本，953.9G NVMe + AMD Ryzen 7 8845H/780M 核显 + KDE Plasma 桌面）—— 机器组装清单
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
-# 部署：手动 nixos-rebuild switch --flake .#nix-book（笔记本移动设备，不用 comin 自动部署）
-#   首次安装：nixos-install --flake /persist/etc/nixos#nix-book（仓库放 /persist/etc/nixos）
+# 部署：手动 nixos-rebuild switch --flake .#nix-lenovo（笔记本移动设备，不用 comin 自动部署）
+#   首次安装：nixos-install --flake /persist/etc/nixos#nix-lenovo（仓库放 /persist/etc/nixos）
 { tools, ... }:
 {
   imports =
@@ -21,7 +21,7 @@
     ]
     ++ (tools.scan ./.);
 
-  networking.hostName = "nix-book";
+  networking.hostName = "nix-lenovo";
 
   # Wayland 默认会话（无 RustDesk 被控需求，无需 X11 妥协；RustDesk 仅作 client 远程其他机器）
   services.xserver.enable = false;
@@ -34,7 +34,7 @@
   # 本地构建：sandbox=true 时部分包构建受限，关沙箱换构建可行
   nix.settings.sandbox = false;
 
-  # store 自动 GC（476G 盘，30 天保留）+ 定期硬链接优化
+  # store 自动 GC（953.9G 盘，30 天保留）+ 定期硬链接优化
   nix.gc.automatic = true;
   nix.gc.options = "--delete-older-than 30d";
   nix.optimise.automatic = true;
@@ -48,14 +48,14 @@
   # fan sudo 免密（日常维护/手动 rebuild 用）
   security.sudo.wheelNeedsPassword = false;
 
-  # 蓝牙（NixOS 默认不开；AX200 的蓝牙硬件在，KDE 界面已就位，蓝牙耳机/键鼠刚需）
+  # 蓝牙（NixOS 默认不开；MT7921 的蓝牙硬件在，KDE 界面已就位，蓝牙耳机/键鼠刚需）
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
 
   # 无 WWAN 模块，ModemManager 纯耗资源，禁用（26.05 起选项为 networking.modemmanager）
   networking.modemmanager.enable = false;
 
-  # 固件更新（BIOS/EC，Linux Vendor Firmware Service；无界这类二线品牌靠它）
+  # 固件更新（BIOS/EC，Linux Vendor Firmware Service；Lenovo 等品牌靠它）
   services.fwupd.enable = true;
 
   # syncthing GUI 密码（syncthing 服务以 fan 用户跑，owner 必须 fan 才能读；

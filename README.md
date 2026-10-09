@@ -9,7 +9,7 @@
 | 平台 | 机器 | 部署命令 | comin 自动 |
 |---|---|---|---|
 | macOS | mba-m5 / mbp-m1 / mini-m4 | `nix run .#mba-m5`（余同） | mini-m4 |
-| NixOS | nix-pve / nix-book | `nixos-rebuild switch --flake .#nix-pve` | nix-pve |
+| NixOS | nix-pve / nix-lenovo | `nixos-rebuild switch --flake .#nix-pve` | nix-pve |
 | IDE 容器 | ide-si / ide-lenovo / ide-mac | 容器内 `nix run .#ide-si`（余同） | — |
 | PVE 宿主 | ds2 / desktop / fan / hp / mi / razer | `nix run .#ds2`（余同） | — |
 
@@ -29,7 +29,7 @@
 |---|---|
 | IDE 容器构建+激活 | 容器内 `nix run .#ide-si` / `.#ide-lenovo` / `.#ide-mac` |
 | macOS 构建+激活 | `nix run .#mba-m5` / `.#mbp-m1` / `.#mini-m4`（激活内置 sudo） |
-| NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-pve` / `.#nix-book` |
+| NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-pve` / `.#nix-lenovo` |
 | PVE 宿主部署 | `nix run .#ds2` / `.#desktop` / `.#fan` / `.#hp` / `.#mi` / `.#razer` |
 | 升级依赖 | `nix flake update` |
 
@@ -62,7 +62,7 @@ chmod 600 /root/.secrets/ai.env
 
 ### NixOS 真机
 
-nix-pve（PVE 上的虚拟，disko 分区 + impermanence）comin 轮询 `main` 自动部署，手动命令用于首次接入/故障恢复；nix-book（无界14S 笔记本）无 comin，手动 `nixos-rebuild`。
+nix-pve（PVE 上的虚拟，disko 分区 + impermanence）comin 轮询 `main` 自动部署，手动命令用于首次接入/故障恢复；nix-lenovo（Lenovo ThinkBook 14 G6+ AHP 笔记本）无 comin，手动 `nixos-rebuild`。
 
 ### macOS
 

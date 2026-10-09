@@ -1,5 +1,5 @@
 # home 目录持久化（/persist/home/fan）：tmpfs 根下 home 数据跨重启保留
-# nix-pve/nix-book 共用（home/fan/_nixos_/default.nix 用 tools.scan 扫描导入）
+# nix-pve/nix-lenovo 共用（home/fan/_nixos_/default.nix 用 tools.scan 扫描导入）
 # 注意 .oh-my-zsh 是 git clone 安装（非 nix 包，见 _common_/shells.nix），必须持久化
 _: {
   home.persistence."/persist" = {

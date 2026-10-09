@@ -1,4 +1,4 @@
-# 桌面应用（nix-book 笔记本）：微信/QQ（unfree，flake extraUnfree 已放行）+ mpv（VAAPI 硬解）
+# 桌面应用（nix-lenovo 笔记本）：微信/QQ（unfree，flake extraUnfree 已放行）+ mpv（VAAPI 硬解）
 # 硬解：780M 核显 vcn 解码 ring 已就位（dmesg 验证），mpv.conf hwdec=vaapi 走核显省电
 { pkgs, ... }:
 {

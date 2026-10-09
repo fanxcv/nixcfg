@@ -366,7 +366,7 @@
         }
       ) (machinesOfKind [ "darwin" ]);
 
-      # --- NixOS 真机（nix-pve / nix-book）由 registry 派生 ---
+      # --- NixOS 真机（nix-pve / nix-lenovo）由 registry 派生 ---
       # 系统层：hosts/<机>/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面）
       # 用户层：users/fan 复用 home/fan/module-list.nix（_common_ + _nixos_ + 可选机器差异）
       # 部署：nixos-rebuild switch --flake .#<机>；nix-pve 的 comin 轮询 main 自动部署

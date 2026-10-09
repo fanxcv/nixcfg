@@ -118,7 +118,7 @@
       "libsciter"
     ];
   };
-  nix-book = {
+  nix-lenovo = {
     kind = "nixos";
     system = "x86_64-linux";
     user = "fan";

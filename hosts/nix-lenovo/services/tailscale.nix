@@ -23,14 +23,14 @@
   # 模块原生登录：authKeyFile 非空 → tailscaled-autoconnect 自动 up（幂等轮询）
   services.tailscale.authKeyFile = "/run/agenix/headscale-auth-key";
   services.tailscale.extraUpFlags = [
-    "--hostname=nix-book"
+    "--hostname=nix-lenovo"
     "--login-server=https://headscale.fan-x.fun" # 必须显式：autoconnect 默认连 tailscale.com，headscale key 必被拒
     "--accept-routes=true"
     "--accept-dns=true"
   ];
   # 已登录机器也收敛节点名/路由/DNS（tailscaled-set oneshot）
   services.tailscale.extraSetFlags = [
-    "--hostname=nix-book"
+    "--hostname=nix-lenovo"
     "--accept-routes=true"
     "--accept-dns=true"
   ];
