@@ -56,6 +56,10 @@ _: {
         directory = "downloads";
         mode = "0755";
       }
+      {
+        directory = "roms"; # Switch ROM 库（eden）；persist 卷 2026-10-10 扩至 400G
+        mode = "0755";
+      }
     ];
     files = [
       ".claude.json"
