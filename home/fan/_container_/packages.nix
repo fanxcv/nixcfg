@@ -1,6 +1,6 @@
 # 容器平台层工具包（ide-si / ide-lenovo 共用）
 #   http-server：npm 全局包改 nix 管理（history 高频使用：本地静态服务器）
-#   unzip / git-lfs：原容器内手工 apt 安装，改 nix 包
+#   git-lfs：原容器内手工 apt 安装，改 nix 包（unzip 已上提至 ../_linux_/base.nix）
 #   libatomic1：GCC runtime 库，nixpkgs 无对应包（apt 专属），激活脚本按 maven 组件
 #     是否声明决定安装（mise config.toml 有 maven 才装；dpkg 判断幂等）
 
@@ -8,7 +8,6 @@
 {
   home.packages = with pkgs; [
     http-server
-    unzip
     git-lfs
   ];
 
