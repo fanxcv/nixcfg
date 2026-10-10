@@ -20,4 +20,15 @@
   ];
 
   system.stateVersion = "25.05";
+
+  # /etc/nixos 仓库属主必须归 fan：nixcfg 以 fan 身份跑 git fetch/checkout/reset，
+  # 而 nixos-install / 首次以 root clone 会留下 root:root（.git 与 FETCH_HEAD 不可写 →
+  # git fetch 报 "cannot open '.git/FETCH_HEAD': Permission denied"）。
+  # /etc/nixos 是 /persist/etc/nixos 的 bind mount，chown 真实存储即可（1424 项约 0.17s，
+  # 无条件执行以自愈 root 误操留下的属主混杂）
+  system.activationScripts.nixcfgRepoOwner = ''
+    if [ -d /persist/etc/nixos ]; then
+      chown -R fan:users /persist/etc/nixos
+    fi
+  '';
 }

@@ -49,7 +49,8 @@
       rerere.enabled = true; # 冲突解决记忆（同冲突只解一次）
       beads.role = "maintainer"; # beads 工作流角色标记
       # 配置仓库挂载自宿主机，owner 可能与容器用户不同，避免 dubious ownership 报错
-      # /etc/nixos = NixOS 机器仓库（/persist/etc/nixos 挂载，root 所有），fan 用户 git 操作需放行
+      # /etc/nixos = NixOS 机器仓库（/persist/etc/nixos 挂载）：写操作由 nixcfg 以 fan 身份跑，
+      # 属主由 hosts/_nixos_/base/default.nix 的 nixcfgRepoOwner 激活脚本保证；此处放行 fan 的 git 只读命令
       safe.directory = [
         "/root/nixcfg"
         "/etc/nixos"
