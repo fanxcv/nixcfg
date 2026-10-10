@@ -2,7 +2,7 @@
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
 # 部署：手动 nixos-rebuild switch --flake .#nix-lenovo（笔记本移动设备，不用 comin 自动部署）
 #   首次安装：nixos-install --flake /persist/etc/nixos#nix-lenovo（仓库放 /persist/etc/nixos）
-{ tools, ... }:
+{ pkgs, tools, ... }:
 {
   imports =
     map tools.relative [
@@ -47,6 +47,10 @@
 
   # fan sudo 免密（日常维护/手动 rebuild 用）
   security.sudo.wheelNeedsPassword = false;
+
+  # Switch 模拟器 eden 的手柄支持：包自带 72-yuzu-input.rules（Pro Controller / Joy-Con 的 hidraw uaccess），
+  # NixOS 只认 services.udev.packages，不注入则手柄静默不可用
+  services.udev.packages = [ pkgs.eden ];
 
   # 蓝牙（NixOS 默认不开；MT7921 的蓝牙硬件在，KDE 界面已就位，蓝牙耳机/键鼠刚需）
   hardware.bluetooth.enable = true;
