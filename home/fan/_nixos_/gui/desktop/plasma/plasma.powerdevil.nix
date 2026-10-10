@@ -1,5 +1,5 @@
-# 电源计划（照搬 tsln1998/nixcfg 的 plasma.powerdevil.nix 全文）：
-#   AC=performance / 电池=balanced / 低电=powerSaving；低电 20% / 危机 5% → hibernate
+# 电源计划（tsln 原版）：AC=performance / 电池=balanced / 低电=powerSaving；
+# 低电 20% / 危机 5% → hibernate；挂起恢复后锁屏见机器层 nix-lenovo/plasma.lock.nix
 # 依赖：swap 32G（disks.nix 的 resumeDevice）供 hibernate；系统层无 TLP（tsln 同款）
 _: {
   programs.plasma.powerdevil = {

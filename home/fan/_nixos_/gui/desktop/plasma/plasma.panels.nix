@@ -1,18 +1,17 @@
-# 面板布局：上：启动器/窗口列表/间隙/数字时钟/间隙/托盘；下：图标任务栏 Dock（上下分栏为 nixcfg 保留项）
-# 注：globalmenu 曾在此（org.kde.plasma.globalmenu 在目标机加载失败报“软件包不存在”，已移除；
-#     需要 macOS 顶栏菜单效果时须先查该 applet 在对应 Plasma 版本是否随 plasma-workspace 提供）
+# 面板布局（tsln 原版）：单条底部 Dock——启动器/分页器/图标任务/间隙/窗口列表/
+# 内存监控/CPU 监控/间隙/系统托盘/数字时钟/显示桌面
+# 固定图标（icontasks launchers）换为本机已装应用（上游为 chromium/beekeeper-studio/gitcomet）
 {
   programs.plasma.panels = [
-    # ── 上面板 ──
     {
       alignment = "center";
-      floating = false;
-      height = 30;
+      floating = true;
+      height = 36;
       hiding = "none";
       lengthMode = "fill";
-      location = "top";
+      location = "bottom";
       offset = 0;
-      opacity = "translucent";
+      opacity = "adaptive";
       widgets = [
         {
           name = "org.kde.plasma.kickoff";
@@ -30,54 +29,8 @@
           };
         }
         {
-          name = "org.kde.plasma.windowlist";
-          config = {
-            General = {
-              openOnHover = true;
-              showText = false;
-              showOnlyCurrentActivity = false;
-              showOnlyCurrentDesktop = false;
-              showOnlyCurrentScreen = false;
-              showOnlyMinimized = false;
-            };
-          };
+          name = "org.kde.plasma.pager";
         }
-        {
-          name = "org.kde.plasma.panelspacer";
-        }
-        {
-          name = "org.kde.plasma.digitalclock";
-          config = {
-            popupHeight = 450;
-            popupWidth = 450;
-          };
-        }
-        {
-          name = "org.kde.plasma.panelspacer";
-        }
-        {
-          name = "org.kde.plasma.systemtray";
-          config = {
-            popupHeight = 450;
-            popupWidth = 430;
-            General = {
-              iconSpacing = 1;
-            };
-          };
-        }
-      ];
-    }
-    # ── 下面板：图标任务管理器 Dock（dodgewindows：窗口贴近时隐藏，最大化窗口必然贴近 → 应用最大化时 Dock 自动让位）──
-    {
-      alignment = "center";
-      floating = true;
-      height = 48;
-      hiding = "dodgewindows";
-      lengthMode = "fit";
-      location = "bottom";
-      offset = 0;
-      opacity = "translucent";
-      widgets = [
         {
           name = "org.kde.plasma.icontasks";
           config = {
@@ -90,11 +43,85 @@
                 "applications:code.desktop"
                 "applications:bitwarden.desktop"
               ];
+
               showOnlyCurrentActivity = false;
               showOnlyCurrentDesktop = false;
               showOnlyCurrentScreen = false;
               showOnlyMinimized = false;
             };
+          };
+        }
+        {
+          name = "org.kde.plasma.marginsseparator";
+        }
+        {
+          name = "org.kde.plasma.windowlist";
+          config = {
+            General = {
+              openOnHover = true;
+              showText = false;
+
+              showOnlyCurrentActivity = false;
+              showOnlyCurrentDesktop = false;
+              showOnlyCurrentScreen = false;
+              showOnlyMinimized = false;
+            };
+          };
+        }
+        {
+          name = "org.kde.plasma.systemmonitor";
+          config = {
+            CurrentPreset = "org.kde.plasma.systemmonitor";
+            popupHeight = 400;
+            popupWidth = 400;
+            Appearance = {
+              chartFace = "org.kde.ksysguard.linechart";
+              title = "RAM";
+              updateRateLimit = 0;
+            };
+            Sensors = {
+              highPrioritySensorIds = ''["memory/physical/used"]'';
+              lowPrioritySensorIds = ''["memory/physical/total"]'';
+              totalSensors = ''["memory/physical/usedPercent"]'';
+            };
+          };
+        }
+        {
+          name = "org.kde.plasma.systemmonitor";
+          config = {
+            CurrentPreset = "org.kde.plasma.systemmonitor";
+            popupHeight = 400;
+            popupWidth = 400;
+            Appearance = {
+              chartFace = "org.kde.ksysguard.linechart";
+              title = "CPU";
+              updateRateLimit = 1000;
+            };
+            Sensors = {
+              highPrioritySensorIds = ''["cpu/all/usage"]'';
+              lowPrioritySensorIds = ''["cpu/all/cpuCount","cpu/all/coreCount"]'';
+              totalSensors = ''["cpu/all/usage"]'';
+            };
+          };
+        }
+        {
+          name = "org.kde.plasma.marginsseparator";
+        }
+        {
+          name = "org.kde.plasma.systemtray";
+          config = {
+            popupHeight = 450;
+            popupWidth = 430;
+            General = {
+              iconSpacing = 1;
+            };
+          };
+        }
+        {
+          name = "org.kde.plasma.digitalclock";
+          config = {
+            popupHeight = 450;
+            popupWidth = 450;
           };
         }
         {
