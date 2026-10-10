@@ -48,6 +48,10 @@ let
     };
     # tar.gz 内文件在根（无顶层目录），强制 sourceRoot 为解包目录
     sourceRoot = ".";
+    # 官方预编译 bd 是动态链接（只需 libc.so.6），而 NixOS 无 /lib64/ld-linux-x86-64.so.2：
+    # 不 patchelf 则运行报 "Could not start dynamically linked executable"（fpi 报「命令在位但不可执行」）
+    nativeBuildInputs = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.autoPatchelfHook ];
+    buildInputs = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.stdenv.cc.cc.lib ];
     installPhase = ''
       runHook preInstall
       mkdir -p $out/bin
