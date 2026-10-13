@@ -14,6 +14,8 @@ with kdePackages;
     enableHidpi = true;
     wayland.enable = true;
     autoNumlock = true;
+    # 登录界面预填用户名 fan（只省一次输入，仍需密码；nix-pve 另有 autoLogin 直进桌面）
+    settings.Users.DefaultUser = "fan";
   };
 
   # 去掉用不到的预装应用（保持精简）
