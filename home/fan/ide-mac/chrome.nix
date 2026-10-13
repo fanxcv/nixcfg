@@ -1,11 +1,14 @@
-# ide-mac 专属：浏览器（远程桌面主浏览器，手动打开，不自启）
-# 9222 调试端口：wrapper 包装浏览器，用户手动启动（panel/终端）都带
+# ide-mac 专属：浏览器（远程桌面主浏览器，autostart 自启 + 守护保活）
+# 9222 调试端口：wrapper 包装浏览器，手动启动（panel/终端/autostart）都带
 #   --remote-debugging-port=9222（DevTools 协议，http://127.0.0.1:9222/json/version 验证）
+# 自启：~/.config/autostart/chrome.desktop → chrome-guard（循环保活）；
+#   桌面实例常驻 127.0.0.1:9222 后，容器内 MCP（chrome-devtools --browser-url http://127.0.0.1:9222）
+#   连的是桌面实例；否则 MCP 在无 browser-url 的配置下会自起 headless 抢走该端口
 # 架构：x86_64-linux 用 nixpkgs google-chrome（unfree，flake.nix 放行）；
 #   aarch64-linux（本机）nixpkgs 无 google-chrome → 用 chromium（hydraPlatforms 含 aarch64-linux）
 # 坑1：容器 fan 跑 Chromium 系必须 --no-sandbox（无 user namespace）；提示条由 --test-type 抑制（Chromium issue 40205764），不改变沙箱状态
 # 坑2：DevTools 远程调试要求非默认数据目录（否则报 requires a non-default data directory）→ --user-data-dir；此目录即唯一主 profile（书签/登录所在）
-# 坑3：容器里 Chromium 系偶发 SIGTRAP 崩溃（crashpad 转储失败 tag not found，容器环境）——如需 autostart 保常驻则用循环重启脚本，但本机浏览器手动打开不自启
+# 坑3：容器里 Chromium 系偶发 SIGTRAP 崩溃（crashpad 转储失败 tag not found，容器环境）→ autostart 走 chrome-guard 循环重启保常驻
 # 坑4：容器 /dev/shm 仅 64M（Docker 默认）→ Chromium 共享内存不足 SIGTRAP 崩溃（rc=133）→ --disable-dev-shm-usage
 # 坑5：无 GPU 容器 GLX 缺失 → GPU 进程初始化失败连锁崩溃 → --disable-gpu（软渲染，已验证 rc 133→稳定）
 
@@ -33,6 +36,20 @@ let
   chromeWrapper = pkgs.writeShellScriptBin "chrome" ''
     exec ${browserBin} --no-sandbox --disable-gpu --disable-dev-shm-usage --remote-debugging-port=9222 --user-data-dir=${sessionHome}/.config/chrome --test-type "$@"
   '';
+  # autostart 守护：DevTools 端口无响应才拉起浏览器（已在跑则空转），崩溃后自动重启
+  chromeGuard = pkgs.writeShellScriptBin "chrome-guard" ''
+    log="''${HOME}/.cache/chrome-guard.log"
+    mkdir -p "''${log%/*}"
+    while :; do
+      if ! ${pkgs.curl}/bin/curl -sf --max-time 2 http://127.0.0.1:9222/json/version >/dev/null 2>&1; then
+        echo "[$(date '+%F %T')] 启动浏览器（DevTools 9222 无响应）" >> "$log"
+        ${chromeWrapper}/bin/chrome >> "$log" 2>&1
+        rc=$?
+        echo "[$(date '+%F %T')] 浏览器退出 rc=$rc" >> "$log"
+      fi
+      sleep 3
+    done
+  '';
   # store 内桌面项：Plank 的 dockitem Launcher 指向它 → 路径永不缺失，不会被 Plank 自动删除
   chromeDesktop = pkgs.makeDesktopItem {
     name = browserDesktopName;
@@ -49,12 +66,24 @@ let
 in
 # 仅 Linux（本机 aarch64-linux，浏览器按架构分支）；darwin 等门控跳过
 lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
-  home.packages = [ chromeWrapper ];
+  home.packages = [
+    chromeWrapper
+    chromeGuard
+  ];
 
   home.activation.chrome = lib.hm.dag.entryAfter [ "kasmvncBeautify" ] ''
-    # ── 1. 不自动开浏览器，清理旧 Edge 残留（幂等）──
+    # ── 1. autostart：浏览器自启（chrome-guard 保活）；清理旧 Edge 残留（幂等）──
+    mkdir -p ${sessionHome}/.config/autostart
+    cat > ${sessionHome}/.config/autostart/chrome.desktop <<EOF
+    [Desktop Entry]
+    Type=Application
+    Name=${browserName}
+    Comment=Remote desktop browser with DevTools on 9222
+    Exec=${chromeGuard}/bin/chrome-guard
+    Terminal=false
+    X-GNOME-Autostart-enabled=true
+    EOF
     rm -f \
-      ${sessionHome}/.config/autostart/chrome.desktop \
       ${sessionHome}/.config/autostart/microsoft-edge.desktop \
       ${sessionHome}/.local/share/applications/microsoft-edge.desktop \
       ${sessionHome}/.config/plank/dock1/launchers/edge.dockitem
