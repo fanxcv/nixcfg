@@ -52,6 +52,22 @@
   # NixOS 只认 services.udev.packages，不注入则手柄静默不可用
   services.udev.packages = [ pkgs.eden ];
 
+  # 蓝牙 Pro 手柄：hid_nintendo 在本机蓝牙下初始化必超时
+  # （dmesg: Failed to get joycon info; ret=-110 → probe failed，已复现两次），
+  # probe 失败即无驱动接管 → 既无 /dev/input/js* 也无 /dev/hidraw*，Eden/SDL 一概看不到。
+  # 禁用该模块，让 hid-generic 接管：USB 与蓝牙统一成标准 HID 手柄（SDL 自带 Switch Pro
+  # 驱动，可给正确映射/陀螺仪/震动）。要回退内核驱动：删本行 + nixos-rebuild 后重启。
+  boot.blacklistedKernelModules = [ "hid_nintendo" ];
+
+  # eden 自带规则里蓝牙那条用 KERNELS=="*057e:2009*"（小写），而内核设备名是 057E:2009（大写），
+  # 匹配不到 → hidraw 停在 0600 root:root，用户态（SDL hidapi / Eden 手柄驱动）打不开。
+  # 另：蓝牙设备挂在 virtual/uhid 下，systemd 的 uaccess 判不出 seat，ACL 不会下发，故用组权限兜底。
+  services.udev.extraRules = ''
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2009*", MODE="0660", GROUP="users"
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2006*", MODE="0660", GROUP="users"
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2007*", MODE="0660", GROUP="users"
+  '';
+
   # 蓝牙（NixOS 默认不开；MT7921 的蓝牙硬件在，KDE 界面已就位，蓝牙耳机/键鼠刚需）
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
