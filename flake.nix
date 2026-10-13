@@ -60,8 +60,9 @@
     };
 
     # git 驱动自动部署：仅 NixOS 真机（nix-pve）启用（mini-m4 2026-09 移除）
+    # 跟随 main（不再锁 tag）：升级 = nix flake update comin
     comin = {
-      url = "git+https://ghfast.top/https://github.com/nlewo/comin.git?ref=refs/tags/v0.14.0&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/nlewo/comin.git?ref=main&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
       # comin 内部自带的 treefmt-nix 整体跟随（否则它解析 github 旧版 + 旧 nixpkgs，lock 残留双节点）
       inputs.treefmt-nix.follows = "treefmt-nix";
@@ -86,9 +87,9 @@
     };
 
     # Catppuccin 全家桶主题模块（plasma/sddm/grub/plymouth/fcitx5 等 target，见 themes/catppuccin.nix）
-    # 固定 rev（同 tsln1998/nixcfg，release-26.11 前的稳定点）；nixpkgs 跟随避免双实例
+    # 跟随 main（不再锁 rev）；nixpkgs 跟随避免双实例
     catppuccin = {
-      url = "git+https://ghfast.top/https://github.com/catppuccin/nix.git?ref=main&rev=9e84aa294455c58a1caba475902d06c1170ed5c1&shallow=1";
+      url = "git+https://ghfast.top/https://github.com/catppuccin/nix.git?ref=main&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

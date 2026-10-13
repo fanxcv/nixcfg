@@ -2,7 +2,13 @@
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
 # 部署：comin 自动部署（git.fan-x.fun 仓库轮询，见本机 services/comin.nix——nix-pve 独有）；
 #   首次接入手动：nixos-rebuild switch --flake /etc/nixos#nix-pve（仓库放 /persist/etc/nixos）
-{ tools, pkgs, lib, inputs, ... }:
+{
+  tools,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 {
   imports =
     map tools.relative [

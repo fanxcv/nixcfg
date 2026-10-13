@@ -18,7 +18,10 @@ let
   zashboardVersion = "3.29.1";
   zashboardUrl = "https://github.com/Zephyruso/zashboard/releases/download/v${zashboardVersion}/dist.zip";
   zashboardSrc =
-    if cfg.useChinaMirror && cfg.githubProxy != "" then cfg.githubProxy + zashboardUrl else zashboardUrl;
+    if cfg.useChinaMirror && cfg.githubProxy != "" then
+      cfg.githubProxy + zashboardUrl
+    else
+      zashboardUrl;
   # fetchzip 剥掉 zip 顶层 dist/，$out 即 UI 根目录（hash 为解压后 NAR，非 zip 文件）
   zashboardUi = pkgs.fetchzip {
     url = zashboardSrc;
