@@ -15,8 +15,9 @@
   dns.listen   本地 :53   → 127.0.0.1:1053（<1024 端口需 root，fan 身份的用户服务绑不上；
                内核内部解析不依赖该监听，它只对外提供 DNS 服务）
 
-失败策略：订阅下载失败一律警告并保留现有配置（不阻断 home 激活——激活还管着大量无关内容）；
-首次且无现有配置时同样只警告，mihomo 服务会因缺配置起不来，重跑部署即可。
+失败策略：订阅下载失败、或本地偏好文件缺失，一律警告并保留现有配置
+（不阻断 home 激活——激活还管着大量无关内容）；首次且无现有配置时同样只警告，
+mihomo 服务会因缺配置起不来，重跑部署即可。
 """
 import os
 import re
@@ -83,6 +84,9 @@ def patch(text):
 
 def main():
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    if not os.path.exists(LOCAL_YAML):
+        print(f"警告: 本地偏好 {LOCAL_YAML} 不存在，保留现有配置（补上该文件后重跑部署）")
+        return
     try:
         sub_text = fetch_subscription()
     except Exception as exc:  # noqa: BLE001 —— 网络失败不阻断部署
