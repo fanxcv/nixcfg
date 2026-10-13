@@ -6,10 +6,28 @@
 {
   lib,
   pkgs,
+  config,
   isContainer ? false,
   ...
 }:
+let
+  catFcitx5 = config.catppuccin.fcitx5;
+  themeName = "catppuccin-${catFcitx5.flavor}-${catFcitx5.accent}";
+  # catppuccin 主题自带 [InputPanel] Font=Sans 13，候选字偏小；
+  # 用户目录同名主题覆盖（fcitx5 主题查找 XDG_DATA_HOME 优先于包内 XDG_DATA_DIRS）
+  candidateFontSize = 16;
+  largeFontTheme = pkgs.runCommand "fcitx5-${themeName}-font-${toString candidateFontSize}" { } ''
+    cp -r ${pkgs.catppuccin-fcitx5}/share/fcitx5/themes/${themeName} $out
+    chmod -R u+w $out
+    ${pkgs.gnused}/bin/sed -i -E 's/^Font=Sans [0-9]+$/Font=Sans ${toString candidateFontSize}/' $out/theme.conf
+    grep -q '^Font=Sans ${toString candidateFontSize}$' $out/theme.conf
+  '';
+in
 {
+  xdg.dataFile = lib.mkIf catFcitx5.enable {
+    "fcitx5/themes/${themeName}".source = largeFontTheme;
+  };
+
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
