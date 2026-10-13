@@ -41,7 +41,6 @@
                 "applications:org.kde.konsole.desktop"
                 "applications:org.kde.spectacle.desktop"
                 "applications:code.desktop"
-                "applications:bitwarden.desktop"
               ];
 
               showOnlyCurrentActivity = false;
