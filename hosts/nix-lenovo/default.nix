@@ -66,6 +66,11 @@
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2009*", MODE="0660", GROUP="users"
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2006*", MODE="0660", GROUP="users"
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2007*", MODE="0660", GROUP="users"
+
+    # F1-F12 直出为功能键，Fn+F1-F12 才是多媒体/热键（SALS_FNLOCK_ON）。
+    # ideapad_laptop 模块没有 fn_lock 模块参数，只能在设备出现时写 sysfs 属性；
+    # EC 是否跨重启记忆不保证，故每次 add 事件都写（幂等）。
+    ACTION=="add", SUBSYSTEM=="platform", KERNEL=="VPC2004:00", ATTR{fn_lock}="1"
   '';
 
   # 蓝牙（NixOS 默认不开；MT7921 的蓝牙硬件在，KDE 界面已就位，蓝牙耳机/键鼠刚需）
