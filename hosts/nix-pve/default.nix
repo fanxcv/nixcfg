@@ -1,8 +1,8 @@
 # nix-pve（Proxmox VE 上的 NixOS 虚拟机，128G 盘 + KDE Plasma 桌面）—— 机器组装清单
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
-# 部署：comin 自动部署（git.fan-x.fun 仓库轮询，见 services/comin.nix）；
+# 部署：comin 自动部署（git.fan-x.fun 仓库轮询，见本机 services/comin.nix——nix-pve 独有）；
 #   首次接入手动：nixos-rebuild switch --flake /etc/nixos#nix-pve（仓库放 /persist/etc/nixos）
-{ tools, pkgs, ... }:
+{ tools, pkgs, lib, inputs, ... }:
 {
   imports =
     map tools.relative [
@@ -16,11 +16,12 @@
       "hosts/_nixos_/services/openssh.nix"
       "hosts/_nixos_/services/podman.nix"
       "hosts/_nixos_/services/syncthing.nix"
-      "hosts/_nixos_/services/comin.nix"
 
       "users/fan"
     ]
-    ++ (tools.scan ./.);
+    ++ (tools.scan ./.)
+    # comin 模块（nix-pve 独有；services/comin.nix 由上面的 tools.scan 自动导入）
+    ++ [ inputs.comin.nixosModules.comin ];
 
   networking.hostName = "nix-pve";
 
@@ -68,12 +69,20 @@
   };
 
   # comin 的 go-git 认证 token（见 services/comin.nix 的 auth.access_token_path）
-  # 机器独有（mini-m4 实验机共用同一 token，跨引用此文件）
+  # 机器独有（曾与 mini-m4 实验机共用，mini-m4 已于 2026-09 移除 comin）
   age.secrets."comin-token" = {
     file = tools.relative "secrets/hosts/nix-pve/comin-token.age";
     path = "/run/agenix/comin-token";
     mode = "0400";
   };
+
+  # comin 状态跨重启保留（根目录 tmpfs；公共 immutable.nix 只留通用项，机器独有项在此追加）
+  environment.persistence."/persist".directories = lib.mkAfter [
+    {
+      directory = "/var/lib/comin";
+      mode = "0755";
+    }
+  ];
 
   # syncthing GUI 密码（syncthing 服务以 fan 用户跑，owner 必须 fan 才能读；
   # 模块 guiPasswordFile 自动 bcrypt 后经 REST API 注入，不覆盖 config.xml 配对状态）

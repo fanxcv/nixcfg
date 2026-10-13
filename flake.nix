@@ -166,7 +166,7 @@
       # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ codex/pi（_common_）
       unstableOverlay = import ./overlays/unstable.nix { inherit inputs; };
       vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
-      # comin 包共享构建（消除 nixos/mini-m4 两处 buildGoModule 重复，见 overlays/comin.nix）
+      # comin 包构建（nix-pve 独有，见 overlays/comin.nix）
       cominOverlay = import ./overlays/comin.nix { inherit lib inputs; };
       # 本地包统一注入，供所有配置构造器复用
       localPkgsOverlay =

@@ -8,7 +8,7 @@
 
 | 平台 | 机器 | 部署命令 | comin 自动 |
 |---|---|---|---|
-| macOS | mba-m5 / mbp-m1 / mini-m4 | `nix run .#mba-m5`（余同） | mini-m4 |
+| macOS | mba-m5 / mbp-m1 / mini-m4 | `nix run .#mba-m5`（余同） | — |
 | NixOS | nix-pve / nix-lenovo | `nixos-rebuild switch --flake .#nix-pve` | nix-pve |
 | IDE 容器 | ide-si / ide-lenovo / ide-mac | 容器内 `nix run .#ide-si`（余同） | — |
 | PVE 宿主 | ds2 / desktop / fan / hp / mi / razer | `nix run .#ds2`（余同） | — |
@@ -66,7 +66,7 @@ nix-pve（PVE 上的虚拟，disko 分区 + impermanence）comin 轮询 `main` �
 
 ### macOS
 
-`nix run .#<机器>` 一步构建+激活（nix-darwin 系统层 + home-manager 用户层）；mini-m4 已启用 comin。系统层结构见 `hosts/README.md`。
+`nix run .#<机器>` 一步构建+激活（nix-darwin 系统层 + home-manager 用户层）；macOS 三台均无 comin（mini-m4 曾启用，2026-09 移除），手动 `nix run` 部署。系统层结构见 `hosts/README.md`。
 
 ### PVE 宿主机
 

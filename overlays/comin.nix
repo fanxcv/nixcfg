@@ -1,9 +1,9 @@
-# comin 包共享构建 overlay（消除 hosts/_nixos_/services/comin.nix 与 hosts/mini-m4/comin.nix 两处逐字重复）
+# comin 包构建 overlay（nixpkgs 稳定版 26.05 无此包，用 comin input 源码重写构建）
 # nixpkgs 稳定版（26.05）无此包，用 comin input 源码重写构建
 #   - overrideModAttrs 注入 GOPROXY=goproxy.cn：Go 依赖下载默认走 proxy.golang.org（国内被墙），
 #     goModules 是 buildGoModule 内部独立 FOD，只能在构造时注入（installer/rebuild/comin 全链路生效）
 #   - wrapProgram 挂 GIT_CONFIG_SYSTEM + git：comin 运行时 go-git 需要 git 与 safe.directory 配置
-# 引用：hosts/_nixos_/services/comin.nix（官方 services.comin 模块）、hosts/mini-m4/comin.nix（自管理 LaunchDaemon）
+# 引用：hosts/nix-pve/services/comin.nix（官方 services.comin 模块，nix-pve 独有）
 { lib, inputs }:
 final: prev: {
   comin = final.buildGoModule {

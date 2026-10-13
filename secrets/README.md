@@ -7,8 +7,7 @@
   - 不只放公私钥：skemate 配置、lucky 归档、tailscale state 等一切机器独有物都进这里
   - 当前机器清单：`ide-lenovo` `ide-si` `ide-mac`（ide 容器）、`mba-m5` `mbp-m1` `mini-m4`（mac）、
     `nix-pve`（NixOS 真机）、`fan` `mi`（PVE 宿主机，见 pve/）
-  - 跨机器共用而非常见文件（如 comin-token 被 mini-m4/nix-pve 共用）：
-    文件本体放主机器目录（nix-pve），其他机器跨引用并注释说明
+  - 跨机器共用而非常见文件：文件本体放主机器目录，其他机器跨引用并注释说明
 
 ## 公私钥约定（统一）
 
@@ -38,7 +37,7 @@ secrets/
     │                hc-sh-app-android-release.p12.age + hc-sh-app-android-key.properties.age  # Android 签名密钥+凭据
     │                skemate-config.age + skemate-tunnel.age  # config.json 仅 password 字段由 nix 管理，其余用户自管
     │                ssh-user-key.age + .pub
-    ├── nix-pve/     comin-token.age（mini-m4 共用）、fan-password.age
+    ├── nix-pve/     comin-token.age（nix-pve 独有）、fan-password.age
     │                ssh-host-key.age + .pub（明文）、tailscale-state.age
     ├── fan/         tailscale-state.age
     └── mi/          tailscale-state.age、lucky-data.age

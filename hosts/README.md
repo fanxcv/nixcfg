@@ -69,8 +69,9 @@ home/fan/<host>/       # 用户层组装（_common_ 跨平台 + _darwin_ 平台�
 
 ## 自动部署（comin，已就位）
 
-`hosts/_nixos_/services/comin.nix` 已配好 git 驱动的自动部署：服务器只轮询 `main` 分支，
+`hosts/nix-pve/services/comin.nix`（nix-pve 独有：模块由 `hosts/nix-pve/default.nix` 显式 import，
+该文件由本机 `tools.scan` 自动导入）配好 git 驱动的自动部署：只轮询 `main` 分支，
 检测到新 commit 自动 `nixos-rebuild`，需要重启时随机延迟后自动重启。
 其它分支（test 等）不自动部署，手动 `nixos-rebuild switch --flake .#nix-pve`。
-接入真机时改 `services/comin.nix` 里的仓库 URL（私有仓库用带 token 的 URL），
-imports 已由 `hosts/_nixos_/base/default.nix` 接好，无需其它改动。
+其他机器（nix-lenovo 笔记本、macOS）不启用 comin，各自手动部署；
+要接入新机器，照 `hosts/nix-pve/default.nix` 复制 comin 模块 import、services/comin.nix 与 token 声明。

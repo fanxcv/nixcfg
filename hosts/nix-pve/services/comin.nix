@@ -1,8 +1,9 @@
 # comin：git 驱动的自动部署——服务器轮询仓库，检测到新 commit 自动 nixos-rebuild
-# 适合无人值守的云服务器（Oracle 免费机等）；本地开发机建议手动 switch
-# 前提：服务器能拉取仓库（公开仓库直连；私有仓库用带 token 的 URL 或 deploy key，
-#   token 可放 agenix 加密文件里注入环境变量）
-# 接入：flake.nix 注册 nixosConfigurations 时导入 hosts/_nixos_/base（见 hosts/README.md）
+# 归属：nix-pve 独有（hosts/nix-pve/services/，由 tools.scan 自动导入；
+#   模块本身由 hosts/nix-pve/default.nix 显式 import inputs.comin.nixosModules.comin）
+# 其余机器不启用：nix-lenovo 笔记本与 macOS 手动 nixos-rebuild / nix run
+# 前提：能拉取私有仓库——go-git 不走 git credential.helper，用 agenix 注入的 access token
+#   （声明见 hosts/nix-pve/default.nix）
 
 {
   lib,
@@ -10,7 +11,7 @@
   ...
 }:
 let
-  # comin 包共享构建（overlays/comin.nix，与 mini-m4 共用一份 buildGoModule，不再本地重复）
+  # comin 包构建（overlays/comin.nix，nixpkgs 稳定版 26.05 无此包）
   comin = lib.getExe pkgs.comin;
   jq = lib.getExe' pkgs.jq "jq";
   sleep = lib.getExe' pkgs.coreutils "sleep";
