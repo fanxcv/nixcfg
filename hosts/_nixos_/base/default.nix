@@ -21,6 +21,10 @@
 
   system.stateVersion = "25.05";
 
+  # mihomo 用户服务（home/fan/_nixos_/mihomo.nix）要开机自启而非等登录：
+  # 无 linger 时 user@1000 只在 fan 登录后拉起，代理在登录前不可用
+  users.users.fan.linger = true;
+
   # /etc/nixos 仓库属主必须归 fan：nixcfg 以 fan 身份跑 git fetch/checkout/reset，
   # 而 nixos-install / 首次以 root clone 会留下 root:root（.git 与 FETCH_HEAD 不可写 →
   # git fetch 报 "cannot open '.git/FETCH_HEAD': Permission denied"）。
