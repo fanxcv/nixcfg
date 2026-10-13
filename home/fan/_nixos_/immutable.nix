@@ -60,6 +60,10 @@ _: {
         directory = "roms"; # Switch ROM 库（eden）；persist 卷 2026-10-10 扩至 400G
         mode = "0755";
       }
+      {
+        directory = "xwechat_files"; # 微信 4.x 数据目录（仅 nix-lenovo 装微信，nix-pve 上为空目录）
+        mode = "0755";
+      }
     ];
     files = [
       ".claude.json"
