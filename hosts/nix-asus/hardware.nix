@@ -5,13 +5,24 @@
   # GRUB 引导：本机有 Windows 双系统，EFI 分区为 NixOS 独有（p6，见 disks.nix），
   # 故不用 efiInstallAsRemovable（那是单系统回退路径写法），改由 efibootmgr 写 NVRAM 条目
   # 指向本 ESP 的 \EFI\NixOS\grubx64.efi（两块 ESP 时固件回退路径不保证选中 NixOS 那块）
-  # useOSProber：生成 GRUB 菜单里的 Windows 项（Windows Boot Manager 在 p1 的 ESP 上）
+  # useOSProber：尝试生成 Windows 项——os-prober 只在已挂载分区里探测，
+  #   第二块 ESP（Windows 的 p1）未挂载时探不到，故用 extraEntries 显式 chainload 兜底
+  #   （D0FF-EB18 = Windows ESP p1 的 FAT UUID；Windows 引导文件为 p1:/EFI/Microsoft/Boot/bootmgfw.efi）
   boot.loader.grub = {
     enable = true;
     device = "nodev";
     efiSupport = true;
     useOSProber = true;
     configurationLimit = 15;
+    extraEntries = ''
+      menuentry "Windows" --class windows --class os {
+        insmod part_gpt
+        insmod fat
+        insmod chain
+        search --no-floppy --fs-uuid --set=root D0FF-EB18
+        chainloader /EFI/Microsoft/Boot/bootmgfw.efi
+      }
+    '';
   };
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
   boot.loader.efi.canTouchEfiVariables = true;
