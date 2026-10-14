@@ -63,14 +63,14 @@ users/fan/             # 用户定义：primaryUser + home-manager 内嵌
 home/fan/<host>/       # 用户层组装（_common_ 跨平台 + _darwin_ 平台层）
 ```
 
-每台机器：`darwin-rebuild switch --flake .#<host>`（或 `nix run .#darwin-<host>`）。
-首次需装 nix-darwin 引导（见 README.md 顶部）。homebrew casks 在
+每台机器：`darwin-rebuild switch --flake .#<host>`（或 `nix run .#<host>`，别名内置 sudo）。
+homebrew casks 在
 `hosts/_darwin_/base/apps.nix`，增删即装卸；未声明的 casks 会自动卸载（cleanup=zap）。
 
 ## 自动部署（comin，已就位）
 
-`hosts/nix-pve/services/comin.nix`（nix-pve 独有：模块由 `hosts/nix-pve/default.nix` 显式 import，
-该文件由本机 `tools.scan` 自动导入）配好 git 驱动的自动部署：只轮询 `main` 分支，
+`hosts/nix-pve/services/comin.nix`（nix-pve 独有，由 `tools.scan` 经
+`hosts/nix-pve/services/default.nix` 自动导入）配好 git 驱动的自动部署：只轮询 `main` 分支，
 检测到新 commit 自动 `nixos-rebuild`，需要重启时随机延迟后自动重启。
 其它分支（test 等）不自动部署，手动 `nixos-rebuild switch --flake .#nix-pve`。
 其他机器（nix-lenovo 笔记本、macOS）不启用 comin，各自手动部署；
