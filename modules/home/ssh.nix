@@ -142,17 +142,27 @@
     # ---------- 2) 身份私钥解密（持有私钥的机器） ----------
     # 门控用 platform/hostName 而非 hostPlatform.isDarwin：跨架构构建（如 darwin 宿主上构建容器配置）会误判
     # mac 沿用既有 id_rsa；nix-lenovo 为 ed25519 → id_ed25519
-    home.activation.decryptSshIdentity = lib.mkIf (platform == "darwin" || hostName == "nix-lenovo") (
-      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        umask 077
-        mkdir -p "$HOME/.ssh"
-        chmod 700 "$HOME/.ssh"
-        identity="$HOME/.ssh/${if hostName == "nix-lenovo" then "id_ed25519" else "id_rsa"}"
-        ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
-          -o "$identity" ${../../secrets/hosts/${hostName}/ssh-user-key.age}
-        chmod 600 "$identity"
-      ''
-    );
+    # 私钥必装；公钥仅当仓库里存在时一并落位（缺失则跳过，不报错）——
+    #   ssh-copy-id 默认身份查找是 `ls -dt ~/.ssh/id*.pub`，只有私钥会让它报「无可用身份」而失败
+    home.activation.decryptSshIdentity =
+      let
+        pubKey = ../../secrets/hosts/${hostName}/ssh-user-key.pub;
+      in
+      lib.mkIf (platform == "darwin" || hostName == "nix-lenovo") (
+        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          identity="$HOME/.ssh/${if hostName == "nix-lenovo" then "id_ed25519" else "id_rsa"}"
+          ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
+            -o "$identity" ${../../secrets/hosts/${hostName}/ssh-user-key.age}
+          chmod 600 "$identity"
+          ${lib.optionalString (builtins.pathExists pubKey) ''
+            cp -f ${pubKey} "$identity.pub"
+            chmod 644 "$identity.pub"
+          ''}
+        ''
+      );
 
     # ---------- 3) ssh config 解密（mba-m5 / mbp-m1 / nix-pve；nix-pve 额外删 orbstack include） ----------
     home.activation.decryptSshConfig =
