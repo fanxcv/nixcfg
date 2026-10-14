@@ -1,0 +1,94 @@
+# mihomo 配置模板（仅非敏感设置项）：apply.py 以订阅为基合并本文件，生成 ~/.config/mihomo/config.yaml
+# 订阅提供 proxies / proxy-groups / rule-providers / rules（含凭据），故本文件不复制这些段；
+# 其余设置项本地覆盖订阅同名键。apply.py 另会改写三处：mode → global、
+# external-ui → nix 打包的 zashboard 绝对路径（并删 external-ui-url）、dns.listen :53 → 127.0.0.1:1053。
+
+mixed-port: 7890
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+tcp-concurrent: true
+keep-alive-interval: 15
+global-client-fingerprint: chrome
+
+external-controller: 127.0.0.1:9090
+external-ui: ./ui
+external-ui-url: https://edgeone.gh-proxy.org/https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip
+
+geodata-mode: true
+geo-auto-update: true
+geo-update-interval: 24
+# Geo 数据库下载地址：源 https://github.com/MetaCubeX/meta-rules-dat
+# 可换镜像站，但勿换其他数据库（可能导致无法启动）
+geox-url:
+  geoip: "https://ghfast.top/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
+  geosite: "https://ghfast.top/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+  mmdb: "https://ghfast.top/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+sniffer:
+  enable: true
+  parse-pure-ip: true
+  force-dns-mapping: true
+  override-destination: true
+
+dns:
+  enable: true
+  listen: :53
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 28.0.0.1/8
+  fake-ip-filter:
+    - '*'
+    - '+.lan'
+    - '+.local'
+    - geosite:cn
+    - geosite:connectivity-check
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 114.114.114.114
+    - tls://223.5.5.5
+    - tls://223.6.6.6
+  nameserver:
+    - tls://8.8.4.4#🏎 延迟择优
+    - tls://1.0.0.1#🏎 延迟择优
+    - tls://223.5.5.5
+    - tls://223.6.6.6
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+    - tls://223.5.5.5
+    - tls://223.6.6.6
+  nameserver-policy:
+    "geosite:cn,private":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+    "geosite:!cn,!private":
+      - "tls://dns.google"
+      - "tls://cloudflare-dns.com"
+  fallback:
+    - https://chrome.cloudflare-dns.com/dns-query
+    - https://dns.cloudflare.com/dns-query#🏎 延迟择优
+    - https://dns.google/dns-query#🏎 延迟择优
+  fallback-filter:
+    geoip: false
+    geoip-code: CN
+    geosite:
+      - gfw
+    ipcidr: []
+    domain: []
+
+tun:
+  enable: false
+  stack: gvisor
+  device: Meta
+  auto-route: true
+  auto-detect-interface: true
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
+  strict-route: true
