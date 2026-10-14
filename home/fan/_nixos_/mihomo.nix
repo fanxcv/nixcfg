@@ -1,5 +1,5 @@
 # mihomo（Clash Meta 内核）声明式安装 + 订阅配置生成（nix-pve / nix-lenovo 共享）
-# 订阅：与 macOS ClashX Meta 同一地址（见 home/fan/_darwin_/gui/apps/clashx-meta.nix）
+# 订阅：与 macOS ClashX Meta 同一地址（见 home/fan/_darwin_/gui/apps/clashx-meta.nix）；URL 含凭据，经 age 加密托管
 # 配置：订阅为基，本地偏好 ~/config.yaml 覆盖 proxies/proxy-groups/rules 之外的键；
 #       mode/UI/DNS 端口三处修正见 mihomo/apply.py 头部说明
 # 服务：用户级 systemd（以 fan 身份读 home 配置）；linger 在 hosts/_nixos_/base 开启（开机即启，不等登录）
@@ -10,6 +10,7 @@
   lib,
   config,
   tools,
+  self,
   ...
 }:
 let
@@ -27,9 +28,9 @@ let
     url = zashboardSrc;
     hash = "sha256-Ibo2iB/U3JLFAj8w4ukKau/W35sBPpJjdcP1Atnv/2U=";
   };
-  # 订阅地址（token 含凭据，不入 store，仅运行时下载）与 macOS 端保持一致
-  subUrl = "https://xx.fan-x.eu.org/api/v1/client/subscribe?token=eaa63ab248c016278df7f8f6d2847757";
   homeDir = config.home.homeDirectory;
+  # 订阅地址含凭据（与 macOS 端同一地址）：age 加密托管，激活期解密到 $HOME/.secrets 再读
+  subUrlFile = "${homeDir}/.secrets/clash-sub-url";
   mihomoDir = "${homeDir}/.config/mihomo";
   mihomoConfig = "${mihomoDir}/config.yaml";
   localYaml = "${homeDir}/config.yaml";
@@ -37,8 +38,9 @@ let
 in
 {
   home.activation.setupMihomo = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    (umask 077; ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "${subUrlFile}" ${self}/secrets/clash-sub-url.age)
     ${python}/bin/python3 ${./mihomo/apply.py} \
-      "${subUrl}" "${localYaml}" "${zashboardUi}" "${mihomoConfig}"
+      "${subUrlFile}" "${localYaml}" "${zashboardUi}" "${mihomoConfig}"
   '';
 
   systemd.user.services.mihomo = {

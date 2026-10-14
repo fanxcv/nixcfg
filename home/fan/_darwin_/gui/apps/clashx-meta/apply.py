@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ClashX Meta 声明式安装 + 配置注入（幂等，激活期执行，macOS 三台共享）
 
-用法: apply.py <版本> <下载URL> <订阅URL> <混合端口> <允许局域网> <显示网速> <自动更新订阅>
+用法: apply.py <版本> <下载URL> <订阅URL文件> <混合端口> <允许局域网> <显示网速> <自动更新订阅>
 
 安装（版本不符才下载）：
   curl 下载 GitHub release zip（URL 已含 githubProxy 前缀，useChinaMirror 门控）→ ditto 解压 /Applications → 去 quarantine
@@ -24,7 +24,7 @@ import urllib.request
 
 VERSION = sys.argv[1]
 DOWNLOAD_URL = sys.argv[2]
-SUB_URL = sys.argv[3]
+SUB_URL = open(sys.argv[3], encoding="utf-8").read().strip()
 MIXED_PORT = sys.argv[4]
 ALLOW_LAN = sys.argv[5] == "true"
 SHOW_NET_SPEED = sys.argv[6] == "true"

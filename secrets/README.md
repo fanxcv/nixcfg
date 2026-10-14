@@ -22,6 +22,7 @@
 secrets/
 ├── age-keys.age                  # age 私钥备份（公共：所有机共用一把私钥；本地忽略）
 ├── ai-env.age                    # 各机激活解密（_common_/secrets.nix）
+├── clash-sub-url.age             # Clash/Mihomo 订阅 URL（mihomo 与 ClashX Meta 共用，各自激活期解密）
 ├── git-credentials.age           # ~/.git-credentials（公共）
 ├── headscale-auth-key.age        # tailscale pre-auth key（三 mac，公共）
 ├── ssh-config.age                # ~/.ssh/config（mba/mbp/nix-pve，公共）

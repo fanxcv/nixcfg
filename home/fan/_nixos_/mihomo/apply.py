@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """mihomo 声明式配置生成（NixOS：nix-pve / nix-lenovo 共享，激活期执行）
 
-用法: apply.py <订阅URL> <本地偏好YAML> <UI目录> <输出配置>
+用法: apply.py <订阅URL文件> <本地偏好YAML> <UI目录> <输出配置>
 
 合并（纯文本块拼接，保留双方注释；本地文件含重复 anchor，YAML 解析器会拒收）：
   订阅为基；本地偏好中除 proxies / proxy-groups / rules 外的键覆盖订阅同名键
@@ -24,7 +24,8 @@ import re
 import sys
 import urllib.request
 
-SUB_URL, LOCAL_YAML, UI_DIR, OUT = sys.argv[1:5]
+SUB_URL_FILE, LOCAL_YAML, UI_DIR, OUT = sys.argv[1:5]
+SUB_URL = open(SUB_URL_FILE, encoding="utf-8").read().strip()
 SUB_KEYS = ("proxies", "proxy-groups", "rules")
 DNS_LISTEN = "127.0.0.1:1053"
 TOP_KEY = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):")
