@@ -22,6 +22,7 @@
     extraUnfree = [
       "google-chrome"
       "albert"
+      "wpsoffice-cn" # 桌面办公（kasmvnc.nix 的 x86_64 分支，真机架构）
     ];
   };
   ide-mac = {

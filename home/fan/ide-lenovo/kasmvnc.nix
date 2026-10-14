@@ -30,6 +30,7 @@ let
   xfce4-clipman = pkgs.xfce4-clipman-plugin; # 剪贴板历史（面板插件）
   mousepad = pkgs.mousepad; # 文本编辑器
   xarchiver = pkgs.xarchiver; # 压缩包管理
+  wpsoffice-cn = pkgs.wpsoffice-cn; # WPS Office（Word/Excel/PPT 查看编辑；unfree，放行见 tools/machines.nix）
   # ── 美化（WhiteSur macOS 风格，linux265 帖子方案：WhiteSur-Gtk-theme/icon/cursors + Plank dock）──
   whitesurGtk = pkgs.whitesur-gtk-theme.override { colorVariants = [ "dark" ]; }; # GTK2/3/4 + xfwm4 + plank 主题（只留 dark 减体积）
   whitesurIcon = pkgs.whitesur-icon-theme; # 图标（目录名 WhiteSur-dark，小写 d）
@@ -97,6 +98,7 @@ let
     "${whitesurIcon}/share"
     "${whitesurCursors}/share"
     "${plank}/share"
+    "${wpsoffice-cn}/share" # WPS 菜单项（share/applications）：XDG_DATA_DIRS 未含 profile share，不补则菜单无入口
     "${fcitx5}/share"
     "${pkgs.adwaita-icon-theme}/share"
   ];
@@ -127,6 +129,7 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
     xfce4-clipman
     mousepad
     xarchiver
+    wpsoffice-cn
     # 美化：WhiteSur 主题/图标/鼠标 + Plank dock + Albert 搜索 + 中文字体/壁纸生成
     whitesurGtk
     whitesurIcon
