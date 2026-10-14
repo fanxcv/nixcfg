@@ -48,6 +48,15 @@
         "dynamic"
       ];
     }
+    {
+      # ASUS Zenbook UM5302TA（与 Windows 双系统），ID 取自真机 config.xml
+      name = "nix-asus";
+      id = "QWB5QEJ-5CTWUWN-23C2TGU-COZPFQX-PHGIFZR-DFTNGEV-473LBFE-CU3MIA2";
+      addr = [
+        "tcp://nix-asus:22000"
+        "dynamic"
+      ];
+    }
   ];
   retired = [
     # nix-book（无界14S 旧笔记本）2026-10 换 ThinkBook 后退役，同一台机器的现役 ID 见上方 peers.nix-lenovo
