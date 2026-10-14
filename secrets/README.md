@@ -6,7 +6,7 @@
 - **secrets/hosts/<machine>/**：机器独有文件（一个机器/部署单元一个目录）
   - 不只放公私钥：skemate 配置、lucky 归档、tailscale state 等一切机器独有物都进这里
   - 当前机器清单：`ide-lenovo` `ide-si` `ide-mac`（ide 容器）、`mba-m5` `mbp-m1` `mini-m4`（mac）、
-    `nix-pve` `nix-lenovo`（NixOS 真机）、`ali-ai` `hc-pro-pve-2`（云服务器）、
+    `nix-pve` `nix-lenovo` `nix-asus`（NixOS 真机）、`ali-ai` `hc-pro-pve-2`（云服务器）、
     `fan` `mi`（PVE 宿主机，见 pve/）
   - 跨机器共用而非常见文件：文件本体放主机器目录，其他机器跨引用并注释说明
 
@@ -41,6 +41,8 @@ secrets/
     │                hc-sh-app-android-release.p12.age + hc-sh-app-android-key.properties.age  # Android 签名密钥+凭据
     │                openlist-token.age、skemate-config.age + skemate-tunnel.age  # config.json 仅 password 字段由 nix 管理，其余用户自管
     │                ssh-user-key.age + .pub
+    ├── nix-asus/    fan-password.age（与 nix-lenovo 同密码）
+    │                ssh-host-key.age + .pub（明文）、ssh-user-key.age + .pub
     ├── nix-lenovo/  fan-password.age、ssh-host-key.age + .pub（明文）、ssh-user-key.age + .pub
     ├── nix-pve/     comin-token.age（nix-pve 独有）、fan-password.age
     │                ssh-host-key.age + .pub（明文）、tailscale-state.age
@@ -49,7 +51,7 @@ secrets/
 ```
 
 `ssh-user-key.{age,pub}` 为机器 SSH 身份密钥（私钥加密入库，公钥授权下发）：持有者为
-`mini-m4` / `mba-m5` / `mbp-m1` / `nix-lenovo`，清单集中于 `tools/sshUserKeys.nix`。
+`mini-m4` / `mba-m5` / `mbp-m1` / `nix-lenovo` / `nix-asus`，清单集中于 `tools/sshUserKeys.nix`。
 
 ## 加密新文件
 

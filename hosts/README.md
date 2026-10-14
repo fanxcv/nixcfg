@@ -73,5 +73,5 @@ homebrew casks 在
 `hosts/nix-pve/services/default.nix` 自动导入）配好 git 驱动的自动部署：只轮询 `main` 分支，
 检测到新 commit 自动 `nixos-rebuild`，需要重启时随机延迟后自动重启。
 其它分支（test 等）不自动部署，手动 `nixos-rebuild switch --flake .#nix-pve`。
-其他机器（nix-lenovo 笔记本、macOS）不启用 comin，各自手动部署；
+其他机器（nix-lenovo 笔记本、nix-asus 笔记本、macOS）不启用 comin，各自手动部署；
 要接入新机器，照 `hosts/nix-pve/default.nix` 复制 comin 模块 import、services/comin.nix 与 token 声明。

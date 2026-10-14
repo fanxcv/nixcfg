@@ -148,21 +148,39 @@
       let
         pubKey = ../../secrets/hosts/${hostName}/ssh-user-key.pub;
       in
-      lib.mkIf (platform == "darwin" || builtins.elem hostName [ "nix-lenovo" "nix-asus" ]) (
-        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-          umask 077
-          mkdir -p "$HOME/.ssh"
-          chmod 700 "$HOME/.ssh"
-          identity="$HOME/.ssh/${if builtins.elem hostName [ "nix-lenovo" "nix-asus" ] then "id_ed25519" else "id_rsa"}"
-          ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
-            -o "$identity" ${../../secrets/hosts/${hostName}/ssh-user-key.age}
-          chmod 600 "$identity"
-          ${lib.optionalString (builtins.pathExists pubKey) ''
-            cp -f ${pubKey} "$identity.pub"
-            chmod 644 "$identity.pub"
-          ''}
-        ''
-      );
+      lib.mkIf
+        (
+          platform == "darwin"
+          || builtins.elem hostName [
+            "nix-lenovo"
+            "nix-asus"
+          ]
+        )
+        (
+          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            umask 077
+            mkdir -p "$HOME/.ssh"
+            chmod 700 "$HOME/.ssh"
+            identity="$HOME/.ssh/${
+              if
+                builtins.elem hostName [
+                  "nix-lenovo"
+                  "nix-asus"
+                ]
+              then
+                "id_ed25519"
+              else
+                "id_rsa"
+            }"
+            ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
+              -o "$identity" ${../../secrets/hosts/${hostName}/ssh-user-key.age}
+            chmod 600 "$identity"
+            ${lib.optionalString (builtins.pathExists pubKey) ''
+              cp -f ${pubKey} "$identity.pub"
+              chmod 644 "$identity.pub"
+            ''}
+          ''
+        );
 
     # ---------- 3) ssh config 解密（mba-m5 / mbp-m1 / nix-pve；nix-pve 额外删 orbstack include） ----------
     home.activation.decryptSshConfig =
