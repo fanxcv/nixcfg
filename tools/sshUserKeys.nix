@@ -10,6 +10,7 @@ let
     "mba-m5"
     "mbp-m1"
     "nix-lenovo"
+    "nix-asus"
   ];
 in
 {
