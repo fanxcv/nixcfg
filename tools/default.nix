@@ -33,6 +33,12 @@ in
   scan = import ./scan.nix { inherit lib; };
   relative = import ./relative.nix { inherit self; };
 
+  # SSH 用户身份公钥集合（授权进各机器 authorized_keys 的单一事实来源）
+  sshUserKeys = import ./sshUserKeys.nix {
+    inherit lib;
+    relative = import ./relative.nix { inherit self; };
+  };
+
   # syncthing 互配机器清单（单一事实来源，见 syncthingPeers.nix）
   syncthingPeers = import ./syncthingPeers.nix;
   # syncthing 自动注册脚本生成器（darwin activation / nixos oneshot 共用）
