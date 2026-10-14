@@ -1,9 +1,9 @@
 # syncthing 自动注册脚本生成器（darwin activation / nixos oneshot 共用）
-#   功能：设备互配（清单驱动，缺者补）+ ~/sync folder 创建/同步 devices + GUI 密码注入（可选）
-#   幂等：REST API 检查存在性，仅补缺不删改（GUI 手动配对状态保留）
+#   功能：设备互配（清单驱动，缺者补）+ 退役设备清理 + ~/sync folder 创建/同步 devices + GUI 密码注入（可选）
+#   幂等：REST API 检查存在性，仅补缺不删改（GUI 手动配对状态保留）；惟 retired 清单内的设备会被删除
 #   失败策略：API 不可达/读不到 key 时仅警告返回（下次部署补），不阻塞部署
 # 用法：
-#   tools.syncthingAutoConfig { pkgs; peers = [ { name; id; addr = [ ... ]; } ]; guiPasswordAgePath = null; guiPasswordFile = null; }
+#   tools.syncthingAutoConfig { pkgs; peers = [ { name; id; addr = [ ... ]; } ]; retired = [ { name; id; } ]; guiPasswordAgePath = null; guiPasswordFile = null; }
 #     guiPasswordAgePath 非空时启用 GUI 密码段（age 解密 → PUT /rest/config/gui，放最后因会触发重启）
 #     guiPasswordFile 非空时改用明文密码文件（nix-pve：/run/agenix/syncthing-gui-password，fan 可读）
 #     两者互斥，至少一个非空才注入；注入 PUT 整个 gui 配置（user=fan + password），
@@ -13,6 +13,7 @@
 {
   pkgs,
   peers,
+  retired ? [ ],
   guiPasswordAgePath ? null,
   guiPasswordFile ? null,
 }:
@@ -21,6 +22,7 @@ let
   jq = "${pkgs.jq}/bin/jq";
   age = "${pkgs.age}/bin/age";
   peersJson = builtins.toJSON peers;
+  retiredJson = builtins.toJSON retired;
   pwCmd =
     if guiPasswordFile != null then
       "pw=$(cat ${guiPasswordFile}) || { echo \"警告: 读 syncthing GUI 密码文件失败\"; return 0; }"
@@ -65,7 +67,7 @@ in
     [ -n "$key" ] || { echo "警告: 读不到 syncthing apikey，自动注册跳过"; return 0; }
 
     local api=http://127.0.0.1:8384/rest hdr="X-API-Key: $key"
-    local peers_json='${peersJson}'
+    local peers_json='${peersJson}' retired_json='${retiredJson}'
 
     # ---- 1. 设备注册：清单中缺失者补（不含自己；不动 GUI 已有配对） ----
     ${curl} -sf -H "$hdr" $api/config/devices -o /tmp/st-autoreg-devices.json || { echo "警告: 读设备列表失败，自动注册跳过"; return 0; }
@@ -88,9 +90,12 @@ in
     done < <(printf '%s' "$peers_json" | ${jq} -c '.[]')
 
     # ---- 2. ~/sync 文件夹：无则建（共享全部清单+自己），有则补缺设备 ----
-    local want_devs
-    want_devs=$(printf '%s' "$peers_json" | ${jq} -c --arg self "$self_id" '
-      ([.[] | {deviceID: .id}] + [{deviceID: $self}]) | unique_by(.deviceID)
+    local want_devs retired_ids
+    retired_ids=$(printf '%s' "$retired_json" | ${jq} -c '[.[].id]')
+    want_devs=$(printf '%s' "$peers_json" | ${jq} -c --arg self "$self_id" --argjson drop "$retired_ids" '
+      ([.[] | {deviceID: .id}] + [{deviceID: $self}])
+      | map(select(.deviceID as $d | ($drop | index($d)) == null))
+      | unique_by(.deviceID)
     ')
     ${curl} -fsS -H "$hdr" $api/config/folders -o /tmp/st-autoreg-folders.json || { echo "警告: 读文件夹列表失败，自动注册跳过"; return 0; }
     if ! ${jq} -e 'any(.[]; .id == "sync")' /tmp/st-autoreg-folders.json >/dev/null 2>&1; then
@@ -107,9 +112,10 @@ in
       # 合并 devices：现有 ∪ 清单(+自己)；path 纠正为 $HOME/sync
       local cur merged same
       cur=$(${curl} -s -H "$hdr" $api/config/folders/sync) || { echo "警告: 读 folder sync 失败"; return 0; }
-      merged=$(printf '%s' "$cur" | ${jq} -c --argjson want "$want_devs" --arg home "$HOME" '
+      merged=$(printf '%s' "$cur" | ${jq} -c --argjson want "$want_devs" --argjson drop "$retired_ids" --arg home "$HOME" '
         ([.devices[].deviceID] | map({deviceID: .})) as $have
-        | .devices = (($have + $want) | unique_by(.deviceID))
+        | .devices = (($have + $want) | unique_by(.deviceID)
+                      | map(select(.deviceID as $d | ($drop | index($d)) == null)))
         | .path = ($home + "/sync")
       ')
       same=$(printf '%s' "$cur" | ${jq} -r --argjson want "$want_devs" --arg path "$HOME/sync" '
@@ -124,7 +130,22 @@ in
       fi
     fi
 
-    # ---- 3. GUI 密码（仅 darwin 侧；nix-pve 由 agenix guiPasswordFile 管理；放最后因 PUT 触发重启） ----
+    # ---- 3. 退役设备清理：从 devices 删除（folder 引用已在上一步过滤）----
+    while IFS= read -r row; do
+      [ -n "$row" ] || continue
+      local rid rname
+      rid=$(printf '%s' "$row" | ${jq} -r '.id')
+      rname=$(printf '%s' "$row" | ${jq} -r '.name')
+      [ "$rid" = "$self_id" ] && continue
+      ${jq} -e --arg id "$rid" 'any(.[]; .deviceID == $id)' /tmp/st-autoreg-devices.json >/dev/null 2>&1 || continue
+      if ${curl} -sf -X DELETE -H "$hdr" "$api/config/devices/$rid" >/dev/null; then
+        echo "[syncthing] 已移除退役设备 $rname"
+      else
+        echo "警告: 移除退役设备 $rname 失败"
+      fi
+    done < <(printf '%s' "$retired_json" | ${jq} -c '.[]')
+
+    # ---- 4. GUI 密码（仅 darwin 侧；nix-pve 由 agenix guiPasswordFile 管理；放最后因 PUT 触发重启） ----
     ${guiPasswordBlock}
   }
   set_syncthing_autoconfig

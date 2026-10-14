@@ -3,7 +3,7 @@
 #     数据目录 ~/sync 见 home/fan/nix-pve/immutable.nix
 #   GUI 仅绑 127.0.0.1（本机浏览器/SSH 隧道）；openDefaultPorts 放行 22000/21027
 #   设备互配：syncthing-autoregister oneshot（syncthing 启动后自动跑，清单 tools/syncthingPeers.nix）
-#   配置由 syncthing 自管（脚本仅补缺不删改，rebuild 不覆盖 GUI 配对状态）
+#   配置由 syncthing 自管（脚本仅补缺不删改，rebuild 不覆盖 GUI 配对状态；retired 清单内设备会被删除）
 #   GUI 密码：agenix 解密到 /run/agenix/syncthing-gui-password（fan 可读），oneshot 注入 user=fan+password
 #     （nixpkgs 模块 guiPasswordFile 只 PATCH password 不设 user，syncthing 要求双非空才启用认证，故必须自注入）
 {
@@ -12,10 +12,10 @@
   ...
 }:
 let
-  peers = tools.syncthingPeers;
-  # 自动注册脚本（设备互配 + ~/sync folder + GUI 密码注入）
+  inherit (tools.syncthingPeers) peers retired;
+  # 自动注册脚本（设备互配 + 退役设备清理 + ~/sync folder + GUI 密码注入）
   autoConfigScript = tools.syncthingAutoConfig {
-    inherit pkgs peers;
+    inherit pkgs peers retired;
     guiPasswordFile = "/run/agenix/syncthing-gui-password";
   };
 in
@@ -35,7 +35,7 @@ in
 
   # 自动注册 oneshot：syncthing 启动后执行，幂等补缺（设备互配 + ~/sync folder）
   systemd.services.syncthing-autoregister = {
-    description = "Syncthing 自动注册（设备互配 + ~/sync folder）";
+    description = "Syncthing 自动注册（设备互配 + 退役设备清理 + ~/sync folder）";
     after = [ "syncthing.service" ];
     requires = [ "syncthing.service" ];
     wantedBy = [ "syncthing.service" ];

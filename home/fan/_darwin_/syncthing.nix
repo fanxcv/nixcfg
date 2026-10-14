@@ -2,7 +2,8 @@
 #   服务：LaunchAgent 自启（RunAtLoad + KeepAlive），登录即启、崩溃自动重启
 #   同步：~/sync 目录与 nix-pve 及其他 Mac 组网；设备互配由 activation 幂等脚本自动完成
 #     （清单 tools/syncthingPeers.nix 单一事实来源，新增机器登记后各机下次部署自动互配）
-#   注意：syncthing 配置（config.xml）由 syncthing 自管；自动注册脚本仅补缺不删改（GUI 配对保留）
+#   注意：syncthing 配置（config.xml）由 syncthing 自管；自动注册脚本仅补缺不删改（GUI 配对保留），
+#         惟 tools/syncthingPeers.nix 的 retired 清单内设备会被删除
 {
   pkgs,
   lib,
@@ -10,9 +11,9 @@
   ...
 }:
 let
-  peers = tools.syncthingPeers;
+  inherit (tools.syncthingPeers) peers retired;
   autoConfigScript = tools.syncthingAutoConfig {
-    inherit pkgs peers;
+    inherit pkgs peers retired;
     # GUI 密码（QAZxsw2341 源）age 解密 → PUT；放脚本末尾（PUT 触发 syncthing 重启）
     guiPasswordAgePath = "${../../..}/secrets/syncthing-gui-password.age";
   };

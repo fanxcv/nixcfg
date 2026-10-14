@@ -1,47 +1,59 @@
 # syncthing 互配机器清单（单一事实来源：新增机器在此登记，各机下次部署自动互配）
-#   id  = 各机 syncthing device ID（REST /rest/system/status 的 myID；或 TLS 22000 证书指纹算法）
-#   addr = 设备地址（MagicDNS 名，headscale 下各机 accept-dns 已开；dynamic 兜底发现）
+#   peers.id   = 各机 syncthing device ID（REST /rest/system/status 的 myID；或 TLS 22000 证书指纹算法）
+#   peers.addr = 设备地址（MagicDNS 名，headscale 下各机 accept-dns 已开；dynamic 兜底发现）
+#   retired    = 已退役设备：各机部署时从 devices 与各 folder 中删除
+#                （自动注册脚本只补缺不删改，退役设备不登记就会永久残留在每台机器上）
 # 注意：本机不在清单不影响（folder 的 devices 自动并入本机 ID，见 syncthingAutoConfig.nix）
 # 注：mbp-m1 的 MagicDNS 名为 macbookpro（tailscale 注册名），addr 用 macbookpro 而非 mbp-m1
-[
-  {
-    name = "mini-m4";
-    id = "Z767O4L-LBDVVEY-DDMDK63-5B6Z3PL-FNXJF4T-QVLF4IV-HTU2BZ3-DSCW6Q3";
-    addr = [
-      "tcp://mini-m4:22000"
-      "dynamic"
-    ];
-  }
-  {
-    name = "mba-m5";
-    id = "45P4AQI-ZTYFDMK-2YXBUUW-LVGU7ZG-MQJRQQR-KXCKLBV-2MEIJWV-LKH6MQ3";
-    addr = [
-      "tcp://mba-m5:22000"
-      "dynamic"
-    ];
-  }
-  {
-    name = "nix-pve";
-    id = "USWSSMC-KP4K3H4-ESKCMRQ-COEBIC5-YBMWBZY-U44EZAM-NJ6AGKU-ORREOAF";
-    addr = [
-      "tcp://nix-pve:22000"
-      "dynamic"
-    ];
-  }
-  {
-    name = "mbp-m1";
-    id = "7UILMCV-YXVJK7G-LII7UK4-XZEAKBV-IDBVF5L-EDUXPW4-AGS6BNL-B7P32QA";
-    addr = [
-      "tcp://macbookpro:22000"
-      "dynamic"
-    ];
-  }
-  {
-    name = "nix-lenovo";
-    id = "3BUAVRP-MP4LTY6-7Q72EOI-HRCOYYK-V2NQ54J-POLLKSW-FMJY7E3-IHJOFQW";
-    addr = [
-      "tcp://nix-lenovo:22000"
-      "dynamic"
-    ];
-  }
-]
+{
+  peers = [
+    {
+      name = "mini-m4";
+      id = "Z767O4L-LBDVVEY-DDMDK63-5B6Z3PL-FNXJF4T-QVLF4IV-HTU2BZ3-DSCW6Q3";
+      addr = [
+        "tcp://mini-m4:22000"
+        "dynamic"
+      ];
+    }
+    {
+      name = "mba-m5";
+      id = "45P4AQI-ZTYFDMK-2YXBUUW-LVGU7ZG-MQJRQQR-KXCKLBV-2MEIJWV-LKH6MQ3";
+      addr = [
+        "tcp://mba-m5:22000"
+        "dynamic"
+      ];
+    }
+    {
+      name = "nix-pve";
+      id = "USWSSMC-KP4K3H4-ESKCMRQ-COEBIC5-YBMWBZY-U44EZAM-NJ6AGKU-ORREOAF";
+      addr = [
+        "tcp://nix-pve:22000"
+        "dynamic"
+      ];
+    }
+    {
+      name = "mbp-m1";
+      id = "7UILMCV-YXVJK7G-LII7UK4-XZEAKBV-IDBVF5L-EDUXPW4-AGS6BNL-B7P32QA";
+      addr = [
+        "tcp://macbookpro:22000"
+        "dynamic"
+      ];
+    }
+    {
+      # 现役 nix-lenovo = ThinkBook 14 G6+ AHP（新装，device ID 与旧机 nix-book 不同）
+      name = "nix-lenovo";
+      id = "2UPF4J3-DVQYRRT-GNU3JB2-77ZZFYE-NK2W6LL-D6UYNXD-LD7TBTY-IGHTYQR";
+      addr = [
+        "tcp://nix-lenovo:22000"
+        "dynamic"
+      ];
+    }
+  ];
+  retired = [
+    # nix-book（无界14S 旧笔记本）2026-10 换 ThinkBook 后退役，同一台机器的现役 ID 见上方 peers.nix-lenovo
+    {
+      name = "nix-book";
+      id = "3BUAVRP-MP4LTY6-7Q72EOI-HRCOYYK-V2NQ54J-POLLKSW-FMJY7E3-IHJOFQW";
+    }
+  ];
+}
