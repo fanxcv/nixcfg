@@ -51,7 +51,7 @@ RUN u=$(id -nu 1000 2>/dev/null); [ -z "$u" ] || userdel -r "$u"; \
 RUN groupadd -r nixbld && useradd -g nixbld nixbld \
     && mkdir -m 0755 /nix \
     && mkdir -p /etc/nix \
-    && printf 'build-users-group =\nsubstituters = https://mirrors.cernet.edu.cn/nix-channels/store https://cache.nixos.org/\nextra-substituters = https://cache.numtide.com https://nix-community.cachix.org\nextra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\nexperimental-features = nix-command flakes\nauto-optimise-store = true\n' > /etc/nix/nix.conf \
+    && printf 'build-users-group =\nsubstituters = https://mirrors.cernet.edu.cn/nix-channels/store https://cache.nixos.org/\nextra-substituters = https://cache.numtide.com https://nix-community.cachix.org\nextra-trusted-public-keys = niks3.numtide.com-1:TcgwHcqU6q5ZmRAIcQjcZI5UDFmSFMryr1Rowo7kJm6n09dCXQ660+5QzOMYsMYhEv3GRKGYo1AKLWTMAEl9Cw== nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=\nexperimental-features = nix-command flakes\nauto-optimise-store = true\n' > /etc/nix/nix.conf \
     && curl -fsL https://mirrors.cernet.edu.cn/nix/latest/install -o /tmp/nix-install.sh \
     && sh /tmp/nix-install.sh --no-daemon --no-channel-add --yes \
     && rm -f /tmp/nix-install.sh

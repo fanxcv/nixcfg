@@ -29,7 +29,7 @@ if ! grep -q 'experimental-features' "$NIXCONF" 2>/dev/null; then
   cat >> "$NIXCONF" <<'EOF'
 substituters = https://mirrors.cernet.edu.cn/nix-channels/store https://cache.nixos.org/
 extra-substituters = https://cache.numtide.com https://nix-community.cachix.org
-extra-trusted-public-keys = cache.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+extra-trusted-public-keys = niks3.numtide.com-1:TcgwHcqU6q5ZmRAIcQjcZI5UDFmSFMryr1Rowo7kJm6n09dCXQ660+5QzOMYsMYhEv3GRKGYo1AKLWTMAEl9Cw== nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
 experimental-features = nix-command flakes
 auto-optimise-store = true
 EOF
