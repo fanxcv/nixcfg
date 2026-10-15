@@ -61,14 +61,25 @@
     }
   ];
   # ide 容器（ide-si / ide-lenovo / ide-mac）：仅参与 share 目录，不参与 sync
-  #   device ID 首次启动 syncthing 后从容器 /home/fan/.config/syncthing/config.xml 的 <device id="..."> 取，
-  #   登记于此（双阶段：先部署容器生成 ID → 回填此处 → 各机下次部署自动互配）
+  #   device ID 取自容器 /home/fan/.config/syncthing/config.xml 的首个 <device>（本机），
+  #   并以 cert.pem 复算交叉核对（syncthing 算法：sha256(DER) → base32 → 每 13 字符追 1 位 luhn32 校验）
   #   容器无 tailscale，地址仅 dynamic（全局发现/中继）
   #   本清单为空时不影响：现有机器的 share 目录照建，只是尚未并入 ide 容器
   idePeers = [
-    # { name = "ide-si"; id = "..."; addr = [ "dynamic" ]; }
-    # { name = "ide-lenovo"; id = "..."; addr = [ "dynamic" ]; }
-    # { name = "ide-mac"; id = "..."; addr = [ "dynamic" ]; }
+    # ide-si 尚未初始化 syncthing（无 device ID），部署过容器后回填：
+    #   { name = "ide-si"; id = "..."; addr = [ "dynamic" ]; }
+    {
+      # 容器 hostname lenovo-ide（宿主 pve.mi.fan.ts），2026-10-15 回填
+      name = "ide-lenovo";
+      id = "JJZD2VD-LXDMQPP-SXEKQRT-KIACVKO-FGZXRUH-VQ2WSRK-THXGYVW-WD3N7AQ";
+      addr = [ "dynamic" ];
+    }
+    {
+      # 容器 hostname mac-ide（宿主 ske-mac.fan.ts），2026-10-15 回填
+      name = "ide-mac";
+      id = "EKKR6YE-ZHL2WCP-E4HPSX2-SRLXNGA-XCPGHLA-5GSL6LU-TMQ5THE-2FSPVAM";
+      addr = [ "dynamic" ];
+    }
   ];
   retired = [
     # nix-book（无界14S 旧笔记本）2026-10 换 ThinkBook 后退役，同一台机器的现役 ID 见上方 peers.nix-lenovo
