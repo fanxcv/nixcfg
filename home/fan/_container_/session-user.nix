@@ -45,11 +45,16 @@ in
   # 在桌面配置写入脚本之后执行（kasmvncBeautify → chrome → kasmvnc；ide-si 无桌面会话，DAG 容忍缺失名）
   home.activation.sessionUser = lib.hm.dag.entryAfter [ "kasmvncBeautify" "chrome" "kasmvnc" ] ''
     # 1) 建用户（幂等）：uid/gid 1000、登录 shell /bin/bash、加入 sudo 组
+    #    1000 被占多数是「旧镜像」——镜像层未跑 Dockerfile 的让位建号（显式删基础镜像自带的 uid1000 用户），
+    #    故失败信息里直接给出两条出路（重建镜像 / 就地把占位者删掉），避免再次排查。
     if ! id -u ${sessionUser} >/dev/null 2>&1; then
       if useradd -m -u 1000 -s /bin/bash ${sessionUser}; then
         echo "===> 已创建用户 ${sessionUser}（uid 1000）"
       else
-        echo "错误: useradd ${sessionUser} 失败（uid 1000 是否被占用？），激活中止"
+        holder="$(id -nu 1000 2>/dev/null || echo 未知用户)"
+        echo "错误: useradd ${sessionUser} 失败 —— uid 1000 已被 ''${holder} 占用，激活中止"
+        echo "  · 若为旧镜像（镜像层未建 fan）：在宿主 compose 目录重建并重建容器：docker compose build && docker compose up -d"
+        echo "  · 或就地解封：userdel -r ''${holder} 后重跑本激活（仅改容器可写层，容器重建即失效）"
         exit 1
       fi
     fi
