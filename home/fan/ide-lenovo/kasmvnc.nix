@@ -98,6 +98,9 @@ let
     "${whitesurIcon}/share"
     "${whitesurCursors}/share"
     "${plank}/share"
+    # MIME 类型库：无它 .doc/.docx/.xlsx 全识别成 application/octet-stream（共享 MIME 库不在任何包的 share 里，
+    # 必须显式加），mimeapps.list 的按类型默认关联才会命中
+    "${pkgs.shared-mime-info}/share"
     "${wpsoffice-cn}/share" # WPS 菜单项（share/applications）：XDG_DATA_DIRS 未含 profile share，不补则菜单无入口
     "${fcitx5}/share"
     "${pkgs.adwaita-icon-theme}/share"
@@ -585,6 +588,36 @@ lib.mkIf (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
       echo "===> xfce4-desktop.xml 已变更，重启 kasmvnc.service 让新会话生效"
       /usr/bin/systemctl restart kasmvnc.service 2>/dev/null || echo "警告: kasmvnc.service 重启失败（壁纸变更）"
     fi
+
+    # 11. 默认文档应用：Office 文档（doc/docx/xls/xlsx/ppt/pptx/rtf）交给 WPS
+    #     Thunar 双击与 xdg-open 均读 ~/.config/mimeapps.list；desktop ID 来自 ${wpsoffice-cn}/share/applications
+    #     前提是上方 XDG_DATA_DIRS 含 shared-mime-info，否则类型识别降级为 octet-stream，本表全部不命中
+    mkdir -p ${sessionHome}/.config
+    cat > ${sessionHome}/.config/mimeapps.list <<EOF
+    [Default Applications]
+    # Word（WPS Writer）；.wps 是 WPS 自有格式，共享 MIME 库将 .wps 记为 application/vnd.ms-works
+    application/msword=wps-office-wps.desktop
+    application/msword-template=wps-office-wps.desktop
+    application/vnd.ms-word=wps-office-wps.desktop
+    application/x-msword=wps-office-wps.desktop
+    application/vnd.ms-word.document.macroEnabled.12=wps-office-wps.desktop
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document=wps-office-wps.desktop
+    application/rtf=wps-office-wps.desktop
+    application/vnd.ms-works=wps-office-wps.desktop
+    # 表格（WPS Spreadsheets）
+    application/vnd.ms-excel=wps-office-et.desktop
+    application/msexcel=wps-office-et.desktop
+    application/x-msexcel=wps-office-et.desktop
+    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet=wps-office-et.desktop
+    # 演示（WPS Presentation）
+    application/vnd.ms-powerpoint=wps-office-wpp.desktop
+    application/vnd.mspowerpoint=wps-office-wpp.desktop
+    application/mspowerpoint=wps-office-wpp.desktop
+    application/powerpoint=wps-office-wpp.desktop
+    application/x-mspowerpoint=wps-office-wpp.desktop
+    application/vnd.openxmlformats-officedocument.presentationml.presentation=wps-office-wpp.desktop
+    application/vnd.openxmlformats-officedocument.presentationml.slideshow=wps-office-wpp.desktop
+    EOF
   '';
 
   home.activation.kasmvnc = lib.hm.dag.entryAfter [ "chrome" ] ''
