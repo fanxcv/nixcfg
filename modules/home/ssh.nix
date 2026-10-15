@@ -2,8 +2,10 @@
 # 三块逻辑：
 #   1. 授权公钥拉取 + sshd 禁用密码（对应 alpine-init.sh 的 ssh_config()；加固仅对容器/云服务器生效，
 #      NixOS 与 macOS 走各自 nix 层声明，PVE 不在本次范围）
-#   2. darwin 用户身份密钥解密（~/.ssh/id_rsa，age 路径按 hostName 参数化 → secrets/hosts/<host>/ssh-user-key.age）
-#   3. ssh config 解密（~/.ssh/config ← secrets/ssh-config.age；mba-m5/mbp-m1/nix-pve 需要；nix-pve 额外删 orbstack include 行）
+#   2. 用户身份密钥解密（mac 为 ~/.ssh/id_rsa，nix-asus / nix-lenovo 为 ~/.ssh/id_ed25519，
+#      age 路径按 hostName 参数化 → secrets/hosts/<host>/ssh-user-key.age）
+#   3. ssh config 解密（~/.ssh/config ← secrets/ssh-config.age；mba-m5/mbp-m1/nix-asus/nix-lenovo 需要。
+#      密文是 mac 口径，非 mac 机器解密后删 orbstack include 行、并把 IdentityFile 换成本机身份密钥）
 # 启用：本模块默认 enable=true；某台不装 → 机器层 softwares.ssh.enable = lib.mkForce false
 
 {
@@ -15,6 +17,21 @@
   platform,
   ...
 }: # GitHub 加速/例外由 tools/config.nix 控制（tools.githubUrl）
+let
+  # 身份密钥口径的唯一出处（两处消费：身份私钥解密的目标文件名、ssh config 的 IdentityFile 改写值）：
+  # mac 用 id_rsa，nix-asus / nix-lenovo 用 ed25519
+  ed25519IdentityHosts = [
+    "nix-asus"
+    "nix-lenovo"
+  ];
+  identityFile = if builtins.elem hostName ed25519IdentityHosts then "id_ed25519" else "id_rsa";
+  # 解密 ~/.ssh/config 的机器 = 持身份私钥、需直连容器/云服务器的那些
+  sshConfigHosts = [
+    "mba-m5"
+    "mbp-m1"
+  ]
+  ++ ed25519IdentityHosts;
+in
 {
   options.softwares.ssh.enable = lib.mkEnableOption "ssh 配置（公钥拉取 + sshd 加固 + 身份/ssh-config 解密）" // {
     default = true;
@@ -148,60 +165,37 @@
       let
         pubKey = ../../secrets/hosts/${hostName}/ssh-user-key.pub;
       in
-      lib.mkIf
-        (
-          platform == "darwin"
-          || builtins.elem hostName [
-            "nix-lenovo"
-            "nix-asus"
-          ]
-        )
-        (
-          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            umask 077
-            mkdir -p "$HOME/.ssh"
-            chmod 700 "$HOME/.ssh"
-            identity="$HOME/.ssh/${
-              if
-                builtins.elem hostName [
-                  "nix-lenovo"
-                  "nix-asus"
-                ]
-              then
-                "id_ed25519"
-              else
-                "id_rsa"
-            }"
-            ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
-              -o "$identity" ${../../secrets/hosts/${hostName}/ssh-user-key.age}
-            chmod 600 "$identity"
-            ${lib.optionalString (builtins.pathExists pubKey) ''
-              cp -f ${pubKey} "$identity.pub"
-              chmod 644 "$identity.pub"
-            ''}
-          ''
-        );
+      lib.mkIf (platform == "darwin" || builtins.elem hostName ed25519IdentityHosts) (
+        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          identity="$HOME/.ssh/${identityFile}"
+          ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
+            -o "$identity" ${../../secrets/hosts/${hostName}/ssh-user-key.age}
+          chmod 600 "$identity"
+          ${lib.optionalString (builtins.pathExists pubKey) ''
+            cp -f ${pubKey} "$identity.pub"
+            chmod 644 "$identity.pub"
+          ''}
+        ''
+      );
 
-    # ---------- 3) ssh config 解密（mba-m5 / mbp-m1 / nix-pve；nix-pve 额外删 orbstack include） ----------
-    home.activation.decryptSshConfig =
-      lib.mkIf
-        (builtins.elem hostName [
-          "mba-m5"
-          "mbp-m1"
-          "nix-pve"
-        ])
-        (
-          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            umask 077
-            mkdir -p "$HOME/.ssh"
-            chmod 700 "$HOME/.ssh"
-            ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
-              -o "${config.home.homeDirectory}/.ssh/config" ${../../secrets/ssh-config.age}
-            chmod 600 "${config.home.homeDirectory}/.ssh/config"
-            ${lib.optionalString (hostName == "nix-pve") ''
-              ${pkgs.gnused}/bin/sed -i '/^Include ~\/\.orbstack\/ssh\/config$/d' "${config.home.homeDirectory}/.ssh/config"
-            ''}
-          ''
-        );
+    # ---------- 3) ssh config 解密（mba-m5 / mbp-m1 / nix-asus / nix-lenovo） ----------
+    home.activation.decryptSshConfig = lib.mkIf (builtins.elem hostName sshConfigHosts) (
+      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        umask 077
+        mkdir -p "$HOME/.ssh"
+        chmod 700 "$HOME/.ssh"
+        ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" \
+          -o "${config.home.homeDirectory}/.ssh/config" ${../../secrets/ssh-config.age}
+        chmod 600 "${config.home.homeDirectory}/.ssh/config"
+        ${lib.optionalString (platform == "nixos") ''
+          # NixOS 无 orbstack include；身份密钥为 ed25519，IdentityFile 随本机改写
+          ${pkgs.gnused}/bin/sed -i '/^Include ~\/\.orbstack\/ssh\/config$/d' "${config.home.homeDirectory}/.ssh/config"
+          ${pkgs.gnused}/bin/sed -i -E 's|^([[:space:]]*IdentityFile ).*$|\1~/.ssh/${identityFile}|' "${config.home.homeDirectory}/.ssh/config"
+        ''}
+      ''
+    );
   };
 }

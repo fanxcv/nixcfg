@@ -26,7 +26,7 @@ secrets/
 ├── clash-sub-url.age             # Clash/Mihomo 订阅 URL（mihomo 与 ClashX Meta 共用，各自激活期解密）
 ├── git-credentials.age           # ~/.git-credentials（公共）
 ├── headscale-auth-key.age        # tailscale pre-auth key（三 mac，公共）
-├── ssh-config.age                # ~/.ssh/config（mba/mbp/nix-pve，公共）
+├── ssh-config.age                # ~/.ssh/config（mba/mbp/nix-asus/nix-lenovo，公共；非 mac 机器激活时改写为本地口径）
 ├── syncthing-gui-password.age    # syncthing GUI 密码（三 mac + 三台 NixOS + 三个 ide 容器，公共）
 ├── encrypt.sh / keys.nix / README.md
 └── hosts/
