@@ -9,9 +9,10 @@
 #   client   是否装客户端
 #   server   是否装 vscode-server 端（UI 类扩展置 false）
 #   unfree   可选：nixpkgs 包名，flake.nix 据此生成 unfree 白名单
-# 来源两路（禁本地自打包，packages/ 不再收 vscode 扩展）：
+# 来源三路（禁本地自打包，packages/ 不再收 vscode 扩展）：
 #   market  = pkgs.vscode-extensions（nixpkgs 内置，无 IFD）
 #   release = pkgs.repos.vscode.vscode-marketplace-release（nix-community，IFD；仅补 nixpkgs 缺失项）
+#   unstable= pkgs.repos.unstable.vscode-extensions（独立 unstable 通道，无 IFD；仅当主通道版本有已知缺陷时用）
 let
   allProfiles = [
     "default"
@@ -125,7 +126,12 @@ in
     }
     {
       id = "ms-vscode-remote.remote-ssh";
-      pkg = pkgs: pkgs.vscode-extensions.ms-vscode-remote.remote-ssh;
+      # 走 unstable 通道取 0.128.0：主通道 nixpkgs 仍锁 0.122.0，该版把 IPC socket 建在
+      # $TMPDIR（mac 上 /var/folders/xx/<24字符>/T 共 49 字节）+ 40 字符随机名 = 113 字节，
+      # 超 macOS sun_path 103 上限 → listen EINVAL → 5 秒一轮无限重连（upstream issue 11672/11677）；
+      # 0.128.0 起按 MAX_UNIX_SOCKET_PATH_LENGTH 截断随机名。engines 要求 VSCode ≥1.133。
+      # 主通道 nixpkgs 升到 ≥0.128.0 后即可回落 pkgs.vscode-extensions
+      pkg = pkgs: pkgs.repos.unstable.vscode-extensions.ms-vscode-remote.remote-ssh;
       profiles = allProfiles;
       client = true;
       server = false; # 客户端侧远程连接器
