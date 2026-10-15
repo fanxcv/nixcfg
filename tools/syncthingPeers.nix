@@ -62,12 +62,17 @@
   ];
   # ide 容器（ide-si / ide-lenovo / ide-mac）：仅参与 share 目录，不参与 sync
   #   device ID 取自容器 /home/fan/.config/syncthing/config.xml 的首个 <device>（本机），
-  #   并以 cert.pem 复算交叉核对（syncthing 算法：sha256(DER) → base32 → 每 13 字符追 1 位 luhn32 校验）
+  #   并以 cert.pem 复算交叉核对（syncthing 算法：sha256(DER) → base32 → 每 13 字符追 1 位 luhn32 校验）；
+  #   ide-si 的 ID 来自用户提供值，已过 luhn 校验位四段（证书复算待该机可达时补）
   #   容器无 tailscale，地址仅 dynamic（全局发现/中继）
   #   本清单为空时不影响：现有机器的 share 目录照建，只是尚未并入 ide 容器
   idePeers = [
-    # ide-si 尚未初始化 syncthing（无 device ID），部署过容器后回填：
-    #   { name = "ide-si"; id = "..."; addr = [ "dynamic" ]; }
+    {
+      # 容器 hostname ide-si（宿主 host-10-31-144-11），2026-10-15 回填
+      name = "ide-si";
+      id = "QJDHO3S-FPGZPYC-QT5M5XN-UHEYL23-OWL7WQK-JZKLI7B-S3MMNTB-SNXT2AV";
+      addr = [ "dynamic" ];
+    }
     {
       # 容器 hostname lenovo-ide（宿主 pve.mi.fan.ts），2026-10-15 回填
       name = "ide-lenovo";

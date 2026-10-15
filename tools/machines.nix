@@ -7,36 +7,37 @@
 #   alias       是否生成 nix run .#<机名> 一步部署别名
 #   extraUnfree 额外 unfree 放行名单（可选，缺省为空）
 {
-  # --- Docker 开发容器（Ubuntu 底，aarch64-linux 原生容器）---
+  # --- Docker 开发容器（Ubuntu 底）---
+  #   架构随宿主机，不随平台成见：ide-lenovo 宿主 pve.mi、ide-si 宿主 host-10-31-144-11 为 amd64，
+  #   ide-mac 宿主 ske-mac 为 arm64（均以容器内 `uname -m` / dpkg --print-architecture 实测）。
+  #   该字段决定 homeConfigurations 的 eval 平台与桌面分支：x86_64 → google-chrome + WPS，
+  #   aarch64 → chromium（见各机 kasmvnc.nix / chrome.nix）；部署别名 packages.<当前 system>.<机名>
+  #   按当前 system 构造，不读本字段，故写错只坑 eval，不坑部署。
   ide-si = {
     kind = "container";
-    # 容器实际是 amd64（宿主 host-10-31-144-11，compose 构建日志 TARGETARCH=amd64），
-    #   原先照 ide-lenovo 记作 aarch64-linux 是笔误：该字段只影响 homeConfigurations 的 eval 平台（
-    #   部署走 packages.<当前 system>.<机名> 别名，不受影响），记 x86_64 才能在 mac 上 eval 出真正部署的那套（
-    #   x86_64 分支：google-chrome + WPS）；不确定时在容器内 `uname -m` 核对。
     system = "x86_64-linux";
     user = "fan";
     alias = true;
     extraUnfree = [
-      "google-chrome" # 桌面浏览器（kasmvnc/chrome.nix 的 x86_64 分支，与 ide-lenovo 同）
+      "google-chrome" # 桌面浏览器（kasmvnc/chrome.nix 的 x86_64 分支）
       "albert" # 桌面启动器（kasmvnc.nix）
       "wpsoffice-cn" # 桌面办公（kasmvnc.nix 的 x86_64 分支）
     ];
   };
   ide-lenovo = {
     kind = "container";
-    system = "aarch64-linux";
+    system = "x86_64-linux";
     user = "fan";
     alias = true;
     extraUnfree = [
       "google-chrome"
       "albert"
-      "wpsoffice-cn" # 桌面办公（kasmvnc.nix 的 x86_64 分支，真机架构）
+      "wpsoffice-cn" # 桌面办公（kasmvnc.nix 的 x86_64 分支）
     ];
   };
   ide-mac = {
     kind = "container";
-    system = "aarch64-linux";
+    system = "aarch64-linux"; # 宿主 ske-mac arm64（实测），桌面走 chromium 分支
     user = "fan";
     alias = true;
     extraUnfree = [
