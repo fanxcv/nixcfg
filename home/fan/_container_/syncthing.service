@@ -1,13 +1,14 @@
 [Unit]
-Description=Syncthing（P2P 文件同步，仅 ~/share）
+Description=Syncthing（P2P 文件同步，仅桌面 share 目录；以 fan 运行，同步进来的文件属主即 fan）
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
-Environment=HOME=/root
-ExecStart=@syncthing@/bin/syncthing serve --no-browser --config=/root/.config/syncthing --data=/root/.local/state/syncthing
+User=fan
+Group=fan
+Environment=HOME=/home/fan
+ExecStart=@syncthing@/bin/syncthing serve --no-browser --config=/home/fan/.config/syncthing --data=/home/fan/.local/state/syncthing
 Restart=always
 RestartSec=5
 

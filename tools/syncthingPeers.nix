@@ -61,7 +61,7 @@
     }
   ];
   # ide 容器（ide-si / ide-lenovo / ide-mac）：仅参与 share 目录，不参与 sync
-  #   device ID 首次启动 syncthing 后从容器 /root/.config/syncthing/config.xml 的 <device id="..."> 取，
+  #   device ID 首次启动 syncthing 后从容器 /home/fan/.config/syncthing/config.xml 的 <device id="..."> 取，
   #   登记于此（双阶段：先部署容器生成 ID → 回填此处 → 各机下次部署自动互配）
   #   容器无 tailscale，地址仅 dynamic（全局发现/中继）
   #   本清单为空时不影响：现有机器的 share 目录照建，只是尚未并入 ide 容器

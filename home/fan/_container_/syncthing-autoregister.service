@@ -4,9 +4,11 @@ After=syncthing.service
 Requires=syncthing.service
 
 [Service]
+# 仍以 root 跑：脚本只碰 syncthing 的 REST API 与 config.xml，并要读 root 属主的 $HOME/.secrets/age-keys.txt；
+# HOME 指 /home/fan 是因为它按 $HOME 找 config.xml（syncthing 本身已改为以 fan 运行）
 Type=oneshot
 User=root
-Environment=HOME=/root
+Environment=HOME=/home/fan
 ExecStart=/usr/local/bin/syncthing-autoregister.sh
 
 [Install]

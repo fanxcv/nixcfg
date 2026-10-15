@@ -11,7 +11,7 @@ let
   sessionUser = "fan";
   sessionHome = "/home/fan";
   # 桌面会话会读写的宿主挂载点（compose 双挂载的 /home/fan 侧目标）。
-  #   本清单须与 docker/ide/docker-compose-*.yml 的 /home/fan 侧挂载一一对应（各 15 条）。
+  #   本清单须与 docker/ide/docker-compose-*.yml 的 /home/fan 侧挂载一一对应（各 18 条）。
   #   仅对其顶层做非递归 chown（保持顶层属主 fan），不递归进入——递归会波及宿主用户文件属主，
   #   且 mac 宿主（virtiofs/osxfs）可能不支持 chown，故按非关键失败仅警告。
   sessionMounts = [
@@ -29,6 +29,10 @@ let
     ".pi"
     ".m2"
     ".secrets"
+    # syncthing：服务以 fan 运行，配置/数据/同步目录全在 fan 侧（compose ./syncthing/{config,state} 与 ./share）
+    ".config/syncthing"
+    ".local/state/syncthing"
+    "Desktop/share"
     # chrome 主 profile：桌面会话写 .config/chrome（chrome.nix wrapper 的 --user-data-dir）
     ".config/chrome"
   ];

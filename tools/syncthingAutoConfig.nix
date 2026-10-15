@@ -8,15 +8,17 @@
 #     peers;                 # 基础设备清单 [ { name; id; addr = [ ... ]; } ]，始终注册
 #     extraPeers ? [ ];      # 附加设备清单（如 ide 容器），始终注册，供 folder 的 devices 引用
 #     retired ? [ ];
-#     folders;               # 要管理的同步目录 [ { id; label; devices; } ]
-#                            #   devices = 该目录的 device ID 列表（本机 ID 自动并入）；路径恒为 $HOME/<id>
+#     folders;               # 要管理的同步目录 [ { id; label; devices; path ? null } ]
+#                            #   devices = 该目录的 device ID 列表（本机 ID 自动并入）
+#                            #   path 缺省为空 → 路径取 $HOME/<id>（既定约定）；给值则用该绝对路径
+#                            #   （容器给 /home/fan/Desktop/share：syncthing 以 fan 运行，桌面上的 share 即同步目录）
 #     guiPasswordAgePath ? null;   # 非空则 age 解密 → PUT /rest/config/gui（darwin / ide 容器）
 #     guiPasswordFile ? null;      # 非空则用明文密码文件（nix-pve：/run/agenix/syncthing-gui-password）
 #   }
 #     guiPasswordAgePath / guiPasswordFile 互斥，至少一个非空才注入；PUT 整个 gui 配置（user=fan + password），
 #     与 nixpkgs 模块 guiPasswordFile 只 PATCH password 不设 user 不同——syncthing 要求 user+password 双非空才启用认证
 #     addr 为设备地址数组（如 [ "tcp://mba-m5:22000" "dynamic" ]）
-#     folder 路径恒为 $HOME/<id>（darwin /Users/fan/<id>，nix-pve /home/fan/<id>，容器 /root/<id>）
+#     folder 路径：darwin /Users/fan/<id> 与 nix-pve /home/fan/<id> 均取 $HOME/<id>（不传 path）；容器显式传 path
 {
   pkgs,
   peers,
@@ -106,9 +108,11 @@ in
     ${curl} -fsS -H "$hdr" $api/config/folders -o /tmp/st-autoreg-folders.json || { echo "警告: 读文件夹列表失败，自动注册跳过"; return 0; }
     while IFS= read -r frow; do
       [ -n "$frow" ] || continue
-      local fid flabel want_devs
+      local fid flabel fpath want_devs
       fid=$(printf '%s' "$frow" | ${jq} -r '.id')
       flabel=$(printf '%s' "$frow" | ${jq} -r '.label')
+      fpath=$(printf '%s' "$frow" | ${jq} -r '.path // ""')
+      [ -n "$fpath" ] || fpath="$HOME/$fid"
       want_devs=$(printf '%s' "$frow" | ${jq} -c --arg self "$self_id" --argjson drop "$retired_ids" '
         ([.devices[] | {deviceID: .}] + [{deviceID: $self}])
         | map(select(.deviceID as $d | ($drop | index($d)) == null))
@@ -116,11 +120,11 @@ in
       ')
       if ! ${jq} -e --arg id "$fid" 'any(.[]; .id == $id)' /tmp/st-autoreg-folders.json >/dev/null 2>&1; then
         local fbody
-        fbody=$(printf '%s' "$want_devs" | ${jq} -c --arg id "$fid" --arg label "$flabel" --arg path "$HOME/$fid" '
+        fbody=$(printf '%s' "$want_devs" | ${jq} -c --arg id "$fid" --arg label "$flabel" --arg path "$fpath" '
           {id: $id, label: $label, path: $path, type: "sendreceive", rescanIntervalS: 3600, fsWatcherEnabled: true, fsWatcherDelayS: 10, ignorePerms: false, autoNormalize: true, devices: .}
         ')
         if ${curl} -s -X POST -H "$hdr" -H "Content-Type: application/json" -d "$fbody" $api/config/folders >/dev/null; then
-          echo "[syncthing] 已创建 ~/$fid 文件夹"
+          echo "[syncthing] 已创建 $fpath 文件夹"
         else
           echo "警告: 创建 ~/$fid 文件夹失败"
         fi
@@ -128,18 +132,18 @@ in
         # 合并 devices：现有 ∪ 清单(+自己)；path 纠正为 $HOME/<id>
         local cur merged same
         cur=$(${curl} -s -H "$hdr" "$api/config/folders/$fid") || { echo "警告: 读 folder $fid 失败"; continue; }
-        merged=$(printf '%s' "$cur" | ${jq} -c --argjson want "$want_devs" --argjson drop "$retired_ids" --arg home "$HOME" --arg id "$fid" '
+        merged=$(printf '%s' "$cur" | ${jq} -c --argjson want "$want_devs" --argjson drop "$retired_ids" --arg path "$fpath" '
           ([.devices[].deviceID] | map({deviceID: .})) as $have
           | .devices = (($have + $want) | unique_by(.deviceID)
                         | map(select(.deviceID as $d | ($drop | index($d)) == null)))
-          | .path = ($home + "/" + $id)
+          | .path = $path
         ')
-        same=$(printf '%s' "$cur" | ${jq} -r --argjson want "$want_devs" --arg path "$HOME/$fid" '
+        same=$(printf '%s' "$cur" | ${jq} -r --argjson want "$want_devs" --arg path "$fpath" '
           (([.devices[].deviceID] | sort) == ([$want[].deviceID] | sort)) and (.path == $path)
         ')
         if [ "$same" != "true" ]; then
           if ${curl} -s -X PUT -H "$hdr" -H "Content-Type: application/json" -d "$merged" "$api/config/folders/$fid" >/dev/null; then
-            echo "[syncthing] ~/$fid 设备列表已更新"
+            echo "[syncthing] $fid 已更新（路径 $fpath）"
           else
             echo "警告: 更新 ~/$fid 设备列表失败"
           fi

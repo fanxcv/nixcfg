@@ -33,11 +33,6 @@ services:
       - ./go:/root/go
       - ./vsc:/root/.vscode-server
       - ./skemate:/root/.config/skemate
-      # syncthing（仅 ~/share 目录，成员 = 现有全部机器 + 三个 ide 容器，见 home/fan/_container_/syncthing.nix）：
-      #   config 目录含 device 身份（cert.pem/key.pem），必须持久化：容器重建后 device ID 不变
-      - ./syncthing/config:/root/.config/syncthing
-      - ./syncthing/state:/root/.local/state/syncthing
-      - ./share:/root/share
       - ~/.claude.json:/root/.claude.json
       - ~/.claude:/root/.claude
       - ~/.codex:/root/.codex
@@ -64,6 +59,12 @@ services:
       - ~/.pi:/home/fan/.pi
       - ./.m2:/home/fan/.m2
       - ./.secrets:/home/fan/.secrets
+      # syncthing（仅桌面 share 一个目录，成员 = 现有全部机器 + 三个 ide 容器，见 home/fan/_container_/syncthing.nix）：
+      #   服务以 fan 运行，配置/数据/同步目录全挂 fan 侧（同步进来的文件属主即 fan，无需 root 侧挂载）；
+      #   config 目录含 device 身份（cert.pem/key.pem），必须持久化：容器重建后 device ID 不变
+      - ./syncthing/config:/home/fan/.config/syncthing
+      - ./syncthing/state:/home/fan/.local/state/syncthing
+      - ./share:/home/fan/Desktop/share
       # chrome 主 profile 持久化：宿主落点为 compose 项目目录 docker/ide/（同 vsc/JetBrains/mise/skemate）
       #   只挂 fan 侧：该目录由以 fan 运行的桌面会话读写，root 服务不涉；容器重建不再重置
       - ./chrome:/home/fan/.config/chrome
