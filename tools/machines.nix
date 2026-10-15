@@ -10,9 +10,18 @@
   # --- Docker 开发容器（Ubuntu 底，aarch64-linux 原生容器）---
   ide-si = {
     kind = "container";
-    system = "aarch64-linux";
+    # 容器实际是 amd64（宿主 host-10-31-144-11，compose 构建日志 TARGETARCH=amd64），
+    #   原先照 ide-lenovo 记作 aarch64-linux 是笔误：该字段只影响 homeConfigurations 的 eval 平台（
+    #   部署走 packages.<当前 system>.<机名> 别名，不受影响），记 x86_64 才能在 mac 上 eval 出真正部署的那套（
+    #   x86_64 分支：google-chrome + WPS）；不确定时在容器内 `uname -m` 核对。
+    system = "x86_64-linux";
     user = "fan";
     alias = true;
+    extraUnfree = [
+      "google-chrome" # 桌面浏览器（kasmvnc/chrome.nix 的 x86_64 分支，与 ide-lenovo 同）
+      "albert" # 桌面启动器（kasmvnc.nix）
+      "wpsoffice-cn" # 桌面办公（kasmvnc.nix 的 x86_64 分支）
+    ];
   };
   ide-lenovo = {
     kind = "container";
