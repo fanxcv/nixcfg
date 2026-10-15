@@ -22,8 +22,14 @@ Components: main restricted universe multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 EOF
 
-RUN apt update -y \
+# 引导期 apt：此时镜像内尚无 ca-certificates，而实际网络里镜像站常把 http 302 到 https（或基础镜像
+#   预置了仅 https 的内网镜像）→ 取 index 即 Certificate verification failed: issuer is unknown，
+#   连 ca-certificates 自身都装不上。故本步临时关闭 TLS 校验（release 与 .deb 仍由 keyring 的 GPG
+#   签名把关），装完立刻删掉豁免文件，不残留到后续层。
+RUN printf 'Acquire::https::Verify-Peer "false";\nAcquire::https::Verify-Host "false";\n' > /etc/apt/apt.conf.d/99-bootstrap-no-tls \
+    && apt update -y \
     && echo -e "Asia\nShanghai" | apt install -y tzdata ca-certificates systemd openssh-server git curl zsh xz-utils sudo \
+    && rm -f /etc/apt/apt.conf.d/99-bootstrap-no-tls \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
