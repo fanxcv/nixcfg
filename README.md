@@ -61,11 +61,13 @@ chmod 600 /root/.secrets/ai.env
 
 日常改配置只需 `git pull && nix run .#<容器>`，**不用重建镜像**——只有动 systemd/sshd/登录 shell 才改 `docker/ide/ubuntu/Dockerfile` 并 rebuild。
 
+三个容器均跑 syncthing，仅同步 `~/share`（成员 = 现有全部机器 + 三个容器）；`~/sync` 仍只在现有机器之间。容器内以 root 运行，配置/数据/share 由 compose 挂载 `./syncthing/{config,state}`、`./share` 持久化（见 `home/fan/_container_/syncthing.nix`）。
+
 ### NixOS 真机
 
 nix-pve（PVE 上的虚拟，disko 分区 + impermanence）comin 轮询 `main` 自动部署，手动命令用于首次接入/故障恢复；nix-lenovo（Lenovo ThinkBook 14 G6+ AHP）与 nix-asus（ASUS Zenbook UM5302TA，与 Windows 双系统）为笔记本，无 comin，手动 `nixos-rebuild`。
 
-三台 NixOS 真机共享用户层：mihomo 代理（开机自启 + 每日定时重拉订阅）、syncthing（设备互配见 `tools/syncthingPeers.nix`）、ssh 加固与身份密钥（见 `tools/sshUserKeys.nix`）。
+三台 NixOS 真机共享用户层：mihomo 代理（开机自启 + 每日定时重拉订阅）、syncthing（`~/sync` 现有机器之间 + `~/share` 含 ide 容器；设备互配见 `tools/syncthingPeers.nix`）、ssh 加固与身份密钥（见 `tools/sshUserKeys.nix`）。
 
 ### macOS
 

@@ -1,19 +1,28 @@
-# syncthing 自动注册脚本生成器（darwin activation / nixos oneshot 共用）
-#   功能：设备互配（清单驱动，缺者补）+ 退役设备清理 + ~/sync folder 创建/同步 devices + GUI 密码注入（可选）
+# syncthing 自动注册脚本生成器（darwin activation / nixos oneshot / 容器 activation 共用）
+#   功能：设备互配（清单驱动，缺者补）+ 退役设备清理 + folder 创建/同步 devices + GUI 密码注入（可选）
 #   幂等：REST API 检查存在性，仅补缺不删改（GUI 手动配对状态保留）；惟 retired 清单内的设备会被删除
 #   失败策略：API 不可达/读不到 key 时仅警告返回（下次部署补），不阻塞部署
 # 用法：
-#   tools.syncthingAutoConfig { pkgs; peers = [ { name; id; addr = [ ... ]; } ]; retired = [ { name; id; } ]; guiPasswordAgePath = null; guiPasswordFile = null; }
-#     guiPasswordAgePath 非空时启用 GUI 密码段（age 解密 → PUT /rest/config/gui，放最后因会触发重启）
-#     guiPasswordFile 非空时改用明文密码文件（nix-pve：/run/agenix/syncthing-gui-password，fan 可读）
-#     两者互斥，至少一个非空才注入；注入 PUT 整个 gui 配置（user=fan + password），
+#   tools.syncthingAutoConfig {
+#     pkgs;
+#     peers;                 # 基础设备清单 [ { name; id; addr = [ ... ]; } ]，始终注册
+#     extraPeers ? [ ];      # 附加设备清单（如 ide 容器），始终注册，供 folder 的 devices 引用
+#     retired ? [ ];
+#     folders;               # 要管理的同步目录 [ { id; label; devices; } ]
+#                            #   devices = 该目录的 device ID 列表（本机 ID 自动并入）；路径恒为 $HOME/<id>
+#     guiPasswordAgePath ? null;   # 非空则 age 解密 → PUT /rest/config/gui（darwin / ide 容器）
+#     guiPasswordFile ? null;      # 非空则用明文密码文件（nix-pve：/run/agenix/syncthing-gui-password）
+#   }
+#     guiPasswordAgePath / guiPasswordFile 互斥，至少一个非空才注入；PUT 整个 gui 配置（user=fan + password），
 #     与 nixpkgs 模块 guiPasswordFile 只 PATCH password 不设 user 不同——syncthing 要求 user+password 双非空才启用认证
 #     addr 为设备地址数组（如 [ "tcp://mba-m5:22000" "dynamic" ]）
-#     folder 路径恒为 $HOME/sync（darwin 下 = /Users/fan/sync，nix-pve 下 = /home/fan/sync）
+#     folder 路径恒为 $HOME/<id>（darwin /Users/fan/<id>，nix-pve /home/fan/<id>，容器 /root/<id>）
 {
   pkgs,
   peers,
+  extraPeers ? [ ],
   retired ? [ ],
+  folders,
   guiPasswordAgePath ? null,
   guiPasswordFile ? null,
 }:
@@ -21,8 +30,10 @@ let
   curl = "${pkgs.curl}/bin/curl";
   jq = "${pkgs.jq}/bin/jq";
   age = "${pkgs.age}/bin/age";
-  peersJson = builtins.toJSON peers;
+  # 设备注册清单 = 基础设备 + 附加设备（folder 的 devices 只能引用已注册设备）
+  devicesJson = builtins.toJSON (peers ++ extraPeers);
   retiredJson = builtins.toJSON retired;
+  foldersJson = builtins.toJSON folders;
   pwCmd =
     if guiPasswordFile != null then
       "pw=$(cat ${guiPasswordFile}) || { echo \"警告: 读 syncthing GUI 密码文件失败\"; return 0; }"
@@ -67,7 +78,9 @@ in
     [ -n "$key" ] || { echo "警告: 读不到 syncthing apikey，自动注册跳过"; return 0; }
 
     local api=http://127.0.0.1:8384/rest hdr="X-API-Key: $key"
-    local peers_json='${peersJson}' retired_json='${retiredJson}'
+    local devices_json='${devicesJson}' retired_json='${retiredJson}' folders_json='${foldersJson}'
+    local retired_ids
+    retired_ids=$(printf '%s' "$retired_json" | ${jq} -c '[.[].id]')
 
     # ---- 1. 设备注册：清单中缺失者补（不含自己；不动 GUI 已有配对） ----
     ${curl} -sf -H "$hdr" $api/config/devices -o /tmp/st-autoreg-devices.json || { echo "警告: 读设备列表失败，自动注册跳过"; return 0; }
@@ -87,48 +100,52 @@ in
       else
         echo "警告: 注册设备 $pname 失败"
       fi
-    done < <(printf '%s' "$peers_json" | ${jq} -c '.[]')
+    done < <(printf '%s' "$devices_json" | ${jq} -c '.[]')
 
-    # ---- 2. ~/sync 文件夹：无则建（共享全部清单+自己），有则补缺设备 ----
-    local want_devs retired_ids
-    retired_ids=$(printf '%s' "$retired_json" | ${jq} -c '[.[].id]')
-    want_devs=$(printf '%s' "$peers_json" | ${jq} -c --arg self "$self_id" --argjson drop "$retired_ids" '
-      ([.[] | {deviceID: .id}] + [{deviceID: $self}])
-      | map(select(.deviceID as $d | ($drop | index($d)) == null))
-      | unique_by(.deviceID)
-    ')
+    # ---- 2. 各 folder：无则建（共享该目录 devices + 自己），有则补缺设备、path 纠正 ----
     ${curl} -fsS -H "$hdr" $api/config/folders -o /tmp/st-autoreg-folders.json || { echo "警告: 读文件夹列表失败，自动注册跳过"; return 0; }
-    if ! ${jq} -e 'any(.[]; .id == "sync")' /tmp/st-autoreg-folders.json >/dev/null 2>&1; then
-      local fbody
-      fbody=$(printf '%s' "$want_devs" | ${jq} -c --arg path "$HOME/sync" '
-        {id: "sync", label: "sync", path: $path, type: "sendreceive", rescanIntervalS: 3600, fsWatcherEnabled: true, fsWatcherDelayS: 10, ignorePerms: false, autoNormalize: true, devices: .}
+    while IFS= read -r frow; do
+      [ -n "$frow" ] || continue
+      local fid flabel want_devs
+      fid=$(printf '%s' "$frow" | ${jq} -r '.id')
+      flabel=$(printf '%s' "$frow" | ${jq} -r '.label')
+      want_devs=$(printf '%s' "$frow" | ${jq} -c --arg self "$self_id" --argjson drop "$retired_ids" '
+        ([.devices[] | {deviceID: .}] + [{deviceID: $self}])
+        | map(select(.deviceID as $d | ($drop | index($d)) == null))
+        | unique_by(.deviceID)
       ')
-      if ${curl} -s -X POST -H "$hdr" -H "Content-Type: application/json" -d "$fbody" $api/config/folders >/dev/null; then
-        echo "[syncthing] 已创建 ~/sync 文件夹"
-      else
-        echo "警告: 创建 ~/sync 文件夹失败"
-      fi
-    else
-      # 合并 devices：现有 ∪ 清单(+自己)；path 纠正为 $HOME/sync
-      local cur merged same
-      cur=$(${curl} -s -H "$hdr" $api/config/folders/sync) || { echo "警告: 读 folder sync 失败"; return 0; }
-      merged=$(printf '%s' "$cur" | ${jq} -c --argjson want "$want_devs" --argjson drop "$retired_ids" --arg home "$HOME" '
-        ([.devices[].deviceID] | map({deviceID: .})) as $have
-        | .devices = (($have + $want) | unique_by(.deviceID)
-                      | map(select(.deviceID as $d | ($drop | index($d)) == null)))
-        | .path = ($home + "/sync")
-      ')
-      same=$(printf '%s' "$cur" | ${jq} -r --argjson want "$want_devs" --arg path "$HOME/sync" '
-        (([.devices[].deviceID] | sort) == ([$want[].deviceID] | sort)) and (.path == $path)
-      ')
-      if [ "$same" != "true" ]; then
-        if ${curl} -s -X PUT -H "$hdr" -H "Content-Type: application/json" -d "$merged" $api/config/folders/sync >/dev/null; then
-          echo "[syncthing] ~/sync 设备列表已更新"
+      if ! ${jq} -e --arg id "$fid" 'any(.[]; .id == $id)' /tmp/st-autoreg-folders.json >/dev/null 2>&1; then
+        local fbody
+        fbody=$(printf '%s' "$want_devs" | ${jq} -c --arg id "$fid" --arg label "$flabel" --arg path "$HOME/$fid" '
+          {id: $id, label: $label, path: $path, type: "sendreceive", rescanIntervalS: 3600, fsWatcherEnabled: true, fsWatcherDelayS: 10, ignorePerms: false, autoNormalize: true, devices: .}
+        ')
+        if ${curl} -s -X POST -H "$hdr" -H "Content-Type: application/json" -d "$fbody" $api/config/folders >/dev/null; then
+          echo "[syncthing] 已创建 ~/$fid 文件夹"
         else
-          echo "警告: 更新 ~/sync 设备列表失败"
+          echo "警告: 创建 ~/$fid 文件夹失败"
+        fi
+      else
+        # 合并 devices：现有 ∪ 清单(+自己)；path 纠正为 $HOME/<id>
+        local cur merged same
+        cur=$(${curl} -s -H "$hdr" "$api/config/folders/$fid") || { echo "警告: 读 folder $fid 失败"; continue; }
+        merged=$(printf '%s' "$cur" | ${jq} -c --argjson want "$want_devs" --argjson drop "$retired_ids" --arg home "$HOME" --arg id "$fid" '
+          ([.devices[].deviceID] | map({deviceID: .})) as $have
+          | .devices = (($have + $want) | unique_by(.deviceID)
+                        | map(select(.deviceID as $d | ($drop | index($d)) == null)))
+          | .path = ($home + "/" + $id)
+        ')
+        same=$(printf '%s' "$cur" | ${jq} -r --argjson want "$want_devs" --arg path "$HOME/$fid" '
+          (([.devices[].deviceID] | sort) == ([$want[].deviceID] | sort)) and (.path == $path)
+        ')
+        if [ "$same" != "true" ]; then
+          if ${curl} -s -X PUT -H "$hdr" -H "Content-Type: application/json" -d "$merged" "$api/config/folders/$fid" >/dev/null; then
+            echo "[syncthing] ~/$fid 设备列表已更新"
+          else
+            echo "警告: 更新 ~/$fid 设备列表失败"
+          fi
         fi
       fi
-    fi
+    done < <(printf '%s' "$folders_json" | ${jq} -c '.[]')
 
     # ---- 3. 退役设备清理：从 devices 删除（folder 引用已在上一步过滤）----
     while IFS= read -r row; do
@@ -145,7 +162,7 @@ in
       fi
     done < <(printf '%s' "$retired_json" | ${jq} -c '.[]')
 
-    # ---- 4. GUI 密码（仅 darwin 侧；nix-pve 由 agenix guiPasswordFile 管理；放最后因 PUT 触发重启） ----
+    # ---- 4. GUI 密码（仅 darwin / 容器侧；nix-pve 由 agenix guiPasswordFile 管理；放最后因 PUT 触发重启） ----
     ${guiPasswordBlock}
   }
   set_syncthing_autoconfig

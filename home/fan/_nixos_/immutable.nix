@@ -49,7 +49,11 @@ _: {
         mode = "0755";
       }
       {
-        directory = "sync"; # syncthing 同步目录（与三台 Mac 组网）
+        directory = "sync"; # syncthing 同步目录（仅现有机器之间）
+        mode = "0755";
+      }
+      {
+        directory = "share"; # syncthing 共享目录（全部机器，含 ide 容器）
         mode = "0755";
       }
       {

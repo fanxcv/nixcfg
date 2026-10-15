@@ -27,7 +27,7 @@ secrets/
 ├── git-credentials.age           # ~/.git-credentials（公共）
 ├── headscale-auth-key.age        # tailscale pre-auth key（三 mac，公共）
 ├── ssh-config.age                # ~/.ssh/config（mba/mbp/nix-pve，公共）
-├── syncthing-gui-password.age    # syncthing GUI 密码（三 mac + nix-pve，公共）
+├── syncthing-gui-password.age    # syncthing GUI 密码（三 mac + 三台 NixOS + 三个 ide 容器，公共）
 ├── encrypt.sh / keys.nix / README.md
 └── hosts/
     ├── ali-ai/      gitea-act-token.age、ssh-host-key.age + .pub（明文）、tailscale-state.age

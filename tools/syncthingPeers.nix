@@ -1,8 +1,10 @@
 # syncthing 互配机器清单（单一事实来源：新增机器在此登记，各机下次部署自动互配）
 #   peers.id   = 各机 syncthing device ID（REST /rest/system/status 的 myID；或 TLS 22000 证书指纹算法）
 #   peers.addr = 设备地址（MagicDNS 名，headscale 下各机 accept-dns 已开；dynamic 兜底发现）
+#   idePeers   = 三个 ide 容器（仅参与 share 目录）：容器无 tailscale，地址仅 dynamic
 #   retired    = 已退役设备：各机部署时从 devices 与各 folder 中删除
 #                （自动注册脚本只补缺不删改，退役设备不登记就会永久残留在每台机器上）
+# 目录与成员：~/sync = peers（现有机器之间）；~/share = peers + idePeers（含三个 ide 容器）
 # 注意：本机不在清单不影响（folder 的 devices 自动并入本机 ID，见 syncthingAutoConfig.nix）
 # 注：mbp-m1 的 MagicDNS 名为 macbookpro（tailscale 注册名），addr 用 macbookpro 而非 mbp-m1
 {
@@ -57,6 +59,16 @@
         "dynamic"
       ];
     }
+  ];
+  # ide 容器（ide-si / ide-lenovo / ide-mac）：仅参与 share 目录，不参与 sync
+  #   device ID 首次启动 syncthing 后从容器 /root/.config/syncthing/config.xml 的 <device id="..."> 取，
+  #   登记于此（双阶段：先部署容器生成 ID → 回填此处 → 各机下次部署自动互配）
+  #   容器无 tailscale，地址仅 dynamic（全局发现/中继）
+  #   本清单为空时不影响：现有机器的 share 目录照建，只是尚未并入 ide 容器
+  idePeers = [
+    # { name = "ide-si"; id = "..."; addr = [ "dynamic" ]; }
+    # { name = "ide-lenovo"; id = "..."; addr = [ "dynamic" ]; }
+    # { name = "ide-mac"; id = "..."; addr = [ "dynamic" ]; }
   ];
   retired = [
     # nix-book（无界14S 旧笔记本）2026-10 换 ThinkBook 后退役，同一台机器的现役 ID 见上方 peers.nix-lenovo

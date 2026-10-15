@@ -1,6 +1,6 @@
 # syncthing（P2P 文件同步）——nix-pve：系统级服务，以 fan 用户身份运行
 #   目录落在持久层：configDir → ~/.config（已持久化）、dataDir → ~/.local（已持久化），
-#     数据目录 ~/sync 见 home/fan/nix-pve/immutable.nix
+#     数据目录 ~/sync 与 ~/share 见 home/fan/_nixos_/immutable.nix
 #   GUI 仅绑 127.0.0.1（本机浏览器/SSH 隧道）；openDefaultPorts 放行 22000/21027
 #   设备互配：syncthing-autoregister oneshot（syncthing 启动后自动跑，清单 tools/syncthingPeers.nix）
 #   配置由 syncthing 自管（脚本仅补缺不删改，rebuild 不覆盖 GUI 配对状态；retired 清单内设备会被删除）
@@ -12,10 +12,25 @@
   ...
 }:
 let
-  inherit (tools.syncthingPeers) peers retired;
-  # 自动注册脚本（设备互配 + 退役设备清理 + ~/sync folder + GUI 密码注入）
+  inherit (tools.syncthingPeers) peers idePeers retired;
+  peerIds = map (p: p.id) peers;
+  shareIds = peerIds ++ map (p: p.id) idePeers;
+  # 自动注册脚本（设备互配 + 退役设备清理 + sync/share folder + GUI 密码注入）
   autoConfigScript = tools.syncthingAutoConfig {
     inherit pkgs peers retired;
+    extraPeers = idePeers;
+    folders = [
+      {
+        id = "sync"; # 仅现有机器之间
+        label = "sync";
+        devices = peerIds;
+      }
+      {
+        id = "share"; # 全部机器（含 ide 容器）
+        label = "share";
+        devices = shareIds;
+      }
+    ];
     guiPasswordFile = "/run/agenix/syncthing-gui-password";
   };
 in
@@ -33,9 +48,9 @@ in
     openDefaultPorts = true; # 放行 22000 TCP/UDP + 21027/UDP（26.05 模块旧名 openFirewall 已改名）
   };
 
-  # 自动注册 oneshot：syncthing 启动后执行，幂等补缺（设备互配 + ~/sync folder）
+  # 自动注册 oneshot：syncthing 启动后执行，幂等补缺（设备互配 + sync/share folder）
   systemd.services.syncthing-autoregister = {
-    description = "Syncthing 自动注册（设备互配 + 退役设备清理 + ~/sync folder）";
+    description = "Syncthing 自动注册（设备互配 + 退役设备清理 + sync/share folder）";
     after = [ "syncthing.service" ];
     requires = [ "syncthing.service" ];
     wantedBy = [ "syncthing.service" ];

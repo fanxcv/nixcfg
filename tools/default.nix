@@ -41,6 +41,8 @@ in
 
   # syncthing 互配机器清单（单一事实来源，见 syncthingPeers.nix）
   syncthingPeers = import ./syncthingPeers.nix;
-  # syncthing 自动注册脚本生成器（darwin activation / nixos oneshot 共用）
+  # syncthing 同步目录忽略规则（Mac / NixOS / ide 容器共用，见 syncthingStignore.nix）
+  syncthingStignore = import ./syncthingStignore.nix;
+  # syncthing 自动注册脚本生成器（darwin activation / nixos oneshot / 容器 activation 共用）
   syncthingAutoConfig = import ./syncthingAutoConfig.nix;
 }

@@ -1,0 +1,13 @@
+[Unit]
+Description=Syncthing 自动注册（设备互配 + share folder + GUI 密码）
+After=syncthing.service
+Requires=syncthing.service
+
+[Service]
+Type=oneshot
+User=root
+Environment=HOME=/root
+ExecStart=/usr/local/bin/syncthing-autoregister.sh
+
+[Install]
+WantedBy=syncthing.service

@@ -23,6 +23,11 @@ services:
       - ./JetBrains/config:/root/.config/JetBrains
       - ./JetBrains/share:/root/.local/share/JetBrains
       - ./skemate:/root/.config/skemate
+      # syncthing（仅 ~/share 目录，成员 = 现有全部机器 + 三个 ide 容器，见 home/fan/_container_/syncthing.nix）：
+      #   config 目录含 device 身份（cert.pem/key.pem），必须持久化：容器重建后 device ID 不变
+      - ./syncthing/config:/root/.config/syncthing
+      - ./syncthing/state:/root/.local/state/syncthing
+      - ./share:/root/share
       - ~/.local/state/mise:/root/.local/state/mise
       - ~/.local/share/mise:/root/.local/share/mise
       - ~/.config/mise:/root/.config/mise
