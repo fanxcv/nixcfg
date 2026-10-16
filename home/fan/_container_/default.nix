@@ -3,9 +3,13 @@
 # 容器公共配置放这里（skemate.nix 等，机器目录只留专属微调）
 # 模块自动扫描（tools.scan）：新增 .nix 文件即生效（当前：skemate.nix）
 
-{ tools, ... }:
+{ tools, lib, ... }:
 {
   imports = [ ../_ubuntu_ ] ++ tools.scan ./.;
+
+  # 三台 ide 容器均装 pi/codex：平台层给默认值，机器层可 mkForce 覆盖
+  softwares.pi.enable = lib.mkDefault true;
+  softwares.codex.enable = lib.mkDefault true;
 
   softwares.sshHostKey = {
     enable = true;

@@ -3,7 +3,10 @@
 
 # 身份与 stateVersion 由 ../_common_/identity.nix 统一声明。
 
-{ tools, ... }:
+{ lib, tools, ... }:
 {
   imports = tools.scan ./.;
+
+  # 三台 mac 均装 pi agent：平台层给默认值，机器层可 mkForce 覆盖
+  softwares.pi.enable = lib.mkDefault true;
 }

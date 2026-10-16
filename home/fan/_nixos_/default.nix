@@ -4,11 +4,19 @@
 # catppuccin 上游 home 模块只挂本层：非 NixOS 平台不持有 catppuccin.* 选项
 # （自封装 target 见 ./themes/catppuccin/）
 
-{ tools, inputs, ... }:
+{
+  tools,
+  lib,
+  inputs,
+  ...
+}:
 {
   imports = [
     ../_linux_
     inputs.catppuccin.homeModules.catppuccin
   ]
   ++ tools.scan ./.;
+
+  # 三台 NixOS 真机均装 pi agent：平台层给默认值，机器层可 mkForce 覆盖
+  softwares.pi.enable = lib.mkDefault true;
 }
