@@ -57,8 +57,16 @@ in
       echo "cli-proxy: config.yaml 已存在，跳过（用户维护，nix 不覆盖）"
     fi
 
+    # 拉最新镜像（失败仅警告，继续用现有镜像）
+    cd "$CPA_DIR" && "$DOCKER" compose pull \
+      || echo "警告: cli-proxy-api 拉取最新镜像失败（registry 不可达？），继续用现有镜像"
+
     # 3) 幂等拉起（已跑则 no-op；配置变更时 compose 自动重建）
     cd "$CPA_DIR" && "$DOCKER" compose up -d \
       || echo "警告: cli-proxy-api 容器启动失败（docker daemon 未运行？fan 网络不存在？）"
+
+    # 清 dangling 旧镜像（pull+up 后旧镜像失 tag；不用 -a，免误删他服务旧版本与本地构建镜像）
+    "$DOCKER" image prune -f \
+      || echo "警告: 旧镜像清理失败（不影响服务）"
   '';
 }
