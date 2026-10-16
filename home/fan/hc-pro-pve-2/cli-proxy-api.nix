@@ -37,7 +37,7 @@ let
   '';
 in
 {
-  home.activation.setupCliProxy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.setupCliProxy = lib.hm.dag.entryAfter [ "writeBoundary" "setupDocker" ] ''
     CPA_DIR=/opt/cli-proxy
     AGE_BIN="${pkgs.age}/bin/age"
     AGE_KEY="$HOME/.secrets/age-keys.txt"

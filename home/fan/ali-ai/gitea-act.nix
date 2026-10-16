@@ -57,7 +57,7 @@ let
   '';
 in
 {
-  home.activation.setupGiteaAct = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.setupGiteaAct = lib.hm.dag.entryAfter [ "writeBoundary" "setupDocker" ] ''
     ACT_DIR=/opt/gitea-act
     AGE_BIN="${pkgs.age}/bin/age"
     AGE_KEY="$HOME/.secrets/age-keys.txt"

@@ -32,7 +32,7 @@ let
   '';
 in
 {
-  home.activation.setupMagpie = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.setupMagpie = lib.hm.dag.entryAfter [ "writeBoundary" "setupDocker" ] ''
     MAGPIE_DIR=/opt/magpie
     AGE_BIN="${pkgs.age}/bin/age"
     AGE_KEY="$HOME/.secrets/age-keys.txt"
