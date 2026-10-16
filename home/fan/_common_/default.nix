@@ -18,9 +18,8 @@
 {
   imports = (tools.scan ./.) ++ [
     outputs.homeModules.default
-    inputs.catppuccin.homeModules.catppuccin
     # plasma-manager 挂全平台（tsln 同款）：darwin/容器也持有 programs.plasma options，
-    # 避免 modules/home/catppuccin/plasma.nix 在非 NixOS 平台 eval undefined
+    # 消费方都在 NixOS 侧（_nixos_/gui/desktop/plasma/、_nixos_/themes/catppuccin/）
     inputs.plasma-manager.homeModules.plasma-manager
   ];
 }

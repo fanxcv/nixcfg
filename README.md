@@ -101,7 +101,7 @@ nixcfg/
 ├── hosts/                 # 系统层：_darwin_/_nixos_ 公共 + <机>（darwin 见 hosts/README.md）
 ├── home/fan/              # 用户层：_common_/_<平台>_ 公共 + <机> 微调（module-list.nix 组装）
 ├── users/fan/             # NixOS 真机用户层（复用 home/fan 模块清单）
-├── modules/               # 可复用模块库：home/（ai/codex/mise/pi/ssh/tmux/vscode/catppuccin）、darwin/、nixos/
+├── modules/               # 可复用模块库：home/（ai/codex/mise/pi/ssh/tmux/vscode）、darwin/、nixos/
 ├── overlays/              # nixpkgs overlay：skemate（flake.lock 锁定 rev，见 inputs）、unstable/vscode 市场、comin 等
 ├── packages/              # 本地自打包（kasmvnc、rustdesk-bin、KDE 商店主题等）
 ├── docker/ide/            # IDE 容器定义（compose si/lenovo/mac 三文件 + ubuntu/Dockerfile）
