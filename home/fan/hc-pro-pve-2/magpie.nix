@@ -1,5 +1,5 @@
 # magpie（docker compose，声明由 nix 渲染派发）
-# 镜像 ghcr.io/yetone/magpie（实测该机可直连，见 lane 报告）；Web UI 3430 + gateway 3425，宿主端口直连
+# 镜像随 useChinaMirror 开关：true → ghcr.nju.edu.cn/yetone/magpie:latest（南大镜像），false → ghcr.io/yetone/magpie:latest（官方）；两 ref 均已实测可达；Web UI 3430 + gateway 3425，宿主端口直连
 # 上游 CMD 为 serve（无 UI），故必须覆盖 command 起 web
 # 唯一状态卷 ./config（容器以 uid 65532 跑，须可写）；密钥 MAGPIE_WEB_KEY 由 /opt/magpie/.env 注入
 # 更新流：改本文件 → 部署 → activation 补 compose/.env → pull 最新镜像 → up -d 重建 → 清 dangling 旧镜像
@@ -7,13 +7,17 @@
 {
   lib,
   pkgs,
+  useChinaMirror ? true,
   ...
 }:
 let
+  magpieImage =
+    if useChinaMirror then "ghcr.nju.edu.cn/yetone/magpie:latest" else "ghcr.io/yetone/magpie:latest";
+
   composeYaml = pkgs.writeText "magpie-compose.yml" ''
     services:
       magpie:
-        image: ghcr.io/yetone/magpie:latest
+        image: ${magpieImage}
         container_name: magpie
         restart: always
         command: [web, "--addr", "0.0.0.0:3430", "--no-open"]
