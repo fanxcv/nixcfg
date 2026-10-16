@@ -4,7 +4,8 @@
 #   token 从 $HOME/.secrets/ai.env 读取（PI_CONFIG_GIT_TOKEN=...），不进 nix 配置、不提交 git
 #   clone 后 origin 移除 token，后续更新走 ~/.git-credentials（容器里挂载宿主机）
 # 幂等：已有 .git 跳过 clone；每次 switch 静默 pull（--ff-only）
-# 启用：本模块默认 enable=true；某台不装 → 机器层 softwares.pi.enable = lib.mkForce false
+# 启用：本模块默认 enable=false；保留机在机器层显式 softwares.pi.enable = true
+#   （dolt/ai.nix 的默认跟随 pi，机器层无需另写 softwares.ai.enable）
 
 {
   config,
@@ -14,7 +15,7 @@
 }:
 {
   options.softwares.pi.enable = lib.mkEnableOption "pi agent（配置仓库拉取 + fpi-install 同步）" // {
-    default = true;
+    default = false;
   };
 
   config = lib.mkIf config.softwares.pi.enable {

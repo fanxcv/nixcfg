@@ -6,4 +6,9 @@
 { tools, ... }:
 {
   imports = tools.scan ./.;
+
+  softwares = {
+    pi.enable = true;
+    codex.enable = true;
+  };
 }

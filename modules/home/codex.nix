@@ -10,8 +10,7 @@
 #   如需回归 nix 默认，删除文件后部署一次即可
 #
 # 启用（各层引用）：
-#   本模块默认 enable=true（所有机器默认装）
-#   某台不装 → 机器层 softwares.codex.enable = lib.mkForce false
+#   本模块默认 enable=false；三台 ide 容器在机器层显式 softwares.codex.enable = true
 
 {
   config,
@@ -21,7 +20,7 @@
 }:
 {
   options.softwares.codex.enable = lib.mkEnableOption "codex（CLI 编码 agent，config 默认模板由 nix 声明）" // {
-    default = true;
+    default = false;
   };
 
   config = lib.mkIf config.softwares.codex.enable {

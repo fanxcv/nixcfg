@@ -11,5 +11,6 @@
     sshHostKey.enable = true;
     hostname.enable = true;
     tailscaleB.enable = true;
+    pi.enable = true;
   };
 }

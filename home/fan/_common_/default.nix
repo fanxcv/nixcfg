@@ -4,7 +4,8 @@
 #   当前清单：identity.nix / base.nix / container.nix / mirrors.nix / path.nix / secrets.nix / shells.nix
 #   （软件类已全部迁入 modules/home/：codex/pi/tmux/ai/mise/ssh；claude 已并入 ai.nix）
 # 软件模块库（modules/home/，每个软件一个文件 + softwares.<名>.enable 门控）：
-#   各模块自述默认值（codex/pi/tmux/ai/mise/ssh 默认开）；某台不装 → 机器层 softwares.<名>.enable = lib.mkForce false
+#   各模块自述默认值：tmux/mise/ssh 默认开（某台不装 → 机器层 softwares.<名>.enable = lib.mkForce false）
+#   codex/pi/ai 默认关（保留机在机器层显式 softwares.pi.enable = true，ai 跟随 pi）
 # 另含 vscode 封装（modules/home/vscode.nix：容器同吃但模块默认关闭，平台层按需启用）
 
 {
