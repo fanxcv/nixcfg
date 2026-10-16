@@ -40,9 +40,7 @@ in
   home.file."sync/.keep".text = "";
   home.file."share/.keep".text = "";
 
-  # 忽略规则（各目录一份；.stignore 本身被 syncthing 忽略、不跨设备同步，故各设备各自写入）
-  home.file."sync/.stignore".text = tools.syncthingStignore;
-  home.file."share/.stignore".text = tools.syncthingStignore;
+  # 忽略规则（.stignore）在 ../_common_/syncthing.nix（darwin/nixos 门控）
 
   # LaunchAgent：登录即启 + KeepAlive 常驻（改配置后 launchctl kickstart -k gui/$(id -u)/syncthing 重启）
   # --no-browser：不弹浏览器；日志 syncthing 自管（配置目录 syncthing.log），不设 StandardOutPath
