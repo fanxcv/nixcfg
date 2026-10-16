@@ -1,4 +1,7 @@
 # Tailscale 组网（与 mac 的 App 版同一 headscale；远程 SSH / rustdesk 双路）
+# nix-asus / nix-lenovo 共用：原两机 services/tailscale.nix 仅 --hostname 不同，2026-09 合并至此，
+#   --hostname 取各机 config.networking.hostName；消费方为各机 default.nix 的显式 imports
+#   （hosts/_nixos_/services/ 非 scan 入口，不参与自动扫描）
 # 登录机制：模块原生 authKeyFile（tailscaled-autoconnect 幂等轮询：NeedsLogin 时
 #   tailscale up --auth-key，Running 即停）；--hostname 属 up/set 参数（tailscaled 无此 flag，
 #   2026-08 nixpkgs 更新后 1.98.10 直接 INVALIDARGUMENT——不得放 extraDaemonFlags）
@@ -11,8 +14,7 @@
 #   secrets/source/headscale-auth-key → ./secrets/encrypt.sh --force 重加密 → 重部署
 {
   tools,
-  lib,
-  pkgs,
+  config,
   ...
 }:
 {
@@ -23,19 +25,19 @@
   # 模块原生登录：authKeyFile 非空 → tailscaled-autoconnect 自动 up（幂等轮询）
   services.tailscale.authKeyFile = "/run/agenix/headscale-auth-key";
   services.tailscale.extraUpFlags = [
-    "--hostname=nix-lenovo"
+    "--hostname=${config.networking.hostName}"
     "--login-server=https://headscale.fan-x.fun" # 必须显式：autoconnect 默认连 tailscale.com，headscale key 必被拒
     "--accept-routes=true"
     "--accept-dns=true"
   ];
   # 已登录机器也收敛节点名/路由/DNS（tailscaled-set oneshot）
   services.tailscale.extraSetFlags = [
-    "--hostname=nix-lenovo"
+    "--hostname=${config.networking.hostName}"
     "--accept-routes=true"
     "--accept-dns=true"
   ];
 
-  # authkey 系统域解密（root 读）
+  # authkey 系统域解密（root 读；两机与 nix-pve 共用同一 preauth key）
   age.secrets."headscale-auth-key" = {
     file = tools.relative "secrets/headscale-auth-key.age";
     path = "/run/agenix/headscale-auth-key";

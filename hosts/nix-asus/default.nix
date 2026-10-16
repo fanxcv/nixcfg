@@ -18,6 +18,7 @@
       "hosts/_nixos_/services/openssh.nix"
       "hosts/_nixos_/services/podman.nix"
       "hosts/_nixos_/services/syncthing.nix"
+      "hosts/_nixos_/services/tailscale.nix"
 
       "users/fan"
     ]
