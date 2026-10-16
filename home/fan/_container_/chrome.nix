@@ -92,9 +92,17 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     mkdir -p ${sessionHome}/.local/share/applications
     ln -sfn ${chromeDesktop}/share/applications/${browserDesktopName}.desktop ${sessionHome}/.local/share/applications/chrome.desktop
 
-    # ── 3. 图标：hicolor 主题目录 symlink 到 user icons，使图标名可解析 ──
-    mkdir -p ${sessionHome}/.local/share/icons
-    ln -sfn ${browser}/share/icons/hicolor ${sessionHome}/.local/share/icons/hicolor
+    # ── 3. 图标：逐文件链入 user icons/hicolor，使图标名可解析 ──
+    #     不整目录 symlink：_container_/vscode-gui.nix 也往同一 hicolor 里放图标，两者是同级 DAG 模块，
+    #     整目录 symlink 会互相覆盖（顺序无契约保证）→ 建成真目录、各写自己的文件，不再依赖顺序
+    dest=${sessionHome}/.local/share/icons/hicolor
+    if [ -L "$dest" ]; then rm -f "$dest"; fi   # 旧世代遗留的整目录 symlink（幂等；须 if 形式，hm activate 是 set -eu）
+    src=${browser}/share/icons/hicolor
+    find "$src" -type f | while read -r iconFile; do
+      rel="''${iconFile#$src/}"
+      mkdir -p "$dest/$(dirname "$rel")"
+      ln -sfn "$iconFile" "$dest/$rel"
+    done
 
     # ── 4. Plank dock 固定 chrome：Launcher 指 store 内 .desktop（永不缺失 → 不被 Plank 自动删除）──
     #     其余 3 个（thunar/terminal/mousepad）由 kasmvnc.nix 写入

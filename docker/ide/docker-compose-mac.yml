@@ -62,6 +62,9 @@ services:
       # chrome 主 profile 持久化：宿主落点为 compose 项目目录 docker/ide/（同 vsc/JetBrains/mise/skemate）
       #   只挂 fan 侧：该目录由以 fan 运行的桌面会话读写，root 服务不涉；容器重建不再重置
       - ./chrome:/home/fan/.config/chrome
+      # vscode GUI 持久化：profile（登录态/设置）与扩展目录，同样只挂 fan 侧（GUI 以 fan 运行）
+      - ./vscode/config:/home/fan/.config/Code
+      - ./vscode/extensions:/home/fan/.vscode/extensions
       # nix store 持久化：容器重建后不重新下载（named volume 首次创建自动拷贝镜像内 /nix）
       - nix-store:/nix
     ports:
