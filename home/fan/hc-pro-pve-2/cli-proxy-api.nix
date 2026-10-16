@@ -2,7 +2,10 @@
 # 参考：ali-ai /opt/cli-proxy/（同镜像 eceasy/cli-proxy-api-plus，:4321）
 # 容器运行时仍 docker（B 路线）；compose 由 nix 生成，config.yaml 仅首装时补（age 加密，含 secret-key）
 # auth-dir（账号 token）/logs/static 是状态，不归 nix（static 面板页由服务自 panel-github-repository 下载）
-# 更新流：改本文件 → 部署 → activation 补 compose、config 缺失时才补 → docker compose up -d 重建
+# 已停用（2026-10-16 起）：activation 只补声明文件、不再拉起，反而确保容器被停掉（幂等 compose down）
+# 数据保留：/opt/cli-proxy/{auth-dir,config.yaml,docker-compose.yml,logs,static} 一律不删，容器停掉后原地留存
+# 恢复方式：把下方「停用」段换回 docker compose pull → up -d（并酌情 image prune -f），部署一次即恢复
+# 更新流（停用态）：改本文件 → 部署 → activation 补 compose、config 缺失时才补 → docker compose down 停掉
 # config.yaml 首装后归用户维护（改 secrets 后需手动 cp 覆盖，nix 不再自动覆盖）
 
 {
@@ -57,16 +60,10 @@ in
       echo "cli-proxy: config.yaml 已存在，跳过（用户维护，nix 不覆盖）"
     fi
 
-    # 拉最新镜像（失败仅警告，继续用现有镜像）
-    cd "$CPA_DIR" && "$DOCKER" compose pull \
-      || echo "警告: cli-proxy-api 拉取最新镜像失败（registry 不可达？），继续用现有镜像"
-
-    # 3) 幂等拉起（已跑则 no-op；配置变更时 compose 自动重建）
-    cd "$CPA_DIR" && "$DOCKER" compose up -d \
-      || echo "警告: cli-proxy-api 容器启动失败（docker daemon 未运行？fan 网络不存在？）"
-
-    # 清 dangling 旧镜像（pull+up 后旧镜像失 tag；不用 -a，免误删他服务旧版本与本地构建镜像）
-    "$DOCKER" image prune -f \
-      || echo "警告: 旧镜像清理失败（不影响服务）"
+    # 停用（2026-10-16 起）：不再拉起容器；数据与 compose 文件保留，恢复只需把本段换回 pull/up
+    if [ -d "$CPA_DIR" ]; then
+      cd "$CPA_DIR" && "$DOCKER" compose down --remove-orphans \
+        || echo "警告: cli-proxy-api 停止失败（docker daemon 未运行？）"
+    fi
   '';
 }
