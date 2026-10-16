@@ -12,9 +12,7 @@ User=fan
 Environment=HOME=/home/fan
 # systemd 默认 PATH 不含 nix bin；@path@ 由激活脚本注入（kasmvnc + xfce 组件 + dbus + xauth/xkbcomp）
 Environment=PATH=@path@
-# 桌面会话继承代理（ide-si 网络需代理，lenovo 直连无此段）：文件由 home/fan/ide-si/sysenv.nix 激活写入；
-#   前缀 - = 文件缺失时不失败（新容器首启、激活尚未跑）
-EnvironmentFile=-/etc/environment.d/zz-ide-proxy.conf
+@proxyEnvFile@
 ExecStart=@kasmvnc@/bin/kasmvncserver -fg :1 -geometry 1920x1080 -select-de manual
 # 旧 xfconfd 是 dbus 激活的独立进程（父进程 1），服务重启不杀它——内存里没有新激活写入的
 # xfconf 配置（xsettings.xml 等），xfsettingsd 启动时读旧值写默认（主题被覆盖成 Adwaita）

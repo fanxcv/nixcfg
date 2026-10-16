@@ -1,11 +1,11 @@
-# ide-mac 专属：浏览器（远程桌面主浏览器，autostart 自启 + 守护保活）
+# ide 容器公共：浏览器（远程桌面主浏览器，autostart 自启 + 守护保活）—— ide-si / ide-lenovo / ide-mac 三台共用
 # 9222 调试端口：wrapper 包装浏览器，手动启动（panel/终端/autostart）都带
 #   --remote-debugging-port=9222（DevTools 协议，http://127.0.0.1:9222/json/version 验证）
 # 自启：~/.config/autostart/chrome.desktop → chrome-guard（循环保活）；
 #   桌面实例常驻 127.0.0.1:9222 后，容器内 MCP（chrome-devtools --browser-url http://127.0.0.1:9222）
 #   连的是桌面实例；否则 MCP 在无 browser-url 的配置下会自起 headless 抢走该端口
 # 架构：x86_64-linux 用 nixpkgs google-chrome（unfree，flake.nix 放行）；
-#   aarch64-linux（本机）nixpkgs 无 google-chrome → 用 chromium（hydraPlatforms 含 aarch64-linux）
+#   aarch64-linux（ide-mac）nixpkgs 无 google-chrome → 用 chromium（hydraPlatforms 含 aarch64-linux）
 # 坑1：容器 fan 跑 Chromium 系必须 --no-sandbox（无 user namespace）；提示条由 --test-type 抑制（Chromium issue 40205764），不改变沙箱状态
 # 坑2：DevTools 远程调试要求非默认数据目录（否则报 requires a non-default data directory）→ --user-data-dir；此目录即唯一主 profile（书签/登录所在）
 # 坑3：容器里 Chromium 系偶发 SIGTRAP 崩溃（crashpad 转储失败 tag not found，容器环境）→ autostart 走 chrome-guard 循环重启保常驻

@@ -1,17 +1,45 @@
-# ide-mac 专属：KasmVNC 浏览器远程桌面（xfce4 桌面，无 GPU 软渲染）
-# 访问：http://<mac-ip>:6901/vnc.html（compose 映射 6901:6901），用户名 fan + 密码
-# 密码：nix 管理（secrets/source/kasmvnc-passwd → encrypt.sh → .age，激活 age 解密写入）
-# 包：packages/kasmvnc.nix（官方 deb 解包自打包，nixpkgs 无此包）
+# ide 容器公共：KasmVNC 浏览器远程桌面（xfce4 桌面，无 GPU 软渲染）—— ide-si / ide-lenovo / ide-mac 三台共用
+# 访问：http://<host>:6901/vnc.html（compose 映射 6901:6901），用户名 fan + 密码
+# 密码：nix 管理（secrets/source/hosts/<hostName>/kasmvnc-passwd → encrypt.sh → .age，激活 age 解密写入）
+# 包：packages/kasmvnc.nix（官方 deb 解包自打包，nixpkgs 无此包；amd64/arm64 各一分支）
 # 桌面：xfce4（GTK 软渲染稳定，KasmVNC 官方默认；KDE 黑屏坑多已弃）
 # 会话：~/.vnc/xstartup 激活生成（dbus-launch + xfce4-session，store 绝对路径 + PATH 注入）
 # 配置：~/.vnc/kasmvnc.yaml 激活生成（覆盖 defaults：分辨率/端口/httpd_directory/字体）
+# 机器差异全部经 hostName 参数化（先例 ../_container_/mise.nix:17-23）：证书 CN（= 各机 compose hostname:）、
+#   口令 .age 路径、桌面会话代理段（仅 ide-si）、WPS 段（仅 x86_64，arm64 无 wpsoffice-cn）
+# 落点 home/fan/_container_/ → ../_container_/default.nix 的 tools.scan 自动对三台 ide 生效（无 import 清单）
 
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  hostName,
+  ...
+}:
 let
   kasmvnc = pkgs.kasmvnc;
   # 桌面会话身份（KasmVNC 会话迁 fan）：显式常量，避免依赖 identity.nix 落地
   sessionUser = "fan";
   sessionHome = "/home/fan";
+  # ── 机器差异（hostName 分支；先例 ../_container_/mise.nix:17-23）──
+  # 证书 CN = 各机 compose 的 hostname:（docker/ide/docker-compose-{si,lenovo,mac}.yml）；三值之外无回退
+  certCN =
+    {
+      ide-si = "ide-si";
+      ide-lenovo = "lenovo-ide";
+      ide-mac = "mac-ide";
+    }
+    .${hostName};
+  # 桌面会话代理段：仅 ide-si（配置文件由 home/fan/ide-si/sysenv.nix 激活写入；lenovo/mac 国内直连无代理）
+  ideProxy = lib.elem hostName [ "ide-si" ];
+  proxyUnitLines = "# 桌面会话继承代理（ide-si 网络需代理，lenovo 直连无此段）：文件由 home/fan/ide-si/sysenv.nix 激活写入；\n#   前缀 - = 文件缺失时不失败（新容器首启、激活尚未跑）\nEnvironmentFile=-/etc/environment.d/zz-ide-proxy.conf";
+  # kasmvnc.service 的占位行 @proxyEnvFile@：ide-si 替换为上面两行（\n = GNU sed 换行转义），其余两台整行删除
+  proxySed =
+    if ideProxy then
+      "s|@proxyEnvFile@|${lib.replaceStrings [ "\n" ] [ "\\n" ] proxyUnitLines}|"
+    else
+      "/@proxyEnvFile@/d";
+  # WPS 仅 x86_64（wpsoffice-cn 无 arm64 包且 unfree）：arm64 上相关段一律不求值
+  isX86 = pkgs.stdenv.hostPlatform.isx86_64;
   # 26.05 起 xfce 组件移顶层（pkgs.xfce4-session 等，xfce.* 已 deprecated）
   xfce4-session = pkgs.xfce4-session;
   xfwm4 = pkgs.xfwm4;
@@ -30,6 +58,7 @@ let
   xfce4-clipman = pkgs.xfce4-clipman-plugin; # 剪贴板历史（面板插件）
   mousepad = pkgs.mousepad; # 文本编辑器
   xarchiver = pkgs.xarchiver; # 压缩包管理
+  wpsoffice-cn = pkgs.wpsoffice-cn; # WPS Office（Word/Excel/PPT 查看编辑；unfree，放行见 tools/machines.nix）
   # ── 美化（WhiteSur macOS 风格，linux265 帖子方案：WhiteSur-Gtk-theme/icon/cursors + Plank dock）──
   whitesurGtk = pkgs.whitesur-gtk-theme.override { colorVariants = [ "dark" ]; }; # GTK2/3/4 + xfwm4 + plank 主题（只留 dark 减体积）
   whitesurIcon = pkgs.whitesur-icon-theme; # 图标（目录名 WhiteSur-dark，小写 d）
@@ -79,71 +108,120 @@ let
   ];
   # XDG_DATA_DIRS：GTK 主题/图标/翻译查找路径（容器无 /usr/share，须指 nix store 各包 share）
   # 面板插件查找也走 XDG_DATA_DIRS/xfce4/panel/plugins（缺则插件加载失败弹窗，如 clipman）
-  xdgDataDirs = lib.concatStringsSep ":" [
-    "${xfconf}/share"
-    "${xfce4-session}/share"
-    "${xfce4-panel}/share"
-    "${xfdesktop}/share"
-    "${xfce4-settings}/share"
-    "${xfce4-terminal}/share"
-    "${thunar}/share"
-    "${whiskermenu}/share"
-    "${xfce4-appfinder}/share"
-    "${xfce4-notifyd}/share"
-    "${xfce4-screenshooter}/share"
-    "${xfce4-taskmanager}/share"
-    "${xfce4-clipman}/share"
-    "${whitesurGtk}/share"
-    "${whitesurIcon}/share"
-    "${whitesurCursors}/share"
-    "${plank}/share"
-    "${fcitx5}/share"
-    "${pkgs.adwaita-icon-theme}/share"
-  ];
+  xdgDataDirs = lib.concatStringsSep ":" (
+    [
+      "${xfconf}/share"
+      "${xfce4-session}/share"
+      "${xfce4-panel}/share"
+      "${xfdesktop}/share"
+      "${xfce4-settings}/share"
+      "${xfce4-terminal}/share"
+      "${thunar}/share"
+      "${whiskermenu}/share"
+      "${xfce4-appfinder}/share"
+      "${xfce4-notifyd}/share"
+      "${xfce4-screenshooter}/share"
+      "${xfce4-taskmanager}/share"
+      "${xfce4-clipman}/share"
+      "${whitesurGtk}/share"
+      "${whitesurIcon}/share"
+      "${whitesurCursors}/share"
+      "${plank}/share"
+    ]
+    # MIME 类型库（仅 x86_64，配合下方 WPS mimeapps 表）：无它 .doc/.docx/.xlsx 全识别成
+    # application/octet-stream（共享 MIME 库不在任何包的 share 里，必须显式加），mimeapps.list 的按类型默认关联才会命中
+    ++ lib.optional isX86 "${pkgs.shared-mime-info}/share"
+    ++ lib.optional isX86 "${wpsoffice-cn}/share" # WPS 菜单项（share/applications）：XDG_DATA_DIRS 未含 profile share，不补则菜单无入口
+    ++ [
+      "${fcitx5}/share"
+      "${pkgs.adwaita-icon-theme}/share"
+    ]
+  );
+  # 激活第 11 段（默认文档应用 → WPS）整段文本 = 原 ide-si/ide-lenovo 逐字文本：前置 "\n\n" 对应第 10 段末换行
+  #   + 段间空行（尾换行由外层补）；arm64 下为空串 → 不触碰 wpsoffice-cn
+  wpsMimeapps = lib.optionalString isX86 (
+    "\n\n"
+    + lib.removeSuffix "\n" ''
+      # 11. 默认文档应用：Office 文档（doc/docx/xls/xlsx/ppt/pptx/rtf）交给 WPS
+      #     Thunar 双击与 xdg-open 均读 ~/.config/mimeapps.list；desktop ID 来自 ${wpsoffice-cn}/share/applications
+      #     前提是上方 XDG_DATA_DIRS 含 shared-mime-info，否则类型识别降级为 octet-stream，本表全部不命中
+      mkdir -p ${sessionHome}/.config
+      cat > ${sessionHome}/.config/mimeapps.list <<EOF
+      [Default Applications]
+      # Word（WPS Writer）；.wps 是 WPS 自有格式，共享 MIME 库将 .wps 记为 application/vnd.ms-works
+      application/msword=wps-office-wps.desktop
+      application/msword-template=wps-office-wps.desktop
+      application/vnd.ms-word=wps-office-wps.desktop
+      application/x-msword=wps-office-wps.desktop
+      application/vnd.ms-word.document.macroEnabled.12=wps-office-wps.desktop
+      application/vnd.openxmlformats-officedocument.wordprocessingml.document=wps-office-wps.desktop
+      application/rtf=wps-office-wps.desktop
+      application/vnd.ms-works=wps-office-wps.desktop
+      # 表格（WPS Spreadsheets）
+      application/vnd.ms-excel=wps-office-et.desktop
+      application/msexcel=wps-office-et.desktop
+      application/x-msexcel=wps-office-et.desktop
+      application/vnd.openxmlformats-officedocument.spreadsheetml.sheet=wps-office-et.desktop
+      # 演示（WPS Presentation）
+      application/vnd.ms-powerpoint=wps-office-wpp.desktop
+      application/vnd.mspowerpoint=wps-office-wpp.desktop
+      application/mspowerpoint=wps-office-wpp.desktop
+      application/powerpoint=wps-office-wpp.desktop
+      application/x-mspowerpoint=wps-office-wpp.desktop
+      application/vnd.openxmlformats-officedocument.presentationml.presentation=wps-office-wpp.desktop
+      application/vnd.openxmlformats-officedocument.presentationml.slideshow=wps-office-wpp.desktop
+      EOF
+    ''
+  );
 in
-# 仅 Linux（本机 aarch64-linux）：deb 走 packages/kasmvnc.nix 的 arm64 分支；
-# 非 Linux（darwin 等）门控跳过，避免平台不匹配报错
+# 仅 Linux（三台 ide 皆 linux 容器：si/lenovo amd64、mac arm64）：非 Linux 平台（darwin eval）门控跳过，
+#   避免 deb 打包平台不匹配报错；deb 的 amd64/arm64 分支见 packages/kasmvnc.nix
 lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
-  home.packages = with pkgs; [
-    kasmvnc
-    # xfce4 核心组件（GTK 软渲染稳定）
-    xfce4-session
-    xfwm4
-    xfce4-panel
-    xfdesktop
-    xfce4-settings
-    xfce4-terminal
-    xfconf
-    dbus
-    adwaita-icon-theme # GTK 默认图标（无则界面空白）
-    dejavu_fonts # Xvnc 渲染 + 界面字体
-    # 基础应用（文件管理器/菜单/通知/截图/任务管理/剪贴板/编辑器/压缩包）
-    thunar
-    xfce4-appfinder
-    whiskermenu
-    xfce4-notifyd
-    xfce4-screenshooter
-    xfce4-taskmanager
-    xfce4-clipman
-    mousepad
-    xarchiver
-    # 美化：WhiteSur 主题/图标/鼠标 + Plank dock + Albert 搜索 + 中文字体/壁纸生成
-    whitesurGtk
-    whitesurIcon
-    whitesurCursors
-    plank
-    albert
-    notoCjk
-    jetbrainsMono
-    imagemagick
-    # 中文输入法（fcitx5 + 拼音引擎 + GTK/QT IM module）
-    fcitx5
-    fcitx5-gtk
-    fcitx5-qt
-    # 系统支撑：fontconfig（/etc/fonts 缺失，字体全不生效）、glibc（localedef 生成中文 locale）
-    fontconfig
-    glibc
-  ];
+  home.packages =
+    with pkgs;
+    [
+      kasmvnc
+      # xfce4 核心组件（GTK 软渲染稳定）
+      xfce4-session
+      xfwm4
+      xfce4-panel
+      xfdesktop
+      xfce4-settings
+      xfce4-terminal
+      xfconf
+      dbus
+      adwaita-icon-theme # GTK 默认图标（无则界面空白）
+      dejavu_fonts # Xvnc 渲染 + 界面字体
+      # 基础应用（文件管理器/菜单/通知/截图/任务管理/剪贴板/编辑器/压缩包）
+      thunar
+      xfce4-appfinder
+      whiskermenu
+      xfce4-notifyd
+      xfce4-screenshooter
+      xfce4-taskmanager
+      xfce4-clipman
+      mousepad
+      xarchiver
+    ]
+    ++ lib.optional isX86 wpsoffice-cn
+    ++ [
+      # 美化：WhiteSur 主题/图标/鼠标 + Plank dock + Albert 搜索 + 中文字体/壁纸生成
+      whitesurGtk
+      whitesurIcon
+      whitesurCursors
+      plank
+      albert
+      notoCjk
+      jetbrainsMono
+      imagemagick
+      # 中文输入法（fcitx5 + 拼音引擎 + GTK/QT IM module）
+      fcitx5
+      fcitx5-gtk
+      fcitx5-qt
+      # 系统支撑：fontconfig（/etc/fonts 缺失，字体全不生效）、glibc（localedef 生成中文 locale）
+      fontconfig
+      glibc
+    ];
 
   # ── 美化声明式（WhiteSur macOS 风格）──
   # 核心坑：xfsettingsd 启动时总写默认（ThemeName=Adwaita）覆盖 xsettings 频道，且被杀后 xfce4-session 会重启它
@@ -581,7 +659,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     if [ "$desktop_changed" = "1" ] && /usr/bin/systemctl is-active --quiet kasmvnc.service 2>/dev/null; then
       echo "===> xfce4-desktop.xml 已变更，重启 kasmvnc.service 让新会话生效"
       /usr/bin/systemctl restart kasmvnc.service 2>/dev/null || echo "警告: kasmvnc.service 重启失败（壁纸变更）"
-    fi
+    fi${wpsMimeapps}
   '';
 
   home.activation.kasmvnc = lib.hm.dag.entryAfter [ "chrome" ] ''
@@ -601,7 +679,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     tmp_xstartup=$(mktemp)
     cat > "$tmp_xstartup" <<EOF
     #!/bin/sh
-    # KasmVNC 会话启动（激活生成，声明式；改配置在 home/fan/ide-mac/kasmvnc.nix）
+    # KasmVNC 会话启动（激活生成，声明式；改配置在 home/fan/_container_/kasmvnc.nix）
     unset SESSION_MANAGER
     unset DBUS_SESSION_BUS_ADDRESS
     export PATH="${runPath}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -645,7 +723,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     if [ ! -f ${sessionHome}/.vnc/kasmvnc-cert.pem ]; then
       ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:2048 -nodes \
         -keyout ${sessionHome}/.vnc/kasmvnc-key.pem -out ${sessionHome}/.vnc/kasmvnc-cert.pem \
-        -days 3650 -subj "/CN=mac-ide" 2>/dev/null
+        -days 3650 -subj "/CN=${certCN}" 2>/dev/null
     fi
     cat > ${sessionHome}/.vnc/kasmvnc.yaml <<EOF
     desktop:
@@ -669,7 +747,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
         x_font_path: ${pkgs.dejavu_fonts}/share/fonts/truetype
     EOF
 
-    # ── 3. 密码：age 解密（secrets/source/hosts/ide-mac/kasmvnc-passwd → encrypt.sh 生成 .age，git 可公开）──
+    # ── 3. 密码：age 解密（secrets/source/hosts/<hostName>/kasmvnc-passwd → encrypt.sh 生成 .age，git 可公开）──
     #    私钥 $HOME/.secrets/age-keys.txt（compose 挂载，容器重建不丢）；解密失败即部署失败
     #    hash 标记比较，密码变更才重写（声明式收敛：手改密码下次激活回滚；无变更不打扰运行中会话）
     #    坑：kasmvncpasswd 不按 -u 解析家目录，写的是 $HOME/.kasmpasswd——而激活以 root 跑（HOME=/root），
@@ -679,7 +757,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     pass_file=${sessionHome}/.kasmpasswd
     pass_hash=${sessionHome}/.vnc/kasmvnc-passwd.sha256
     tmp=$(mktemp)
-    ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" ${../../..}/secrets/hosts/ide-mac/kasmvnc-passwd.age
+    ${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o "$tmp" ${../../..}/secrets/hosts/${hostName}/kasmvnc-passwd.age
     new_hash=$(${pkgs.coreutils}/bin/sha256sum "$tmp" | cut -d' ' -f1)
     # 口令变更、或口令文件缺失（自愈：文件没了即使 hash 未变也要重建）才重写
     pass_changed=0
@@ -697,7 +775,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     # ── 4. systemd service（幂等写入 + 变更重启，同 skemate 模式）──
     unit=/etc/systemd/system/kasmvnc.service
     tmp=$(mktemp)
-    sed -e "s|@kasmvnc@|${kasmvnc}|" -e "s|@path@|${runPath}|" ${./kasmvnc.service} > "$tmp"
+    sed -e "s|@kasmvnc@|${kasmvnc}|" -e "s|@path@|${runPath}|" -e "${proxySed}" ${./kasmvnc.service} > "$tmp"
     unit_changed=0
     if ! cmp -s "$tmp" "$unit"; then
       cp "$tmp" "$unit"
