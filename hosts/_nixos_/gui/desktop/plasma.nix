@@ -1,6 +1,6 @@
 # KDE Plasma 6 桌面 + SDDM（参考 tsln minipc；面板/字体/KWin 定制在 home 层，见
 # home/fan/_nixos_/gui/plasma.nix——系统层只负责桌面服务本身）
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 with pkgs;
 with kdePackages;
 {
@@ -14,8 +14,14 @@ with kdePackages;
     enableHidpi = true;
     wayland.enable = true;
     autoNumlock = true;
-    # 登录界面预填用户名 fan（只省一次输入，仍需密码；nix-pve 另有 autoLogin 直进桌面）
+    # 登录界面预填用户名 fan（autoLogin 关闭时兜底，仍可省一次输入）
     settings.Users.DefaultUser = "fan";
+  };
+
+  # 开机直进 fan 桌面，不再选用户/输密码（mkDefault：机器可覆盖 enable=false 关掉）
+  services.displayManager.autoLogin = {
+    enable = lib.mkDefault true;
+    user = lib.mkDefault "fan";
   };
 
   # 去掉用不到的预装应用（保持精简）
