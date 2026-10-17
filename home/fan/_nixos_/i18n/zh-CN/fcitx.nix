@@ -33,7 +33,8 @@
           "Groups/0/Items/1"."Name" = "pinyin";
         };
         addons = {
-          classicui.globalSection.Font = "Noto Sans CJK SC 16";
+          # 候选字号 14pt（catppuccin 主题时代 13 → 曾放大到 16，视觉偏大回调一档）
+          classicui.globalSection.Font = "Noto Sans CJK SC 14";
           pinyin.globalSection = {
             "FirstRun" = "False";
             "PageSize" = 9;
