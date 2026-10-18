@@ -9,7 +9,7 @@
 #   Ubuntu 容器/服务器 → /usr/bin（apt-get/systemctl）；NixOS → /run/current-system/sw/bin
 #   （systemctl/sudo）；mac → /usr/bin（sudo/launchctl/pkill）；Alpine → /sbin（rc-service）
 # 注意：nix 专属工具（python3/mise 等）不在这三个路径，仍需 ${pkgs.xxx} 绝对路径
-#   （见 nix-pve/rustdesk.nix、_darwin_/rustdesk.nix、mini-m4/android-emulator.nix）
+#   （见 _nixos_/rustdesk.nix、_darwin_/rustdesk.nix、mini-m4/android-emulator.nix）
 { lib, ... }:
 {
   home.activation.activatePathFix = lib.hm.dag.entryBefore [ "writeBoundary" ] ''

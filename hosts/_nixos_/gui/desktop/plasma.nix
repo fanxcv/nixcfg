@@ -1,5 +1,5 @@
 # KDE Plasma 6 桌面 + SDDM（参考 tsln minipc；面板/字体/KWin 定制在 home 层，见
-# home/fan/_nixos_/gui/plasma.nix——系统层只负责桌面服务本身）
+# home/fan/_nixos_/gui/desktop/plasma/——系统层只负责桌面服务本身）
 { pkgs, lib, ... }:
 with pkgs;
 with kdePackages;

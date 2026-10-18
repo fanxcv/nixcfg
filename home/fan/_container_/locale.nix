@@ -9,7 +9,7 @@
 # 修法：容器自带 glibc 的 localedef（/usr/bin/localedef，来自 libc-bin）+ nix glibc 的 i18n 源数据，
 #   写进**系统** locale-archive（/usr/lib/locale/locale-archive）——所有进程（含系统 bash、sshd 会话、
 #   docker exec）直接可见；不用 LOCPATH（nix 专属环境变量，只对 nix 二进制生效），也不动
-#   ide-lenovo/kasmvnc.nix 的 GUI 会话 LOCPATH。
+#   _container_/kasmvnc.nix 的 GUI 会话 LOCPATH。
 #   版本关系：i18n 源是文本，由容器 glibc（Ubuntu 24.04 = 2.39）的 localedef 编译 → 产物与系统 glibc 同源。
 #
 # 幂等：locale -a 命中即跳过；容器重建后 /usr/lib/locale 清空，auto-deploy 首轮激活自动重建（见 ide-auto-deploy.sh）。

@@ -1,5 +1,5 @@
 # NixOS 系统服务：podman（声明式，开机自启；docker CLI/socket 兼容，drop-in 替换 docker）
-# 国内镜像加速（挂 useChinaMirror 开关，flake.nix specialArgs 注入，与 mac orbstack/mirrors.nix 同语义）：
+# 国内镜像加速（挂 useChinaMirror 开关，flake.nix specialArgs 注入，与 mac orbstack.nix（registry-mirrors）同语义）：
 #   true  → registries.conf.d 三镜像；false → 不设，podman 默认源
 {
   pkgs,

@@ -1,4 +1,4 @@
-# ssh 配置模块（从 _common_/ssh.nix + 机器层 ssh.nix/ssh-config.nix 收敛，加 softwares.ssh.enable 门控）
+# ssh 配置模块（从旧 _common_/ssh.nix 与机器层 ssh-config 收敛，加 softwares.ssh.enable 门控）
 # 三块逻辑：
 #   1. 授权公钥拉取 + sshd 禁用密码（对应 alpine-init.sh 的 ssh_config()；加固仅对容器/云服务器生效，
 #      NixOS 与 macOS 走各自 nix 层声明，PVE 不在本次范围）

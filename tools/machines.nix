@@ -19,7 +19,7 @@
     user = "fan";
     alias = true;
     extraUnfree = [
-      "google-chrome" # 桌面浏览器（kasmvnc/chrome.nix 的 x86_64 分支）
+      "google-chrome" # 桌面浏览器（_container_/chrome.nix 的 x86_64 分支）
       "albert" # 桌面启动器（kasmvnc.nix）
       "wpsoffice-cn" # 桌面办公（kasmvnc.nix 的 x86_64 分支）
     ];

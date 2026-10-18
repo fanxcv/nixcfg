@@ -1,6 +1,6 @@
 # 本地包集合（tsln 的 packages 思路）：nixpkgs 缺失的自打包
 # 经 flake.nix 的 packages output 合并导出（nix build .#<包名>）
-# home 配置里引用：import 本文件传 pkgs（见 home/fan/nix-pve/rustdesk.nix）
+# 引用：flake.nix 的 localPkgsOverlay（import 本文件传 pkgs）
 # githubFetchBase：GitHub 加速 base（来自 tools/config.nix 集中配置），包构建期编 GitHub 时用
 {
   pkgs,
@@ -37,11 +37,11 @@ autoPkgs
 }
 // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   # KasmVNC：浏览器远程桌面（仅 linux：官方 deb 解包含 arm64/amd64 分支；nixpkgs 无此包）
-  # → home/fan/ide-lenovo/kasmvnc.nix、home/fan/ide-mac/kasmvnc.nix
+  # → home/fan/_container_/kasmvnc.nix（ide 三容器共用）
   kasmvnc = pkgs.callPackage ./kasmvnc.nix { };
 }
 // {
-  # Catppuccin Konsole 配色（nixpkgs 26.05 无此包，固定 rev 自打包；→ home/fan/_nixos_/gui/plasma.nix）
+  # Catppuccin Konsole 配色（nixpkgs 26.05 无此包，固定 rev 自打包；→ home/fan/_nixos_/themes/catppuccin/konsole.nix）
   # 网络：fetchFromGitHub 默认直连 github.com（国内不稳），githubBase 换加速前缀（代理不改内容，hash 不重算）
   catppuccin-konsole = pkgs.callPackage ./catppuccin/konsole.nix { githubBase = githubFetchBase; };
 }

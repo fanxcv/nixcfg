@@ -1,6 +1,6 @@
 # 用户定义（对应原仓库 users/tsln）
 # darwin / NixOS：系统用户定义 + Home Manager 内嵌（模块清单复用 home/fan/module-list.nix）
-#   密码策略：不内置 hash（SSH 公钥登录由 _common_/ssh.nix 激活拉取；
+#   密码策略：不内置 hash（SSH 公钥登录由 modules/home/ssh.nix 激活拉取；
 #   控制台登录需接入时设置，hash 可后续走 agenix）
 
 {

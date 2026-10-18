@@ -11,7 +11,7 @@ hosts/
 ├── _common_/    # 跨平台系统配置（模块：用户、时区、i18n）
 ├── _nixos_/     # NixOS 专属（服务、内核、桌面）
 ├── _darwin_/    # macOS 专属（homebrew、系统偏好）
-└── <host>/      # 单机：imports 组装清单（如 nixcfg 的 hosts/minipc/default.nix）
+└── <host>/      # 单机：imports 组装清单（如 hosts/mini-m4/default.nix）
 ```
 
 ## 接入一台 NixOS 机器（三步）
@@ -58,7 +58,7 @@ hosts/_darwin_/        # macOS 平台层：default.nix=三台共用组装清单�
                        #   base（homebrew 声明式 + casks）gui（quartz 桌面声明：
                        #   Dock/Finder/触控板/菜单栏/截图…）i18n（字体）
                        #   kernel（pmset 电源/关更新/关开机音）
-hosts/<机>/            # 机器差异层：只放本机文件（homebrew.nix/dock.nix/power.nix…）
+hosts/<机>/            # 机器差异层：只放本机文件（homebrew.nix/power.nix/comin-cleanup.nix…）
 users/fan/             # 用户定义：primaryUser + home-manager 内嵌
 home/fan/<host>/       # 用户层组装（_common_ 跨平台 + _darwin_ 平台层）
 ```
