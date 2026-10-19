@@ -33,6 +33,7 @@
 | NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-pve` / `.#nix-lenovo` / `.#nix-asus` |
 | PVE 宿主部署 | `nix run .#ds2` / `.#desktop` / `.#fan` / `.#hp` / `.#mi` / `.#razer` |
 | 升级依赖 | `nix flake update` |
+| 升级自建包（codex/rustdesk/kasmvnc） | `scripts/update-packages.sh`（`--check` 只报告） |
 
 ## 分平台部署
 

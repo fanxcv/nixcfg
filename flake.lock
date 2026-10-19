@@ -360,11 +360,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792248753,
-        "narHash": "sha256-RNlhSYnIDRWkg2m5io7Ix14CISV9xGSxrdwqN6bpRSI=",
+        "lastModified": 1792340288,
+        "narHash": "sha256-i0/XkzOQKF0RrpbGBP5rHjfOvj/kowvOYXmNF0qZdZo=",
         "ref": "deploy",
-        "rev": "adcbe80a0c5345edd8512567feb175f7d3cefe90",
-        "revCount": 2351,
+        "rev": "aa321e13a2a626e49d700c582a1e9374f32a584a",
+        "revCount": 2356,
         "type": "git",
         "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git"
       },
@@ -420,10 +420,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1792209015,
-        "narHash": "sha256-Tb0rqL2M5jvWEWV2RQEp1LjLy8yphxVcPmJly3e8MDE=",
+        "lastModified": 1792295755,
+        "narHash": "sha256-wPyciG1ur2WPbCT12T+IRBr8Dfrt+pqewm/viin9+zE=",
         "ref": "master",
-        "rev": "30e2df6af8c52737a22710686314a5aa365dec7f",
+        "rev": "b80d26f334eed217a271b98ca692937676b33762",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-community/nix-vscode-extensions.git"
