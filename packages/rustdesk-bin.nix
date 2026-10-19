@@ -49,16 +49,16 @@
 let
   src = fetchurl {
     urls = [
-      "https://ghfast.top/https://github.com/rustdesk/rustdesk/releases/download/1.4.9/rustdesk-1.4.9-x86_64.deb"
-      "https://github.com/rustdesk/rustdesk/releases/download/1.4.9/rustdesk-1.4.9-x86_64.deb"
+      "https://ghfast.top/https://github.com/rustdesk/rustdesk/releases/download/1.5.0/rustdesk-1.5.0-x86_64.deb"
+      "https://github.com/rustdesk/rustdesk/releases/download/1.5.0/rustdesk-1.5.0-x86_64.deb"
     ];
-    sha256 = "sha256-ckS6R8QOgEFyBEv75llGfFTORlVMmOeMjAQG8dYS/aM=";
+    sha256 = "sha256-TiuXAdJafvNz89Cb2lhKN9aQL5emqxXy6G1KV4PioOw=";
   };
 
   # 原样解包：ELF 文件一律不动（原始 RUNPATH=$ORIGIN/lib 定位同目录 lib/）
   raw = stdenv.mkDerivation {
     pname = "rustdesk-raw";
-    version = "1.4.9";
+    version = "1.5.0";
     inherit src;
     nativeBuildInputs = [ xz ];
     dontStrip = true;
@@ -168,7 +168,7 @@ let
 in
 stdenv.mkDerivation {
   pname = "rustdesk-bin";
-  version = "1.4.9";
+  version = "1.5.0";
 
   dontUnpack = true;
   dontBuild = true;
