@@ -51,9 +51,11 @@ in
       chmod 600 "$STATE_FILE"
 
       # 2) wrapper（nix store 路径随升级变化，unit 固定调 wrapper）
+      # --port=41641 必须显式传：tailscaled 默认 -port=0（自动随机），云安全组只放行 41641/UDP
+      # 时随机端口出网在云边缘被丢，对端收不到直连包只能走 DERP
       cat > /usr/local/bin/tailscaled-nix <<'EOF'
       #!/bin/sh
-      exec __TS_BIN__ --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscaled.sock
+      exec __TS_BIN__ --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscaled.sock --port=41641
       EOF
       sed -i "s|__TS_BIN__|$TS_BIN|" /usr/local/bin/tailscaled-nix
       chmod +x /usr/local/bin/tailscaled-nix
