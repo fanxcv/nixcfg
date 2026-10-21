@@ -169,6 +169,8 @@
       vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
       # comin 包构建（nix-pve 独有，见 overlays/comin.nix）
       cominOverlay = import ./overlays/comin.nix { inherit lib inputs; };
+      # Konsole 隐藏工具栏（--hide-toolbars 包装，见 overlays/konsole.nix）
+      konsoleOverlay = import ./overlays/konsole.nix lib;
       # 本地包统一注入，供所有配置构造器复用
       localPkgsOverlay =
         final: prev:
@@ -202,6 +204,7 @@
             unstableOverlay
             vscodeOverlay
             cominOverlay
+            konsoleOverlay
             localPkgsOverlay
           ];
         };

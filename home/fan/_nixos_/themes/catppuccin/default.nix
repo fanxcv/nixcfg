@@ -20,21 +20,36 @@
     flavor = lib.mkDefault "latte";
     accent = lib.mkDefault "blue";
 
-    # CLI 工具预设（flavor 覆盖全局 latte；enable 未开不生效，仅预设）
+    # CLI 工具（tsln 原版逐项显式开；autoEnable 关时必须逐项声明，flavor 覆全局 latte）
+    # 生效前提：eza/atuin/btop/delta/helix/obsidian 的 target 需 programs.<x>.enable 才落配置。
+    #   本仓库这些工具多数只装包不启用 HM 程序模块 → 那些 enable 当前是空转；
+    #   已装且安全的两个（bat/eza）在下面 files 单独开程序模块，其余等要用时再开：
+    #   btop/starship/atuin/helix/zellij/delta/obsidian 均未安装，开了会连带装包/改提示符
+    obsidian.enable = lib.mkDefault true;
+    bat.enable = lib.mkDefault true;
     bat.flavor = lib.mkDefault "mocha";
+    eza.enable = lib.mkDefault true;
     eza.flavor = lib.mkDefault "mocha";
     k9s.flavor = lib.mkDefault "mocha";
+    tmux.enable = lib.mkDefault true;
     tmux.flavor = lib.mkDefault "mocha";
+    zellij.enable = lib.mkDefault true;
     zellij.flavor = lib.mkDefault "mocha";
     lazygit.flavor = lib.mkDefault "mocha";
+    starship.enable = lib.mkDefault true;
     starship.flavor = lib.mkDefault "mocha";
+    atuin.enable = lib.mkDefault true;
     atuin.flavor = lib.mkDefault "mocha";
+    btop.enable = lib.mkDefault true;
     btop.flavor = lib.mkDefault "mocha";
+    delta.enable = lib.mkDefault true;
     delta.flavor = lib.mkDefault "mocha";
     fzf.flavor = lib.mkDefault "mocha";
+    helix.enable = lib.mkDefault true;
     helix.flavor = lib.mkDefault "mocha";
     yazi.flavor = lib.mkDefault "mocha";
     alacritty.flavor = lib.mkDefault "mocha";
+    zsh-syntax-highlighting.enable = lib.mkDefault true;
     zsh-syntax-highlighting.flavor = lib.mkDefault "mocha";
 
     # KDE 主题切换（tsln 原版）：Plasma 配色/开机画面/光标（plasma.nix）、
@@ -53,4 +68,13 @@
       whiskers = pkgs.catppuccin-whiskers;
     }
   );
+
+  # catppuccin.bat / catppuccin.eza 的 enable 只是开关，真正落配置需 programs.<x>.enable：
+  #   本仓库 bat/eza 在 _common_/base.nix 只装包；不启程序模块的话主题永远不生效。
+  #   eza 关 zsh integration：HM 会写 ls/ll/la 等 alias，与 shells.nix 自定义 alias 重叠。
+  programs.bat.enable = lib.mkDefault true;
+  programs.eza = {
+    enable = lib.mkDefault true;
+    enableZshIntegration = lib.mkDefault false;
+  };
 }

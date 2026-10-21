@@ -79,9 +79,11 @@
   # fcitx5 中文输入法：系统层 i18n.inputMethod（NixOS 模块）自动设 IM 环境变量
   # + 生成 /etc/gtk-3.0/immodules.cache
   # addons 与 home 层同 list → 系统/用户 profile 的 fcitx5-with-addons 为同一 drv，只存一份
+  # waylandFrontend：本机 Wayland 会话 → 走 Wayland 前端（与 tsln 对齐）
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
     fcitx5.addons = [ pkgs.kdePackages.fcitx5-chinese-addons ];
+    fcitx5.waylandFrontend = true;
   };
 }

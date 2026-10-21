@@ -110,6 +110,8 @@
   # + 生成 /etc/gtk-3.0/immodules.cache（GTK 默认查找路径；fcitx5-with-addons 含 fcitx5-gtk immodule）
   # 用户层 fcitx5 配置（双拼/皮肤）由 home/fan/_nixos_/i18n/zh-CN/fcitx.nix 管理
   # addons 与 home 层同 list → 系统/用户 profile 的 fcitx5-with-addons 为同一 drv，只存一份
+  # waylandFrontend 不动（保持默认 false）：本机为 X11 会话（plasmax11，RustDesk 捕获需要），
+  #   关掉 GTK_IM_MODULE/QT_IM_MODULE 会让 X11 下 Qt 应用丢输入法；Wayland 机器（lenovo/asus）已开 true
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";

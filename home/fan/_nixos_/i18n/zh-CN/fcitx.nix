@@ -4,7 +4,9 @@
 # XDG_DATA_DIRS——会话里 fcitx5 由系统 profile 的 wrapper 启动时也能看到
 # 候选字号只能写在 classicui.conf 的 Font（fcitx5 5.1.x 已删除主题里的 [InputPanel] Font，
 # 改主题的 theme.conf 是无效改动）
-# nix-pve 会话为 X11（plasmax11，RustDesk 捕获需要）→ waylandFrontend = false，
+# 输入法前端：跟随 tsln 用 Wayland 前端（waylandFrontend = true）——GTK/Qt 的 IM 环境变量
+#   改由 gtk{2,3,4} 的 gtk-im-module 提供；X11 会话（nix-pve plasmax11，RustDesk 捕获）下
+#   非 GTK 的 Qt/X11 应用若不走 IM module，需回退此开关为 false
 # HM 设 GTK_IM_MODULE/QT_IM_MODULE/XMODIFIERS（登录 shell）；图形会话由系统层
 # i18n.inputMethod 补（见 hosts/nix-pve/default.nix）
 {
@@ -67,7 +69,7 @@
           };
         };
       };
-      waylandFrontend = false;
+      waylandFrontend = true;
     };
   };
 }
