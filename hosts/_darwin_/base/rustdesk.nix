@@ -39,9 +39,10 @@ in
         uid="$(id -u "$owner")"
         mkdir -p "$dir" "$root_dir"
 
-        # 1. 收敛检查：fan 配置已是自建服务器（GUI 或注入写入）→ 已到位，完全不动
+        # 1. 收敛检查：fan 配置已是自建服务器与自建 API → 已到位，完全不动
         #    （避免部署时无条件杀进程触发 service 抢写把好配置变成官方默认）
-        if grep -Fq "${rustdesk.relay}" "$dir/RustDesk2.toml" 2>/dev/null; then
+        if grep -Fq "${rustdesk.relay}" "$dir/RustDesk2.toml" 2>/dev/null \
+          && grep -Fq "${rustdesk.apiServer}" "$dir/RustDesk2.toml" 2>/dev/null; then
           echo "rustdesk: 配置已是自建服务器，跳过注入/重启"
           return 0
         fi
@@ -55,12 +56,14 @@ in
         ${pkgs.python3}/bin/python3 ${injector} \
           "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" \
           --server "${rustdesk.server}" --key "${rustdesk.key}" --relay "${rustdesk.relay}" \
+          --api-server "${rustdesk.apiServer}" \
           --trusted-devices "${trustedDevices}"
         chown "$owner":staff "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
         chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
         ${pkgs.python3}/bin/python3 ${injector} \
           "$root_dir/RustDesk2.toml" "$root_dir/RustDesk_local.toml" \
           --server "${rustdesk.server}" --key "${rustdesk.key}" --relay "${rustdesk.relay}" \
+          --api-server "${rustdesk.apiServer}" \
           --trusted-devices "${trustedDevices}"
         chmod 600 "$root_dir"/RustDesk2.toml "$root_dir"/RustDesk_local.toml
 

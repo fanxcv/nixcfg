@@ -76,6 +76,7 @@ def inject(
     relay: str | None,
     trusted_devices: str | None,
     pin: str | None = None,
+    api_server: str | None = None,
 ) -> None:
     top_updates = {
         "rendezvous_server": repr(server),
@@ -100,6 +101,8 @@ def inject(
     }
     if relay is not None:
         rd2_options["relay-server"] = repr(relay)
+    if api_server is not None:
+        rd2_options["api-server"] = repr(api_server)
 
     apply_updates(rd2, top_updates, rd2_options)
     apply_updates(
@@ -137,6 +140,10 @@ def parse_args() -> argparse.Namespace:
         "--pin",
         help="optional unlock PIN for GUI security-settings unlock (Nix-managed; omit to keep existing value)",
     )
+    parser.add_argument(
+        "--api-server",
+        help="optional RustDesk account/address-book API base URL (e.g. https://rd.example.com)",
+    )
     return parser.parse_args()
 
 
@@ -150,6 +157,7 @@ def main() -> None:
         args.relay,
         args.trusted_devices,
         args.pin,
+        args.api_server,
     )
 
 

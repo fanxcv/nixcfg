@@ -41,6 +41,7 @@ in
       ${pkgs.python3}/bin/python3 ${injector} \
         "$dir/RustDesk2.toml" "$dir/RustDesk_local.toml" \
         --server "${rustdesk.server}" --key "${rustdesk.key}" --relay "${rustdesk.relay}" \
+        --api-server "${rustdesk.apiServer}" \
         ${lib.optionalString (rustdesk.unlockPin or "" != "") "--pin \"${rustdesk.unlockPin}\""}
       chmod 600 "$dir"/RustDesk2.toml "$dir"/RustDesk_local.toml
 

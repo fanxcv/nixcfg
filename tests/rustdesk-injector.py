@@ -10,6 +10,7 @@ from pathlib import Path
 SERVER = "10.20.30.40:21116"
 KEY = "test-public-key"
 RELAY = "10.20.30.40"
+API_SERVER = "https://rd.example.com"
 TRUSTED_DEVICE = "test-device-id"
 PIN = "123456"
 
@@ -17,6 +18,7 @@ RD2_OPTIONS = {
     "key": KEY,
     "custom-rendezvous-server": "10.20.30.40",
     "relay-server": RELAY,
+    "api-server": API_SERVER,
     "direct-server": "Y",
     "enable-udp-punch": "Y",
     "allow-remote-config-modification": "Y",
@@ -60,6 +62,8 @@ def run_case(
         KEY,
         "--relay",
         RELAY,
+        "--api-server",
+        API_SERVER,
     ]
     if trusted_devices is not None:
         command += ["--trusted-devices", trusted_devices]
