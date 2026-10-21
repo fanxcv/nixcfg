@@ -109,8 +109,10 @@
   # （SDDM 图形会话 source /etc/profile 生效，home-manager sessionVariables 只进 ~/.zshenv 不覆盖图形会话）
   # + 生成 /etc/gtk-3.0/immodules.cache（GTK 默认查找路径；fcitx5-with-addons 含 fcitx5-gtk immodule）
   # 用户层 fcitx5 配置（双拼/皮肤）由 home/fan/_nixos_/i18n/zh-CN/fcitx.nix 管理
+  # addons 与 home 层同 list → 系统/用户 profile 的 fcitx5-with-addons 为同一 drv，只存一份
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
+    fcitx5.addons = [ pkgs.kdePackages.fcitx5-chinese-addons ];
   };
 }

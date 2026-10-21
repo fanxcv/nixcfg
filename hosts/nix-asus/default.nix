@@ -4,7 +4,7 @@
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
 # 部署：手动 nixos-rebuild switch --flake .#nix-asus（笔记本移动设备，不用 comin 自动部署）
 #   首次安装：nixos-install --flake /persist/etc/nixos#nix-asus（仓库放 /persist/etc/nixos）
-{ tools, ... }:
+{ pkgs, tools, ... }:
 {
   imports =
     map tools.relative [
@@ -78,8 +78,10 @@
 
   # fcitx5 中文输入法：系统层 i18n.inputMethod（NixOS 模块）自动设 IM 环境变量
   # + 生成 /etc/gtk-3.0/immodules.cache
+  # addons 与 home 层同 list → 系统/用户 profile 的 fcitx5-with-addons 为同一 drv，只存一份
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
+    fcitx5.addons = [ pkgs.kdePackages.fcitx5-chinese-addons ];
   };
 }

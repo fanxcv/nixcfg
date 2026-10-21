@@ -47,7 +47,7 @@
           };
           pinyin.globalSection = {
             "FirstRun" = "False";
-            "PageSize" = 9;
+            "PageSize" = 7; # 单行候选 9 → 7，免面板过宽
             "SpellEnabled" = "True";
             "SymbolsEnabled" = "True";
             "ChaiziEnabled" = "True";
