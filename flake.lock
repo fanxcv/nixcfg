@@ -360,11 +360,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792340288,
-        "narHash": "sha256-i0/XkzOQKF0RrpbGBP5rHjfOvj/kowvOYXmNF0qZdZo=",
+        "lastModified": 1792562826,
+        "narHash": "sha256-SLNlQsdIeqOYngu3Of8sKeY4rXXkF01Tz38C0wKaeOQ=",
         "ref": "deploy",
-        "rev": "aa321e13a2a626e49d700c582a1e9374f32a584a",
-        "revCount": 2356,
+        "rev": "3f130bd34946336a490448ca9a1ca97dfc833d8a",
+        "revCount": 2445,
         "type": "git",
         "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git"
       },
@@ -398,10 +398,10 @@
     },
     "unstable": {
       "locked": {
-        "lastModified": 1792116957,
-        "narHash": "sha256-EjZqHKObBfIOeHZnMRVV87HB3pPq/WBkmRJWyFxmZu8=",
+        "lastModified": 1792506237,
+        "narHash": "sha256-Q/8KLB6jNfpaUN1HAedE/u/Et9feE/zYSsutBLKrCFk=",
         "ref": "nixpkgs-unstable",
-        "rev": "f20cd90e28fe0403873f473b29e42662cd86e8c4",
+        "rev": "5adc50831c259f87faeb09ddf930d43597197473",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
@@ -420,10 +420,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1792295755,
-        "narHash": "sha256-wPyciG1ur2WPbCT12T+IRBr8Dfrt+pqewm/viin9+zE=",
+        "lastModified": 1792555615,
+        "narHash": "sha256-hgkjMS7s4GRhZiHAgzF1UHFrXwu+2dcBohgF57Wrgps=",
         "ref": "master",
-        "rev": "b80d26f334eed217a271b98ca692937676b33762",
+        "rev": "2a46f9d8fac507c47e8a659d5a4e91676d06273c",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-community/nix-vscode-extensions.git"
