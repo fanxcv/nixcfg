@@ -63,9 +63,23 @@
   };
 
   # 上游主题源替换（whiskers 模板工具换 nixpkgs 版，避免上游自带旧版）
+  # 端口源（catppuccin/<port> 的 GitHub tarball）改走 githubProxy 前缀：这些 FOD 不在
+  #   cache.nixos.org（实测 nix-lenovo 闭包 13 个 catppuccin FOD 里 7 个缺，且
+  #   catppuccin.cachix.org 同样缺），否则每台机器首次构建直连 github.com 下载。
+  #   hash 固定 → 输出路径不变，命中缓存者（kde/plymouth/whiskers/壁纸）不受影响。
+  #   fetchSubmodules 的端口走 fetchgit，禁用前缀（ghfast 不代理 git 协议）。
   catppuccin.sources = inputs.catppuccin.packages.${pkgs.stdenv.hostPlatform.system}.overrideScope (
     final: prev: {
       whiskers = pkgs.catppuccin-whiskers;
+
+      fetchCatppuccinPort =
+        args:
+        prev.fetchCatppuccinPort (
+          args
+          // lib.optionalAttrs (!(args.fetchSubmodules or false)) {
+            githubBase = tools.githubFetchBase;
+          }
+        );
     }
   );
 
