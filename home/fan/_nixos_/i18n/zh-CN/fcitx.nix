@@ -1,7 +1,9 @@
 # fcitx5 中文输入法（tsln 完整版）：全拼默认 + 拼字/云拼音动画/标点策略；
-# 皮肤：Catppuccin 已随主题切换禁用（见 ../../themes/catppuccin.nix），用默认皮肤
+# 皮肤：Material-Color（hosxy/Fcitx5-Material-Color）teal + 单行候选；Catppuccin 皮肤已关
+# 主题只投放 XDG_DATA_HOME（fcitx5 恒查 ~/.local/share/fcitx5/themes），不走 addons 的
+# XDG_DATA_DIRS——会话里 fcitx5 由系统 profile 的 wrapper 启动时也能看到
 # 候选字号只能写在 classicui.conf 的 Font（fcitx5 5.1.x 已删除主题里的 [InputPanel] Font，
-# 改 catppuccin 主题的 theme.conf 是无效改动）
+# 改主题的 theme.conf 是无效改动）
 # nix-pve 会话为 X11（plasmax11，RustDesk 捕获需要）→ waylandFrontend = false，
 # HM 设 GTK_IM_MODULE/QT_IM_MODULE/XMODIFIERS（登录 shell）；图形会话由系统层
 # i18n.inputMethod 补（见 hosts/nix-pve/default.nix）
@@ -12,6 +14,9 @@
   ...
 }:
 {
+  xdg.dataFile."fcitx5/themes/Material-Color-teal".source =
+    "${pkgs.fcitx5-material-color}/share/fcitx5/themes/Material-Color-teal";
+
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
@@ -33,8 +38,13 @@
           "Groups/0/Items/1"."Name" = "pinyin";
         };
         addons = {
-          # 候选字号 14pt（catppuccin 主题时代 13 → 曾放大到 16，视觉偏大回调一档）
-          classicui.globalSection.Font = "Noto Sans CJK SC 14";
+          classicui.globalSection = {
+            # 候选字号 14pt（catppuccin 主题时代 13 → 曾放大到 16，视觉偏大回调一档）
+            Font = "Noto Sans CJK SC 14";
+            Theme = "Material-Color-teal";
+            "Vertical Candidate List" = "False"; # 单行候选（主题 README 推荐配置）
+            PerScreenDPI = "True";
+          };
           pinyin.globalSection = {
             "FirstRun" = "False";
             "PageSize" = 9;

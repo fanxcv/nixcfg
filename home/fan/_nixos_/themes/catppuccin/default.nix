@@ -38,10 +38,11 @@
     zsh-syntax-highlighting.flavor = lib.mkDefault "mocha";
 
     # KDE 主题切换（tsln 原版）：Plasma 配色/开机画面/光标（plasma.nix）、
-    # 壁纸（桌面+锁屏，wallpaper.nix）、fcitx5 皮肤、Konsole 配色（konsole.nix，mocha）
+    # 壁纸（桌面+锁屏，wallpaper.nix）、Konsole 配色（konsole.nix，mocha）
+    # fcitx5 皮肤不用 Catppuccin：改用 Material-Color teal 单行（_nixos_/i18n/zh-CN/fcitx.nix）
     plasma.enable = lib.mkDefault true;
     wallpaper.enable = lib.mkDefault true;
-    fcitx5.enable = lib.mkDefault true;
+    fcitx5.enable = lib.mkDefault false;
     konsole.enable = lib.mkDefault true;
     konsole.flavor = lib.mkDefault "mocha";
   };
