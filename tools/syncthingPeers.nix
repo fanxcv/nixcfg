@@ -79,7 +79,7 @@
     }
   ];
   retired = [
-    # nix-book（无界14S，2026-10 重新纳入现役但不装 syncthing）——部署后各机自动移除该设备
+    # nix-book（无界14S，2026-10 已迁出本仓库自管并退役）——部署后各机自动移除该设备
     {
       name = "nix-book";
       id = "3BUAVRP-MP4LTY6-7Q72EOI-HRCOYYK-V2NQ54J-POLLKSW-FMJY7E3-IHJOFQW";

@@ -357,7 +357,7 @@
         }
       ) (machinesOfKind [ "darwin" ]);
 
-      # --- NixOS 真机（nix-lenovo / nix-book / nix-asus）由 registry 派生 ---
+      # --- NixOS 真机（nix-lenovo / nix-asus）由 registry 派生 ---
       # 系统层：hosts/<机>/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面）
       # 用户层：users/fan 复用 home/fan/module-list.nix（_common_ + _nixos_ + 可选机器差异）
       # 部署：nixos-rebuild switch --flake .#<机>（本仓库无自动部署）
@@ -458,8 +458,8 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          # 全目标 eval：11 standalone HM + 3 darwin + 3 nixos = 17（求值失败则 check 实例化失败）
-          # unsafeDiscardStringContext：只 eval 不构建；否则 check 会把 17 个目标的 drv 当依赖，跨架构直接 platform mismatch
+          # 全目标 eval：11 standalone HM + 3 darwin + 2 nixos = 16（求值失败则 check 实例化失败）
+          # unsafeDiscardStringContext：只 eval 不构建；否则 check 会把 16 个目标的 drv 当依赖，跨架构直接 platform mismatch
           targetDrvs =
             lib.mapAttrs (
               n: c: builtins.unsafeDiscardStringContext c.activationPackage.drvPath
@@ -497,7 +497,7 @@
               '${builtins.toJSON aliasPresent}'
             touch "$out"
           '';
-          # 全目标 eval 门禁：17 台机器全部可求值（见 tests/eval-all-targets.py）
+          # 全目标 eval 门禁：16 台机器全部可求值（见 tests/eval-all-targets.py）
           eval-all-targets = pkgs.runCommand "eval-all-targets-check" { } ''
             ${pkgs.python3}/bin/python3 ${./tests/eval-all-targets.py} '${builtins.toJSON targetDrvs}'
             touch "$out"

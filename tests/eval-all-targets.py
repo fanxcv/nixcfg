@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""全目标 eval 门禁：17 台机器（11 standalone HM + 3 darwin + 3 nixos）必须全部可求值。
+"""全目标 eval 门禁：16 台机器（11 standalone HM + 3 darwin + 2 nixos）必须全部可求值。
 
 flake.nix 的 check 传入各目标 drvPath 的 JSON；求值失败则 check 实例化即失败，
 本脚本复核目标数与路径非空（机器漏注册会少目标 → 失败）。
@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import sys
 
-EXPECTED_TARGETS = 17
+EXPECTED_TARGETS = 16
 
 
 def main() -> int:
