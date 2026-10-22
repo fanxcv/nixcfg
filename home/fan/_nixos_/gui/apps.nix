@@ -9,5 +9,6 @@
     microsoft-edge # 浏览器（mac 同款；nixpkgs 标记 unfree，flake 已放行）
     bitwarden-desktop # 密码管理（mac 同款）
     remmina # 远程桌面客户端（RDP/VNC/SPICE，连 Windows/服务器用）
+    wpsoffice-cn # WPS Office（Word/Excel/PPT；unfree，放行见 tools/machines.nix extraUnfree）
   ];
 }

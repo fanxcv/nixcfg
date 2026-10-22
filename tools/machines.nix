@@ -127,6 +127,7 @@
     extraUnfree = [
       "microsoft-edge"
       "libsciter"
+      "wpsoffice-cn" # WPS Office
     ];
   };
   nix-lenovo = {
@@ -137,6 +138,7 @@
     extraUnfree = [
       "microsoft-edge"
       "libsciter"
+      "wpsoffice-cn" # WPS Office
       "wechat"
       "qq"
     ];
@@ -150,6 +152,7 @@
     extraUnfree = [
       "microsoft-edge"
       "libsciter"
+      "wpsoffice-cn" # WPS Office
       "wechat"
       "qq"
     ];
@@ -163,6 +166,7 @@
     extraUnfree = [
       "microsoft-edge"
       "libsciter"
+      "wpsoffice-cn" # WPS Office
       "wechat"
       "qq"
     ];
