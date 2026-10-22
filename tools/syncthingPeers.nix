@@ -87,7 +87,7 @@
     }
   ];
   retired = [
-    # nix-book（无界14S 旧笔记本）2026-10 换 ThinkBook 后退役，同一台机器的现役 ID 见上方 peers.nix-lenovo
+    # nix-book（无界14S，2026-10 重新纳入现役但不装 syncthing）——部署后各机自动移除该设备
     {
       name = "nix-book";
       id = "3BUAVRP-MP4LTY6-7Q72EOI-HRCOYYK-V2NQ54J-POLLKSW-FMJY7E3-IHJOFQW";
