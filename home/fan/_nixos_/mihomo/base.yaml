@@ -20,10 +20,12 @@ geo-auto-update: true
 geo-update-interval: 24
 # Geo 数据库下载地址：源 https://github.com/MetaCubeX/meta-rules-dat
 # 可换镜像站，但勿换其他数据库（可能导致无法启动）
+# 2026-10：ghfast.top 对该路径返回 403 "Forbidden by black list"（24 字节错误页会污染 GeoSite.dat 导致 mihomo 启动 fatal），
+#   改用 edgeone.gh-proxy.org（与上面 external-ui-url 同一镜像，实测取到真数据）
 geox-url:
-  geoip: "https://ghfast.top/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
-  geosite: "https://ghfast.top/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
-  mmdb: "https://ghfast.top/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
+  geoip: "https://edgeone.gh-proxy.org/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
+  geosite: "https://edgeone.gh-proxy.org/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+  mmdb: "https://edgeone.gh-proxy.org/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb"
 
 profile:
   store-selected: true
