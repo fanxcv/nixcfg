@@ -141,6 +141,19 @@
       "qq"
     ];
   };
+  # MECHREVO 无界14S（7840HS/780M + AX200，476.9G 盘），2026-10 起重新纳入现役
+  nix-book = {
+    kind = "nixos";
+    system = "x86_64-linux";
+    user = "fan";
+    alias = false;
+    extraUnfree = [
+      "microsoft-edge"
+      "libsciter"
+      "wechat"
+      "qq"
+    ];
+  };
   # ASUS Zenbook UM5302TA，与 Windows 双系统（NixOS 占 p3 之后的 256G 空闲区）
   nix-asus = {
     kind = "nixos";
