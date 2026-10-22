@@ -1,5 +1,5 @@
 # home 目录持久化（/persist/home/fan）：tmpfs 根下 home 数据跨重启保留
-# nix-pve/nix-lenovo 共用（home/fan/_nixos_/default.nix 用 tools.scan 扫描导入）
+# nix-lenovo/nix-book/nix-asus 共用（home/fan/_nixos_/default.nix 用 tools.scan 扫描导入）
 # 注意 .oh-my-zsh 是 git clone 安装（非 nix 包，见 _common_/shells.nix），必须持久化
 _: {
   home.persistence."/persist" = {
@@ -65,7 +65,7 @@ _: {
         mode = "0755";
       }
       {
-        directory = "xwechat_files"; # 微信 4.x 数据目录（仅 nix-lenovo 装微信，nix-pve 上为空目录）
+        directory = "xwechat_files"; # 微信 4.x 数据目录（未装微信的机器上为空目录）
         mode = "0755";
       }
     ];

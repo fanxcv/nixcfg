@@ -1,4 +1,4 @@
-# syncthing（P2P 文件同步）——nix-pve：系统级服务，以 fan 用户身份运行
+# syncthing（P2P 文件同步）——NixOS 真机（nix-lenovo / nix-asus）：系统级服务，以 fan 用户身份运行
 #   目录落在持久层：configDir → ~/.config（已持久化）、dataDir → ~/.local（已持久化），
 #     数据目录 ~/sync 与 ~/share 见 home/fan/_nixos_/immutable.nix
 #   GUI 仅绑 127.0.0.1（本机浏览器/SSH 隧道）；openDefaultPorts 放行 22000/21027

@@ -15,7 +15,7 @@
 #   私钥：$HOME/.secrets/age-keys.txt（与 ai.env 同目录同挂载，容器重建不丢）
 #   解密：本文件（ai-env/git-credentials）+ 各模块自带（tailscale/ssh/keystore/skemate），
 #   模式统一、无 if 无兜底——私钥缺失或 .age 损坏即部署失败（暴露问题）
-# 系统域 secrets（NixOS host keys、nix-pve comin 等）仍走 agenix 系统层（hosts/ 下声明）。
+# 系统域 secrets（NixOS host keys 等）仍走 agenix 系统层（hosts/ 下声明）。
 # HM 层不再 import agenix homeManagerModules（无 age.secrets 声明）。
 
 { pkgs, lib, ... }:

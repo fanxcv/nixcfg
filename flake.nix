@@ -59,16 +59,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # git 驱动自动部署：仅 NixOS 真机（nix-pve）启用（mini-m4 2026-09 移除）
-    # 跟随 main（不再锁 tag）：升级 = nix flake update comin
-    comin = {
-      url = "git+https://ghfast.top/https://github.com/nlewo/comin.git?ref=main&shallow=1";
-      inputs.nixpkgs.follows = "nixpkgs";
-      # comin 内部自带的 treefmt-nix 整体跟随（否则它解析 github 旧版 + 旧 nixpkgs，lock 残留双节点）
-      inputs.treefmt-nix.follows = "treefmt-nix";
-    };
-
-    # --- NixOS 真机（nix-pve，PVE 上的虚拟机）：声明式磁盘 / 不可变系统 / Plasma 桌面 ---
+    # --- NixOS 真机：声明式磁盘 / 不可变系统 / Plasma 桌面 ---
     # 注意：input 全部走 gh-proxy（与 nixpkgs/home-manager 一致）；若 gh-proxy 限流导致 lock 拉不动，
     # 可临时用 --override-input 直连 GitHub 或换 ghfast.top 前缀（见下方 URL 格式）
     disko = {
@@ -142,7 +133,6 @@
       home-manager,
       agenix,
       treefmt-nix,
-      comin,
       nix-darwin,
       ...
     }@inputs:
@@ -167,8 +157,6 @@
       # unstable 服务包：vscode 本体（nixos）+ 扩展市场（mac/nixos）+ codex/pi（_common_）
       unstableOverlay = import ./overlays/unstable.nix { inherit inputs; };
       vscodeOverlay = import ./overlays/vscode.nix { inherit inputs; };
-      # comin 包构建（nix-pve 独有，见 overlays/comin.nix）
-      cominOverlay = import ./overlays/comin.nix { inherit lib inputs; };
       # Konsole 隐藏工具栏（--hide-toolbars 包装，见 overlays/konsole.nix）
       konsoleOverlay = import ./overlays/konsole.nix lib;
       # 本地包统一注入，供所有配置构造器复用
@@ -203,7 +191,6 @@
             skemateOverlay
             unstableOverlay
             vscodeOverlay
-            cominOverlay
             konsoleOverlay
             localPkgsOverlay
           ];
@@ -370,10 +357,10 @@
         }
       ) (machinesOfKind [ "darwin" ]);
 
-      # --- NixOS 真机（nix-pve / nix-lenovo）由 registry 派生 ---
+      # --- NixOS 真机（nix-lenovo / nix-book / nix-asus）由 registry 派生 ---
       # 系统层：hosts/<机>/default.nix（disko 分区 / impermanence 持久化 / Plasma 桌面）
       # 用户层：users/fan 复用 home/fan/module-list.nix（_common_ + _nixos_ + 可选机器差异）
-      # 部署：nixos-rebuild switch --flake .#<机>；nix-pve 的 comin 轮询 main 自动部署
+      # 部署：nixos-rebuild switch --flake .#<机>（本仓库无自动部署）
       nixosConfigurations = lib.mapAttrs (
         hostName: m:
         mkNixosConfig {

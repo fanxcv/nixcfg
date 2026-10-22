@@ -37,7 +37,7 @@
     "--accept-dns=true"
   ];
 
-  # authkey 系统域解密（root 读；两机与 nix-pve 共用同一 preauth key）
+  # authkey 系统域解密（root 读；各 NixOS 真机共用同一 preauth key）
   age.secrets."headscale-auth-key" = {
     file = tools.relative "secrets/headscale-auth-key.age";
     path = "/run/agenix/headscale-auth-key";

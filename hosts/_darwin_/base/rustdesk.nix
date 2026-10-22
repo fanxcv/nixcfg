@@ -20,7 +20,7 @@
 let
   rustdesk = tools.config.rustdesk;
   injector = ../../../tools/rustdesk-inject.py;
-  # Mac 实机可信设备；nix-pve 首次被连时由 GUI 确认，不预写。
+  # Mac 实机可信设备（NixOS 侧不预写，首次被连时 GUI 确认）。
   trustedDevices = "009GnjljLRT/b2k0DwCFQSXI6O";
 in
 {

@@ -1,7 +1,7 @@
 # nix-book（MECHREVO 无界14S 笔记本：476.9G NVMe + AMD Ryzen 7 7840HS/780M 核显 + Intel AX200 无线 + KDE Plasma 桌面）
 # 由 nix-lenovo 的机器层复制而来（同为用户的主力笔记本形态），硬件项按本机实测器件改写
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
-# 部署：手动 nixos-rebuild switch --flake .#nix-book（笔记本移动设备，不用 comin 自动部署）
+# 部署：手动 nixos-rebuild switch --flake .#nix-book（笔记本移动设备）
 { pkgs, tools, ... }:
 {
   imports =

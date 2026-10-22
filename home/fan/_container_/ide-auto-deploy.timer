@@ -1,5 +1,5 @@
 [Unit]
-Description=ide-auto-deploy 轮询 timer（每 60s，与 comin 默认轮询周期一致）
+Description=ide-auto-deploy 轮询 timer（每 60s）
 
 [Timer]
 OnBootSec=60

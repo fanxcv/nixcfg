@@ -4,12 +4,12 @@
 
 **宗旨：能 nix 就 nix**——软件包、配置、环境变量尽量全交 nix 声明式管理；实在不行的（systemd、sshd、登录 shell）才留在 Dockerfile/系统层。nix 模块即配置的唯一载体，改配置就是改 nix（见 AGENTS.md）。
 
-## 机器矩阵（18 台）
+## 机器矩阵（17 台）
 
-| 平台 | 机器 | 部署命令 | comin 自动 |
+| 平台 | 机器 | 部署命令 | 自动部署 |
 |---|---|---|---|
 | macOS | mba-m5 / mbp-m1 / mini-m4 | `nix run .#mba-m5`（余同） | — |
-| NixOS | nix-pve / nix-lenovo / nix-book / nix-asus | `nixos-rebuild switch --flake .#nix-pve` | nix-pve |
+| NixOS | nix-lenovo / nix-book / nix-asus | `nixos-rebuild switch --flake .#nix-lenovo` | — |
 | IDE 容器 | ide-si / ide-lenovo / ide-mac | 容器内 `nix run .#ide-si`（余同） | — |
 | 云服务器 | ali-ai / hc-pro-pve-2 | `nix run .#ali-ai`（余同） | — |
 | PVE 宿主 | ds2 / desktop / fan / hp / mi / razer | `nix run .#ds2`（余同） | — |
@@ -30,7 +30,7 @@
 |---|---|
 | IDE 容器构建+激活 | 容器内 `nix run .#ide-si` / `.#ide-lenovo` / `.#ide-mac` |
 | macOS 构建+激活 | `nix run .#mba-m5` / `.#mbp-m1` / `.#mini-m4`（激活内置 sudo） |
-| NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-pve` / `.#nix-lenovo` / `.#nix-book` / `.#nix-asus` |
+| NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-lenovo` / `.#nix-book` / `.#nix-asus` |
 | PVE 宿主部署 | `nix run .#ds2` / `.#desktop` / `.#fan` / `.#hp` / `.#mi` / `.#razer` |
 | 升级依赖 | `nix flake update` |
 | 升级自建包（codex/rustdesk/kasmvnc） | `scripts/update-packages.sh`（`--check` 只报告） |
@@ -66,13 +66,13 @@ chmod 600 /root/.secrets/ai.env
 
 ### NixOS 真机
 
-nix-pve（PVE 上的虚拟，disko 分区 + impermanence）comin 轮询 `main` 自动部署，手动命令用于首次接入/故障恢复；nix-lenovo（Lenovo ThinkBook 14 G6+ AHP）、nix-book（MECHREVO 无界14S）与 nix-asus（ASUS Zenbook UM5302TA，与 Windows 双系统）为笔记本，无 comin，手动 `nixos-rebuild`。
+nix-lenovo（Lenovo ThinkBook 14 G6+ AHP）、nix-book（MECHREVO 无界14S）与 nix-asus（ASUS Zenbook UM5302TA，与 Windows 双系统）为笔记本，手动 `nixos-rebuild` 部署（本仓库无自动部署）。
 
-四台 NixOS 真机共享用户层：mihomo 代理（开机自启 + 每日定时重拉订阅）、ssh 加固与身份密钥（见 `tools/sshUserKeys.nix`）；syncthing（`~/sync` 现有机器之间 + `~/share` 含 ide 容器；设备互配见 `tools/syncthingPeers.nix`）在 nix-pve / nix-lenovo / nix-asus 三台启用，nix-book 不装。
+三台 NixOS 真机共享用户层：mihomo 代理（开机自启 + 每日定时重拉订阅）、ssh 加固与身份密钥（见 `tools/sshUserKeys.nix`）；syncthing（`~/sync` 现有机器之间 + `~/share` 含 ide 容器；设备互配见 `tools/syncthingPeers.nix`）在 nix-lenovo / nix-asus 两台启用，nix-book 不装。
 
 ### macOS
 
-`nix run .#<机器>` 一步构建+激活（nix-darwin 系统层 + home-manager 用户层）；macOS 三台均无 comin（mini-m4 曾启用，2026-09 移除），手动 `nix run` 部署。系统层结构见 `hosts/README.md`。
+`nix run .#<机器>` 一步构建+激活（nix-darwin 系统层 + home-manager 用户层）；macOS 三台手动 `nix run` 部署。系统层结构见 `hosts/README.md`。
 
 ### PVE 宿主机
 
@@ -103,7 +103,7 @@ nixcfg/
 ├── home/fan/              # 用户层：_common_/_<平台>_ 公共 + <机> 微调（module-list.nix 组装）
 ├── users/fan/             # NixOS 真机用户层（复用 home/fan 模块清单）
 ├── modules/               # 可复用模块库：home/（ai/codex/mise/pi/ssh/tmux/vscode）、darwin/、nixos/
-├── overlays/              # nixpkgs overlay：skemate（flake.lock 锁定 rev，见 inputs）、unstable/vscode 市场、comin 等
+├── overlays/              # nixpkgs overlay：skemate（flake.lock 锁定 rev，见 inputs）、unstable/vscode 市场等
 ├── packages/              # 本地自打包（kasmvnc、rustdesk-bin、KDE 商店主题等）
 ├── docker/ide/            # IDE 容器定义（compose si/lenovo/mac 三文件 + ubuntu/Dockerfile）
 ├── pve/                   # PVE 宿主系统层 + 部署脚本（apply.sh/deploy.sh/deploy.nix）

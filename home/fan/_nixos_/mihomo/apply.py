@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""mihomo 声明式配置生成（NixOS：nix-pve / nix-lenovo 共享，激活期执行）
+"""mihomo 声明式配置生成（NixOS：nix-lenovo / nix-book / nix-asus 共享，激活期执行）
 
 用法: apply.py <订阅URL文件> <模板YAML> <UI目录> <输出配置>
 

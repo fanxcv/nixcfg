@@ -11,7 +11,7 @@ grep -qE 'age1[a-z0-9]{50,}' keys.nix || { echo "错误：keys.nix 中没有 age
 count=0
 # 只加密私密文件：*.pub 公钥明文直接入库（secrets/hosts/<机>/），不入 source、不加密
 while IFS= read -r f; do
-  # 保持 source/ 下的子目录结构（如 hosts/nix-pve/）
+  # 保持 source/ 下的子目录结构（如 hosts/ide-si/）
   rel="${f#source/}"
   out="${rel}.age"
   mkdir -p "$(dirname "$out")"

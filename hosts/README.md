@@ -58,7 +58,7 @@ hosts/_darwin_/        # macOS 平台层：default.nix=三台共用组装清单�
                        #   base（homebrew 声明式 + casks）gui（quartz 桌面声明：
                        #   Dock/Finder/触控板/菜单栏/截图…）i18n（字体）
                        #   kernel（pmset 电源/关更新/关开机音）
-hosts/<机>/            # 机器差异层：只放本机文件（homebrew.nix/power.nix/comin-cleanup.nix…）
+hosts/<机>/            # 机器差异层：只放本机文件（tailscale.nix/udev 规则等机器独有项…）
 users/fan/             # 用户定义：primaryUser + home-manager 内嵌
 home/fan/<host>/       # 用户层组装（_common_ 跨平台 + _darwin_ 平台层）
 ```
@@ -67,11 +67,7 @@ home/fan/<host>/       # 用户层组装（_common_ 跨平台 + _darwin_ 平台�
 homebrew casks 在
 `hosts/_darwin_/base/apps.nix`，增删即装卸；未声明的 casks 会自动卸载（cleanup=zap）。
 
-## 自动部署（comin，已就位）
+## 部署方式
 
-`hosts/nix-pve/services/comin.nix`（nix-pve 独有，由 `tools.scan` 经
-`hosts/nix-pve/services/default.nix` 自动导入）配好 git 驱动的自动部署：只轮询 `main` 分支，
-检测到新 commit 自动 `nixos-rebuild`，需要重启时随机延迟后自动重启。
-其它分支（test 等）不自动部署，手动 `nixos-rebuild switch --flake .#nix-pve`。
-其他机器（nix-lenovo 笔记本、nix-asus 笔记本、macOS）不启用 comin，各自手动部署；
-要接入新机器，照 `hosts/nix-pve/default.nix` 复制 comin 模块 import、services/comin.nix 与 token 声明。
+各机均手动部署：`nixos-rebuild switch --flake .#<机>`（NixOS）/ `nix run .#<机>`（macOS、容器、PVE 宿主）。
+仓库不提供自动部署（comin 已随 nix-pve 于 2026-10 退役而移除，flake input 与 overlay 一并删除）。

@@ -119,17 +119,6 @@
   };
 
   # --- NixOS 真机（无 nix run 别名，走 nixos-rebuild）---
-  nix-pve = {
-    kind = "nixos";
-    system = "x86_64-linux";
-    user = "fan";
-    alias = false;
-    extraUnfree = [
-      "microsoft-edge"
-      "libsciter"
-      "wpsoffice-cn" # WPS Office
-    ];
-  };
   nix-lenovo = {
     kind = "nixos";
     system = "x86_64-linux";

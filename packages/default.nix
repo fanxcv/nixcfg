@@ -32,7 +32,7 @@ in
 autoPkgs
 // lib.optionalAttrs (pkgs.stdenv.hostPlatform.system == "x86_64-linux") {
   # 官方 GitHub Release 二进制（deb 解包），免 rustdesk 源码编译（无缓存，编译 ~1h）
-  # 仅 x86_64-linux（nix-pve 用）；darwin 走 brew + 注入脚本（见 hosts/_darwin_/base/rustdesk.nix）
+  # 仅 x86_64-linux；darwin 走 brew + 注入脚本（见 hosts/_darwin_/base/rustdesk.nix）
   rustdesk-bin = pkgs.callPackage ./rustdesk-bin.nix { };
 }
 // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {

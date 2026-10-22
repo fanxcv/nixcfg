@@ -1,4 +1,4 @@
-# mihomo（Clash Meta 内核）声明式安装 + 订阅配置生成（所有 NixOS 真机：nix-pve / nix-lenovo / nix-asus）
+# mihomo（Clash Meta 内核）声明式安装 + 订阅配置生成（所有 NixOS 真机：nix-lenovo / nix-book / nix-asus）
 # 订阅：与 macOS ClashX Meta 同一地址（见 home/fan/_darwin_/gui/apps/clashx-meta.nix）；URL 含凭据，经 age 加密托管
 # 配置：订阅为基，仓库内 mihomo/base.yaml（仅非敏感设置项，随部署进 store，不落 home）覆盖
 #       proxies/proxy-groups/rules 之外的键；mode/UI/DNS 端口三处修正见 mihomo/apply.py 头部说明

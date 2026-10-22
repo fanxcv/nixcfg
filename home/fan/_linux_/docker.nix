@@ -57,7 +57,7 @@
         fi
 
         # 4) 国内镜像加速（useChinaMirror 开关，与 mirrors.nix 同语义）：写 /etc/docker/daemon.json
-        #    NixOS 真机跳过（nix-pve 由系统层 virtualisation.docker.daemon.settings 声明式管，
+        #    NixOS 真机跳过（系统层 virtualisation.docker.daemon.settings 声明式管，
         #    HM 写普通文件会覆盖其 symlink，rebuild 后丢失）
         if [ "${if useChinaMirror then "true" else "false"}" = true ] && [ "${platform}" != nixos ]; then
           ''${SUDO} mkdir -p /etc/docker

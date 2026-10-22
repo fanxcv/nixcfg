@@ -1,5 +1,5 @@
 #!/bin/sh
-# ide 容器配置自动部署（pull 轮询模型，轻量替代 comin——comin 只认 nixos/darwin 配置输出且需 NixOS 系统）
+# ide 容器配置自动部署（pull 轮询模型；现成系统级部署器只认 nixos/darwin 配置输出且需系统级接入）
 # 由 ide-auto-deploy.nix 激活时安装到 /usr/local/bin/（sed 替换 @hostName@）
 # 逻辑：/root/nixcfg（compose bind mount 宿主工作树，不 clone）fetch origin/main，
 #   与 $STATE/last 记录的已部署 commit 比对；不一致则强切 main 到 origin/main 后 nix run .#<hostName>

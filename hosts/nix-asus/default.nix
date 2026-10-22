@@ -2,7 +2,7 @@
 # 与 Windows 双系统：原盘前 220G 归 Windows（含 260M ESP / MSR / C: 219G / RECOVERY / MYASUS），
 #   NixOS 用 p3 之后的 256G 空闲区（分区布局见 disks.nix，首次安装为手工建区）
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
-# 部署：手动 nixos-rebuild switch --flake .#nix-asus（笔记本移动设备，不用 comin 自动部署）
+# 部署：手动 nixos-rebuild switch --flake .#nix-asus（笔记本移动设备）
 #   首次安装：nixos-install --flake /persist/etc/nixos#nix-asus（仓库放 /persist/etc/nixos）
 { pkgs, tools, ... }:
 {

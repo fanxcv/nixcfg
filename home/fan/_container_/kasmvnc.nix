@@ -67,7 +67,7 @@ let
   albert = pkgs.albert; # 搜索（帖子第 4 步）
   notoCjk = pkgs.noto-fonts-cjk-sans; # 中文渲染（兜底）
   jetbrainsMono = pkgs.jetbrains-mono; # 等宽字体（终端/编辑器，用户选定）
-  # fcitx5 中文输入法（参考 nix-pve i18n.inputMethod.fcitx5：全拼默认 + 云拼音/标点策略）
+  # fcitx5 中文输入法（参考 tsln i18n.inputMethod.fcitx5：全拼默认 + 云拼音/标点策略）
   fcitx5 = pkgs.qt6Packages.fcitx5-with-addons.override {
     addons = [ pkgs.kdePackages.fcitx5-chinese-addons ];
   };
@@ -416,7 +416,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
       fi
     fi
 
-    # fcitx5 中文输入法配置（参考 nix-pve i18n.inputMethod.fcitx5 settings：全拼默认 + 云拼音/标点策略）
+    # fcitx5 中文输入法配置（参考 tsln i18n.inputMethod.fcitx5 settings：全拼默认 + 云拼音/标点策略）
     # 坑：Enabled Addons 必须显式列出 keyboard,pinyin——fcitx5 5.1 addon 懒加载，
     #   缺此行时组构建早于 pinyin addon 加载完成（晚约 1.3s）→ pinyin 被剔出组 → DefaultIM 回退 keyboard-us
     mkdir -p ${sessionHome}/.config/fcitx5/conf

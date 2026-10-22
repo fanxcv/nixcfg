@@ -9,7 +9,7 @@ Four places must match exactly, all mirroring the single source of truth tools/c
 A fifth place is checked as a subset (it only declares the keys it needs):
   5. pve/deploy.sh               — /etc/nix/nix.conf heredoc for PVE hosts (plain shell, no cachix keys)
 
-modules/darwin/nix.nix and hosts/nix-pve read tools.config.nix directly and therefore
+modules/darwin/nix.nix and hosts/<机>/default.nix read tools.config.nix directly and therefore
 follow the source automatically; they need no assertion here.
 Additionally checked: tools/config.nix dockerRegistryMirrors vs the hand-written
 registries.conf.d drop-in in pve/apply.sh (6th argument, or sibling of the

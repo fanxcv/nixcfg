@@ -1,5 +1,5 @@
-# ide 容器配置自动部署（pull 轮询模型，轻量替代 comin）
-#   触发：systemd timer 每 60s 跑一次（OnBootSec=60 延迟启动，Persistent 补跑；与 comin 默认轮询周期一致）
+# ide 容器配置自动部署（pull 轮询模型，轻量自建）
+#   触发：systemd timer 每 60s 跑一次（OnBootSec=60 延迟启动，Persistent 补跑）
 #   逻辑：/root/nixcfg（compose bind mount，不 clone）fetch origin/main → 与 last 记录的 commit 比对，
 #     不一致则强切 main 到 origin/main → nix run .#<hostName>
 #   分支无关：不管容器内当前停在哪个分支（test 等），一律以 origin/main 为准强切（宿主工作树，分支由脚本接管）
@@ -7,8 +7,8 @@
 #   代理：ide-si 的 all_proxy 由 sysenv.nix 写 /etc/environment.d/zz-ide-proxy.conf；environment.d 只对 user
 #     实例生效（系统服务不读），unit 用 EnvironmentFile=- 显式引用（- 容忍 lenovo 无此文件），nix/libcurl 自动走代理
 #   失败重试：激活失败不更新 last，下次轮询自动重试
-#   为什么不用 comin：comin 只认 nixosConfigurations/darwinConfigurations 输出（deployment 固定
-#     switch-to-configuration），不支持 homeConfigurations/任意命令，且 services.comin 需 NixOS/darwin 系统
+#   为什么自研：现成系统级部署器只认 nixos/darwin 系统配置输出
+#     （deployment 固定 switch-to-configuration），不支持 homeConfigurations/任意命令
 
 { lib, hostName, ... }:
 {

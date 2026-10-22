@@ -13,12 +13,12 @@
 #                            #   path 缺省为空 → 路径取 $HOME/<id>（既定约定）；给值则用该绝对路径
 #                            #   （容器给 /home/fan/Desktop/share：syncthing 以 fan 运行，桌面上的 share 即同步目录）
 #     guiPasswordAgePath ? null;   # 非空则 age 解密 → PUT /rest/config/gui（darwin / ide 容器）
-#     guiPasswordFile ? null;      # 非空则用明文密码文件（nix-pve：/run/agenix/syncthing-gui-password）
+#     guiPasswordFile ? null;      # 非空则用明文密码文件（如 /run/agenix/syncthing-gui-password）
 #   }
 #     guiPasswordAgePath / guiPasswordFile 互斥，至少一个非空才注入；PUT 整个 gui 配置（user=fan + password），
 #     与 nixpkgs 模块 guiPasswordFile 只 PATCH password 不设 user 不同——syncthing 要求 user+password 双非空才启用认证
 #     addr 为设备地址数组（如 [ "tcp://mba-m5:22000" "dynamic" ]）
-#     folder 路径：darwin /Users/fan/<id> 与 nix-pve /home/fan/<id> 均取 $HOME/<id>（不传 path）；容器显式传 path
+#     folder 路径：darwin /Users/fan/<id> 与 linux /home/fan/<id> 均取 $HOME/<id>（不传 path）；容器显式传 path
 {
   pkgs,
   peers,
@@ -166,7 +166,7 @@ in
       fi
     done < <(printf '%s' "$retired_json" | ${jq} -c '.[]')
 
-    # ---- 4. GUI 密码（仅 darwin / 容器侧；nix-pve 由 agenix guiPasswordFile 管理；放最后因 PUT 触发重启） ----
+    # ---- 4. GUI 密码（仅 darwin / 容器侧；NixOS 由 agenix guiPasswordFile 管理；放最后因 PUT 触发重启） ----
     ${guiPasswordBlock}
   }
   set_syncthing_autoconfig

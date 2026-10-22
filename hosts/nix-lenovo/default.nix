@@ -1,6 +1,6 @@
 # nix-lenovo（Lenovo ThinkBook 14 G6+ AHP 笔记本，953.9G NVMe + AMD Ryzen 7 8845H/780M 核显 + KDE Plasma 桌面）—— 机器组装清单
 # 公共配置在 hosts/_common_/ + hosts/_nixos_/，本目录只放本机特有项
-# 部署：手动 nixos-rebuild switch --flake .#nix-lenovo（笔记本移动设备，不用 comin 自动部署）
+# 部署：手动 nixos-rebuild switch --flake .#nix-lenovo（笔记本移动设备）
 #   首次安装：nixos-install --flake /persist/etc/nixos#nix-lenovo（仓库放 /persist/etc/nixos）
 { pkgs, tools, ... }:
 {

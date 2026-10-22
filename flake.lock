@@ -44,32 +44,6 @@
         "url": "https://ghfast.top/https://github.com/catppuccin/nix.git"
       }
     },
-    "comin": {
-      "inputs": {
-        "flake-compat": "flake-compat",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "treefmt-nix": [
-          "treefmt-nix"
-        ]
-      },
-      "locked": {
-        "lastModified": 1791828108,
-        "narHash": "sha256-K8jtZcj51AvvLJNXZJV4hShG7+U/1iwyUwRru5Zt9sQ=",
-        "ref": "main",
-        "rev": "aad3bfa91975a31abaabc51a7ccaed3fddd910f3",
-        "shallow": true,
-        "type": "git",
-        "url": "https://ghfast.top/https://github.com/nlewo/comin.git"
-      },
-      "original": {
-        "ref": "main",
-        "shallow": true,
-        "type": "git",
-        "url": "https://ghfast.top/https://github.com/nlewo/comin.git"
-      }
-    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -90,22 +64,6 @@
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-community/disko.git"
-      }
-    },
-    "flake-compat": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1765121682,
-        "narHash": "sha256-4VBOP18BFeiPkyhy9o4ssBNQEvfvv1kXkasAYd0+rrA=",
-        "owner": "NixOS",
-        "repo": "flake-compat",
-        "rev": "65f23138d8d09a92e30f1e5c87611b23ef451bf3",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "flake-compat",
-        "type": "github"
       }
     },
     "home-manager": {
@@ -335,7 +293,6 @@
       "inputs": {
         "agenix": "agenix",
         "catppuccin": "catppuccin",
-        "comin": "comin",
         "disko": "disko",
         "home-manager": "home-manager",
         "homebrew": "homebrew",

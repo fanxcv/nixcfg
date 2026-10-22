@@ -4,7 +4,7 @@
 #   （升级 = 改 version + 重取 hash：nix store prefetch-file <官方 URL>；同 clashx-meta 模式）
 # QQ：26.05 的 3.2.29 源 URL 已死（404），用 unstable 通道的 3.2.32（→ overlays/unstable.nix）
 # unfree：由机器注册表 tools/machines.nix 的 extraUnfree 放行（wechat / qq）；未声明的机器
-#   若开启本模块会 eval 失败，故 nix-pve 机器层显式关闭
+#   若开启本模块会 eval 失败（extraUnfree 未放行 wechat/qq）
 # 启用：默认仅 NixOS 平台开启；某台不装 → 机器层 softwares.chat.enable = lib.mkForce false
 
 {

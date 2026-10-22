@@ -1,7 +1,21 @@
 <!-- project-rules:START -->
 # Project Rules —— 业务编码规范
 
-> 本分割块由 `fpi-project-init` 管理：每次只替换 START/END 之间的内容。标记之外的内容由项目自行维护，不会被覆盖。
+## 0. 最小化验证（强制，先读此条）
+
+> 改毕只验所及。全量验证须用户明确同意方可跑；未获同意即禁止，子代理同受此约束。纯文案、注释、文档、字面量配置改动，通常零验证。
+
+- 验惟所及：受影响单测、单文件编译或类型检查、一条最小复现命令，验毕即止
+- 禁默认全量：全仓 test / build / lint、整套集成与 e2e，不以「稳妥」「保险」为由自跑
+- 确需全量先申请：说明跑什么、为何非全量不可、约耗几时；得明确同意方可执行
+- 影响面不明取最窄一条先跑，一次只扩一级并言明缘由
+- 新写测试亦取最小：一处能拦住该改动的断言即可，不铺用例矩阵
+- 例外（不须申请）：项目既定门禁（git hooks / CI 明定者）；安全、鉴权、凭据、数据迁移、不可逆操作相关改动
+
+本项目命令：
+
+- 改毕默认跑（最窄一条）：`<填本项目最窄验证命令>`
+- 全量门禁（须用户同意方跑）：`<填全仓测试/构建命令>`
 
 ## 1. 代码简洁性
 
@@ -49,7 +63,7 @@
 
 ## 7. 测试与提交
 
-- 改代码即担责：交差前必跑受影响范围的编译与测试，不过不交
+- 改代码即担责：交差前必跑第 0 节所定的最小验证，不过不交
 - 新增或修复逻辑必留一处可运行的验证（测试或最小自检），禁无验交付
 - 修 bug 先求根因：查全部调用方，于共用处一次修净，勿逐点补丁
 - 提交一事一改，信息格式随本项目历史惯例（无惯例则 `scope: 简述`）；不夹带无关改动、不提交生成物与凭据
@@ -57,13 +71,13 @@
 <!-- project-rules:END -->
 
 <!-- project-db:START -->
-## 数据库与文档目录（依项目实际取舍，无库可删）
+## 数据库与文档目录
 
 ### 数据库操作
 
 - 数据库变更经项目既定通道：有 DB MCP 则走 MCP，有迁移工具（golang-migrate、Alembic、Liquibase、Flyway 等）则走迁移脚本
-- ⛔ 禁 Bash 直执数据库命令（mysql/psql/mongo）
-- ⛔ 禁临时脚本操库（Python/Node 手搓连接同禁）
+- 禁 Bash 直执数据库命令（mysql/psql/mongo）
+- 禁临时脚本操库（Python/Node 手搓连接同禁）
 - 生产库写操作：先询用户，先留退路（备份/快照/事务），后动手
 - 变更必留 SQL 脚本存档：`docs/sql/YYYYMMDD_功能.sql`
   ```sql
@@ -91,7 +105,7 @@
 | hosts/_darwin_/、home/fan/_darwin_/、users/fan、hosts/<mac机>/、home/fan/<mac机>/ | darwinConfigurations（改共享层 → 三台；改机器专属 → 仅该机器） |
 | home/fan/_common_/、home/fan/default.nix | darwinConfigurations + homeConfigurations（跨平台共享层，两边都受影响） |
 | home/fan/_linux_/、_ubuntu_/、_container_/、_nixos_/、_alpine_/、ide-si/、ide-lenovo/、ide-mac/ | homeConfigurations（ide-si / ide-lenovo / ide-mac） |
-| hosts/_nixos_/ | nixosConfigurations（nix-asus / nix-lenovo / nix-pve） |
+| hosts/_nixos_/ | nixosConfigurations（nix-lenovo / nix-book / nix-asus） |
 | secrets/、flake.nix、AGENTS.md | 按实际影响面判断；不确定时跑受影响平台的 eval |
 
 ## 架构约定（2025-08 整理，新增/修改模块必须遵守）
@@ -108,7 +122,7 @@
 - **fan 域 secrets**（ai-env / git-credentials / tailscale authkey / ssh 私钥 / keystore / skemate 配置）：
   统一由 `home.activation` 解密——`${pkgs.age}/bin/age -d -i "$HOME/.secrets/age-keys.txt" -o <目标> <secrets/*.age>`，
   模式见 home/fan/_common_/secrets.nix 与各模块。**失败即部署失败**（无 if 无 || true）。
-- **系统域 secrets**（NixOS host keys、nix-pve comin 等）：走 agenix 系统层（hosts/ 下声明，root 激活解密）。
+- **系统域 secrets**（NixOS host keys 等）：走 agenix 系统层（hosts/ 下声明，root 激活解密）。
 - **禁止**：HM 层 age.secrets 声明（agenix homeManagerModules 已整体移除）、
   agenixContainerFallback 类兑底链、条件跳过解密。
 - 密钥维护：明文放 secrets/source/ → `./secrets/encrypt.sh` 生成 .age（git 可公开），私钥 `$HOME/.secrets/age-keys.txt`。

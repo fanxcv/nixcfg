@@ -20,9 +20,6 @@ let
     mini-m4 = [
       "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
     ];
-    nix-pve = [
-      "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
-    ];
     nix-lenovo = [
       "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
     ];

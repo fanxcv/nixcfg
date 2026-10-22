@@ -26,14 +26,6 @@
       ];
     }
     {
-      name = "nix-pve";
-      id = "USWSSMC-KP4K3H4-ESKCMRQ-COEBIC5-YBMWBZY-U44EZAM-NJ6AGKU-ORREOAF";
-      addr = [
-        "tcp://nix-pve:22000"
-        "dynamic"
-      ];
-    }
-    {
       name = "mbp-m1";
       id = "7UILMCV-YXVJK7G-LII7UK4-XZEAKBV-IDBVF5L-EDUXPW4-AGS6BNL-B7P32QA";
       addr = [
@@ -91,6 +83,11 @@
     {
       name = "nix-book";
       id = "3BUAVRP-MP4LTY6-7Q72EOI-HRCOYYK-V2NQ54J-POLLKSW-FMJY7E3-IHJOFQW";
+    }
+    # nix-pve（PVE 虚拟机）2026-10 退役——部署后各机自动移除该设备
+    {
+      name = "nix-pve";
+      id = "USWSSMC-KP4K3H4-ESKCMRQ-COEBIC5-YBMWBZY-U44EZAM-NJ6AGKU-ORREOAF";
     }
   ];
 }
