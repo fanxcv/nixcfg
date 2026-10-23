@@ -5,6 +5,8 @@
 #   （FreeRDP/Remmina src/remmina_icon.c）。托盘图标本身照常，只是开机不自动拉起。
 # 想恢复自启：删本文件，或在 Remmina「首选项 → Applet」勾回"启动时驻留托盘"。
 {
+  # force：目标机首次切换时该文件已由 Remmina 自建（非 HM 托管），不 force 会拒绝覆盖致激活失败
+  xdg.configFile."autostart/remmina-applet.desktop".force = true;
   xdg.configFile."autostart/remmina-applet.desktop".text = ''
     [Desktop Entry]
     Version=1.0
