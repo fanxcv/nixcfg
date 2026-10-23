@@ -19,10 +19,11 @@
 }: # GitHub 加速/例外由 tools/config.nix 控制（tools.githubUrl）
 let
   # 身份密钥口径的唯一出处（两处消费：身份私钥解密的目标文件名、ssh config 的 IdentityFile 改写值）：
-  # mac 用 id_rsa，nix-asus / nix-lenovo 用 ed25519
+  # mac 用 id_rsa，nix-asus / nix-lenovo / nix-im 用 ed25519
   ed25519IdentityHosts = [
     "nix-asus"
     "nix-lenovo"
+    "nix-im"
   ];
   identityFile = if builtins.elem hostName ed25519IdentityHosts then "id_ed25519" else "id_rsa";
   # 解密 ~/.ssh/config 的机器 = 持身份私钥、需直连容器/云服务器的那些

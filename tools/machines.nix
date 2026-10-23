@@ -132,6 +132,20 @@
       "qq"
     ];
   };
+  # ThinkBook 14 G6+ IMH（Intel Ultra 5 125H），nix-lenovo 的同机型 Intel 版；配置共享、身份分离
+  nix-im = {
+    kind = "nixos";
+    system = "x86_64-linux";
+    user = "fan";
+    alias = false;
+    extraUnfree = [
+      "microsoft-edge"
+      "libsciter"
+      "wpsoffice-cn"
+      "wechat"
+      "qq"
+    ];
+  };
   # ASUS Zenbook UM5302TA，与 Windows 双系统（NixOS 占 p3 之后的 256G 空闲区）
   nix-asus = {
     kind = "nixos";

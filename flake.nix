@@ -458,8 +458,8 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          # 全目标 eval：11 standalone HM + 3 darwin + 2 nixos = 16（求值失败则 check 实例化失败）
-          # unsafeDiscardStringContext：只 eval 不构建；否则 check 会把 16 个目标的 drv 当依赖，跨架构直接 platform mismatch
+          # 全目标 eval：11 standalone HM + 3 darwin + 3 nixos = 17（求值失败则 check 实例化失败）
+          # unsafeDiscardStringContext：只 eval 不构建；否则 check 会把 17 个目标的 drv 当依赖，跟架构直接 platform mismatch
           targetDrvs =
             lib.mapAttrs (
               n: c: builtins.unsafeDiscardStringContext c.activationPackage.drvPath

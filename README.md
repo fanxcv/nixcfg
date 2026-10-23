@@ -9,7 +9,7 @@
 | 平台 | 机器 | 部署命令 | 自动部署 |
 |---|---|---|---|
 | macOS | mba-m5 / mbp-m1 / mini-m4 | `nix run .#mba-m5`（余同） | — |
-| NixOS | nix-lenovo / nix-asus | `nixos-rebuild switch --flake .#nix-lenovo` | — |
+| NixOS | nix-lenovo / nix-asus / nix-im | `nixos-rebuild switch --flake .#nix-lenovo` | — |
 | IDE 容器 | ide-si / ide-lenovo / ide-mac | 容器内 `nix run .#ide-si`（余同） | — |
 | 云服务器 | ali-ai / hc-pro-pve-2 | `nix run .#ali-ai`（余同） | — |
 | PVE 宿主 | ds2 / desktop / fan / hp / mi / razer | `nix run .#ds2`（余同） | — |
@@ -30,7 +30,7 @@
 |---|---|
 | IDE 容器构建+激活 | 容器内 `nix run .#ide-si` / `.#ide-lenovo` / `.#ide-mac` |
 | macOS 构建+激活 | `nix run .#mba-m5` / `.#mbp-m1` / `.#mini-m4`（激活内置 sudo） |
-| NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-lenovo` / `.#nix-asus` |
+| NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-lenovo` / `.#nix-asus` / `.#nix-im` |
 | PVE 宿主部署 | `nix run .#ds2` / `.#desktop` / `.#fan` / `.#hp` / `.#mi` / `.#razer` |
 | 升级依赖 | `nix flake update` |
 | 升级自建包（codex/rustdesk/kasmvnc） | `scripts/update-packages.sh`（`--check` 只报告） |
@@ -66,7 +66,7 @@ chmod 600 /root/.secrets/ai.env
 
 ### NixOS 真机
 
-nix-lenovo（Lenovo ThinkBook 14 G6+ AHP）与 nix-asus（ASUS Zenbook UM5302TA，与 Windows 双系统）为笔记本，手动 `nixos-rebuild` 部署（本仓库无自动部署）。
+nix-lenovo（Lenovo ThinkBook 14 G6+ AHP）、nix-im（同机型 Intel 版 IMH）与 nix-asus（ASUS Zenbook UM5302TA，与 Windows 双系统）为笔记本，手动 `nixos-rebuild` 部署（本仓库无自动部署）。
 
 两台 NixOS 真机共享用户层：mihomo 代理（开机自启 + 每日定时重拉订阅）、ssh 加固与身份密钥（见 `tools/sshUserKeys.nix`）；syncthing（`~/sync` 现有机器之间 + `~/share` 含 ide 容器；设备互配见 `tools/syncthingPeers.nix`）两台均启用。
 
