@@ -5,7 +5,13 @@
 {
   home.packages = with pkgs; [
     mpv
-    eden
+    # Eden 官方不推荐 Wayland（多数合成器下性能显著更差 + 神秘 bug），包装脚本固定 xcb；
+    # 用 --set-default 而非 --set，用户显式另指平台时仍可覆盖
+    (eden.overrideAttrs (prev: {
+      preFixup = prev.preFixup + ''
+        qtWrapperArgs+=(--set-default QT_QPA_PLATFORM xcb)
+      '';
+    }))
     python3
   ];
 }
