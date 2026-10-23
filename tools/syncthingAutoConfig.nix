@@ -143,7 +143,7 @@ in
         ')
         if [ "$same" != "true" ]; then
           if ${curl} -s -X PUT -H "$hdr" -H "Content-Type: application/json" -d "$merged" "$api/config/folders/$fid" >/dev/null; then
-            echo "[syncthing] $fid 已更新（路径 $fpath）"
+            echo "[syncthing] $fid 已更新（路径 ''${fpath}）"
           else
             echo "警告: 更新 ~/$fid 设备列表失败"
           fi

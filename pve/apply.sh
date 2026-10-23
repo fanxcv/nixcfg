@@ -73,7 +73,7 @@ if [ -f static-ip.conf ]; then
       install -m 0644 /tmp/interfaces.nixcfg /etc/network/interfaces
       echo "固定 IP 已写入（vmbr0: $ip ，网关 $gateway ）"
       if ! grep -q "address $ip" /etc/network/interfaces; then
-        echo "警告: 写入后未匹配 address $ip（原配置无 vmbr0 静态段？）" >&2
+        echo "警告: 写入后未匹配 address ${ip}（原配置无 vmbr0 静态段？）" >&2
       fi
     else
       echo "警告: /etc/network/interfaces 无 vmbr0 段，固定 IP 跳过（请手动配置）" >&2

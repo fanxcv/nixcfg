@@ -86,9 +86,9 @@ let
           fi
           sleep 3
           if ss -tlnp | grep -qE ":338[0-9]|:339[0-9]"; then
-            echo "lucky 已启动（$LUCKY_UNIT），转发端口监听正常"
+            echo "lucky 已启动（''${LUCKY_UNIT}），转发端口监听正常"
           else
-            echo "警告: lucky 端口未监听（检查 $LUCKY_UNIT）" >&2
+            echo "警告: lucky 端口未监听（检查 ''${LUCKY_UNIT}）" >&2
           fi
         fi
       ''

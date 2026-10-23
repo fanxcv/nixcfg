@@ -142,7 +142,7 @@ in
                 return 0
               fi
 
-              echo "===> sshd 加固已变更（$dropin），重启 sshd"
+              echo "===> sshd 加固已变更（''${dropin}），重启 sshd"
               # failed 状态会让 restart 直接报错（如上次重启中断），先清状态
               systemctl reset-failed ssh 2>/dev/null || true
               if ! (rc-service sshd restart 2>/dev/null \
