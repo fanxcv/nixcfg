@@ -44,5 +44,26 @@ with kdePackages;
 
   environment.systemPackages = [
     koko
+
+    # 截图链路（微信/QQ 自带截图在 KWin Wayland 下无捕获后端，按下即崩）：
+    #   Ctrl+Alt+A → Spectacle 区域截图 → 直接进剪贴板 → 聊天框 Ctrl+V。
+    # 快捷键的声明式覆盖在 home 层 plasma.shortcuts.nix；微信侧已由用户释放该键。
+    # 必须放系统数据目录 share/kglobalaccel（KGlobalAccel 只扫 XDG_DATA_DIRS）；
+    # X-KDE-GlobalShortcutType=Service 表示“命令型”组件，无需应用常驻即可触发。
+    (pkgs.writeTextDir "share/kglobalaccel/spectacle-region.desktop" ''
+      [Desktop Entry]
+      Type=Application
+      Name=Spectacle Region to Clipboard
+      NoDisplay=true
+      StartupNotify=false
+      Actions=spectacle-region
+      X-KDE-GlobalShortcutType=Service
+      X-KDE-Shortcuts=Ctrl+Alt+A
+
+      [Desktop Action spectacle-region]
+      Name=区域截图到剪贴板
+      Exec=${kdePackages.spectacle}/bin/spectacle --region --background --nonotify --copy-image
+      X-KDE-Shortcuts=Ctrl+Alt+A
+    '')
   ];
 }
