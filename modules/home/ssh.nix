@@ -2,9 +2,9 @@
 # 三块逻辑：
 #   1. 授权公钥拉取 + sshd 禁用密码（对应 alpine-init.sh 的 ssh_config()；加固仅对容器/云服务器生效，
 #      NixOS 与 macOS 走各自 nix 层声明，PVE 不在本次范围）
-#   2. 用户身份密钥解密（mac 为 ~/.ssh/id_rsa，nix-asus / nix-lenovo 为 ~/.ssh/id_ed25519，
+#   2. 用户身份密钥解密（mac 为 ~/.ssh/id_rsa；nix-asus / nix-lenovo / nix-im 与 ide 容器为 ~/.ssh/id_ed25519，
 #      age 路径按 hostName 参数化 → secrets/hosts/<host>/ssh-user-key.age）
-#   3. ssh config 解密（~/.ssh/config ← secrets/ssh-config.age；mba-m5/mbp-m1/nix-asus/nix-lenovo 需要。
+#   3. ssh config 解密（~/.ssh/config ← secrets/ssh-config.age；mba-m5/mbp-m1/nix-asus/nix-lenovo/nix-im 需要，ide 容器不套）。
 #      密文是 mac 口径，非 mac 机器解密后删 orbstack include 行、并把 IdentityFile 换成本机身份密钥）
 # 启用：本模块默认 enable=true；某台不装 → 机器层 softwares.ssh.enable = lib.mkForce false
 
@@ -19,19 +19,25 @@
 }: # GitHub 加速/例外由 tools/config.nix 控制（tools.githubUrl）
 let
   # 身份密钥口径的唯一出处（两处消费：身份私钥解密的目标文件名、ssh config 的 IdentityFile 改写值）：
-  # mac 用 id_rsa，nix-asus / nix-lenovo / nix-im 用 ed25519
+  # mac 用 id_rsa，nix-asus / nix-lenovo / nix-im 与 ide 容器用 ed25519
+  # ide 容器同样持固定身份（容器重建后不变）：私钥解密落 $HOME/.ssh（容器内激活 = /root）
   ed25519IdentityHosts = [
     "nix-asus"
     "nix-lenovo"
     "nix-im"
+    "ide-lenovo"
+    "ide-mac"
   ];
   identityFile = if builtins.elem hostName ed25519IdentityHosts then "id_ed25519" else "id_rsa";
   # 解密 ~/.ssh/config 的机器 = 持身份私钥、需直连容器/云服务器的那些
+  #   显式列而非复用 ed25519IdentityHosts：ide 容器只要身份密钥，不套 mac 口径的 ssh config
   sshConfigHosts = [
     "mba-m5"
     "mbp-m1"
-  ]
-  ++ ed25519IdentityHosts;
+    "nix-asus"
+    "nix-lenovo"
+    "nix-im"
+  ];
 in
 {
   options.softwares.ssh.enable = lib.mkEnableOption "ssh 配置（公钥拉取 + sshd 加固 + 身份/ssh-config 解密）" // {
@@ -159,7 +165,7 @@ in
 
     # ---------- 2) 身份私钥解密（持有私钥的机器） ----------
     # 门控用 platform/hostName 而非 hostPlatform.isDarwin：跨架构构建（如 darwin 宿主上构建容器配置）会误判
-    # mac 沿用既有 id_rsa；nix-lenovo / nix-asus 为 ed25519 → id_ed25519
+    # mac 沿用既有 id_rsa；nix-lenovo / nix-asus / ide 容器为 ed25519 → id_ed25519
     # 私钥必装；公钥仅当仓库里存在时一并落位（缺失则跳过，不报错）——
     #   ssh-copy-id 默认身份查找是 `ls -dt ~/.ssh/id*.pub`，只有私钥会让它报「无可用身份」而失败
     home.activation.decryptSshIdentity =

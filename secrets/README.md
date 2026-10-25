@@ -5,7 +5,7 @@
 - **secrets/ 根**：公共/多机共享文件（所有机器、跨平台通用）
 - **secrets/hosts/<machine>/**：机器独有文件（一个机器/部署单元一个目录）
   - 不只放公私钥：skemate 配置、lucky 归档、tailscale state 等一切机器独有物都进这里
-  - 当前机器清单：`ide-lenovo` `ide-si` `ide-mac`（ide 容器）、`mba-m5` `mbp-m1` `mini-m4`（mac）、
+  - 当前机器清单：`ide-lenovo` `ide-mac`（ide 容器）、`mba-m5` `mbp-m1` `mini-m4`（mac）、
     `nix-lenovo` `nix-asus`（NixOS 真机）、`ali-ai` `hc-pro-pve-2`（云服务器）、
     `fan` `mi`（PVE 宿主机，见 pve/）
   - 跨机器共用而非常见文件：文件本体放主机器目录，其他机器跨引用并注释说明
@@ -26,15 +26,14 @@ secrets/
 ├── clash-sub-url.age             # Clash/Mihomo 订阅 URL（mihomo 与 ClashX Meta 共用，各自激活期解密）
 ├── git-credentials.age           # ~/.git-credentials（公共）
 ├── headscale-auth-key.age        # tailscale pre-auth key（三 mac，公共）
-├── ssh-config.age                # ~/.ssh/config（mba/mbp/nix-asus/nix-lenovo，公共；非 mac 机器激活时改写为本地口径）
-├── syncthing-gui-password.age    # syncthing GUI 密码（三 mac + 三台 NixOS + 三个 ide 容器，公共）
+├── ssh-config.age                # ~/.ssh/config（mba/mbp/nix-asus/nix-lenovo/nix-im，公共；非 mac 机器激活时改写为本地口径）
+├── syncthing-gui-password.age    # syncthing GUI 密码（三 mac + 三台 NixOS + 两个 ide 容器，公共）
 ├── encrypt.sh / keys.nix / README.md
 └── hosts/
     ├── ali-ai/      gitea-act-token.age、ssh-host-key.age + .pub（明文）、tailscale-state.age
     ├── hc-pro-pve-2/ cli-proxy-config.yaml.age、ssh-host-key.age + .pub（明文）、tailscale-state.age
-    ├── ide-lenovo/  ssh-host-key.age + .pub（明文）、kasmvnc-passwd.age（KasmVNC 远程桌面密码）
-    ├── ide-mac/     ssh-host-key.age + .pub（明文）、kasmvnc-passwd.age（KasmVNC 远程桌面密码）
-    ├── ide-si/      ssh-host-key.age + .pub（明文）
+    ├── ide-lenovo/  ssh-host-key.age + .pub（明文）、ssh-user-key.age + .pub、kasmvnc-passwd.age（KasmVNC 远程桌面密码）
+    ├── ide-mac/     ssh-host-key.age + .pub（明文）、ssh-user-key.age + .pub、kasmvnc-passwd.age（KasmVNC 远程桌面密码）
     ├── mba-m5/      ssh-user-key.age + .pub
     ├── mbp-m1/      ssh-user-key.age + .pub
     ├── mini-m4/     bill-app-android-release.p12.age + bill-app-android-key.properties.age
@@ -49,7 +48,8 @@ secrets/
 ```
 
 `ssh-user-key.{age,pub}` 为机器 SSH 身份密钥（私钥加密入库，公钥授权下发）：持有者为
-`mini-m4` / `mba-m5` / `mbp-m1` / `nix-lenovo` / `nix-asus`，清单集中于 `tools/sshUserKeys.nix`。
+`mini-m4` / `mba-m5` / `mbp-m1` / `nix-lenovo` / `nix-asus` / `ide-lenovo` / `ide-mac`，清单集中于 `tools/sshUserKeys.nix`。
+ide 容器的私钥在激活时解密到 `$HOME/.ssh/id_ed25519`（容器内激活以 root 跑 = `/root`），容器重建后身份不变。
 
 ## 加密新文件
 
