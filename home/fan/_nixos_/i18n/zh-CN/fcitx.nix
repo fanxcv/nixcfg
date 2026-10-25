@@ -56,9 +56,8 @@
             "CloudPinyinEnabled" = "True";
             "CloudPinyinIndex" = 2;
             "CloudPinyinAnimation" = "True";
-            # 联想下一词：libime 1.1.14 该选项默认 isAndroid()，桌面默认关；
-            # 开着才会用 user.history（用户词频）＋语言模型预测下一词
-            "Prediction" = "True";
+            # 联想下一词：libime 1.1.14 该选项默认 isAndroid()，桌面默认关；显式置 False，防止上游默认变更时被动开启
+            "Prediction" = "False";
           };
           cloudpinyin.globalSection = {
             "MinimumPinyinLength" = 4;
