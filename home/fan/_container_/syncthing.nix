@@ -1,5 +1,5 @@
-# syncthing（P2P 文件同步）——容器平台层公共（ide-si / ide-lenovo / ide-mac 共用一份）
-#   同步：仅一个目录 —— /home/fan/Desktop/share（桌面上的 share），成员 = 现有全部机器 + 三个 ide 容器
+# syncthing（P2P 文件同步）——容器平台层公共（ide-lenovo / ide-mac 共用一份）
+#   同步：仅一个目录 —— /home/fan/Desktop/share（桌面上的 share），成员 = 现有全部机器 + 两个 ide 容器
 #     （清单 tools/syncthingPeers.nix 的 peers + idePeers；不参与 ~/sync，sync 仅现有机器之间）
 #   身份：syncthing 以 fan（uid 1000）运行 —— 同步进来的文件属主即 fan，桌面会话直接可读写，
 #     故不再需要 root 侧挂载（原先 /root/share + root 属主文件正是权限问题之源）；

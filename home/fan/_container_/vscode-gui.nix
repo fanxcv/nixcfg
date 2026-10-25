@@ -1,4 +1,4 @@
-# vscode GUI 客户端（容器桌面会话用；ide-si 无桌面会话 → 门控跳过）
+# vscode GUI 客户端（容器桌面会话用）
 #   与 _container_/vscode-server.nix 互补不冲突：本模块是桌面会话里以 fan 跑的 GUI 客户端
 #   （profile ~/.config/Code、扩展 ~/.vscode/extensions），后者是 remote-ssh 连入用的 server
 #   （~/.vscode-server），二者目录不重叠。
@@ -16,7 +16,6 @@
 {
   pkgs,
   lib,
-  hostName,
   ...
 }:
 let
@@ -41,7 +40,7 @@ let
     startupWMClass = "Code";
   };
 in
-lib.mkIf (pkgs.stdenv.hostPlatform.isLinux && hostName != "ide-si") {
+lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
   home.packages = [
     pkgs.vscode
     codeWrapper

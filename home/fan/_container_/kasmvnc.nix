@@ -1,4 +1,4 @@
-# ide 容器公共：KasmVNC 浏览器远程桌面（xfce4 桌面，无 GPU 软渲染）—— ide-si / ide-lenovo / ide-mac 三台共用
+# ide 容器公共：KasmVNC 浏览器远程桌面（xfce4 桌面，无 GPU 软渲染）—— ide-lenovo / ide-mac 两台共用
 # 访问：http://<host>:6901/vnc.html（compose 映射 6901:6901），用户名 fan + 密码
 # 密码：nix 管理（secrets/source/hosts/<hostName>/kasmvnc-passwd → encrypt.sh → .age，激活 age 解密写入）
 # 包：packages/kasmvnc.nix（官方 deb 解包自打包，nixpkgs 无此包；amd64/arm64 各一分支）
@@ -6,8 +6,8 @@
 # 会话：~/.vnc/xstartup 激活生成（dbus-launch + xfce4-session，store 绝对路径 + PATH 注入）
 # 配置：~/.vnc/kasmvnc.yaml 激活生成（覆盖 defaults：分辨率/端口/httpd_directory/字体）
 # 机器差异全部经 hostName 参数化（先例 ../_container_/mise.nix:17-23）：证书 CN（= 各机 compose hostname:）、
-#   口令 .age 路径、桌面会话代理段（仅 ide-si）、WPS 段（仅 x86_64，arm64 无 wpsoffice-cn）
-# 落点 home/fan/_container_/ → ../_container_/default.nix 的 tools.scan 自动对三台 ide 生效（无 import 清单）
+#   口令 .age 路径、WPS 段（仅 x86_64，arm64 无 wpsoffice-cn）
+# 落点 home/fan/_container_/ → ../_container_/default.nix 的 tools.scan 自动对两台 ide 生效（无 import 清单）
 
 {
   pkgs,
@@ -21,23 +21,13 @@ let
   sessionUser = "fan";
   sessionHome = "/home/fan";
   # ── 机器差异（hostName 分支；先例 ../_container_/mise.nix:17-23）──
-  # 证书 CN = 各机 compose 的 hostname:（docker/ide/docker-compose-{si,lenovo,mac}.yml）；三值之外无回退
+  # 证书 CN = 各机 compose 的 hostname:（docker/ide/docker-compose-{lenovo,mac}.yml）；两值之外无回退
   certCN =
     {
-      ide-si = "ide-si";
       ide-lenovo = "lenovo-ide";
       ide-mac = "mac-ide";
     }
     .${hostName};
-  # 桌面会话代理段：仅 ide-si（配置文件由 home/fan/ide-si/sysenv.nix 激活写入；lenovo/mac 国内直连无代理）
-  ideProxy = lib.elem hostName [ "ide-si" ];
-  proxyUnitLines = "# 桌面会话继承代理（ide-si 网络需代理，lenovo 直连无此段）：文件由 home/fan/ide-si/sysenv.nix 激活写入；\n#   前缀 - = 文件缺失时不失败（新容器首启、激活尚未跑）\nEnvironmentFile=-/etc/environment.d/zz-ide-proxy.conf";
-  # kasmvnc.service 的占位行 @proxyEnvFile@：ide-si 替换为上面两行（\n = GNU sed 换行转义），其余两台整行删除
-  proxySed =
-    if ideProxy then
-      "s|@proxyEnvFile@|${lib.replaceStrings [ "\n" ] [ "\\n" ] proxyUnitLines}|"
-    else
-      "/@proxyEnvFile@/d";
   # WPS 仅 x86_64（wpsoffice-cn 无 arm64 包且 unfree）：arm64 上相关段一律不求值
   isX86 = pkgs.stdenv.hostPlatform.isx86_64;
   # 26.05 起 xfce 组件移顶层（pkgs.xfce4-session 等，xfce.* 已 deprecated）
@@ -137,7 +127,7 @@ let
       "${pkgs.adwaita-icon-theme}/share"
     ]
   );
-  # 激活第 11 段（默认文档应用 → WPS）整段文本 = 原 ide-si/ide-lenovo 逐字文本：前置 "\n\n" 对应第 10 段末换行
+  # 激活第 11 段（默认文档应用 → WPS）整段文本 = 原 ide-lenovo 逐字文本：前置 "\n\n" 对应第 10 段末换行
   #   + 段间空行（尾换行由外层补）；arm64 下为空串 → 不触碰 wpsoffice-cn
   wpsMimeapps = lib.optionalString isX86 (
     "\n\n"
@@ -174,7 +164,7 @@ let
     ''
   );
 in
-# 仅 Linux（三台 ide 皆 linux 容器：si/lenovo amd64、mac arm64）：非 Linux 平台（darwin eval）门控跳过，
+# 仅 Linux（两台 ide 皆 linux 容器：lenovo amd64、mac arm64）：非 Linux 平台（darwin eval）门控跳过，
 #   避免 deb 打包平台不匹配报错；deb 的 amd64/arm64 分支见 packages/kasmvnc.nix
 lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
   home.packages =
@@ -775,7 +765,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     # ── 4. systemd service（幂等写入 + 变更重启，同 skemate 模式）──
     unit=/etc/systemd/system/kasmvnc.service
     tmp=$(mktemp)
-    sed -e "s|@kasmvnc@|${kasmvnc}|" -e "s|@path@|${runPath}|" -e "${proxySed}" ${./kasmvnc.service} > "$tmp"
+    sed -e "s|@kasmvnc@|${kasmvnc}|" -e "s|@path@|${runPath}|" ${./kasmvnc.service} > "$tmp"
     unit_changed=0
     if ! cmp -s "$tmp" "$unit"; then
       cp "$tmp" "$unit"

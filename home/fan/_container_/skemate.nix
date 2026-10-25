@@ -1,4 +1,4 @@
-# skemate（自研终端复用服务）——容器平台层公共（ide-si / ide-lenovo 共用一份）
+# skemate（自研终端复用服务）——容器平台层公共（ide-lenovo / ide-mac 共用一份）
 #   安装：overlays/skemate.nix 提供 pkgs.skemate（官方构建，flake.lock 锁定 rev，升级 nix flake update skemate）
 #   配置：Nix 不管理——宿主机 compose 挂载 ./skemate → /root/.config/skemate，
 #         config.json / tunnel.yaml 等由用户在宿主机 docker/ide/skemate/ 自行维护
@@ -8,7 +8,7 @@
 #         unit 变更（skemate 升级，store 路径变）强制 restart 换新二进制；
 #         unit 未变但服务挂了（崩溃循环）也自动拉起并输出 journalctl
 #   last_state 由 skemate 自身维护（serve 启动/退出自动写 tunnel.yaml），Nix 不再干预
-#   原在 ide-si/ide-lenovo 各一份，移入容器平台层去重（平台层即容器语义，不再需要 isContainer 门控）
+#   原在 ide-lenovo 机器层，移入容器平台层去重（平台层即容器语义，不再需要 isContainer 门控）
 
 { pkgs, lib, ... }:
 {

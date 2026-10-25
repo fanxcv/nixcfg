@@ -6,7 +6,6 @@
 # 与分支无关：容器内无论停在哪个分支（test 等）都以 origin/main 为准强切，
 #   避免长期停在测试分支导致自动部署失效（本仓库是宿主工作树，分支由本脚本接管）
 # 状态：$STATE/last 记录上次成功部署的 origin/main commit；容器重建后清空 → 首次轮询自动部署
-# 代理：ide-si 的 all_proxy 由 sysenv.nix 写 /etc/environment.d/zz-ide-proxy.conf，systemd 服务启动自动注入，无需重复处理
 # 失败重试：fetch 失败 / 激活失败均不更新 last，下次轮询自动重试
 set -eu
 export GIT_TERMINAL_PROMPT=0

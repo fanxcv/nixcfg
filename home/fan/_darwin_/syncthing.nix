@@ -2,7 +2,7 @@
 #   服务：LaunchAgent 自启（RunAtLoad + KeepAlive），登录即启、崩溃自动重启
 #   同步：两个目录——
 #     ~/sync  仅现有机器之间（清单 tools/syncthingPeers.nix 的 peers）
-#     ~/share 全部机器（peers + idePeers，即含三个 ide 容器）
+#     ~/share 全部机器（peers + idePeers，即含两个 ide 容器）
 #   设备互配由 activation 幂等脚本自动完成（清单 tools/syncthingPeers.nix 单一事实来源）
 #   注意：syncthing 配置（config.xml）由 syncthing 自管；自动注册脚本仅补缺不删改（GUI 配对保留），
 #         惟 tools/syncthingPeers.nix 的 retired 清单内设备会被删除

@@ -326,7 +326,7 @@
 
       # homeConfigurations（standalone HM：容器 / ubuntu / pve）由 registry 派生，键 = "<user>@<机名>"
       # 容器：isContainer=true 跳过 docker 安装（容器里 daemon 起不来）；容器平台层 _container_ 继承 _ubuntu_，_nixos_ 仅 NixOS 真机
-      # 代理：仅 ide-si 走（sysenv.nix 接管环境变量，与 compose 无关）；内网 hosts 三台共用（_container_/extra-hosts.nix）
+      # 内网 hosts 两台共用（_container_/extra-hosts.nix）
       # 机器专属：mise 组件共享 _container_/mise.nix（hostName 分支差异）；ide-mac 桌面走 KasmVNC arm64 + chromium 替代 google-chrome
       homeConfigurations =
         lib.mapAttrs'
@@ -372,7 +372,7 @@
 
       # --- 一步到位：nix run .#<机器名>（构建 + activate 一条命令）---
       # homeConfigurations 标准名保留（兼容 home-manager switch --flake 等工具）
-      # ide 容器可能跑在不同架构服务器（lenovo/si-11 等），激活配置必须按当前 system 构建：
+      # ide 容器可能跑在不同架构服务器（lenovo/mac 等），激活配置必须按当前 system 构建：
       # 不能引用固定架构的 homeConfigurations（会 platform mismatch，如 x86_64 机器拿到 aarch64 配置）
       # 容器只跑 linux：darwin 宿主上构建容器配置会 hostPlatform.isDarwin 误判（见 modules/home/ssh.nix 门控），
       # 故 ide 别名仅对 linux 系统生成；本地包（packages/）仍全平台可用
@@ -445,7 +445,7 @@
         )
       );
 
-      # --- 多台机器部署别名：nix run .#ide-si / .#mba-m5 等（packages 块内由 mkHomeAlias / genAttrs 统一生成）---
+      # --- 多台机器部署别名：nix run .#ide-lenovo / .#mba-m5 等（packages 块内由 mkHomeAlias / genAttrs 统一生成）---
 
       # 代码格式化：nix fmt 一键格式化（treefmt：nixfmt + statix，配置见 formatter.nix）
       formatter = forAllSystems (
@@ -497,7 +497,7 @@
               '${builtins.toJSON aliasPresent}'
             touch "$out"
           '';
-          # 全目标 eval 门禁：16 台机器全部可求值（见 tests/eval-all-targets.py）
+          # 全目标 eval 门禁：15 台机器全部可求值（见 tests/eval-all-targets.py）
           eval-all-targets = pkgs.runCommand "eval-all-targets-check" { } ''
             ${pkgs.python3}/bin/python3 ${./tests/eval-all-targets.py} '${builtins.toJSON targetDrvs}'
             touch "$out"

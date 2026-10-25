@@ -1,4 +1,4 @@
-# 容器系统 locale：en_US.UTF-8 / zh_CN.UTF-8（ide-si / ide-lenovo 共用）
+# 容器系统 locale：en_US.UTF-8 / zh_CN.UTF-8（ide-lenovo / ide-mac 共用）
 #
 # 问题：Ubuntu 基础镜像只有 C / C.UTF-8 / POSIX（无 locales 包、无 /usr/share/i18n 源）。
 #   客户端（mac 的 nix-darwin 环境 = en_US.UTF-8，ssh 默认 SendEnv LANG LC_*，sshd 默认 AcceptEnv LANG LC_*）

@@ -1,6 +1,6 @@
-# ide 容器 mise 组件声明（共享；ide-si / ide-lenovo / ide-mac 各自主机分支取用）
+# ide 容器 mise 组件声明（共享；ide-lenovo / ide-mac 各自主机分支取用）
 #   组件清单从容器实测导出（mise ls --installed），纳入 nix 管理：
-#     bun/go/java/maven/node/python/uv + 机器差异（lenovo/mac：pipx + java oracle-17；si：java zulu-8）
+#     bun/go/java/maven/node/python/uv + 机器差异（lenovo/mac：pipx + java oracle-17）
 #   激活时自动 mise install：config.toml 写入后安装缺失组件（幂等，已装版本秒级跳过）
 #   容器内 /root/.config/mise 由宿主机 compose 挂载持久化（docker/ide/mise/config）
 # config.toml 策略（→ _common_/mise/apply.py，实体文件可写）：
@@ -13,7 +13,7 @@
   ...
 }:
 let
-  # 机器差异：java 版本（si=zulu-8 / lenovo、mac=oracle-17）
+  # 机器差异：java 版本（lenovo、mac=oracle-17；其余 zulu-8）
   oracle17 = lib.elem hostName [
     "ide-lenovo"
     "ide-mac"

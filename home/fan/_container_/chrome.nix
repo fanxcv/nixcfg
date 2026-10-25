@@ -1,4 +1,4 @@
-# ide 容器公共：浏览器（远程桌面主浏览器，autostart 自启 + 守护保活）—— ide-si / ide-lenovo / ide-mac 三台共用
+# ide 容器公共：浏览器（远程桌面主浏览器，autostart 自启 + 守护保活）—— ide-lenovo / ide-mac 两台共用
 # 9222 调试端口：wrapper 包装浏览器，手动启动（panel/终端/autostart）都带
 #   --remote-debugging-port=9222（DevTools 协议，http://127.0.0.1:9222/json/version 验证）
 # 自启：~/.config/autostart/chrome.desktop → chrome-guard（循环保活）；

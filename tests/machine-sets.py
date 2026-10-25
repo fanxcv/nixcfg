@@ -21,7 +21,6 @@ EXPECTED_HOME = [
     "fan@hp",
     "fan@mi",
     "fan@razer",
-    "fan@ide-si",
     "fan@ide-lenovo",
     "fan@ide-mac",
     "root@ali-ai",
@@ -30,7 +29,6 @@ EXPECTED_HOME = [
 EXPECTED_DARWIN = ["mba-m5", "mbp-m1", "mini-m4"]
 EXPECTED_NIXOS = ["nix-lenovo", "nix-asus", "nix-im"]
 EXPECTED_ALIAS = [
-    "ide-si",
     "ide-lenovo",
     "ide-mac",
     "ali-ai",

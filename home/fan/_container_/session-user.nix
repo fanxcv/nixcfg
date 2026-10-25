@@ -11,8 +11,7 @@ let
   sessionUser = "fan";
   sessionHome = "/home/fan";
   # 桌面会话会读写的宿主挂载点（compose 双挂载的 /home/fan 侧目标）。
-  #   本清单须与 docker/ide/docker-compose-*.yml 的 /home/fan 侧挂载一一对应：lenovo/mac 各 20 条，
-  #   si 无 vscode GUI（跳过 _container_/vscode-gui.nix）故少末两条，18 条。
+  #   本清单须与 docker/ide/docker-compose-*.yml 的 /home/fan 侧挂载一一对应：lenovo/mac 各 20 条。
   #   仅对其顶层做非递归 chown（保持顶层属主 fan），不递归进入——递归会波及宿主用户文件属主，
   #   且 mac 宿主（virtiofs/osxfs）可能不支持 chown，故按非关键失败仅警告。
   sessionMounts = [
@@ -36,7 +35,7 @@ let
     "Desktop/share"
     # chrome 主 profile：桌面会话写 .config/chrome（chrome.nix wrapper 的 --user-data-dir）
     ".config/chrome"
-    # vscode GUI：profile 与扩展目录（compose 只挂 fan 侧，ide-si 跳过 vscode-gui.nix）
+    # vscode GUI：profile 与扩展目录（compose 只挂 fan 侧）
     ".config/Code"
     ".vscode/extensions"
   ];
@@ -46,7 +45,7 @@ let
   ) sessionMounts;
 in
 {
-  # 在桌面配置写入脚本之后执行（kasmvncBeautify → chrome → kasmvnc；ide-si 无桌面会话，DAG 容忍缺失名）
+  # 在桌面配置写入脚本之后执行（kasmvncBeautify → chrome → kasmvnc）
   home.activation.sessionUser = lib.hm.dag.entryAfter [ "kasmvncBeautify" "chrome" "kasmvnc" ] ''
     # 1) 建用户（幂等）：uid/gid 1000、登录 shell /bin/bash、加入 sudo 组
     #    1000 被占多数是「旧镜像」——镜像层未跑 Dockerfile 的让位建号（显式删基础镜像自带的 uid1000 用户），

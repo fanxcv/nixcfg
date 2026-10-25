@@ -4,8 +4,6 @@
 #     不一致则强切 main 到 origin/main → nix run .#<hostName>
 #   分支无关：不管容器内当前停在哪个分支（test 等），一律以 origin/main 为准强切（宿主工作树，分支由脚本接管）
 #   状态：/var/lib/ide-auto-deploy/last 记录上次部署的 origin/main commit；容器重建后清空 → 首次轮询自动部署
-#   代理：ide-si 的 all_proxy 由 sysenv.nix 写 /etc/environment.d/zz-ide-proxy.conf；environment.d 只对 user
-#     实例生效（系统服务不读），unit 用 EnvironmentFile=- 显式引用（- 容忍 lenovo 无此文件），nix/libcurl 自动走代理
 #   失败重试：激活失败不更新 last，下次轮询自动重试
 #   为什么自研：现成系统级部署器只认 nixos/darwin 系统配置输出
 #     （deployment 固定 switch-to-configuration），不支持 homeConfigurations/任意命令

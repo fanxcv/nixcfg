@@ -10,7 +10,7 @@
 #   如需回归 nix 默认，删除文件后部署一次即可
 #
 # 启用（各层引用）：
-#   本模块默认 enable=false；三台 ide 容器在机器层显式 softwares.codex.enable = true
+#   本模块默认 enable=false；两台 ide 容器在机器层显式 softwares.codex.enable = true
 
 {
   config,

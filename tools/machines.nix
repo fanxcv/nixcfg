@@ -8,22 +8,11 @@
 #   extraUnfree 额外 unfree 放行名单（可选，缺省为空）
 {
   # --- Docker 开发容器（Ubuntu 底）---
-  #   架构随宿主机，不随平台成见：ide-lenovo 宿主 pve.mi、ide-si 宿主 host-10-31-144-11 为 amd64，
+  #   架构随宿主机，不随平台成见：ide-lenovo 宿主 pve.mi 为 amd64，
   #   ide-mac 宿主 ske-mac 为 arm64（均以容器内 `uname -m` / dpkg --print-architecture 实测）。
   #   该字段决定 homeConfigurations 的 eval 平台与桌面分支：x86_64 → google-chrome + WPS，
   #   aarch64 → chromium（见各机 kasmvnc.nix / chrome.nix）；部署别名 packages.<当前 system>.<机名>
   #   按当前 system 构造，不读本字段，故写错只坑 eval，不坑部署。
-  ide-si = {
-    kind = "container";
-    system = "x86_64-linux";
-    user = "fan";
-    alias = true;
-    extraUnfree = [
-      "google-chrome" # 桌面浏览器（_container_/chrome.nix 的 x86_64 分支）
-      "albert" # 桌面启动器（kasmvnc.nix）
-      "wpsoffice-cn" # 桌面办公（kasmvnc.nix 的 x86_64 分支）
-    ];
-  };
   ide-lenovo = {
     kind = "container";
     system = "x86_64-linux";

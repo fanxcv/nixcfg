@@ -1,7 +1,7 @@
-# 容器公共：内网 DNS 条目写入 /etc/hosts（ide-si / ide-lenovo 共用；替代 docker-compose extra_hosts）
+# 容器公共：内网 DNS 条目写入 /etc/hosts（ide-lenovo / ide-mac 共用；替代 docker-compose extra_hosts）
 # 背景：compose 注入的 hosts 修改必须重建容器；nix 激活直接写入，免重建，nix run 即生效
 # 通道：activation 幂等追加 + systemd oneshot 启动自动恢复（容器重启 Docker 重写 /etc/hosts）
-# 代理环境变量不在此处：ide-si 走代理（本机 sysenv.nix），lenovo 国内直连
+# 代理环境变量不在此处：两台 ide 均国内直连
 
 { pkgs, lib, ... }:
 let

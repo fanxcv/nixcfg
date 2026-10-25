@@ -1,16 +1,16 @@
 # fan 的 Nix 配置仓库
 
-多机 Nix 配置：3 台 Mac、2 台 NixOS 真机、3 个 Docker 开发容器、2 台云服务器、6 台 PVE 宿主机（共 16 台）。
+多机 Nix 配置：3 台 Mac、2 台 NixOS 真机、2 个 Docker 开发容器、2 台云服务器、6 台 PVE 宿主机（共 15 台）。
 
 **宗旨：能 nix 就 nix**——软件包、配置、环境变量尽量全交 nix 声明式管理；实在不行的（systemd、sshd、登录 shell）才留在 Dockerfile/系统层。nix 模块即配置的唯一载体，改配置就是改 nix（见 AGENTS.md）。
 
-## 机器矩阵（16 台）
+## 机器矩阵（15 台）
 
 | 平台 | 机器 | 部署命令 | 自动部署 |
 |---|---|---|---|
 | macOS | mba-m5 / mbp-m1 / mini-m4 | `nix run .#mba-m5`（余同） | — |
 | NixOS | nix-lenovo / nix-asus / nix-im | `nixos-rebuild switch --flake .#nix-lenovo` | — |
-| IDE 容器 | ide-si / ide-lenovo / ide-mac | 容器内 `nix run .#ide-si`（余同） | — |
+| IDE 容器 | ide-lenovo / ide-mac | 容器内 `nix run .#ide-lenovo`（余同） | — |
 | 云服务器 | ali-ai / hc-pro-pve-2 | `nix run .#ali-ai`（余同） | — |
 | PVE 宿主 | ds2 / desktop / fan / hp / mi / razer | `nix run .#ds2`（余同） | — |
 
@@ -28,7 +28,7 @@
 
 | 场景 | 命令 |
 |---|---|
-| IDE 容器构建+激活 | 容器内 `nix run .#ide-si` / `.#ide-lenovo` / `.#ide-mac` |
+| IDE 容器构建+激活 | 容器内 `nix run .#ide-lenovo` / `.#ide-mac` |
 | macOS 构建+激活 | `nix run .#mba-m5` / `.#mbp-m1` / `.#mini-m4`（激活内置 sudo） |
 | NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-lenovo` / `.#nix-asus` / `.#nix-im` |
 | PVE 宿主部署 | `nix run .#ds2` / `.#desktop` / `.#fan` / `.#hp` / `.#mi` / `.#razer` |
@@ -39,12 +39,12 @@
 
 ### IDE 容器（Ubuntu 24.04 + systemd + sshd + nix）
 
-compose 是**三个具名文件**（无默认 docker-compose.yml），在 `docker/ide/` 目录下执行：
+compose 是**两个具名文件**（无默认 docker-compose.yml），在 `docker/ide/` 目录下执行：
 
 ```bash
-docker compose -f docker/ide/docker-compose-si.yml up -d   # lenovo 用 -lenovo.yml，mac 用 -mac.yml
-docker exec -it ide bash                                   # 首次无公钥时
-git pull && nix run .#ide-si                               # 容器内：拉配置 + 构建激活
+docker compose -f docker/ide/docker-compose-lenovo.yml up -d   # mac 用 -mac.yml
+docker exec -it ide bash                                       # 首次无公钥时
+git pull && nix run .#ide-lenovo                               # 容器内：拉配置 + 构建激活
 ```
 
 密钥前置（宿主机，容器重建不丢）：
@@ -105,7 +105,7 @@ nixcfg/
 ├── modules/               # 可复用模块库：home/（ai/codex/mise/pi/ssh/tmux/vscode）、darwin/、nixos/
 ├── overlays/              # nixpkgs overlay：skemate（flake.lock 锁定 rev，见 inputs）、unstable/vscode 市场等
 ├── packages/              # 本地自打包（kasmvnc、rustdesk-bin、KDE 商店主题等）
-├── docker/ide/            # IDE 容器定义（compose si/lenovo/mac 三文件 + ubuntu/Dockerfile）
+├── docker/ide/            # IDE 容器定义（compose lenovo/mac 两文件 + ubuntu/Dockerfile）
 ├── pve/                   # PVE 宿主系统层 + 部署脚本（apply.sh/deploy.sh/deploy.nix）
 ├── secrets/               # age 加密密钥（encrypt.sh 生成，git 可公开）
 ├── tools/                 # flake 工具库：config.nix（镜像/代理唯一入口）、sshUserKeys.nix（SSH 身份清单）、目录扫描、syncthing 配置
@@ -117,13 +117,13 @@ nixcfg/
 
 ## 镜像与网络
 
-镜像/代理策略集中 `tools/config.nix`（`useChinaMirror` / `githubFetchBase` 唯一入口，机器级可覆盖）；容器网络各管各的：ide-si 走代理（nix 接管环境变量+hosts），lenovo / mac 国内直连；nix 安装/二进制缓存走 CERNET 联合镜像（`mirrors.cernet.edu.cn`），git 拉取走 ghfast.top 前缀。切换 GitHub 代理见 `scripts/switch-github-proxy.sh`。
+镜像/代理策略集中 `tools/config.nix`（`useChinaMirror` / `githubFetchBase` 唯一入口，机器级可覆盖）；容器网络各管各的：lenovo / mac 国内直连；nix 安装/二进制缓存走 CERNET 联合镜像（`mirrors.cernet.edu.cn`），git 拉取走 ghfast.top 前缀。切换 GitHub 代理见 `scripts/switch-github-proxy.sh`。
 
 ## 常用命令
 
 ```bash
 nix run .#<机器>            # 一步构建+激活（容器/mac/PVE）；NixOS 用 nixos-rebuild
-nix build .#ide-si && ./result/activate   # 两步法（构建 + 手动激活）
+nix build .#ide-lenovo && ./result/activate   # 两步法（构建 + 手动激活）
 nix flake update            # 升级全部依赖（稳定版跟随分支点，构建命中镜像缓存）
 nix fmt                     # treefmt 一键格式化（nixfmt + statix）
 nix flake check             # 6 项门禁：格式 + 镜像一致性 + 机器集合 + 全目标 eval + scan 导入 + rustdesk 注入器
