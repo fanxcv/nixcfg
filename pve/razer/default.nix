@@ -13,7 +13,6 @@ let
       blacklist nvidia_drm
       options nouveau modeset=0
     '';
-    "iommu_unsafe_interrupts.conf" = "options vfio_iommu_type1 allow_unsafe_interrupts=1";
     "kvm.conf" = "options kvm ignore_msrs=1";
     "mdadm.conf" = "options md_mod start_ro=1";
     "vfio.conf" = "options vfio-pci ids=10de:2191,10de:1aeb,10de:1aec,10de:1aed disable_vga=1";
@@ -25,8 +24,17 @@ import ../mkHost.nix {
   ip = "10.2.241.80/24";
   extra = [
     "initcall_blacklist=sysfb_init"
+    # 直通隔离冗余性待重启验证；验证前保留（去掉后若无副作用即可移除）
     "pcie_acs_override=downstream"
     "video=vesafb:off"
     "video=efifb:off"
   ];
+  modules = [
+    "coretemp"
+    "vfio"
+    "vfio_iommu_type1"
+    "vfio_pci"
+    "vfio_virqfd"
+  ];
+  obsoleteModprobe = [ "iommu_unsafe_interrupts.conf" ]; # DMAR-IR 已启用，无需 unsafe interrupts
 }
