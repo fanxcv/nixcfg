@@ -86,9 +86,7 @@ in
       WantedBy=multi-user.target
       EOF
 
-      # 4) 启动 + 登录（state 已含登录态：up 幂等，节点名/IP 保持 ${
-        if hostName == "ali-ai" then "ali-sh-3 / 10.1.0.18" else "hc-pro-pve-2 / 10.1.0.34"
-      }）
+      # 4) 启动 + 登录（state 已含登录态：up 幂等，节点名/IP 保持 ${hostName}）
       /usr/bin/systemctl daemon-reload
       /usr/bin/systemctl enable tailscaled > /dev/null 2>&1 || true
       /usr/bin/systemctl restart tailscaled

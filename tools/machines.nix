@@ -48,11 +48,13 @@
     user = "root";
     alias = true;
   };
-  # --- FICC test 环境（Ubuntu LXC / 真机，root 用户态 HM）---
-  # ficc-test-pve: ds3(10.2.241.206) 上的 PVE LXC 容器，8C/24G/98G，IP 10.2.241.210
+  # --- FICC test 环境（Ubuntu 真机 / VM，root 用户态 HM）---
+  # ficc-test-vm: ds3(10.2.241.206) 上的 KVM VM（VM ID 200），Ubuntu 24.04，8C/23G/96G，IP 10.2.241.211
   #   服务用 podman + podman-compose（非 docker），故机器层关闭 softwares.docker.enable
+  #   旧 LXC ficc-test-pve（10.2.241.210，unprivileged）已弃用：容器内 podman 调 socket(AF_INET)
+  #   返回 EACCES（LXC 无 CAP_NET_ADMIN 起 rootless 网络栈），该机仅作数据中转，不再登记
   # hc-test-pve: 10.2.241.65（PVE LXC，原有 docker 容器不动，同样关闭 docker 接管）
-  ficc-test-pve = {
+  ficc-test-vm = {
     kind = "ubuntu";
     system = "x86_64-linux";
     user = "root";

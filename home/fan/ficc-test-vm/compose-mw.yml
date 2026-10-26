@@ -1,0 +1,236 @@
+version: "3.8"
+# FICC test 环境中间件栈（VM 版，podman-compose）
+# 来源：迁移档案 /mnt/code/ficc-server-bak/scripts/compose-mw.yml（原 119.6.62.155 环境）
+# 口令不落明文：${FICC_MW_PASSWORD} / ${MINIO_ROOT_USER} / ${MINIO_ROOT_PASSWORD} 由 /data/.env 注入
+#   （.env 来自 secrets/hosts/ficc-test-vm/mw-env.age，见 middleware.nix）
+# 网络：bridge 172.31.0.0/16，服务间用容器名；对外经端口映射（与 31017 原环境一致）
+# 数据：/data/<service>（VM 本地 ext4）
+# 内存：mem_limit 受控，总预算约 9.5G
+
+services:
+  mysql:
+    image: docker.io/library/mysql:8.0.35
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${FICC_MW_PASSWORD}"
+      TZ: Asia/Shanghai
+    volumes:
+      - /data/mysql:/var/lib/mysql:Z
+      - /data/config/ficc/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+    networks:
+      - ficc
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-p${FICC_MW_PASSWORD}", "--silent"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: docker.io/library/redis:7.2.5
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "${FICC_MW_PASSWORD}", "--appendonly", "no"]
+    volumes:
+      - /data/redis:/data:Z
+    networks:
+      - ficc
+    mem_limit: 512m
+
+  redis-stack:
+    image: docker.io/redis/redis-stack:7.2.0-v6
+    container_name: redis-stack
+    restart: always
+    ports:
+      - "6389:6379"
+    environment:
+      REDIS_ARGS: "--requirepass ${FICC_MW_PASSWORD}"
+    volumes:
+      - /data/redis-stack:/data:Z
+    networks:
+      - ficc
+    mem_limit: 512m
+
+  zookeeper1:
+    image: docker.io/library/zookeeper:3.6.3
+    container_name: zoo1
+    restart: always
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: "server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181"
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOO_STANDALONE_ENABLED: "false"
+      ZOO_AUTOPURGE_SNAPRETAINCOUNT: 3
+    volumes:
+      - /data/zookeeper1/data:/data:Z
+      - /data/zookeeper1/datalog:/datalog:Z
+      - /data/zookeeper1/logs:/logs:Z
+    networks:
+      - ficc
+    mem_limit: 256m
+
+  zookeeper2:
+    image: docker.io/library/zookeeper:3.6.3
+    container_name: zoo2
+    restart: always
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: "server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181"
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOO_STANDALONE_ENABLED: "false"
+      ZOO_AUTOPURGE_SNAPRETAINCOUNT: 3
+    volumes:
+      - /data/zookeeper2/data:/data:Z
+      - /data/zookeeper2/datalog:/datalog:Z
+      - /data/zookeeper2/logs:/logs:Z
+    networks:
+      - ficc
+    mem_limit: 256m
+
+  zookeeper3:
+    image: docker.io/library/zookeeper:3.6.3
+    container_name: zoo3
+    restart: always
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: "server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181"
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOO_STANDALONE_ENABLED: "false"
+      ZOO_AUTOPURGE_SNAPRETAINCOUNT: 3
+    volumes:
+      - /data/zookeeper3/data:/data:Z
+      - /data/zookeeper3/datalog:/datalog:Z
+      - /data/zookeeper3/logs:/logs:Z
+    networks:
+      - ficc
+    mem_limit: 256m
+
+  rocketmq-namesrv:
+    image: docker.io/apache/rocketmq:5.2.0
+    container_name: rocketmq-namesrv-1
+    restart: always
+    ports:
+      - "9876:9876"
+    command: sh mqnamesrv
+    volumes:
+      - /data/rocketmq/namesrv/logs:/home/rocketmq/logs:Z
+    networks:
+      - ficc
+    mem_limit: 512m
+
+  rocketmq-broker:
+    image: docker.io/apache/rocketmq:5.2.0
+    container_name: rocketmq-broker-1
+    restart: always
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+      - "10912:10912"
+    command: sh mqbroker --enable-proxy -c /home/rocketmq/conf/broker.conf
+    volumes:
+      - /data/rocketmq/broker/conf/broker.conf:/home/rocketmq/conf/broker.conf:ro
+      - /data/rocketmq/broker/store:/home/rocketmq/store:Z
+      - /data/rocketmq/broker/logs:/home/rocketmq/logs:Z
+    networks:
+      - ficc
+    depends_on:
+      - rocketmq-namesrv
+    mem_limit: 1g
+
+  rocketmq-dashboard:
+    image: docker.io/apacherocketmq/rocketmq-dashboard:latest
+    container_name: rocketmq-dashboard
+    restart: always
+    ports:
+      - "18080:8080"   # 原 8081 与 ficc-auth 冲突（见迁移文档「端口变更记录」）
+    environment:
+      JAVA_OPTS: "-Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false"
+    networks:
+      - ficc
+    depends_on:
+      - rocketmq-namesrv
+    mem_limit: 512m
+
+  nacos:
+    image: docker.io/nacos/nacos-server:v2.2.3
+    container_name: nacos
+    restart: always
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+      - "7848:7848"
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: ip
+      FUNCTION_MODE: all
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+      JVM_XMN: 256m
+      JVM_MS: 128m
+      JVM_MMS: 320m
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_USER: nacos
+      MYSQL_SERVICE_PASSWORD: "${FICC_MW_PASSWORD}"
+      MYSQL_SERVICE_DB_PARAM: "characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true"
+      NACOS_AUTH_ENABLE: "false"
+    volumes:
+      - /data/nacos/logs:/home/nacos/logs:Z
+      - /data/nacos/data:/home/nacos/data:Z
+    networks:
+      - ficc
+    depends_on:
+      - mysql
+    mem_limit: 1g
+
+  elasticsearch:
+    image: docker.io/library/elasticsearch:8.11.1
+    container_name: elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      TZ: Asia/Shanghai
+    volumes:
+      - /data/es/data:/usr/share/elasticsearch/data:Z
+      - /data/es/plugins:/usr/share/elasticsearch/plugins:Z
+      - /data/config/ficc/es/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    networks:
+      - ficc
+    mem_limit: 3g
+
+  minio:
+    image: docker.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server --console-address ":9001" /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      TZ: Asia/Shanghai
+    volumes:
+      - /data/minio:/data:Z
+    networks:
+      - ficc
+    mem_limit: 512m
+
+networks:
+  ficc:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/16
