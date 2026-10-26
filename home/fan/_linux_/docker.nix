@@ -10,7 +10,7 @@
 #   NixOS 真机（platform=nixos）→ 运行时统一 podman，见 hosts/_nixos_/services/podman.nix：
 #     其 dockerCompat 提供 docker 命令（→ podman）与 /run/docker.sock，再装 docker 包只会两份 daemon 互扰
 # 另：机器层可显式设 softwares.docker.enable = false
-#   → ficc-test-pve 用 podman-compose；hc-test-pve 保留原有 apt docker，不让 nix 版接管
+#   → ficc-test-vm 用 podman-compose（见同层 podman.nix）；hc-test-pve 保留原有 apt docker，不让 nix 版接管
 
 { 
   pkgs,
