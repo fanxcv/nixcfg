@@ -118,7 +118,13 @@ in
     }
     {
       id = "highagency.pencildev";
-      pkg = pkgs: pkgs.repos.vscode.vscode-marketplace-release.highagency.pencildev; # Pencil / pen.dev 设计稿编辑（nixpkgs 无）
+      # Pencil / pen.dev 设计稿编辑（nixpkgs 无）。优先 Open VSX：两处 vsix 内容同 hash，
+      # 但 Azure CDN 国内直连实测 125 KB/s（73.8 MB 约 10 分钟），open-vsx.org 2.2 MB/s。
+      # open-vsx 尚未收录新版时回退主市场 release 通道，避免 eval 失败。
+      pkg =
+        pkgs:
+        pkgs.repos.vscode.open-vsx.highagency.pencildev
+          or pkgs.repos.vscode.vscode-marketplace-release.highagency.pencildev;
       profiles = allProfiles;
       client = true;
       server = true; # .pen 编辑器与 MCP server 在 workspace 侧运行，远程开发时 server 端需要
