@@ -17,6 +17,7 @@ import sys
 EXPECTED_HOME = [
     "fan@desktop",
     "fan@ds2",
+    "fan@ds3",
     "fan@fan",
     "fan@hp",
     "fan@mi",
@@ -34,6 +35,7 @@ EXPECTED_ALIAS = [
     "ali-ai",
     "hc-pro-pve-2",
     "ds2",
+    "ds3",
     "desktop",
     "fan",
     "hp",

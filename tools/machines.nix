@@ -56,6 +56,12 @@
     user = "fan";
     alias = true;
   };
+  ds3 = {
+    kind = "pve";
+    system = "x86_64-linux";
+    user = "fan";
+    alias = true;
+  };
   desktop = {
     kind = "pve";
     system = "x86_64-linux";
