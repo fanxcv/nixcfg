@@ -7,7 +7,11 @@
 # 中间件 compose 由 middleware.nix 渲染派发到 /data（声明见同目录 compose-mw.yml）
 _: {
   softwares = {
-    docker.enable = true;
+    docker = {
+      enable = true;
+      # LXC 内无发行版 docker：由本模块生成 docker.service / docker.socket（nix 的 dockerd）
+      adoptSystem = true;
+    };
     podman.enable = false;
     sshHostKey.enable = true;
     hostname.enable = true;
