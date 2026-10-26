@@ -6,6 +6,8 @@
   ip,
   gateway ? null,
   modprobeHost ? { },
+  modules ? [ ],
+  obsoleteModprobe ? [ ],
   extra ? [ ],
   tailscaleForward ? false,
   tailscaleState ? null,
@@ -47,6 +49,8 @@ let
         grubCmdline
         modprobePublic
         modprobeHost
+        modules
+        obsoleteModprobe
         tailscaleForward
         ip
         ;

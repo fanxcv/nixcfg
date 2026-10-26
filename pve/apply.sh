@@ -120,9 +120,9 @@ if [ -f "$IFUPDOWN2_PARSER" ] && grep -q "readfp" "$IFUPDOWN2_PARSER"; then
   echo "警告: ifupdown2 readfp 已修复（python3.12 兼容），重启网络后生效"
 fi
 
-echo "==> [6/7] modprobe 收编（公共 nixcfg-public.conf + 机器专属，pve/ 渲染同名覆盖）"
+echo "==> [6/7] modprobe / modules 收编（声明的写入，废弃的删除）"
+CHANGED=0
 if [ -d modprobe ] && ls modprobe/*.conf >/dev/null 2>&1; then
-  CHANGED=0
   for f in modprobe/*.conf; do
     DEST="/etc/modprobe.d/$(basename "$f")"
     if ! cmp -s "$f" "$DEST" 2>/dev/null; then
@@ -132,14 +132,56 @@ if [ -d modprobe ] && ls modprobe/*.conf >/dev/null 2>&1; then
       echo "modprobe 更新: $(basename "$f")"
     fi
   done
-  if [ "$CHANGED" = "1" ]; then
-    update-initramfs -u
-    echo "initramfs 已重建（直通黑名单进 initramfs）"
-  else
-    echo "modprobe 无变化，跳过 initramfs"
-  fi
 else
   echo "警告: modprobe 渲染目录缺失（渲染异常？）"
+fi
+# 已废弃的 modprobe 文件（不再直通等）：备份后删除
+if [ -f obsolete-modprobe ]; then
+  while IFS= read -r name; do
+    [ -n "$name" ] || continue
+    DEST="/etc/modprobe.d/$name"
+    if [ -e "$DEST" ]; then
+      cp -a "$DEST" "$BACKUP/" 2>/dev/null || true
+      rm -f "$DEST"
+      CHANGED=1
+      echo "modprobe 移除（已废弃）: $name"
+    fi
+  done < obsolete-modprobe
+fi
+# 开机加载模块（/etc/modules）
+if [ -f modules ] && ! cmp -s modules /etc/modules; then
+  cp -a /etc/modules "$BACKUP/" 2>/dev/null || true
+  install -m 0644 modules /etc/modules
+  CHANGED=1
+  echo "/etc/modules 已更新"
+fi
+if [ "$CHANGED" = "1" ]; then
+  update-initramfs -u
+  echo "initramfs 已重建（modprobe/modules 变更，重启后生效）"
+else
+  echo "modprobe/modules 无变化，跳过 initramfs"
+fi
+
+echo "==> [6.2/7] sshd 加固（禁用密码登录，仅公钥；drop-in 由 nixcfg 写入）"
+SSH_DROPIN=/etc/ssh/sshd_config.d/00-nix-hardening.conf
+if [ ! -s /root/.ssh/authorized_keys ]; then
+  echo "警告: /root/.ssh/authorized_keys 为空，跳过 sshd 加固（防锁死）" >&2
+elif ! grep -qE '^[[:space:]]*Include[[:space:]]+/etc/ssh/sshd_config\.d' /etc/ssh/sshd_config; then
+  echo "警告: sshd_config 未 Include sshd_config.d，跳过加固" >&2
+else
+  mkdir -p /etc/ssh/sshd_config.d
+  cat > "$SSH_DROPIN" <<'SSHD'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+SSHD
+  chmod 644 "$SSH_DROPIN"
+  if /usr/sbin/sshd -t; then
+    systemctl reload ssh 2>/dev/null || systemctl reload sshd 2>/dev/null || echo "警告: sshd reload 失败（配置已写入，下次重启生效）" >&2
+    echo "sshd 加固已生效（PasswordAuthentication no）"
+  else
+    rm -f "$SSH_DROPIN"
+    echo "警告: sshd -t 校验失败，已移除 drop-in" >&2
+  fi
 fi
 
 @TAILSCALE@

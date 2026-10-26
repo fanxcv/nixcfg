@@ -10,6 +10,8 @@
   grubCmdline,
   modprobePublic ? "",
   modprobeHost ? { },
+  modules ? [ ],
+  obsoleteModprobe ? [ ],
   tailscaleForward ? false,
   ip ? "",
   gateway ? "",
@@ -82,6 +84,17 @@ pkgs.runCommand "pve-sysfiles" { } ''
       CONF
     '') modprobeHost
   )}
+
+  # 开机加载模块（/etc/modules；机器层 modules 声明，空则只保留表头）
+  cat > $out/modules <<EOF
+  # 由 nixcfg 渲染（pve/<host>/default.nix 的 modules）
+  ${builtins.concatStringsSep "\n" modules}
+  EOF
+
+  # 已废弃的 modprobe 文件（apply 备份后删除；机器层 obsoleteModprobe 声明）
+  cat > $out/obsolete-modprobe <<EOF
+  ${builtins.concatStringsSep "\n" obsoleteModprobe}
+  EOF
 
   # tailscale 转发规则（iptables-restore 格式；仅 tailscale 网关机渲染，apply 段写 unit 持久化）
   ${lib.optionalString tailscaleForward ''
