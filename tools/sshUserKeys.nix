@@ -13,6 +13,7 @@ let
     "nix-asus"
     "ide-lenovo"
     "ide-mac"
+    "ds3"
   ];
 in
 {
