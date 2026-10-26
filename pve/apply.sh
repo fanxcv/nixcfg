@@ -30,24 +30,21 @@ else
   exit 1
 fi
 
-echo "==> [3/7] apt 换源（中科大）+ 禁用 enterprise/ceph"
+echo "==> [3/7] apt 换源（CERNET deb822）+ 清理未声明源（enterprise/ceph/tailscale 等）"
 cp -a /etc/apt/sources.list.d/. "$BACKUP/" 2>/dev/null || true
+cp -a /etc/apt/sources.list "$BACKUP/" 2>/dev/null || true
 install -m 0644 debian.sources /etc/apt/sources.list.d/debian.sources
 install -m 0644 debian-security.sources /etc/apt/sources.list.d/debian-security.sources
 install -m 0644 pve-no-subscription.list /etc/apt/sources.list.d/pve-no-subscription.list
-# enterprise 源是「仓库黄色提示」根源（未订阅），备份后移除（PVE 8=.list，PVE 9=deb822 .sources）
-for f in /etc/apt/sources.list.d/pve-enterprise.list /etc/apt/sources.list.d/pve-enterprise.sources; do
-  if [ -f "$f" ]; then
-    mv "$f" "$BACKUP/"
-    echo "$f 已禁用（备份于 $BACKUP ）"
-  fi
-done
-# ceph 源（可选组件，本机未用）备份禁用
-for f in /etc/apt/sources.list.d/ceph.list /etc/apt/sources.list.d/ceph.sources; do
-  if [ -f "$f" ]; then
-    mv "$f" "$BACKUP/"
-    echo "$f 已禁用（备份于 $BACKUP ）"
-  fi
+install -m 0644 sources.list /etc/apt/sources.list
+# 未声明源（enterprise/ceph/tailscale.list/历史残留）：备份后移除；白名单外一律清掉
+for f in /etc/apt/sources.list.d/*; do
+  [ -e "$f" ] || continue
+  case "$(basename "$f")" in
+    debian.sources | debian-security.sources | pve-no-subscription.list) continue ;;
+  esac
+  mv "$f" "$BACKUP/"
+  echo "$(basename "$f") 已移除（未声明源，备份于 $BACKUP ）"
 done
 
 echo "==> [4/7] 网络（DNS 直写 + 固定 IP）"

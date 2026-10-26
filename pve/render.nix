@@ -42,6 +42,11 @@ pkgs.runCommand "pve-sysfiles" { } ''
   deb ${mirror}/proxmox/debian/pve ${suite} pve-no-subscription
   EOF
 
+  # 传统 sources.list：apt 源统一走 deb822 三件，本文件留空避免历史残留（如 bookworm/TUNA/USTC）混入
+  cat > $out/sources.list <<EOF
+  # 由 nixcfg 渲染（PVE 的 apt 源见 sources.list.d/：debian.sources / debian-security.sources / pve-no-subscription.list）
+  EOF
+
   # DNS（/etc/resolv.conf 直写；PVE 9 无 systemd-resolved，resolv.conf 由安装器/网络模块生成，部署时覆盖）
   cat > $out/resolv.conf <<EOF
   # 由 nixcfg pve 渲染（公共 DNS，见 pve/default.nix）；网络重启若覆盖，请在 /etc/network/interfaces 配置 dns-nameservers
