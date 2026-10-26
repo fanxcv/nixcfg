@@ -1,4 +1,4 @@
-# AI 密钥等敏感环境变量注入（三平台通用）
+# AI 密钥等敏感环境变量注入（非 PVE 平台；PVE 宿主机不解密 ai.env、不注入 AI key）
 # 密钥文件统一约定 $HOME/.secrets/ai.env，只存三个源 key（不进 nix 配置、不提交 git）：
 #   export AI_FAN_CLAUDE=...   # claude key（claude code / pi 的 PIPI_CLAUDE_KEY）
 #   export AI_FAN_CODEX=...    # codex key（pi 的 IPI_CODEX_KEY）
@@ -18,9 +18,18 @@
 # 系统域 secrets（NixOS host keys 等）仍走 agenix 系统层（hosts/ 下声明）。
 # HM 层不再 import agenix homeManagerModules（无 age.secrets 声明）。
 
-{ pkgs, lib, ... }:
 {
-  programs.zsh.initContent = ''
+  pkgs,
+  lib,
+  platform ? "nixos",
+  ...
+}:
+let
+  # PVE 宿主机不跑 AI 工具（pi/codex/beads 均不启用）：不解密 ai.env、不注入 key，并清理存量
+  isPve = platform == "pve";
+in
+{
+  programs.zsh.initContent = lib.optionalString (!isPve) ''
     [ -f "$HOME/.secrets/ai.env" ] && source "$HOME/.secrets/ai.env"
     # AI key 映射：ai-env 的 AI_FAN_* → 各工具环境变量（未定义为无害空值）
     export ANTHROPIC_AUTH_TOKEN="$AI_FAN_CLAUDE"   # claude code（cc_claude 内也有独立派生）
@@ -29,13 +38,17 @@
     export PIPI_CHAT_KEY="$AI_FAN_CHAT"            # pi
   '';
 
-  # 统一解密（ai-env + git-credentials，全平台）；失败即中断部署
+  # 统一解密（非 PVE：ai-env + git-credentials；PVE：仅 git-credentials 并清理存量 ai.env）；
+  # 失败即中断部署
   home.activation.decryptUserSecrets = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     umask 077
     AGE_BIN="${pkgs.age}/bin/age"
     AGE_KEY="$HOME/.secrets/age-keys.txt"
-    "$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.secrets/ai.env" ${../../..}/secrets/ai-env.age
+    ${lib.optionalString (
+      !isPve
+    ) ''"$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.secrets/ai.env" ${../../..}/secrets/ai-env.age''}
     "$AGE_BIN" -d -i "$AGE_KEY" -o "$HOME/.git-credentials" ${../../..}/secrets/git-credentials.age
     chmod 600 "$HOME/.git-credentials"
+    ${lib.optionalString isPve ''rm -f "$HOME/.secrets/ai.env"''}
   '';
 }
