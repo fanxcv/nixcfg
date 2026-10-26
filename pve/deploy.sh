@@ -34,7 +34,7 @@ set -euo pipefail
 # 检查 nix 二进制存在性而非 PATH 命令（非交互 ssh 的 PATH 无 nix，但已装机器不应重跑 installer）
 if [ ! -x /nix/var/nix/profiles/default/bin/nix ]; then
   echo "nix 未安装，官方 installer 安装中（--daemon，国内网络慢属正常）..."
-  curl -L https://nixos.org/nix/install | sh -s -- --daemon
+  curl -L https://mirrors.cernet.edu.cn/nix/latest/install | sh -s -- --daemon
 fi
 # 非交互 ssh 不 source /etc/profile.d，后续 [4/4] 远程 nix build + activate 需要 nix 全家在 PATH（幂等）
 ln -sf /nix/var/nix/profiles/default/bin/nix /usr/local/bin/nix
