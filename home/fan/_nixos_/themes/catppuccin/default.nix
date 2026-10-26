@@ -35,7 +35,6 @@
     tmux.flavor = lib.mkDefault "mocha";
     zellij.enable = lib.mkDefault true;
     zellij.flavor = lib.mkDefault "mocha";
-    lazygit.flavor = lib.mkDefault "mocha";
     starship.enable = lib.mkDefault true;
     starship.flavor = lib.mkDefault "mocha";
     atuin.enable = lib.mkDefault true;

@@ -23,8 +23,6 @@
     bat
     eza
     yq
-    # TUI 版 git（lazygit，所有机器；配置文件 ~/.config/lazygit/config.yml 用户自管）
-    lazygit
     # 系统信息展示（所有机器；neofetch 已从 nixpkgs 移除，fastfetch 为社区标准替代）
     fastfetch
     # 默认 node 由 nix 管理（替代原全局默认 mise node@lts，pkgs.nodejs 跟随 nixpkgs LTS）；
