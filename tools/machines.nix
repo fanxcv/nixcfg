@@ -50,6 +50,12 @@
   };
 
   # --- PVE 宿主机（Debian 底，HM standalone + pve/ 系统层）---
+  ds1 = {
+    kind = "pve";
+    system = "x86_64-linux";
+    user = "fan";
+    alias = true;
+  };
   ds2 = {
     kind = "pve";
     system = "x86_64-linux";
@@ -57,12 +63,6 @@
     alias = true;
   };
   ds3 = {
-    kind = "pve";
-    system = "x86_64-linux";
-    user = "fan";
-    alias = true;
-  };
-  desktop = {
     kind = "pve";
     system = "x86_64-linux";
     user = "fan";

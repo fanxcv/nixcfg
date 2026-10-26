@@ -12,7 +12,7 @@
 | NixOS | nix-lenovo / nix-asus / nix-im | `nixos-rebuild switch --flake .#nix-lenovo` | — |
 | IDE 容器 | ide-lenovo / ide-mac | 容器内 `nix run .#ide-lenovo`（余同） | — |
 | 云服务器 | ali-ai / hc-pro-pve-2 | `nix run .#ali-ai`（余同） | — |
-| PVE 宿主 | ds2 / ds3 / desktop / fan / hp / mi / razer | `nix run .#ds2`（余同） | — |
+| PVE 宿主 | ds1 / ds2 / ds3 / fan / hp / mi / razer | `nix run .#ds1`（余同） | — |
 
 ## 分层模型
 
@@ -31,7 +31,7 @@
 | IDE 容器构建+激活 | 容器内 `nix run .#ide-lenovo` / `.#ide-mac` |
 | macOS 构建+激活 | `nix run .#mba-m5` / `.#mbp-m1` / `.#mini-m4`（激活内置 sudo） |
 | NixOS 切换 | `sudo nixos-rebuild switch --flake .#nix-lenovo` / `.#nix-asus` / `.#nix-im` |
-| PVE 宿主部署 | `nix run .#ds2` / `.#ds3` / `.#desktop` / `.#fan` / `.#hp` / `.#mi` / `.#razer` |
+| PVE 宿主部署 | `nix run .#ds1` / `.#ds2` / `.#ds3` / `.#fan` / `.#hp` / `.#mi` / `.#razer` |
 | 升级依赖 | `nix flake update` |
 | 升级自建包（codex/rustdesk/kasmvnc） | `scripts/update-packages.sh`（`--check` 只报告） |
 

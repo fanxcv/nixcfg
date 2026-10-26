@@ -15,7 +15,7 @@ import sys
 
 # 迁移前基线（输出名与别名集合必须完全不变）
 EXPECTED_HOME = [
-    "fan@desktop",
+    "fan@ds1",
     "fan@ds2",
     "fan@ds3",
     "fan@fan",
@@ -34,9 +34,9 @@ EXPECTED_ALIAS = [
     "ide-mac",
     "ali-ai",
     "hc-pro-pve-2",
+    "ds1",
     "ds2",
     "ds3",
-    "desktop",
     "fan",
     "hp",
     "mi",

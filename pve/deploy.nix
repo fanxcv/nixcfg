@@ -2,7 +2,7 @@
 # 组装：机器层配置渲染（./<host>）+ apply/deploy 脚本（占位符替换）
 # 部署目标：PVE 宿主机（Debian 13 trixie，root 用户）
 # HM activation 在目标机本机构建（darwin 无法构建 x86_64-linux 闭包），见 deploy.sh
-# 注意：flake.nix 里 import 本文件时传 host = "ds2" / "desktop" 等
+# 注意：flake.nix 里 import 本文件时传 host = "ds1" / "ds2" 等
 {
   pkgs,
   lib,
