@@ -4,7 +4,7 @@
 #   useChinaMirror=false（国外直连场景）→ 不写配置文件/不注入变量，工具默认官方源
 # 用配置文件而非环境变量：npm/pip/uv/go 自动读取，不依赖 shell 环境加载
 # flutter 的 pub/engine 下载走环境变量（PUB_HOSTED_URL/FLUTTER_STORAGE_BASE_URL，CLI 读取）；
-#   注意与 mise 的 SDK 下载源（storage.googleapis.com 自定义 url）互不影响
+#   注意与 mise 的 SDK 下载源（各机 mise.nix 内的自定义 url）互不影响
 # 说明：镜像配置对全平台统一生效（装过 node/go/uv/python/flutter 的机器自然受益，
 #   未装对应组件的机器写文件也无副作用）
 
@@ -40,7 +40,8 @@
 
   # flutter/dart pub 包与 engine 下载镜像（CLI 读环境变量，写 .zshenv 由 HM 注入所有 shell）
   # FLUTTER_STORAGE_BASE_URL 下 flutter 拼 /flutter_infra_release/、/dart-archive/ 子路径（CERNET 两者均镜像）
-  # PUB_HOSTED_URL 无 CERNET 对应镜像，保留 flutter-io.cn
+  # PUB_HOSTED_URL 无可用 CERNET 对应镜像：联合镜像有 /dart-pub/，但其 /api/packages/<pkg> 返回目录页而非
+  #   pub API 的 JSON（2026-10 实测 dart pub get 报 "Got badly formatted response"），保留 flutter-io.cn
   home.sessionVariables = lib.mkIf useChinaMirror {
     PUB_HOSTED_URL = "https://pub.flutter-io.cn";
     FLUTTER_STORAGE_BASE_URL = "https://mirrors.cernet.edu.cn/flutter";

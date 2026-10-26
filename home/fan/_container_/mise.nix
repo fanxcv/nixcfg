@@ -31,7 +31,13 @@ let
     python = "3.12"
     uv = "latest"
   ''
-  + pipxLine;
+  + pipxLine
+  + ''
+
+    [settings]
+    # 官方 nodejs.org/dist 布局（尾部斜杠必需：无斜杠时 mise 拼 URL 会吃掉末段路径）
+    node.mirror_url = "https://mirrors.cernet.edu.cn/nodejs-release/"
+  '';
   template = pkgs.writeText "mise-config-${hostName}.toml" configText;
 in
 {
