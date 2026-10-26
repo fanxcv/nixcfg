@@ -1,12 +1,14 @@
 # docker + docker-compose（对应 alpine-init.sh 的 install_docker()）
-# 本层只被 _nixos_/_alpine_ 导入，天然仅 Linux 生效（mac 不装），无需再判平台
+# 本层被 _nixos_/_ubuntu_/_pve_/_container_ 导入 -> Linux 生效（mac 不装）
 # nix 侧统一用官方包，不区分发行版源：
 #   pkgs.docker          → 脚本的 apk docker / apt docker-ce（client + daemon）
 #   pkgs.docker-compose  → 脚本手动下载的 release 二进制（v2）
 #   pkgs.docker-buildx   → 脚本 Ubuntu 分支的 docker-buildx-plugin（nix 侧统一提供）
 # 自启 + dc 软链 + network fan 由 home.activation 完成（需 root 或 sudo NOPASSWD）
-# 容器环境不安装：isContainer 由 flake.nix 传入（ide 容器 = true，真机默认 false），
-#   包与 activation 均 mkIf 跳过——容器里 docker daemon 起不来，连检测都不跑
+# 不装的两类：
+#   isContainer（ide 容器）→ 容器里 docker daemon 起不来，连检测都不跑
+#   NixOS 真机（platform=nixos）→ 运行时统一 podman，见 hosts/_nixos_/services/podman.nix：
+#     其 dockerCompat 提供 docker 命令（→ podman）与 /run/docker.sock，再装 docker 包只会两份 daemon 互扰
 
 {
   pkgs,
@@ -17,8 +19,11 @@
   platform ? "linux",
   ...
 }:
+let
+  enabled = !isContainer && platform != "nixos";
+in
 {
-  home.packages = lib.mkIf (!isContainer) (
+  home.packages = lib.mkIf enabled (
     with pkgs;
     [
       docker
@@ -27,7 +32,7 @@
     ]
   );
 
-  home.activation.setupDocker = lib.mkIf (!isContainer) (
+  home.activation.setupDocker = lib.mkIf enabled (
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       setup_docker() {
         SUDO=""
@@ -57,9 +62,8 @@
         fi
 
         # 4) 国内镜像加速（useChinaMirror 开关，与 mirrors.nix 同语义）：写 /etc/docker/daemon.json
-        #    NixOS 真机跳过（系统层 virtualisation.docker.daemon.settings 声明式管，
-        #    HM 写普通文件会覆盖其 symlink，rebuild 后丢失）
-        if [ "${if useChinaMirror then "true" else "false"}" = true ] && [ "${platform}" != nixos ]; then
+        #    只在 Ubuntu/PVE 上写（NixOS 走 podman registries.conf.d，本模块在 nixos 不生效）
+        if [ "${if useChinaMirror then "true" else "false"}" = true ]; then
           ''${SUDO} mkdir -p /etc/docker
           echo '{"registry-mirrors": ${builtins.toJSON tools.config.dockerRegistryMirrors}}' \
             | ''${SUDO} tee /etc/docker/daemon.json > /dev/null

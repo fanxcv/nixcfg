@@ -1,4 +1,7 @@
 # NixOS 系统服务：podman（声明式，开机自启；docker CLI/socket 兼容，drop-in 替换 docker）
+# NixOS 真机唯一的容器运行时：home 层 _linux_/docker.nix 在 platform=nixos 时不装 docker 包，
+#   故 `docker` 命令由下面 dockerCompat 提供的 shim（→ podman）落位，PATH 上不再有冲突。
+#   docker-compose 也未装（本仓库 nixos 机器无 compose 用例）；需要时用 podman compose / podman-compose。
 # 国内镜像加速（挂 useChinaMirror 开关，flake.nix specialArgs 注入，与 mac orbstack.nix（registry-mirrors）同语义）：
 #   true  → registries.conf.d 三镜像；false → 不设，podman 默认源
 {
