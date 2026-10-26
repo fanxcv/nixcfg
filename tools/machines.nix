@@ -48,6 +48,22 @@
     user = "root";
     alias = true;
   };
+  # --- FICC test 环境（Ubuntu LXC / 真机，root 用户态 HM）---
+  # ficc-test-pve: ds3(10.2.241.206) 上的 PVE LXC 容器，8C/24G/98G，IP 10.2.241.210
+  #   服务用 podman + podman-compose（非 docker），故机器层关闭 softwares.docker.enable
+  # hc-test-pve: 10.2.241.65（PVE LXC，原有 docker 容器不动，同样关闭 docker 接管）
+  ficc-test-pve = {
+    kind = "ubuntu";
+    system = "x86_64-linux";
+    user = "root";
+    alias = true;
+  };
+  hc-test-pve = {
+    kind = "ubuntu";
+    system = "x86_64-linux";
+    user = "root";
+    alias = true;
+  };
 
   # --- PVE 宿主机（Debian 底，HM standalone + pve/ 系统层）---
   ds1 = {

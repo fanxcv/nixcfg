@@ -9,20 +9,31 @@
 #   isContainer（ide 容器）→ 容器里 docker daemon 起不来，连检测都不跑
 #   NixOS 真机（platform=nixos）→ 运行时统一 podman，见 hosts/_nixos_/services/podman.nix：
 #     其 dockerCompat 提供 docker 命令（→ podman）与 /run/docker.sock，再装 docker 包只会两份 daemon 互扰
+# 另：机器层可显式设 softwares.docker.enable = false
+#   → ficc-test-pve 用 podman-compose；hc-test-pve 保留原有 apt docker，不让 nix 版接管
 
-{
+{ 
   pkgs,
   lib,
   tools,
+  config,
   isContainer ? false,
   useChinaMirror ? true,
   platform ? "linux",
   ...
 }:
 let
-  enabled = !isContainer && platform != "nixos";
+  enabled = config.softwares.docker.enable;
 in
 {
+  options.softwares.docker.enable = lib.mkOption {
+    type = lib.types.bool;
+    default = !isContainer && platform != "nixos";
+    description = "是否安装并接管 docker（podman 机器或需保留外部 docker 的机器设 false）";
+  };
+
+  # 引入 options 后，配置项必须显式包在 config 内
+  config = {
   home.packages = lib.mkIf enabled (
     with pkgs;
     [
@@ -73,4 +84,5 @@ in
       setup_docker
     ''
   );
+  };
 }
