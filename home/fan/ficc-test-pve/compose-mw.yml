@@ -131,7 +131,7 @@ services:
       - "10909:10909"
       - "10911:10911"
       - "10912:10912"
-    command: sh mqbroker --enable-proxy -c /home/rocketmq/conf/broker.conf
+    command: sh mqbroker --enable-proxy -c /home/rocketmq/conf/broker.conf -n rocketmq-namesrv-1:9876
     environment:
       # 显式定堆：默认按宿主物理内存算（24G → 远超 2g mem_limit，被 OOM kill）
       JAVA_OPT_EXT: "-Xms1g -Xmx1g -Xmn512m"
