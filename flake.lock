@@ -118,13 +118,13 @@
         "rev": "1220a4af7bdf66e2b5c2c970cf1191606972e009",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/Homebrew/brew.git"
+        "url": "https://mirrors.cernet.edu.cn/brew.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/Homebrew/brew.git"
+        "url": "https://mirrors.cernet.edu.cn/brew.git"
       }
     },
     "homebrew-cask": {
@@ -136,13 +136,13 @@
         "rev": "4e2164395a87d2d8aa2eda75411c46463e70191b",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/homebrew/homebrew-cask.git"
+        "url": "https://mirrors.cernet.edu.cn/homebrew-cask.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/homebrew/homebrew-cask.git"
+        "url": "https://mirrors.cernet.edu.cn/homebrew-cask.git"
       }
     },
     "homebrew-core": {
@@ -154,13 +154,13 @@
         "rev": "f7cd8f7862e34c051e73e75d5141e3d0100f6b75",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/homebrew/homebrew-core.git"
+        "url": "https://mirrors.cernet.edu.cn/homebrew-core.git"
       },
       "original": {
         "ref": "main",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/homebrew/homebrew-core.git"
+        "url": "https://mirrors.cernet.edu.cn/homebrew-core.git"
       }
     },
     "impermanence": {
@@ -238,13 +238,13 @@
         "rev": "7993f34ee47e28a3d607a525aadc6c94b73be728",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://mirrors.cernet.edu.cn/nixpkgs.git"
       },
       "original": {
         "ref": "nixos-26.05",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://mirrors.cernet.edu.cn/nixpkgs.git"
       }
     },
     "nixpkgs-darwin": {
@@ -255,13 +255,13 @@
         "rev": "240fddad86d7a0520319f21d8be1b43db426b18d",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://mirrors.cernet.edu.cn/nixpkgs.git"
       },
       "original": {
         "ref": "nixpkgs-26.05-darwin",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://mirrors.cernet.edu.cn/nixpkgs.git"
       }
     },
     "plasma-manager": {
@@ -361,13 +361,13 @@
         "rev": "674a2028661e550a97400c1cc992b9cca9a668a1",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://mirrors.cernet.edu.cn/nixpkgs.git"
       },
       "original": {
         "ref": "nixpkgs-unstable",
         "shallow": true,
         "type": "git",
-        "url": "https://ghfast.top/https://github.com/NixOS/nixpkgs.git"
+        "url": "https://mirrors.cernet.edu.cn/nixpkgs.git"
       }
     },
     "vscode-extensions": {

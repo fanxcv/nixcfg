@@ -22,12 +22,14 @@
   };
 
   inputs = {
-    # git+https 走 GitHub 加速前缀（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
+    # 上游有 CERNET 联合镜像的 input 直连镜像：nixpkgs / brew / homebrew-core / homebrew-cask（git 镜像实测可取
+    #   lock 内 rev；镜像滞后上游，`nix flake update` 撞上未同步 rev 时改回 ghfast.top 前缀即可）
+    # 其余 input 走 GitHub 加速前缀（国内 GitHub 直连超时）：flakes fetcher 无法配置镜像，URL 前置代理最稳
     # 前缀由 tools/config.nix 的 githubProxy 声明（flake 解析器限制 inputs.url 必须字符串字面量，
     # 换代理：改 tools/config.nix + 跑 scripts/switch-github-proxy.sh 同步 inputs/lock）
     # 稳定版 nixos-26.05：闭包二进制在镜像/官方永久缓存 → 构建命中 CERNET 镜像；
     # 不锁 rev：分支点更新慢（几周一次），nix flake update 自动跟随（升级=全量 nix flake update）
-    nixpkgs.url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixos-26.05&shallow=1";
+    nixpkgs.url = "git+https://mirrors.cernet.edu.cn/nixpkgs.git?ref=nixos-26.05&shallow=1";
     home-manager = {
       # 与 nixpkgs 26.05 配套的 release 分支（master 要求更新的 nixpkgs）
       url = "git+https://ghfast.top/https://github.com/nix-community/home-manager.git?ref=release-26.05&shallow=1";
@@ -38,7 +40,7 @@
     # 锁 rev（flake.lock）+ 周级 nix flake update：unstable 滚动快、二进制保留期短于稳定分支，长时间不更新会掉缓存
     # 命中面压缩到单包：主通道仍走 26.05（见 overlays/unstable.nix 与 modules/home/vscode.nix、modules/home/{codex,pi}.nix）
     unstable = {
-      url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-unstable&shallow=1";
+      url = "git+https://mirrors.cernet.edu.cn/nixpkgs.git?ref=nixpkgs-unstable&shallow=1";
     };
 
     # vscode 扩展补充市场（nixpkgs 缺失的扩展，→ pkgs.repos.vscode.vscode-marketplace-release）
@@ -100,7 +102,7 @@
     # nix-darwin 用配套分支：nix-darwin-26.05 ↔ nixpkgs-26.05-darwin（checkRelease 强制匹配）
     nixpkgs-darwin = {
       # darwin 专属 channel（闭包含完整 darwin 构建，镜像同步）；不锁 rev，跟随分支
-      url = "git+https://ghfast.top/https://github.com/NixOS/nixpkgs.git?ref=nixpkgs-26.05-darwin&shallow=1";
+      url = "git+https://mirrors.cernet.edu.cn/nixpkgs.git?ref=nixpkgs-26.05-darwin&shallow=1";
     };
     nix-darwin = {
       url = "git+https://ghfast.top/https://github.com/nix-darwin/nix-darwin.git?ref=nix-darwin-26.05&shallow=1";
@@ -113,15 +115,15 @@
       inputs.brew-src.follows = "homebrew";
     };
     homebrew = {
-      url = "git+https://ghfast.top/https://github.com/Homebrew/brew.git?ref=main&shallow=1";
+      url = "git+https://mirrors.cernet.edu.cn/brew.git?ref=main&shallow=1";
       flake = false;
     };
     homebrew-core = {
-      url = "git+https://ghfast.top/https://github.com/homebrew/homebrew-core.git?ref=main&shallow=1";
+      url = "git+https://mirrors.cernet.edu.cn/homebrew-core.git?ref=main&shallow=1";
       flake = false;
     };
     homebrew-cask = {
-      url = "git+https://ghfast.top/https://github.com/homebrew/homebrew-cask.git?ref=main&shallow=1";
+      url = "git+https://mirrors.cernet.edu.cn/homebrew-cask.git?ref=main&shallow=1";
       flake = false;
     };
   };
