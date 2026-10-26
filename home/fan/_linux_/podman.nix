@@ -1,6 +1,6 @@
 # podman + podman-compose 运行时（Ubuntu 发行版层用 podman 取代 docker）
 # 本层被 _nixos_/_ubuntu_/_pve_/_container_ 导入 -> Linux 生效（mac 不装）
-# 默认关闭：只有机器层显式设 softwares.podman.enable = true 才装（当前 ficc-test-vm）
+# 默认关闭：只有机器层显式设 softwares.podman.enable = true 才装（当前无机器启用）
 # Ubuntu 上 podman 无 daemon：容器靠 `restart: always` 的 podman-restart.service 开机拉起，
 #   故 activation 把包内 unit 拷到 /etc/systemd/system 并 enable --now
 # NixOS 真机不走本模块（其运行时在 hosts/_nixos_/services/podman.nix，由系统层声明）

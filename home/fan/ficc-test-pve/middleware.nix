@@ -1,6 +1,6 @@
-# FICC 中间件栈（podman-compose，声明由 nix 渲染派发）
+# FICC 中间件栈（docker compose，声明由 nix 渲染派发）
 # compose 源：compose-mw.yml（源自迁移档案，口令占位符化；dashboard 端口改 18080 避开 ficc-auth）
-# 口令由 /data/.env 注入：age 解密 secrets/hosts/ficc-test-vm/mw-env.age（失败即部署失败，无兜底）
+# 口令由 /data/.env 注入：age 解密 secrets/hosts/ficc-test-pve/mw-env.age（失败即部署失败，无兜底）
 # 三份只读配置（my.cnf / elasticsearch.yml / broker.conf）是机器本地运维资料、不入 git，
 #   缺失则容器起不来 -> 前置检查直接报错中止，不带着半套中间件往下走
 # 更新流：改 compose-mw.yml → 部署 → activation 覆盖 compose/.env → up -d 重建
@@ -11,13 +11,13 @@
   ...
 }:
 {
-  home.activation.setupFiccMiddleware = lib.hm.dag.entryAfter [ "writeBoundary" "setupPodman" ] ''
+  home.activation.setupFiccMiddleware = lib.hm.dag.entryAfter [ "writeBoundary" "setupDocker" ] ''
     FICC_MW_DIR=/data
     AGE_BIN="${pkgs.age}/bin/age"
     AGE_KEY="$HOME/.secrets/age-keys.txt"
-    PODMAN_COMPOSE="${pkgs.podman-compose}/bin/podman-compose"
+    DOCKER_COMPOSE="${pkgs.docker-compose}/bin/docker-compose"
 
-    # 1) 目录（挂载点须先存在，否则 podman 会建成 root 属主的空卷）
+    # 1) 目录（挂载点须先存在，否则 docker 会建成 root 属主的空卷）
     mkdir -p /data/{mysql,redis,redis-stack,minio} \
              /data/zookeeper{1,2,3}/{data,datalog,logs} \
              /data/rocketmq/namesrv/logs /data/rocketmq/broker/{conf,store,logs} \
@@ -29,7 +29,7 @@
 
     # 3) 口令 env → .env（每次覆盖，源在 secrets；失败即部署失败，无兜底）
     umask 077
-    "$AGE_BIN" -d -i "$AGE_KEY" -o "$FICC_MW_DIR/.env" ${../../../secrets/hosts/ficc-test-vm/mw-env.age}
+    "$AGE_BIN" -d -i "$AGE_KEY" -o "$FICC_MW_DIR/.env" ${../../../secrets/hosts/ficc-test-pve/mw-env.age}
     chmod 600 "$FICC_MW_DIR/.env"
 
     # 4) 前置检查：只读配置文件不在 git，缺一份就中止（暴露问题，不带病启动）
@@ -41,6 +41,6 @@
     done
 
     # 5) 幂等拉起（已跑则 no-op；配置变更时 compose 自动重建）
-    cd "$FICC_MW_DIR" && "$PODMAN_COMPOSE" -f "$FICC_MW_DIR/compose-mw.yml" --env-file "$FICC_MW_DIR/.env" up -d
+    cd "$FICC_MW_DIR" && "$DOCKER_COMPOSE" -f "$FICC_MW_DIR/compose-mw.yml" --env-file "$FICC_MW_DIR/.env" up -d
   '';
 }

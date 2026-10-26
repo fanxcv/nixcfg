@@ -47,7 +47,7 @@ let
     hc-pro-pve-2 = [
       "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
     ];
-    ficc-test-vm = [
+    ficc-test-pve = [
       "age1hn63jj6y5yh2rqhmtw3gdn0887fds7gvjfup7558gvg8vrsatsps7lp204"
     ];
     hc-test-pve = [
