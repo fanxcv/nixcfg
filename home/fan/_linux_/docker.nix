@@ -111,7 +111,9 @@ EOF
           ''${SUDO} sed -i "s|__DOCKERD__|${pkgs.docker}/bin/dockerd|" /etc/systemd/system/docker.service
 
           # 卸 apt 包（只卸二进制与 /usr/lib 单元，不碰 /var/lib/docker）
-          if dpkg -l 2>/dev/null | grep -q '^ii  docker-ce'; then
+          # 注意：不可写 `dpkg -l | grep -q`——全量 dpkg -l 输出被 grep -q 提前关闭管道，
+          #   pipefail 下 dpkg 得 SIGPIPE(141)，条件永远为假，卸载静默跳过。限定包名后输出短，无此问题。
+          if dpkg -l docker-ce 2>/dev/null | grep -q '^ii'; then
             ''${SUDO} apt-get purge -y docker-ce docker-ce-cli containerd.io \
                 docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras \
               || echo "警告: apt docker 包卸载失败（nix 单元仍会接管 daemon，残留包不影响运行）"
