@@ -61,8 +61,10 @@ in
 
         # 1) 接管系统自带 docker（apt docker-ce）：停用其单元 + 卸包，daemon 改由 nix 单元承担。
         #    nix 的 dockerd 自带 containerd/runc/tini（moby 闭包内），故 apt containerd.io 一并卸掉。
-        #    /var/lib/docker 不动 —— 12 个容器与网络、卷原样保留，靠 restart 策略自动拉起。
-        if [ "${if cfg.adoptSystem then "true" else "false"}" = true ] && command -v systemctl > /dev/null 2>&1; then
+        #    /var/lib/docker 不动 —— 容器/网络/卷原样保留，靠 restart 策略自动拉起。
+        #    幂等门：仅当仍装着 apt docker 或尚未落 nix 单元时才接管；否则每次部署都会重起 daemon、弹一遍所有容器
+        if [ "${if cfg.adoptSystem then "true" else "false"}" = true ] && command -v systemctl > /dev/null 2>&1 \
+           && { dpkg -l docker-ce 2>/dev/null | grep -q '^ii' || ! grep -q 'nix-managed' /etc/systemd/system/docker.service 2>/dev/null; }; then
           ''${SUDO} systemctl disable --now docker.socket docker > /dev/null 2>&1 \
             || true   # 幂等：未装 apt docker 时属预期失败
           ''${SUDO} getent group docker > /dev/null 2>&1 || ''${SUDO} groupadd -r docker
