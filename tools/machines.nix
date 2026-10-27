@@ -52,7 +52,7 @@
   # ficc-test-pve: ds3(10.2.241.206) 上的 PVE LXC（CT 100），Ubuntu 24.04，8C/24G/100G，IP 10.2.241.210
   #   服务用 docker + docker-compose（LXC 内 podman 的 netavark 在嵌套 userns 下 socket() 报 EACCES，
   #   docker 走标准 netns/bridge 无此问题，实测 bind/bridge/端口映射/容器互通全通）
-  # hc-test-pve: 10.2.241.65（PVE LXC，原有 docker 容器不动，同样关闭 docker 接管）
+  # hc-test-pve: 10.2.241.65（PVE LXC，16C/16G；apt docker 由 nix 接管 adoptSystem，/var/lib/docker 原地复用）
   ficc-test-pve = {
     kind = "ubuntu";
     system = "x86_64-linux";

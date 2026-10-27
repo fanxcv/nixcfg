@@ -12,7 +12,6 @@ _: {
       # LXC 内无发行版 docker：由本模块生成 docker.service / docker.socket（nix 的 dockerd）
       adoptSystem = true;
     };
-    podman.enable = false;
     sshHostKey.enable = true;
     hostname.enable = true;
   };

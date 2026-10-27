@@ -9,8 +9,8 @@
 #   isContainer（ide 容器）→ 容器里 docker daemon 起不来，连检测都不跑
 #   NixOS 真机（platform=nixos）→ 运行时统一 podman，见 hosts/_nixos_/services/podman.nix：
 #     其 dockerCompat 提供 docker 命令（→ podman）与 /run/docker.sock，再装 docker 包只会两份 daemon 互扰
-# 另：机器层可显式设 softwares.docker.enable = false
-#   → ficc-test-pve 用 docker（LXC 内 podman netavark 不可用）；hc-test-pve 保留原有 apt docker，不让 nix 版接管
+# 另：机器层可显式设 softwares.docker.enable = false 保留外部 docker；当前无机器如此——
+#   ficc-test-pve 与 hc-test-pve 均 adoptSystem = true 由 nix 接管（/var/lib/docker 原地复用，容器随 restart 策略回来）
 
 { 
   pkgs,
