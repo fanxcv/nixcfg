@@ -141,4 +141,22 @@ in
     mkdir -p "$HOME/.oh-my-zsh/custom/themes"
     cp -f ${themeSource} "$HOME/.oh-my-zsh/custom/themes/fishy-custom.zsh-theme"
   '';
+
+  # 默认 shell 切 zsh：NixOS/darwin 由系统层声明（users/fan/default.nix），容器由镜像 entrypoint，
+  # PVE 由 pve/apply.sh [1/7] 负责；此处只补 Ubuntu 服务器（HM 顶层唯一能在系统层 chsh 的发行版平台）。
+  # 幂等：/etc/shells 已含且已是目标 shell 则不动；zsh 缺失只警告（同 cloneOhMyZsh 的容忍度）
+  home.activation.setLoginShell = lib.mkIf (platform == "ubuntu") (
+    lib.hm.dag.entryAfter [ "writeBoundary" "installPackages" ] ''
+      ZSH_BIN="$HOME/.nix-profile/bin/zsh"
+      if [ -x "$ZSH_BIN" ]; then
+        grep -qxF "$ZSH_BIN" /etc/shells 2>/dev/null || echo "$ZSH_BIN" >> /etc/shells
+        if [ "$(getent passwd "$(id -un)" | cut -d: -f7)" != "$ZSH_BIN" ]; then
+          chsh -s "$ZSH_BIN" "$(id -un)"
+          echo "[login-shell] $(id -un) 默认 shell → $ZSH_BIN（新登录生效）"
+        fi
+      else
+        echo "警告: $ZSH_BIN 不存在，跳过 chsh（HM 未装 zsh？）"
+      fi
+    ''
+  );
 }
