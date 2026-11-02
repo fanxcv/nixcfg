@@ -26,6 +26,12 @@
 
   networking.hostName = "nix-asus";
 
+  # 根跑在 btrfs 子卷上（见 disks.nix），每次开机由 initrd 掦根并保留最近 3 份快照
+  nixcfg.rootOnBtrfs = {
+    enable = true;
+    device = "/dev/pool/root";
+  };
+
   # Wayland 默认会话（无 RustDesk 被控需求，无需 X11 妥协）
   services.xserver.enable = false;
 

@@ -1,6 +1,8 @@
-# 声明式磁盘（disko）：953.9G NVMe 全盘格，LVM 布局 + tmpfs 根（不可变系统）
-#   EFI 512M + LVM（boot 1G + swap 32G + persist 400G + nix 300G），LVM 余量 ~220G（lvextend 可扩 nix/persist）
+# 声明式磁盘（disko）：953.9G NVMe 全盘格，LVM 布局 + btrfs 根子卷（不可变系统）
+#   EFI 512M + LVM（root 40G + boot 1G + swap 32G + persist 400G + nix 300G），LVM 余量 ~180G（lvextend 可扩 nix/persist）
 #   布局与 nix-lenovo 逐字一致（同容量 953.9G NVMe），差异只在机器身份与硬件层
+#   根是 btrfs 子卷 @root（zstd 压缩、落盘，不受 RAM 限制）：每次开机 initrd 把旧根改名为快照再
+#   建空子卷（hosts/_nixos_/base/root-on-btrfs.nix），保留最近 3 份供回滚
 #   swap 32G 供 hibernate（30G 内存，plasma 电源计划 criticalAction=hibernate 需要；zram 是压缩内存不可休眠）
 #   ⚠ 全盘格式化：本文件 --mode disko 会抹掉整盘（含原有 Windows/BitLocker 分区）
 # 首次安装：nix run nixpkgs#disko -- --mode disko ./hosts/nix-im/disks.nix
@@ -70,21 +72,26 @@ _: {
             mountpoint = "/nix";
           };
         };
-      };
-    };
-    nodev = {
-      "/" = {
-        fsType = "tmpfs";
-        mountOptions = [
-          "size=2G"
-          "mode=0755"
-        ];
-      };
-      "/tmp" = {
-        fsType = "tmpfs";
-        mountOptions = [
-          "size=2G"
-        ];
+        root = {
+          size = "40G";
+          content = {
+            type = "btrfs";
+            extraArgs = [
+              "-f"
+              "-L"
+              "nixroot"
+            ];
+            subvolumes = {
+              "@root" = {
+                mountpoint = "/";
+                mountOptions = [
+                  "compress=zstd"
+                  "noatime"
+                ];
+              };
+            };
+          };
+        };
       };
     };
   };
