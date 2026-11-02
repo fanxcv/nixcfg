@@ -17,7 +17,5 @@
   hardware.graphics.extraPackages = [ pkgs.intel-media-driver ];
 
   # 笔记本电源：系统层无 TLP（tsln 同款，电源计划全在 plasma.powerdevil，见 home/fan/nix-im/）
-  # 休眠恢复：swap LV 已标 resumeDevice（disks.nix），内核 initrd 自动带 resume 参数
-  # swap 32G ≥ 内存 30G，hibernate 才可靠（zram 是压缩内存，不可作为休眠目标）
-  boot.resumeDevice = "/dev/pool/swap";
+  # 休眠恢复：swap 分区的 resumeDevice 由 disko 从 disks.nix 生成，无需手写
 }

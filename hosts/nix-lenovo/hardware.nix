@@ -12,6 +12,5 @@ _: {
   # AMD 核显用户态驱动、固件、zram、swappiness、ESP 挂点已在公共层（hosts/_nixos_/base）
 
   # 笔记本电源：系统层无 TLP（tsln 同款，电源计划全在 plasma.powerdevil，见 home/fan/nix-lenovo/）
-  # 休眠恢复：swap LV 已标 resumeDevice（disks.nix），内核 initrd 自动带 resume 参数
-  boot.resumeDevice = "/dev/pool/swap";
+  # 休眠恢复：swap 分区的 resumeDevice 由 disko 从 disks.nix 生成，无需手写
 }

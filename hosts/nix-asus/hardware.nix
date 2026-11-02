@@ -27,6 +27,6 @@ _: {
 
   # 核显驱动、固件、zram、swappiness、ESP 挂点已在公共层（hosts/_nixos_/base）
 
-  # 休眠恢复：swap LV（16G，见 disks.nix）为 resume 目标，内核 initrd 自动带 resume 参数
-  boot.resumeDevice = "/dev/pool/swap";
+  # 休眠恢复：swap 分区（16G，见 disks.nix）为 resume 目标，内核 initrd 自动带 resume 参数
+  boot.resumeDevice = "/dev/disk/by-partlabel/NIXOS-SWAP";
 }

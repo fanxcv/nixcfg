@@ -16,7 +16,7 @@
   # 根跑在 btrfs 子卷上（见 disks.nix），每次开机由 initrd 掦根并保留最近 3 份快照
   nixcfg.rootOnBtrfs = {
     enable = true;
-    device = "/dev/pool/root";
+    device = "/dev/disk/by-partlabel/disk-main-pool";
   };
 
   # Wayland 默认会话（无 RustDesk 被控需求，无需 X11 妥协；RustDesk 仅作 client 远程其他机器）

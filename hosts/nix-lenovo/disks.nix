@@ -1,10 +1,12 @@
-# 声明式磁盘（disko）：953.9G NVMe 全盘格，LVM 布局 + btrfs 根子卷（不可变系统）
-#   EFI 512M + LVM（root 40G + boot 1G + swap 32G + persist 400G + nix 300G），LVM 余量 ~180G（lvextend 可扩 nix/persist）
-#   根是 btrfs 子卷 @root（zstd 压缩、落盘，不受 RAM 限制）：每次开机 initrd 把旧根改名为快照再
+# 声明式磁盘（disko）：953.9G NVMe 全盘格，单 btrfs 池 + 子卷（不可变系统）
+#   GPT：EFI 512M + swap 32G + btrfs 剩余（~921G），四个子卷共享空间，不再有定长卷
+#     @root → /      @boot → /boot      @persist → /persist      @nix → /nix
+#   根是 @root（zstd 压缩、落盘，不受 RAM 限制）：每次开机 initrd 把旧根改名为快照再
 #   建空子卷（hosts/_nixos_/base/root-on-btrfs.nix），保留最近 3 份供回滚
-#   persist 2026-10-10 由 200G 扩至 400G（Switch ROM 库，~/roms → /persist/home/fan/roms）；
-#   扩容是在线 lvextend + resize2fs 做的（disko 不在运行时改布局），此处改 size 只为声明与实际一致
-#   swap 32G 供 hibernate（27G 内存，tsln 电源计划 criticalAction=hibernate 需要；zram 是压缩内存不可休眠）
+#   swap 单列分区（不进 btrfs）：休眠恢复要连续块设备，swapfile 得手算 resume_offset，不值当
+#   @boot 不压缩：GRUB 从 btrfs+zstd 读内核是少见路径，省那点空间不如省事
+# ⚠ 空间耦合：单池下 /persist 写爆会连带打穿 /nix 与根，这是共享空间的代价
+# ⚠ 全盘格式化：本文件 --mode disko 会抹掉整盘，改造前先把 /persist 备份出去
 # 首次安装：nix run nixpkgs#disko -- --mode disko ./hosts/nix-lenovo/disks.nix
 #   （NVMe → /dev/nvme0n1；安装镜像 U 盘是 /dev/sda，勿混淆）
 _: {
@@ -28,66 +30,48 @@ _: {
               mountpoint = "/boot/efi";
             };
           };
-          lvm = {
-            size = "100%";
+          swap = {
+            size = "32G";
             content = {
-              type = "lvm_pv";
-              vg = "pool";
+              type = "swap";
+              resumeDevice = true; # hibernate 恢复目标（27G 内存）
             };
           };
-        };
-      };
-    };
-    lvm_vg.pool = {
-      type = "lvm_vg";
-      lvs = {
-        boot = {
-          size = "1G";
-          content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/boot";
-          };
-        };
-        swap = {
-          size = "32G";
-          content = {
-            type = "swap";
-            resumeDevice = true; # hibernate 恢复目标
-          };
-        };
-        persist = {
-          size = "400G";
-          content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/persist";
-          };
-        };
-        nix = {
-          size = "300G";
-          content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/nix";
-          };
-        };
-        root = {
-          size = "40G";
-          content = {
-            type = "btrfs";
-            extraArgs = [
-              "-f"
-              "-L"
-              "nixroot"
-            ];
-            subvolumes = {
-              "@root" = {
-                mountpoint = "/";
-                mountOptions = [
-                  "compress=zstd"
-                  "noatime"
-                ];
+          pool = {
+            size = "100%";
+            content = {
+              type = "btrfs";
+              extraArgs = [
+                "-f"
+                "-L"
+                "nixos"
+              ];
+              subvolumes = {
+                "@root" = {
+                  mountpoint = "/";
+                  mountOptions = [
+                    "compress=zstd"
+                    "noatime"
+                  ];
+                };
+                "@boot" = {
+                  mountpoint = "/boot";
+                  mountOptions = [ "noatime" ];
+                };
+                "@persist" = {
+                  mountpoint = "/persist";
+                  mountOptions = [
+                    "compress=zstd"
+                    "noatime"
+                  ];
+                };
+                "@nix" = {
+                  mountpoint = "/nix";
+                  mountOptions = [
+                    "compress=zstd"
+                    "noatime"
+                  ];
+                };
               };
             };
           };

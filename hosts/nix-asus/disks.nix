@@ -9,38 +9,26 @@
 #   p2 16M   MSR                （不动）
 #   p3 219G  Windows C: NTFS    （不动）
 #   p6 1G    NIXOS-ESP  vfat    → /boot/efi   （空闲区起点 220G）
-#   p7 255G  LVM PV → VG pool
-#     ├ root    20G  btrfs（子卷 @root）→ /
-#     ├ boot    1G   ext4 → /boot
-#     ├ swap   16G        → hibernate（14G 内存）
-#     ├ persist 95G ext4 → /persist
-#     └ nix     118G ext4 → /nix（余 ~5G 留给 lvextend）
+#   p7 16G   NIXOS-SWAP swap    → hibernate（14G 内存，连续块设备才能恢复）
+#   p8 239G  NIXOS-POOL btrfs   → 子卷 @root/@boot/@persist/@nix 共一池，无定长卷
 #   p4 1.1G  RECOVERY / p5 200M MYASUS （不动，位于盘尾）
 # 根是 btrfs 子卷 @root（不可变系统，持久化清单见 hosts/_nixos_/base/immutable.nix；
-#   每次开机由 initrd 掦根，见 hosts/_nixos_/base/root-on-btrfs.nix）
-#
-# 本机 VG 只剩 ~5G，腾 root 必须离线缩 persist（ext4 不能在线缩）：
-#   df /persist 确认用量 < 90G 后，在 live 环境或 initrd 救援 shell 里：
-#   umount /persist && e2fsck -f /dev/pool/persist && resize2fs /dev/pool/persist 95G
-#   lvreduce -L 95G /dev/pool/persist
-#   lvcreate -L 20G -n root pool && mkfs.btrfs -f -L nixroot /dev/pool/root
-#   mount /dev/pool/root /mnt && btrfs subvolume create /mnt/@root && umount /mnt
+#   每次开机由 initrd 擦根，见 hosts/_nixos_/base/root-on-btrfs.nix）
+# ⚠ 空间耦合：单池下 /persist 写爆会连带打穿 /nix 与根
+# ⚠ 改造会删掉 p7 的 LVM（原 boot/swap/persist/nix 四卷），先把 /persist 备份出去
 #
 # 首次安装（手工，仓库须在 /mnt/persist/etc/nixos）：
 #   sgdisk -n 6:220GiB:+1GiB -t 6:EF00 -c 6:NIXOS-ESP /dev/nvme0n1
-#   sgdisk -n 7:0:0 -t 7:8E00 -c 7:NIXOS-LVM /dev/nvme0n1
+#   sgdisk -n 7:221GiB:+16GiB -t 7:8200 -c 7:NIXOS-SWAP /dev/nvme0n1
+#   sgdisk -n 8:0:0 -t 8:8300 -c 8:NIXOS-POOL /dev/nvme0n1
 #   mkfs.vfat -F32 -n NIXOS-ESP /dev/nvme0n1p6
-#   pvcreate /dev/nvme0n1p7 && vgcreate pool /dev/nvme0n1p7
-#   lvcreate -L 1G -n boot pool && lvcreate -L 16G -n swap pool
-#   lvcreate -L 95G -n persist pool && lvcreate -L 118G -n nix pool
-#   lvcreate -L 20G -n root pool && mkfs.btrfs -f -L nixroot /dev/pool/root
-#   mount /dev/pool/root /mnt && btrfs subvolume create /mnt/@root && umount /mnt
-#   mkfs.ext4 -L boot /dev/pool/boot && mkfs.ext4 -L persist /dev/pool/persist
-#   mkfs.ext4 -L nix /dev/pool/nix && mkswap /dev/pool/swap
+#   mkswap -L NIXOS-SWAP /dev/nvme0n1p7
+#   mkfs.btrfs -f -L nixos /dev/nvme0n1p8
+#   mount /dev/nvme0n1p8 /mnt && for s in @root @boot @persist @nix; do btrfs subvolume create /mnt/$s; done && umount /mnt
 {
   fileSystems = {
     "/" = {
-      device = "/dev/pool/root";
+      device = "/dev/disk/by-partlabel/NIXOS-POOL";
       fsType = "btrfs";
       options = [
         "subvol=@root"
@@ -49,9 +37,12 @@
       ];
     };
     "/boot" = {
-      device = "/dev/pool/boot";
-      fsType = "ext4";
-      options = [ "defaults" ];
+      device = "/dev/disk/by-partlabel/NIXOS-POOL";
+      fsType = "btrfs";
+      options = [
+        "subvol=@boot"
+        "noatime"
+      ];
     };
     "/boot/efi" = {
       device = "/dev/disk/by-partlabel/NIXOS-ESP";
@@ -62,25 +53,27 @@
       ];
     };
     "/nix" = {
-      device = "/dev/pool/nix";
-      fsType = "ext4";
+      device = "/dev/disk/by-partlabel/NIXOS-POOL";
+      fsType = "btrfs";
       options = [
-        "x-initrd.mount"
-        "defaults"
+        "subvol=@nix"
+        "compress=zstd"
+        "noatime"
       ];
     };
     "/persist" = {
-      device = "/dev/pool/persist";
-      fsType = "ext4";
+      device = "/dev/disk/by-partlabel/NIXOS-POOL";
+      fsType = "btrfs";
       options = [
-        "x-initrd.mount"
-        "defaults"
+        "subvol=@persist"
+        "compress=zstd"
+        "noatime"
       ];
       neededForBoot = true;
     };
   };
 
   swapDevices = [
-    { device = "/dev/pool/swap"; }
+    { device = "/dev/disk/by-partlabel/NIXOS-SWAP"; }
   ];
 }
