@@ -7,9 +7,9 @@ in
 {
   inherit config;
   # GitHub 加速前缀（便捷键，等价 config.githubProxy）
-  githubProxy = config.githubProxy;
+  inherit (config) githubProxy;
   # 国内镜像开关（flake.nix 注入 useChinaMirror 的默认值；机器级可经 mkHomeConfig/mkDarwinConfig 参数覆盖）
-  useChinaMirror = config.useChinaMirror;
+  inherit (config) useChinaMirror;
 
   # 给 GitHub URL 套加速前缀：命中 withoutProxy 例外或 githubProxy 为空（直连模式）时不套
   githubUrl =

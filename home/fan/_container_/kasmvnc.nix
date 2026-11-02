@@ -16,7 +16,7 @@
   ...
 }:
 let
-  kasmvnc = pkgs.kasmvnc;
+  inherit (pkgs) kasmvnc;
   # 桌面会话身份（KasmVNC 会话迁 fan）：显式常量，避免依赖 identity.nix 落地
   sessionUser = "fan";
   sessionHome = "/home/fan";
@@ -31,41 +31,41 @@ let
   # WPS 仅 x86_64（wpsoffice-cn 无 arm64 包且 unfree）：arm64 上相关段一律不求值
   isX86 = pkgs.stdenv.hostPlatform.isx86_64;
   # 26.05 起 xfce 组件移顶层（pkgs.xfce4-session 等，xfce.* 已 deprecated）
-  xfce4-session = pkgs.xfce4-session;
-  xfwm4 = pkgs.xfwm4;
-  xfce4-panel = pkgs.xfce4-panel;
-  xfdesktop = pkgs.xfdesktop;
-  xfce4-settings = pkgs.xfce4-settings;
-  xfce4-terminal = pkgs.xfce4-terminal;
-  xfconf = pkgs.xfconf;
+  inherit (pkgs) xfce4-session;
+  inherit (pkgs) xfwm4;
+  inherit (pkgs) xfce4-panel;
+  inherit (pkgs) xfdesktop;
+  inherit (pkgs) xfce4-settings;
+  inherit (pkgs) xfce4-terminal;
+  inherit (pkgs) xfconf;
   # ── 基础应用（xfce 捆绑全家桶，容器远程桌面日常所需）──
-  thunar = pkgs.thunar; # 文件管理器（Failsafe 会话已引用 --daemon，此前未装导致目录打不开）
-  xfce4-appfinder = pkgs.xfce4-appfinder; # 应用查找器（Alt+F2 / 菜单搜索）
+  inherit (pkgs) thunar; # 文件管理器（Failsafe 会话已引用 --daemon，此前未装导致目录打不开）
+  inherit (pkgs) xfce4-appfinder; # 应用查找器（Alt+F2 / 菜单搜索）
   whiskermenu = pkgs.xfce4-whiskermenu-plugin; # 应用菜单（面板主菜单，替代默认 applicationsmenu）
-  xfce4-notifyd = pkgs.xfce4-notifyd; # 通知守护（dbus 激活）
-  xfce4-screenshooter = pkgs.xfce4-screenshooter; # 截图
-  xfce4-taskmanager = pkgs.xfce4-taskmanager; # 任务管理器
+  inherit (pkgs) xfce4-notifyd; # 通知守护（dbus 激活）
+  inherit (pkgs) xfce4-screenshooter; # 截图
+  inherit (pkgs) xfce4-taskmanager; # 任务管理器
   xfce4-clipman = pkgs.xfce4-clipman-plugin; # 剪贴板历史（面板插件）
-  mousepad = pkgs.mousepad; # 文本编辑器
-  xarchiver = pkgs.xarchiver; # 压缩包管理
-  wpsoffice-cn = pkgs.wpsoffice-cn; # WPS Office（Word/Excel/PPT 查看编辑；unfree，放行见 tools/machines.nix）
+  inherit (pkgs) mousepad; # 文本编辑器
+  inherit (pkgs) xarchiver; # 压缩包管理
+  inherit (pkgs) wpsoffice-cn; # WPS Office（Word/Excel/PPT 查看编辑；unfree，放行见 tools/machines.nix）
   # ── 美化（WhiteSur macOS 风格，linux265 帖子方案：WhiteSur-Gtk-theme/icon/cursors + Plank dock）──
   whitesurGtk = pkgs.whitesur-gtk-theme.override { colorVariants = [ "dark" ]; }; # GTK2/3/4 + xfwm4 + plank 主题（只留 dark 减体积）
   whitesurIcon = pkgs.whitesur-icon-theme; # 图标（目录名 WhiteSur-dark，小写 d）
   whitesurCursors = pkgs.whitesur-cursors; # 鼠标（目录名 WhiteSur-cursors）
-  plank = pkgs.plank; # macOS 风格 dock（底部，替代底部面板）
-  albert = pkgs.albert; # 搜索（帖子第 4 步）
+  inherit (pkgs) plank; # macOS 风格 dock（底部，替代底部面板）
+  inherit (pkgs) albert; # 搜索（帖子第 4 步）
   notoCjk = pkgs.noto-fonts-cjk-sans; # 中文渲染（兜底）
   jetbrainsMono = pkgs.jetbrains-mono; # 等宽字体（终端/编辑器，用户选定）
   # fcitx5 中文输入法（参考 tsln i18n.inputMethod.fcitx5：全拼默认 + 云拼音/标点策略）
   fcitx5 = pkgs.qt6Packages.fcitx5-with-addons.override {
     addons = [ pkgs.kdePackages.fcitx5-chinese-addons ];
   };
-  fcitx5-gtk = pkgs.fcitx5-gtk; # GTK IM module（GTK_IM_MODULE=fcitx 加载）
+  inherit (pkgs) fcitx5-gtk; # GTK IM module（GTK_IM_MODULE=fcitx 加载）
   fcitx5-qt = pkgs.qt6Packages.fcitx5-qt; # QT IM module（QT_IM_MODULE=fcitx 加载）
-  imagemagick = pkgs.imagemagick; # 壁纸生成
-  fontconfig = pkgs.fontconfig; # 字体配置（容器无 /etc/fonts，字体全不生效）
-  glibc = pkgs.glibc; # localedef 生成 zh_CN.UTF-8（容器 /usr/share/i18n 被裁剪）
+  inherit (pkgs) imagemagick; # 壁纸生成
+  inherit (pkgs) fontconfig; # 字体配置（容器无 /etc/fonts，字体全不生效）
+  inherit (pkgs) glibc; # localedef 生成 zh_CN.UTF-8（容器 /usr/share/i18n 被裁剪）
   # 主题名（WhiteSur：GTK WhiteSur-Dark、图标 WhiteSur-dark、光标 WhiteSur-cursors，nixpkgs 实证目录名）
   gtkTheme = "WhiteSur-Dark";
   iconTheme = "WhiteSur-dark";

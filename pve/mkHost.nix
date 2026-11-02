@@ -17,10 +17,10 @@
 }:
 let
   common = import ./default.nix;
-  dns = common.dns;
-  mirror = common.mirror;
-  suite = common.suite;
-  modprobePublic = common.modprobePublic;
+  inherit (common) dns;
+  inherit (common) mirror;
+  inherit (common) suite;
+  inherit (common) modprobePublic;
   grubCmdline = common.grubCmdline ++ extra;
   effectiveGateway = if gateway == null then common.gateway else gateway;
   attrs = {

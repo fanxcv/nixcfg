@@ -44,7 +44,7 @@ stdenvNoCC.mkDerivation {
       "https://ghfast.top/https://github.com/openai/codex/releases/download/rust-v${version}/${file}"
       "https://github.com/openai/codex/releases/download/rust-v${version}/${file}"
     ];
-    hash = asset.hash;
+    inherit (asset) hash;
   };
 
   # tar 顶层是 bin/ codex-path/ codex-resources/ codex-package.json（多条目，须显式 sourceRoot，

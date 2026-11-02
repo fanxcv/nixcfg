@@ -7,7 +7,7 @@
   githubFetchBase ? "github.com",
 }:
 let
-  lib = pkgs.lib;
+  inherit (pkgs) lib;
   # 平铺包文件自动注册：新增 packages/<name>.nix 即生效，零注册改动
   # 平台条件/需额外参数的包在下方显式注册，其文件从自动扫描排除（免被无条件注册）
   explicitFiles = [

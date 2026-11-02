@@ -150,7 +150,7 @@ in
       '';
       programs.vscode = {
         enable = true;
-        package = cfg.package;
+        inherit (cfg) package;
         mutableExtensionsDir = false; # 扩展由 nix 锁定，编辑器内不可增删
         profiles = {
           default =

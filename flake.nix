@@ -141,7 +141,7 @@
     let
       # outputs == self（flake 自身），模块里统一用这个引用
       outputs = self;
-      lib = nixpkgs.lib;
+      inherit (nixpkgs) lib;
       # 目录扫描/相对路径工具（模块自动导入，见 tools/scan.nix、tools/relative.nix）
       tools = import ./tools { inherit lib self; };
       # 全局镜像/代理集中配置（tools/config.nix，唯一配置入口）—— useChinaMirror 注入默认值取自这里
@@ -166,7 +166,7 @@
         final: prev:
         import ./packages {
           pkgs = prev;
-          githubFetchBase = tools.githubFetchBase;
+          inherit (tools) githubFetchBase;
         };
       # unfree 白名单：vscode 本体 + 扩展（扩展名由 modules/home/vscode-extensions.nix 的 unfree 字段生成，
       # 加插件只改该清单；该文件是 home 模块，清单经 _module.args 暴露，import 直读静态字段不需 pkgs；
@@ -284,7 +284,7 @@
               tools
               ;
             # darwin 固定值（与 mkHomeConfig 的注入对齐，home 层模块统一取用；默认取集中配置 tools/config.nix）
-            useChinaMirror = netConfig.useChinaMirror;
+            inherit (netConfig) useChinaMirror;
             isContainer = false;
             platform = "darwin";
           };
@@ -311,7 +311,7 @@
               outputs
               tools
               ;
-            useChinaMirror = netConfig.useChinaMirror;
+            inherit (netConfig) useChinaMirror;
             isContainer = false;
             platform = "nixos";
           };
@@ -414,7 +414,7 @@
         in
         (import ./packages {
           inherit pkgs;
-          githubFetchBase = tools.githubFetchBase;
+          inherit (tools) githubFetchBase;
         })
         // lib.optionalAttrs isLinux (
           # 容器/ubuntu 机器别名：HOME_MANAGER_BACKUP_EXT=backup 备份已存在的手配文件（如 .codex/config.toml）

@@ -1,7 +1,7 @@
 # 截图快捷键的声明式覆盖（组件本体见 hosts/_nixos_/gui/desktop/plasma.nix 的
 # share/kglobalaccel/spectacle-region.desktop）。
 # Ctrl+Alt+A 沿用微信截图的老习惯；微信侧的占用已由用户释放，此处不再有冲突。
-{ ... }:
+_:
 {
   programs.plasma.shortcuts."spectacle-region.desktop"."spectacle-region" = [ "Ctrl+Alt+A" ];
 

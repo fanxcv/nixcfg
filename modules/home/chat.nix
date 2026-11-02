@@ -29,7 +29,7 @@
           url = "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.AppImage";
           hash = "sha256-RSYYC8qYASh5FZmvEi/0eVACpXFaUQ9qZUgOK+aHQkQ=";
         };
-        meta = wechat.meta;
+        inherit (wechat) meta;
       })
       repos.unstable.qq
     ];
