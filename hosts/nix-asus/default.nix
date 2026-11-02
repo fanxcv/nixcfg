@@ -6,23 +6,8 @@
 #   首次安装：nixos-install --flake /persist/etc/nixos#nix-asus（仓库放 /persist/etc/nixos）
 { pkgs, tools, ... }:
 {
-  imports =
-    map tools.relative [
-      "hosts/_common_/base"
-      "hosts/_common_/i18n"
-      "hosts/_nixos_/base"
-      "hosts/_nixos_/i18n"
-      "hosts/_nixos_/gui/desktop"
-      "hosts/_nixos_/themes"
-      "hosts/_nixos_/kernel"
-      "hosts/_nixos_/services/openssh.nix"
-      "hosts/_nixos_/services/podman.nix"
-      "hosts/_nixos_/services/syncthing.nix"
-      "hosts/_nixos_/services/tailscale.nix"
-
-      "users/fan"
-    ]
-    ++ (tools.scan ./.);
+  # 共用装配清单（公共层/平台层/用户层）在 hosts/_nixos_/base，本机只扫本目录
+  imports = [ (tools.relative "hosts/_nixos_/base") ] ++ (tools.scan ./.);
 
   networking.hostName = "nix-asus";
 
