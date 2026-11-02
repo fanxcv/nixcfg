@@ -4,24 +4,28 @@
 with pkgs;
 with kdePackages;
 {
-  services.desktopManager.plasma6 = {
-    enable = true;
-    notoPackage = pkgs.noto-fonts-cjk-sans;
-  };
+  services = {
+    desktopManager.plasma6 = {
+      enable = true;
+      notoPackage = pkgs.noto-fonts-cjk-sans;
+    };
 
-  services.displayManager.sddm = {
-    enable = true;
-    enableHidpi = true;
-    wayland.enable = true;
-    autoNumlock = true;
-    # 登录界面预填用户名 fan（autoLogin 关闭时兜底，仍可省一次输入）
-    settings.Users.DefaultUser = "fan";
-  };
+    displayManager = {
+      sddm = {
+        enable = true;
+        enableHidpi = true;
+        wayland.enable = true;
+        autoNumlock = true;
+        # 登录界面预填用户名 fan（autoLogin 关闭时兜底，仍可省一次输入）
+        settings.Users.DefaultUser = "fan";
+      };
 
-  # 开机直进 fan 桌面，不再选用户/输密码（mkDefault：机器可覆盖 enable=false 关掉）
-  services.displayManager.autoLogin = {
-    enable = lib.mkDefault true;
-    user = lib.mkDefault "fan";
+      # 开机直进 fan 桌面，不再选用户/输密码（mkDefault：机器可覆盖 enable=false 关掉）
+      autoLogin = {
+        enable = lib.mkDefault true;
+        user = lib.mkDefault "fan";
+      };
+    };
   };
 
   # 去掉用不到的预装应用（保持精简）

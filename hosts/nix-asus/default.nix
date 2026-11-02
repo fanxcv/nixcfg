@@ -18,25 +18,36 @@
   };
 
   # Wayland 默认会话（无 RustDesk 被控需求，无需 X11 妥协）
-  services.xserver.enable = false;
+  services = {
+    xserver.enable = false;
+
+    # NVMe 定期 trim（SSD 寿命/性能）
+    fstrim = {
+      enable = true;
+      interval = "weekly";
+    };
+
+    # 固件更新（BIOS/EC，Linux Vendor Firmware Service；ASUS 部分机型走 LVFS）
+    fwupd.enable = true;
+  };
 
   # nix 下载走国内镜像（手动 rebuild 用；root 的 nix.conf 由 NixOS 生成，天然 trusted）
-  nix.settings.substituters = tools.config.nixSubstituters;
-  nix.settings.extra-substituters = tools.config.nixCachixSubstituters;
-  nix.settings.extra-trusted-public-keys = tools.config.nixCachixTrustedPublicKeys;
+  nix = {
+    settings = {
+      substituters = tools.config.nixSubstituters;
+      extra-substituters = tools.config.nixCachixSubstituters;
+      extra-trusted-public-keys = tools.config.nixCachixTrustedPublicKeys;
 
-  # 本地构建：sandbox=true 时部分包构建受限，关沙箱换构建可行
-  nix.settings.sandbox = false;
+      # 本地构建：sandbox=true 时部分包构建受限，关沙箱换构建可行
+      sandbox = false;
+    };
 
-  # store 自动 GC（512G 盘，NixOS 侧约 118G，30 天保留）+ 定期硬链接优化
-  nix.gc.automatic = true;
-  nix.gc.options = "--delete-older-than 30d";
-  nix.optimise.automatic = true;
-
-  # NVMe 定期 trim（SSD 寿命/性能）
-  services.fstrim = {
-    enable = true;
-    interval = "weekly";
+    # store 自动 GC（512G 盘，NixOS 侧约 118G，30 天保留）+ 定期硬链接优化
+    gc = {
+      automatic = true;
+      options = "--delete-older-than 30d";
+    };
+    optimise.automatic = true;
   };
 
   # fan sudo 免密（日常维护/手动 rebuild 用）
@@ -48,9 +59,6 @@
 
   # 无 WWAN 模块，ModemManager 纯耗资源，禁用（26.05 起选项为 networking.modemmanager）
   networking.modemmanager.enable = false;
-
-  # 固件更新（BIOS/EC，Linux Vendor Firmware Service；ASUS 部分机型走 LVFS）
-  services.fwupd.enable = true;
 
   # syncthing GUI 密码（syncthing 服务以 fan 用户跑，owner 必须 fan 才能读；
   # 模块 guiPasswordFile 自动 bcrypt 后经 REST API 注入，不覆盖 config.xml 配对状态）

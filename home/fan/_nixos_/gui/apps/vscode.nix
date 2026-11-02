@@ -2,11 +2,13 @@
 # 封装见 modules/home/vscode.nix；扩展清单在 modules/home/vscode-extensions.nix（单一 manifest）
 { pkgs, ... }:
 {
-  vscode.enable = true;
-  vscode.package = pkgs.repos.unstable.vscode;
-  # nixos 平台差异设置（mac 无标题栏/菜单样式概念）
-  vscode.settings = {
-    "window.titleBarStyle" = "native";
-    "window.menuStyle" = "custom";
+  vscode = {
+    enable = true;
+    package = pkgs.repos.unstable.vscode;
+    # nixos 平台差异设置（mac 无标题栏/菜单样式概念）
+    settings = {
+      "window.titleBarStyle" = "native";
+      "window.menuStyle" = "custom";
+    };
   };
 }

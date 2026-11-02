@@ -10,12 +10,14 @@
 {
   imports = tools.scan ./.;
 
-  catppuccin.enable = lib.mkOptionDefault false;
-  catppuccin.autoEnable = lib.mkOptionDefault false;
-  # 上游主题源替换（whiskers 模板工具换 nixpkgs 版，避免上游自带旧版）
-  catppuccin.sources = inputs.catppuccin.packages.${pkgs.stdenv.hostPlatform.system}.overrideScope (
-    final: prev: {
-      whiskers = pkgs.catppuccin-whiskers;
-    }
-  );
+  catppuccin = {
+    enable = lib.mkOptionDefault false;
+    autoEnable = lib.mkOptionDefault false;
+    # 上游主题源替换（whiskers 模板工具换 nixpkgs 版，避免上游自带旧版）
+    sources = inputs.catppuccin.packages.${pkgs.stdenv.hostPlatform.system}.overrideScope (
+      final: prev: {
+        whiskers = pkgs.catppuccin-whiskers;
+      }
+    );
+  };
 }

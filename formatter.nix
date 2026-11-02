@@ -3,9 +3,11 @@ _: {
   # 用于定位项目根（treefmt 向上查找）
   projectRootFile = "flake.nix";
 
-  programs.nixfmt.enable = true;
-  programs.statix.enable = true;
-  programs.statix.disabled-lints = [
-    "manual_inherit_from"
-  ];
+  programs = {
+    nixfmt.enable = true;
+    statix.enable = true;
+    statix.disabled-lints = [
+      "manual_inherit_from"
+    ];
+  };
 }

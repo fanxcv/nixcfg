@@ -17,8 +17,10 @@
 
     plymouth.enable = lib.mkDefault true;
 
-    sddm.enable = lib.mkDefault true;
-    sddm.flavor = lib.mkDefault "latte";
-    sddm.background = ../../../assets/kde-wallpaper.jpg;
+    sddm = {
+      enable = lib.mkDefault true;
+      flavor = lib.mkDefault "latte";
+      background = ../../../assets/kde-wallpaper.jpg;
+    };
   };
 }

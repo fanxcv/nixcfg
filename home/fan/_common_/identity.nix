@@ -18,12 +18,14 @@ let
       "/home/fan";
 in
 {
-  home.username = userName;
-  home.homeDirectory = homeDirectory;
-  home.stateVersion = "25.05";
+  home = {
+    username = userName;
+    inherit homeDirectory;
+    stateVersion = "25.05";
 
-  # 容器与 PVE 没有用户级 systemd，避免 Home Manager 激活时重复警告。
-  home.activation.reloadSystemd = lib.mkIf isRootHome (
-    lib.mkForce (lib.hm.dag.entryAfter [ "linkGeneration" ] "")
-  );
+    # 容器与 PVE 没有用户级 systemd，避免 Home Manager 激活时重复警告。
+    activation.reloadSystemd = lib.mkIf isRootHome (
+      lib.mkForce (lib.hm.dag.entryAfter [ "linkGeneration" ] "")
+    );
+  };
 }

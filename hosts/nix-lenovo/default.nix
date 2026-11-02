@@ -16,33 +16,58 @@
   };
 
   # Wayland 默认会话（无 RustDesk 被控需求，无需 X11 妥协；RustDesk 仅作 client 远程其他机器）
-  services.xserver.enable = false;
+  services = {
+    xserver.enable = false;
+
+    # NVMe 定期 trim（SSD 寿命/性能）
+    fstrim = {
+      enable = true;
+      interval = "weekly";
+    };
+
+    # Switch 模拟器 eden 的手柄支持：包自带 72-yuzu-input.rules（Pro Controller / Joy-Con 的 hidraw uaccess），
+    # NixOS 只认 services.udev.packages，不注入则手柄静默不可用
+    udev.packages = [ pkgs.eden ];
+
+    # eden 自带规则里蓝牙那条用 KERNELS=="*057e:2009*"（小写），而内核设备名是 057E:2009（大写），
+    # 匹配不到 → hidraw 停在 0600 root:root，用户态（SDL hidapi / Eden 手柄驱动）打不开。
+    # 另：蓝牙设备挂在 virtual/uhid 下，systemd 的 uaccess 判不出 seat，ACL 不会下发，故用组权限兜底。
+    udev.extraRules = ''
+      KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2009*", MODE="0660", GROUP="users"
+      KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2006*", MODE="0660", GROUP="users"
+      KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2007*", MODE="0660", GROUP="users"
+
+      # F1-F12 直出为功能键，Fn+F1-F12 才是多媒体/热键（SALS_FNLOCK_ON）。
+      # ideapad_laptop 模块没有 fn_lock 模块参数，只能在设备出现时写 sysfs 属性；
+      # EC 是否跨重启记忆不保证，故每次 add 事件都写（幂等）。
+      ACTION=="add", SUBSYSTEM=="platform", KERNEL=="VPC2004:00", ATTR{fn_lock}="1"
+    '';
+
+    # 固件更新（BIOS/EC，Linux Vendor Firmware Service；Lenovo 等品牌靠它）
+    fwupd.enable = true;
+  };
 
   # nix 下载走国内镜像（手动 rebuild 用；root 的 nix.conf 由 NixOS 生成，天然 trusted）
-  nix.settings.substituters = tools.config.nixSubstituters;
-  nix.settings.extra-substituters = tools.config.nixCachixSubstituters;
-  nix.settings.extra-trusted-public-keys = tools.config.nixCachixTrustedPublicKeys;
+  nix = {
+    settings = {
+      substituters = tools.config.nixSubstituters;
+      extra-substituters = tools.config.nixCachixSubstituters;
+      extra-trusted-public-keys = tools.config.nixCachixTrustedPublicKeys;
 
-  # 本地构建：sandbox=true 时部分包构建受限，关沙箱换构建可行
-  nix.settings.sandbox = false;
+      # 本地构建：sandbox=true 时部分包构建受限，关沙箱换构建可行
+      sandbox = false;
+    };
 
-  # store 自动 GC（953.9G 盘，30 天保留）+ 定期硬链接优化
-  nix.gc.automatic = true;
-  nix.gc.options = "--delete-older-than 30d";
-  nix.optimise.automatic = true;
-
-  # NVMe 定期 trim（SSD 寿命/性能）
-  services.fstrim = {
-    enable = true;
-    interval = "weekly";
+    # store 自动 GC（953.9G 盘，30 天保留）+ 定期硬链接优化
+    gc = {
+      automatic = true;
+      options = "--delete-older-than 30d";
+    };
+    optimise.automatic = true;
   };
 
   # fan sudo 免密（日常维护/手动 rebuild 用）
   security.sudo.wheelNeedsPassword = false;
-
-  # Switch 模拟器 eden 的手柄支持：包自带 72-yuzu-input.rules（Pro Controller / Joy-Con 的 hidraw uaccess），
-  # NixOS 只认 services.udev.packages，不注入则手柄静默不可用
-  services.udev.packages = [ pkgs.eden ];
 
   # 蓝牙 Pro 手柄：hid_nintendo 在本机蓝牙下初始化必超时
   # （dmesg: Failed to get joycon info; ret=-110 → probe failed，已复现两次），
@@ -51,29 +76,12 @@
   # 驱动，可给正确映射/陀螺仪/震动）。要回退内核驱动：删本行 + nixos-rebuild 后重启。
   boot.blacklistedKernelModules = [ "hid_nintendo" ];
 
-  # eden 自带规则里蓝牙那条用 KERNELS=="*057e:2009*"（小写），而内核设备名是 057E:2009（大写），
-  # 匹配不到 → hidraw 停在 0600 root:root，用户态（SDL hidapi / Eden 手柄驱动）打不开。
-  # 另：蓝牙设备挂在 virtual/uhid 下，systemd 的 uaccess 判不出 seat，ACL 不会下发，故用组权限兜底。
-  services.udev.extraRules = ''
-    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2009*", MODE="0660", GROUP="users"
-    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2006*", MODE="0660", GROUP="users"
-    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", KERNELS=="*057E:2007*", MODE="0660", GROUP="users"
-
-    # F1-F12 直出为功能键，Fn+F1-F12 才是多媒体/热键（SALS_FNLOCK_ON）。
-    # ideapad_laptop 模块没有 fn_lock 模块参数，只能在设备出现时写 sysfs 属性；
-    # EC 是否跨重启记忆不保证，故每次 add 事件都写（幂等）。
-    ACTION=="add", SUBSYSTEM=="platform", KERNEL=="VPC2004:00", ATTR{fn_lock}="1"
-  '';
-
   # 蓝牙（NixOS 默认不开；MT7921 的蓝牙硬件在，KDE 界面已就位，蓝牙耳机/键鼠刚需）
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
 
   # 无 WWAN 模块，ModemManager 纯耗资源，禁用（26.05 起选项为 networking.modemmanager）
   networking.modemmanager.enable = false;
-
-  # 固件更新（BIOS/EC，Linux Vendor Firmware Service；Lenovo 等品牌靠它）
-  services.fwupd.enable = true;
 
   # syncthing GUI 密码（syncthing 服务以 fan 用户跑，owner 必须 fan 才能读；
   # 模块 guiPasswordFile 自动 bcrypt 后经 REST API 注入，不覆盖 config.xml 配对状态）

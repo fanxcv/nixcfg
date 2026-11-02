@@ -37,8 +37,16 @@ let
 in
 {
   # 同步目录（.keep 占位触发 home-manager 建目录）
-  home.file."sync/.keep".text = "";
-  home.file."share/.keep".text = "";
+  home = {
+    file."sync/.keep".text = "";
+    file."share/.keep".text = "";
+
+    # 自动注册（幂等，entryAfter writeBoundary）：
+    #   ① 注册 peers+idePeers 清单缺失设备（缺者补，GUI 已有配对不动）
+    #   ② ~/sync 与 ~/share folder 无则建（各按清单 devices）、有则补缺设备、path 纠正
+    #   ③ GUI 密码经 age 解密注入（每次都 PUT，密码变更随部署生效；失败仅警告）
+    activation.setSyncthingAutoConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] autoConfigScript;
+  };
 
   # 忽略规则（.stignore）在 ../_common_/syncthing.nix（darwin/nixos 门控）
 
@@ -57,10 +65,4 @@ in
       WorkingDirectory = "/Users/fan";
     };
   };
-
-  # 自动注册（幂等，entryAfter writeBoundary）：
-  #   ① 注册 peers+idePeers 清单缺失设备（缺者补，GUI 已有配对不动）
-  #   ② ~/sync 与 ~/share folder 无则建（各按清单 devices）、有则补缺设备、path 纠正
-  #   ③ GUI 密码经 age 解密注入（每次都 PUT，密码变更随部署生效；失败仅警告）
-  home.activation.setSyncthingAutoConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] autoConfigScript;
 }

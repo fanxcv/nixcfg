@@ -53,34 +53,36 @@ in
   # Home Manager 内嵌：darwin 挂 nix-darwin 的 home-manager 模块，NixOS 挂 home-manager.nixosModules
   # 用户配置由 home/fan/module-list.nix 统一组装（_common_ + 平台层 + 可选机器差异）。
   # 复用系统 pkgs（allowUnfreePredicate 一并生效，见 flake.nix）
-  home-manager.useGlobalPkgs = true;
-  # home-manager 的 user submodule 不继承系统层 specialArgs，
-  # 必须注入顶层 extraSpecialArgs（tools.scan / ${self} 主题路径 / inputs 都要用）
-  home-manager.extraSpecialArgs = {
-    inherit
-      self
-      inputs
-      outputs
-      tools
-      useChinaMirror
-      isContainer
-      platform
-      hostName
-      ;
-  };
-
-  # 用户配置统一由 home/fan/module-list.nix 组装，避免每台机器重复导入公共/平台层。
-  home-manager.users."${userName}" = {
-    imports = [
-      (self + "/home/fan")
-    ]
-    ++ import (self + "/home/fan/module-list.nix") {
+  home-manager = {
+    useGlobalPkgs = true;
+    # home-manager 的 user submodule 不继承系统层 specialArgs，
+    # 必须注入顶层 extraSpecialArgs（tools.scan / ${self} 主题路径 / inputs 都要用）
+    extraSpecialArgs = {
       inherit
-        lib
         self
+        inputs
+        outputs
+        tools
+        useChinaMirror
+        isContainer
         platform
         hostName
         ;
+    };
+
+    # 用户配置统一由 home/fan/module-list.nix 组装，避免每台机器重复导入公共/平台层。
+    users."${userName}" = {
+      imports = [
+        (self + "/home/fan")
+      ]
+      ++ import (self + "/home/fan/module-list.nix") {
+        inherit
+          lib
+          self
+          platform
+          hostName
+          ;
+      };
     };
   };
 }

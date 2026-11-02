@@ -53,49 +53,53 @@ in
   #   在其中调 systemctl 会破坏 systemd 对该 unit 的作业管理 → 发起方与被操作方均失败；
   #   而**独立 ExecStart 里经 sh -c 调 systemctl 可行**（实测 zz-b=success 且目标 PID 变更、
   #   双方均 active），故沿用单 unit 两段式
-  systemd.user.services.mihomo-refresh = {
-    Unit = {
-      Description = "mihomo 订阅刷新（重取订阅 + 合并模板 + 重启内核）";
-      After = [ "network-online.target" ];
-      Wants = [ "network-online.target" ];
-    };
-    Service = {
-      Type = "oneshot";
-      # apply.py 内置重试与失败容忍（订阅拉取失败仅警告并保留现有配置）
-      # 重启在 apply.py 成功后执行；用 restart 而非 external-controller 热重载：
-      #   实测启动竞态下 9090 可能未监听（bind 失败被静默跳过），热重载不可靠；
-      #   刷新在开机后 1min 跑，此时无长连接，重启代价可忽略
-      # 二进制路径：NixOS 无 /usr/bin/systemctl，systemd 在 current-system 下
-      ExecStart = "/bin/sh -c '${python}/bin/python3 ${./mihomo/apply.py} \"${subUrlFile}\" \"${baseYaml}\" \"${zashboardUi}\" \"${mihomoConfig}\" && /run/current-system/sw/bin/systemctl --user restart mihomo.service'";
-    };
-  };
+  systemd = {
+    user = {
+      services.mihomo-refresh = {
+        Unit = {
+          Description = "mihomo 订阅刷新（重取订阅 + 合并模板 + 重启内核）";
+          After = [ "network-online.target" ];
+          Wants = [ "network-online.target" ];
+        };
+        Service = {
+          Type = "oneshot";
+          # apply.py 内置重试与失败容忍（订阅拉取失败仅警告并保留现有配置）
+          # 重启在 apply.py 成功后执行；用 restart 而非 external-controller 热重载：
+          #   实测启动竞态下 9090 可能未监听（bind 失败被静默跳过），热重载不可靠；
+          #   刷新在开机后 1min 跑，此时无长连接，重启代价可忽略
+          # 二进制路径：NixOS 无 /usr/bin/systemctl，systemd 在 current-system 下
+          ExecStart = "/bin/sh -c '${python}/bin/python3 ${./mihomo/apply.py} \"${subUrlFile}\" \"${baseYaml}\" \"${zashboardUi}\" \"${mihomoConfig}\" && /run/current-system/sw/bin/systemctl --user restart mihomo.service'";
+        };
+      };
 
-  # 开机后 1 分钟刷新一次（等网络就绪），之后每日 04:17 刷新（避开整点拥挤）
-  systemd.user.timers.mihomo-refresh = {
-    Unit.Description = "mihomo 订阅定时刷新";
-    Timer = {
-      OnBootSec = "1min";
-      OnCalendar = "*-*-* 04:17:00";
-      Persistent = true;
-    };
-    Install.WantedBy = [ "timers.target" ];
-  };
+      # 开机后 1 分钟刷新一次（等网络就绪），之后每日 04:17 刷新（避开整点拥挤）
+      timers.mihomo-refresh = {
+        Unit.Description = "mihomo 订阅定时刷新";
+        Timer = {
+          OnBootSec = "1min";
+          OnCalendar = "*-*-* 04:17:00";
+          Persistent = true;
+        };
+        Install.WantedBy = [ "timers.target" ];
+      };
 
-  systemd.user.services.mihomo = {
-    Unit = {
-      Description = "mihomo (Clash Meta) proxy";
-      After = [ "network-online.target" ];
-      Wants = [ "network-online.target" ];
+      services.mihomo = {
+        Unit = {
+          Description = "mihomo (Clash Meta) proxy";
+          After = [ "network-online.target" ];
+          Wants = [ "network-online.target" ];
+        };
+        Service = {
+          ExecStart = "${pkgs.mihomo}/bin/mihomo -d ${mihomoDir}";
+          # external-ui 在只读 store，需经 SAFE_PATHS 白名单（否则内核报 path is not subpath of home directory）
+          Environment = [ "SAFE_PATHS=${zashboardUi}" ];
+          # mode=global 的出口由 GLOBAL 组决定，启动后指向延迟择优组
+          ExecStartPost = "${python}/bin/python3 ${./mihomo/select-global.py} ${mihomoConfig}";
+          Restart = "on-failure";
+          RestartSec = 5;
+        };
+        Install.WantedBy = [ "default.target" ];
+      };
     };
-    Service = {
-      ExecStart = "${pkgs.mihomo}/bin/mihomo -d ${mihomoDir}";
-      # external-ui 在只读 store，需经 SAFE_PATHS 白名单（否则内核报 path is not subpath of home directory）
-      Environment = [ "SAFE_PATHS=${zashboardUi}" ];
-      # mode=global 的出口由 GLOBAL 组决定，启动后指向延迟择优组
-      ExecStartPost = "${python}/bin/python3 ${./mihomo/select-global.py} ${mihomoConfig}";
-      Restart = "on-failure";
-      RestartSec = 5;
-    };
-    Install.WantedBy = [ "default.target" ];
   };
 }

@@ -18,24 +18,26 @@
   ...
 }:
 {
-  services.tailscale.enable = true;
-  services.tailscale.openFirewall = true;
-  services.tailscale.useRoutingFeatures = "client";
+  services.tailscale = {
+    enable = true;
+    openFirewall = true;
+    useRoutingFeatures = "client";
 
-  # 模块原生登录：authKeyFile 非空 → tailscaled-autoconnect 自动 up（幂等轮询）
-  services.tailscale.authKeyFile = "/run/agenix/headscale-auth-key";
-  services.tailscale.extraUpFlags = [
-    "--hostname=${config.networking.hostName}"
-    "--login-server=https://headscale.fan-x.fun" # 必须显式：autoconnect 默认连 tailscale.com，headscale key 必被拒
-    "--accept-routes=true"
-    "--accept-dns=true"
-  ];
-  # 已登录机器也收敛节点名/路由/DNS（tailscaled-set oneshot）
-  services.tailscale.extraSetFlags = [
-    "--hostname=${config.networking.hostName}"
-    "--accept-routes=true"
-    "--accept-dns=true"
-  ];
+    # 模块原生登录：authKeyFile 非空 → tailscaled-autoconnect 自动 up（幂等轮询）
+    authKeyFile = "/run/agenix/headscale-auth-key";
+    extraUpFlags = [
+      "--hostname=${config.networking.hostName}"
+      "--login-server=https://headscale.fan-x.fun" # 必须显式：autoconnect 默认连 tailscale.com，headscale key 必被拒
+      "--accept-routes=true"
+      "--accept-dns=true"
+    ];
+    # 已登录机器也收敛节点名/路由/DNS（tailscaled-set oneshot）
+    extraSetFlags = [
+      "--hostname=${config.networking.hostName}"
+      "--accept-routes=true"
+      "--accept-dns=true"
+    ];
+  };
 
   # authkey 系统域解密（root 读；各 NixOS 真机共用同一 preauth key）
   age.secrets."headscale-auth-key" = {

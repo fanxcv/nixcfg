@@ -8,11 +8,13 @@
   imports = [ ../_ubuntu_ ] ++ tools.scan ./.;
 
   # 两台 ide 容器均装 pi/codex：平台层给默认值，机器层可 mkForce 覆盖
-  softwares.pi.enable = lib.mkDefault true;
-  softwares.codex.enable = lib.mkDefault true;
+  softwares = {
+    pi.enable = lib.mkDefault true;
+    codex.enable = lib.mkDefault true;
 
-  softwares.sshHostKey = {
-    enable = true;
-    syncToSshDir = true;
+    sshHostKey = {
+      enable = true;
+      syncToSshDir = true;
+    };
   };
 }
