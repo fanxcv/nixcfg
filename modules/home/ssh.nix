@@ -100,13 +100,9 @@ in
                   # 2) sshd 禁用密码认证（公钥未就位则跳过，防止禁密码后无法登录）
                   #    NixOS：/etc/ssh/sshd_config 是只读 store 链接，开关在 hosts/_nixos_/services/openssh.nix
                   #    macOS：sshd 配置由 hosts/_darwin_/base/ssh.nix 声明
-                  #    PVE：本次变更范围排除，保持既有行为
+                  #    PVE：与 Ubuntu 同走 dropin（Debian 主配置 Include sshd_config.d/*.conf，00- 前缀居首）
                   if [ "${platform}" = "nixos" ] || [ "${platform}" = "darwin" ]; then
                     echo "NixOS/macOS：sshd 加固走 nix 层声明，跳过运行时改写"
-                    return 0
-                  fi
-                  if [ "${platform}" = "pve" ]; then
-                    echo "PVE：跳过 sshd 加固（变更范围排除 PVE）"
                     return 0
                   fi
                   if [ ! -s "$HOME/.ssh/authorized_keys" ]; then
