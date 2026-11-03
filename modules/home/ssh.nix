@@ -72,29 +72,30 @@ in
                     pve_keys=/etc/pve/priv/authorized_keys
                     add_key() {
                       [ -n "$1" ] || return 0
-                      grep -qF "$1" "$pve_keys" 2>/dev/null || { echo "$1" >> "$pve_keys"; echo "PVE: 公钥已并入集群信任（$(echo "$1" | cut -c1-40)…）"; }
+                      grep -qxF "$1" "$pve_keys" 2>/dev/null || { echo "$1" >> "$pve_keys"; echo "PVE: 公钥已并入集群信任（$(echo "$1" | cut -c1-40)…）"; }
                     }
                     ${pkgs.curl}/bin/curl -sfL --max-time 15 "${tools.githubUrl "https://github.com/fanxcv.keys"}" 2>/dev/null | while read -r line; do add_key "$line"; done || true  # || true：pipefail 下 curl 超时/网络不通不中断 activate（公钥拉取失败容忍）
-                    add_key "$(cat ${toString ../../secrets/hosts/mini-m4/ssh-user-key.pub} 2>/dev/null)"
-                    add_key "$(cat ${toString ../../secrets/hosts/mba-m5/ssh-user-key.pub} 2>/dev/null)"
-                    add_key "$(cat ${toString ../../secrets/hosts/mbp-m1/ssh-user-key.pub} 2>/dev/null)"
+                    ${lib.concatMapStrings (k: "add_key '${k}'\n") tools.sshUserKeys.pubKeys}
                     # 合并后转普通分支的 sshd 加固（PasswordAuthentication no 等）
                   else
-                    keys_tmp="$HOME/.ssh/authorized_keys.tmp"
-                    : > "$keys_tmp"
-                    if ${pkgs.curl}/bin/curl -sfL --max-time 15 "${tools.githubUrl "https://github.com/fanxcv.keys"}" -o "$keys_tmp" \
-                      && [ -s "$keys_tmp" ]; then
-                      # 追加身份公钥集合（tools/sshUserKeys.nix：mini-m4 / mba-m5 / mbp-m1 / nix-lenovo；
-                      # github 集合可能不含最新 key，防激活覆盖锁死；重复行无害，ssh 按 key 去重）
-                      ${lib.concatMapStrings (
-                        k: "printf '%s\\n' '${k}' >> \"$keys_tmp\"\n"
-                      ) tools.sshUserKeys.pubKeys}
-                      mv -f "$keys_tmp" "$HOME/.ssh/authorized_keys"
-                      chmod 600 "$HOME/.ssh/authorized_keys"
-                    else
-                      rm -f "$keys_tmp"
-                      echo "警告: 公钥拉取失败，保留现有 ~/.ssh/authorized_keys"
-                    fi
+                    # 合并语义（与 PVE 分支一致）：以既有 authorized_keys 为基底，幂等追加
+                    # GitHub 集合与仓库集合，手工加过的密钥保留；此前是整文件覆盖，
+                    # 凡不在两集合内的密钥每次激活都被抹掉。代价：撤销某把 key 需手工删。
+                    keys_file="$HOME/.ssh/authorized_keys"
+                    keys_tmp="$keys_file.tmp"
+                    if [ -f "$keys_file" ]; then cp -f "$keys_file" "$keys_tmp"; else : > "$keys_tmp"; fi
+                    add_key() {
+                      [ -n "$1" ] || return 0
+                      grep -qxF "$1" "$keys_tmp" 2>/dev/null || printf '%s\n' "$1" >> "$keys_tmp"
+                    }
+                    ${pkgs.curl}/bin/curl -sfL --max-time 15 "${tools.githubUrl "https://github.com/fanxcv.keys"}" 2>/dev/null \
+                      | while read -r line; do add_key "$line"; done || echo "警告: 公钥拉取失败，仅并入仓库集合"
+                    # 仓库身份公钥集合（tools/sshUserKeys.nix，含 nix-lenovo/nix-asus/ide/ds3 全部机器）
+                    ${lib.concatMapStrings (k: "add_key '${k}'\n") tools.sshUserKeys.pubKeys}
+                    # 去空行与重复行后原子替换
+                    ${pkgs.gawk}/bin/awk 'NF && !seen[$0]++' "$keys_tmp" > "$keys_tmp.clean" && mv -f "$keys_tmp.clean" "$keys_file"
+                    chmod 600 "$keys_file"
+                    rm -f "$keys_tmp"
                   fi
 
                   # 2) sshd 禁用密码认证（公钥未就位则跳过，防止禁密码后无法登录）
