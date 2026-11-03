@@ -14,4 +14,5 @@
   };
 
   users.users.fan.openssh.authorizedKeys.keys = tools.sshUserKeys.pubKeys;
+  users.users.root.openssh.authorizedKeys.keys = tools.sshUserKeys.pubKeys;
 }

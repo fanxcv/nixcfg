@@ -2,7 +2,7 @@
 # 明文流程：secrets/source/hosts/<机>/fan-password → ./secrets/encrypt.sh
 # 路径按机器动态拼接（同 keys.nix 模式）；各机密码 hash 独立（secrets/source/hosts/<机>/）
 # root 密码与 fan 一致（同一 hash 文件；root 默认无密码，固定后控制台/SSH root 登录可用）
-{ tools, config, ... }:
+{ tools, config, pkgs, ... }:
 {
   age.secrets."fan-password" = {
     file = tools.relative "secrets/hosts/${config.networking.hostName}/fan-password.age";
@@ -10,4 +10,7 @@
   };
 
   users.users.root.hashedPasswordFile = config.age.secrets."fan-password".path;
+
+  # root 与 fan 同用 zsh（NixOS 默认 bash-interactive，控制台维护时手感不一致）
+  users.users.root.shell = pkgs.zsh;
 }
