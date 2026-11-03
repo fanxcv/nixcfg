@@ -11,6 +11,8 @@
 
   users.users.root.hashedPasswordFile = config.age.secrets."fan-password".path;
 
-  # root 与 fan 同用 zsh（NixOS 默认 bash-interactive，控制台维护时手感不一致）
+  # root 与 fan 同用 zsh（NixOS 默认 bash-interactive，控制台维护时手感不一致）。
+  # programs.zsh.enable 必须在：否则 NixOS 断言（users-groups.nix）报 shell 包不在系统 PATH。
+  programs.zsh.enable = true;
   users.users.root.shell = pkgs.zsh;
 }
