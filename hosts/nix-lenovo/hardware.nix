@@ -12,6 +12,17 @@ _: {
   };
   # 允许 grub-install 写 NVRAM（缺此则只落文件、不注册 Boot####，固件找不到）
   boot.loader.efi.canTouchEfiVariables = true;
+  # Windows 11（p4, NTFS）：os-prober 只扫已挂载分区，探不到双系统的 ESP，故显式 chainload。
+  # 1E19-F014 是 p1(ESP) 的 FAT UUID；ESP 若重格须同步改此值。
+  boot.loader.grub.extraEntries = ''
+    menuentry "Windows 11" --class windows --class os {
+      insmod part_gpt
+      insmod fat
+      insmod chain
+      search --no-floppy --fs-uuid --set=root 1E19-F014
+      chainloader /EFI/Microsoft/Boot/bootmgfw.efi
+    }
+  '';
   # AMD 核显用户态驱动、固件、zram、swappiness、ESP 挂点已在公共层（hosts/_nixos_/base）
 
   # 笔记本电源：系统层无 TLP（tsln 同款，电源计划全在 plasma.powerdevil，见 home/fan/nix-lenovo/）
