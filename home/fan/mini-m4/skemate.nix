@@ -73,9 +73,23 @@
   launchd.agents.skemate = {
     enable = true;
     config = {
+      # 模型凭据只在交互 shell 里派生（_common_/secrets.nix 的 programs.zsh.initContent
+      # 把 ~/.secrets/ai.env 映成 PIPI_*_KEY），launchd 不读 shell 启动文件。不在这里补一次，
+      # 升级换血后 serve 起的 fpi 子进程解析 models.json 里的 $PIPI_CHAT_KEY 为空，
+      # ffpi / QQ 会话一律 "No API key found"，表现为「发了没反应」。
+      # 密钥不写进 nix（会落 /nix/store 全局可读），启动时 source 用户 secrets 文件。
       ProgramArguments = [
-        "${pkgs.skemate}/bin/skemate"
-        "serve"
+        "/bin/sh"
+        "-c"
+        ''
+          set -a
+          [ -f "$HOME/.secrets/ai.env" ] && . "$HOME/.secrets/ai.env"
+          set +a
+          export PIPI_CLAUDE_KEY="$AI_FAN_CLAUDE"
+          export PIPI_CODEX_KEY="$AI_FAN_CODEX"
+          export PIPI_CHAT_KEY="$AI_FAN_CHAT"
+          exec "${pkgs.skemate}/bin/skemate" serve
+        ''
       ];
       RunAtLoad = true;
       KeepAlive = true;
