@@ -10,5 +10,7 @@
     bitwarden-desktop # 密码管理（mac 同款）
     remmina # 远程桌面客户端（RDP/VNC/SPICE，连 Windows/服务器用）
     wpsoffice-cn # WPS Office（Word/Excel/PPT；unfree，放行见 tools/machines.nix extraUnfree）
+    wl-clipboard # wl-copy/wl-paste：pi 的 /copy 与 Ctrl+V 图片粘贴在 Wayland 会话下依赖它
+    xclip # 同上，X11 会话（或 XWayland 客户端）的兜底后端
   ];
 }
