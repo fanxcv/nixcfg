@@ -17,9 +17,6 @@ services:
       - LC_ALL=C.UTF-8
       - LANG=C.UTF-8
       - USER=root   # home-manager activation 脚本 set -u 引用 $USER，docker exec 默认不带
-      # 关闭 node(内置 OpenSSL 3.6.5) 的后量子混合 KeyShare：预加载模块把 groups 限为经典曲线
-      # （镜像内 /etc/pqc-classic.cjs，见 docker/ide/ubuntu/Dockerfile；成因见 home/fan/_container_/pqc.nix）
-      - NODE_OPTIONS=--require /etc/pqc-classic.cjs
     volumes:
       - ./vsc:/root/.vscode-server
       - ./JetBrains/cache:/root/.cache/JetBrains
