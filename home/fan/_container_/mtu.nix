@@ -4,10 +4,10 @@
 #         客户端在同一 seq 上反复重传（1.4s→3.9s→7.8s→…），请求体永远到不齐。
 #         抓包实证：seq 1:1449 length 1448 反复重发，服务端 SACK 只确认后面 114 字节的小段。
 #         表现为 pi 报 "Request timed out."（带 132KB system prompt 的请求必挂），curl 偶发 0A000126。
-#   实测：同一 135KB 请求，MTU 1500 时 60s 失败；改 1450 后 1.7–2.1s 成功。
+#   实测：同一 135KB 请求，MTU 1500 时 60s 失败；改 1450 后 1.5–2.1s 成功。
+#   只需改容器：MSS 在 SYN 阶段按本端 MTU 定为 1410，服务端回包也不会超过 1450，双向都安全。
+#         实测宿主保持 1500 + tcp_mtu_probing=0 时，132KB 请求连测 3 次仍全部成功（1.5/3.7/1.6s）。
 #   容器重启时 Docker 会把 veth MTU 重置回 1500，故用 oneshot 服务在启动时纠正。
-#   宿主侧对应改动：/etc/systemd/network/eth0.network.d/mtu.conf（MTUBytes=1450）与
-#   /etc/sysctl.d/99-mtu.conf（tcp_mtu_probing=1）——宿主是 PVE 生成的 LXC，不在本仓库机器列表内，故手工维护。
 
 { pkgs, lib, ... }:
 let
