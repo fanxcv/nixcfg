@@ -3,7 +3,10 @@
 # 仓库为自建 Gitea（非 GitHub，无需 gh-proxy），私有需要只读密钥：
 #   token 从 $HOME/.secrets/ai.env 读取（PI_CONFIG_GIT_TOKEN=...），不进 nix 配置、不提交 git
 #   clone 后 origin 移除 token，后续更新走 ~/.git-credentials（容器里挂载宿主机）
-# 幂等：已有 .git 跳过 clone；每次 switch 静默 pull（--ff-only）
+# 幂等：已有 .git 跳过 clone。日常同步（pull + fpi-install）不在激活期做：
+#   home-manager 在 NixOS 上是开机 oneshot（Before=systemd-user-sessions，卡在 display-manager 之前），
+#   开机瞬间网络未就绪，且激活 PATH 缺 npm prefix（${HOME}/.local）会让 fpi-install 误判 pi 未安装
+#   而全量重装整个依赖树（实测拖满 2 分钟）。需要同步时手动跑 ~/.pi/agent/bin/fpi-install。
 # 启用：本模块默认 enable=false；保留机在机器层显式 softwares.pi.enable = true
 #   （modules/home/ai.nix 的默认跟随 pi，机器层无需另写 softwares.ai.enable）
 
@@ -55,24 +58,6 @@
           fi
         fi
 
-        # 每次 switch 静默更新（失败不影响激活）
-        if [ -e "$PI_DIR/.git" ]; then
-          ${pkgs.git}/bin/git -C "$PI_DIR" pull --ff-only --quiet 2>/dev/null || true
-        fi
-
-        # 拉取/已存在后运行 fpi-install 更新 pi 配置（合成人格 → 合并 settings → 落盘 goal/hermes → 补装 skills → 自检）。
-        # 激活 PATH 精简，需补入 nix profile（node/git/pi 等）供 fpi-install 内部裸命令使用；
-        # 非关键失败仅警告（部署继续），缺 node 时跳过——绝不触发 fpi-install 的 mise 安装分支。
-        if [ -e "$PI_DIR/bin/fpi-install" ]; then
-          if ( export PATH="$HOME/.nix-profile/bin:$PATH"; command -v node >/dev/null 2>&1 ); then
-            ( export PATH="$HOME/.nix-profile/bin:$PATH"
-              export FPI_MIRROR=1   # pi-coding-agent 经 npm 安装走 npmmirror 国内镜像（跳过官方源）
-              bash "$PI_DIR/bin/fpi-install" ) \
-              || echo "警告: fpi-install 更新失败，可稍后手动运行 $PI_DIR/bin/fpi-install"
-          else
-            echo "警告: node 不在激活 PATH，跳过 fpi-install（pi 配置未更新）"
-          fi
-        fi
       }
       setup_pi
     '';
