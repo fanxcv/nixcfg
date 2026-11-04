@@ -75,6 +75,12 @@ ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.ni
 RUN mkdir -p /etc/zsh \
     && printf '. /nix/var/nix/profiles/default/etc/profile.d/nix.sh\n' > /etc/zsh/zshenv
 
+# 关闭 OpenSSL 3.5+ 默认启用的后量子混合组 X25519MLKEM768：该组使 ClientHello 从 ~310B 膨胀到
+#   ~1.2KB，被部分出口链路上的 DPI/入口设备间歇丢弃或 RST（症状 error:0A000126 unexpected eof
+#   while reading）。curl/git 分别由 ~/.curlrc 与 http.sslVersion 处理（home/fan/_container_/pqc.nix），
+#   node 内置静态 OpenSSL 且 ssl_conf 的 system_default 管不了 groups，只能靠预加载模块改全局默认。
+RUN printf 'require("tls").DEFAULT_ECDH_CURVE = "X25519:P-256:P-384";\n' > /etc/pqc-classic.cjs
+
 COPY entrypoint.sh /usr/local/bin/
 
 RUN chmod a+x /usr/local/bin/entrypoint.sh \
