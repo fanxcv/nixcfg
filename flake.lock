@@ -7,10 +7,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1790734419,
-        "narHash": "sha256-n7wew722m1OTBT9DOIMxNX/NF4zfsSUABAO5eW3wikE=",
+        "lastModified": 1792507013,
+        "narHash": "sha256-8tKjSQajD3mUND1GaAuaWTcuyUpgcGsh5V+l4ibzC7U=",
         "ref": "main",
-        "rev": "3daa710894355fa2fad8243380af373a2b4046ef",
+        "rev": "5e5b88a0c8e56f291a108c2fe9934054d9745b2e",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/ryantm/agenix.git"
@@ -29,10 +29,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1791795517,
-        "narHash": "sha256-hmF0FVrUW6UKQ74qyGJSepMYadnIqzVe2h7TQtZdbmo=",
+        "lastModified": 1793368344,
+        "narHash": "sha256-ojN7KpXLYv6NgJ2OMn7cPioc46g7UB1pd4tBf//3S1U=",
         "ref": "main",
-        "rev": "2e605f61db52a45a7ff1db414df395ef566565a3",
+        "rev": "feac189528d08ca7c46bf1605d84b78ea5fe8263",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/catppuccin/nix.git"
@@ -51,10 +51,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1789770686,
-        "narHash": "sha256-uZkBR7yHdIKUFB5SZdfgh1qkGfI3XmYmI/lTiquxbck=",
+        "lastModified": 1792526520,
+        "narHash": "sha256-3hSJlv8mUVnZPMWK2+CM7a9O+nR6Z4mCh27NfLCmTPc=",
         "ref": "master",
-        "rev": "725ea35e410ad83be4931d1bff7e090eacaf3563",
+        "rev": "cedd626e11b635470fa6f9fdb8ad79b0075dd7f9",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-community/disko.git"
@@ -73,10 +73,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1790996401,
-        "narHash": "sha256-f+kOxEmOUnQazVAmGg0i8hzwgd1kX/geY+k/Dpheye8=",
+        "lastModified": 1792818383,
+        "narHash": "sha256-199i7ubVSXTMl+0AAlL7cVCXSjcI+jWByMcimYjeMX0=",
         "ref": "release-26.05",
-        "rev": "db7d5e2332710f5abb088f6b5de927d7f9511b35",
+        "rev": "24f2190587513b9c2f73db112a17844ae912d965",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-community/home-manager.git"
@@ -112,10 +112,10 @@
     "homebrew": {
       "flake": false,
       "locked": {
-        "lastModified": 1791889323,
-        "narHash": "sha256-7A0+xtGpxqMJGdG7ksFXLFuLynyXFxeD8AmbHme9vF8=",
+        "lastModified": 1793791561,
+        "narHash": "sha256-ERvAwxxIW28jtPMgVOYrnZQ85SyASO+2XlYR8l3v7BE=",
         "ref": "main",
-        "rev": "1220a4af7bdf66e2b5c2c970cf1191606972e009",
+        "rev": "4d1e464ca686408052b9ff46b38d0847d119715b",
         "shallow": true,
         "type": "git",
         "url": "https://mirrors.cernet.edu.cn/brew.git"
@@ -130,10 +130,10 @@
     "homebrew-cask": {
       "flake": false,
       "locked": {
-        "lastModified": 1791899187,
-        "narHash": "sha256-BeJY8ZYpg4J/1OR6scgd5BXwqeseqhG4GZfCn01jfGg=",
+        "lastModified": 1793786600,
+        "narHash": "sha256-Ao/o3ZLxQ9fRI16nTn3PSPIGWt2Z75S/+3OAeU1dL2U=",
         "ref": "main",
-        "rev": "4e2164395a87d2d8aa2eda75411c46463e70191b",
+        "rev": "e2bd5108c1821c097c61472a7ed426e123b86fb9",
         "shallow": true,
         "type": "git",
         "url": "https://mirrors.cernet.edu.cn/homebrew-cask.git"
@@ -148,10 +148,10 @@
     "homebrew-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1791896327,
-        "narHash": "sha256-soJ1nms++IPT2P+bHUaw1CU/yZS7krDcZrXo/fUs52k=",
+        "lastModified": 1793783725,
+        "narHash": "sha256-5RmMyel9sf5lmKQi79x5W2rJMB/a8o8dy+ZgeY+C400=",
         "ref": "main",
-        "rev": "f7cd8f7862e34c051e73e75d5141e3d0100f6b75",
+        "rev": "c38a4a58b06912c3e64e5afd7f7dfe8aedd84dc5",
         "shallow": true,
         "type": "git",
         "url": "https://mirrors.cernet.edu.cn/homebrew-core.git"
@@ -171,10 +171,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1769548169,
-        "narHash": "sha256-03+JxvzmfwRu+5JafM0DLbxgHttOQZkUtDWBmeUkN8Y=",
+        "lastModified": 1792739756,
+        "narHash": "sha256-s0TeXWG5Ci75Y/Hzon0Z7NrN/fG773Rc54/z6oPFszQ=",
         "ref": "master",
-        "rev": "7b1d382faf603b6d264f58627330f9faa5cba149",
+        "rev": "fa627f4c8b8e92f58f58a73d99ee4e1304e64eb2",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-community/impermanence.git"
@@ -193,10 +193,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1783744694,
-        "narHash": "sha256-2cp6N3rrwnGYLTx9l6N+NI+kwrCWxvJUbj5WJhvB29A=",
+        "lastModified": 1792800221,
+        "narHash": "sha256-53jIZEWNh96irEXhsMZFoNhLJgGSU3nYl1i4wFQHAsU=",
         "ref": "nix-darwin-26.05",
-        "rev": "c3e90c89649b07d1a96e4b9dd6cd0d6e44b91a74",
+        "rev": "d31953cf55f9027a56e9be938daf5db8c5655663",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/nix-darwin/nix-darwin.git"
@@ -215,10 +215,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1789928041,
-        "narHash": "sha256-iV37ieTcE4ZLOYEe0VznW6dWMBe4lEL8AbK1vblyZGM=",
+        "lastModified": 1793543863,
+        "narHash": "sha256-oDYLVD8KGT/M57c8HziYSSj0le4wCyA+jZ7+/qUS91M=",
         "ref": "main",
-        "rev": "c11cccfdd36dd69b5323d70d354b2853379c2426",
+        "rev": "52bc87da3f30c2261a6d1cfef3c892097b53daeb",
         "shallow": true,
         "type": "git",
         "url": "https://ghfast.top/https://github.com/zhaofengli/nix-homebrew.git"
@@ -232,10 +232,10 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1791765022,
-        "narHash": "sha256-ZGq3ptZzA+oO0N/Wi/F+GbuTijLkYExD01LvpNFAvr0=",
+        "lastModified": 1793633738,
+        "narHash": "sha256-tItrb9M8eYA6WhFgmT9tpGKueri3+wRuVA952o/2xSU=",
         "ref": "nixos-26.05",
-        "rev": "7993f34ee47e28a3d607a525aadc6c94b73be728",
+        "rev": "7dcdd87373d72e7a2173e4db02e20d3d7f495cfd",
         "shallow": true,
         "type": "git",
         "url": "https://mirrors.cernet.edu.cn/nixpkgs.git"
@@ -249,10 +249,10 @@
     },
     "nixpkgs-darwin": {
       "locked": {
-        "lastModified": 1791678325,
-        "narHash": "sha256-yH6Su6IXtj1DUC6/Fpl1rmGpOFH1vtozMGOqaA6Yknk=",
+        "lastModified": 1793671242,
+        "narHash": "sha256-FXXhGUZDRvPAdKFx/eF4E/WG3BnzvkCW2V/Qzs4KBoA=",
         "ref": "nixpkgs-26.05-darwin",
-        "rev": "240fddad86d7a0520319f21d8be1b43db426b18d",
+        "rev": "4ad2eda5f89410d94c57449a70d08935d9bbb4f6",
         "shallow": true,
         "type": "git",
         "url": "https://mirrors.cernet.edu.cn/nixpkgs.git"
