@@ -75,6 +75,13 @@ services:
       - 6901:6901 # KasmVNC 浏览器远程桌面（http://<host>:6901/vnc.html）
     networks:
       - fan
+    # DNS：内网 10.21.1.1 偶发解析超时（Resolving timed out after 8s），改用公共 DNS
+    #   Docker 不直接写入 resolv.conf，而是作为 embedded DNS(127.0.0.11) 的上游 ExtServers，
+    #   容器名解析（caddy 等）不受影响；内网域名 gitlab/maven 由 extra-hosts.nix 静态入 /etc/hosts
+    dns:
+      - 119.29.29.29 # 腾讯
+      - 223.5.5.5 # 阿里云主
+      - 223.6.6.6 # 阿里云备
     deploy:
       resources:
         limits:
