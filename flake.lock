@@ -323,12 +323,12 @@
         "rev": "2a62bf7cf748c1dec138998872c9ec84b6f4822f",
         "revCount": 2998,
         "type": "git",
-        "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git"
+        "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2:x-oauth-basic@hc-git.qksxin.com/wangyu/skemate.git"
       },
       "original": {
         "ref": "deploy",
         "type": "git",
-        "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git"
+        "url": "https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2:x-oauth-basic@hc-git.qksxin.com/wangyu/skemate.git"
       }
     },
     "treefmt-nix": {

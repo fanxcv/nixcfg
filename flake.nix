@@ -93,8 +93,10 @@
     # flake.lock 锁 git rev：升级 = nix flake update skemate（rev 变必重拉，无 fetcher-cache 缓存坑），
     # 纯 eval 无需 --impure；nixpkgs 跟随本仓库避免双节点。
     skemate = {
-      # token 内嵌 URL：免 git 交互式询问账号密码（hc-git 私有仓库）
-      url = "git+https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2@hc-git.qksxin.com/wangyu/skemate.git?ref=deploy";
+      # token 内嵌 URL 且必须自带密码段（token:x-oauth-basic）：只给用户名时，Gitea 301 重定向后
+      # git 会走 credential fill，sudo 下的 root 无 ~/.git-credentials，只剩 osxkeychain（报 -25308
+      # errSecInteractionNotAllowed）→ 交互式索取账号密码并卡在写钥匙串
+      url = "git+https://f0618ffdd3f4325a4ac55dfd47c4f9c62dfcecf2:x-oauth-basic@hc-git.qksxin.com/wangyu/skemate.git?ref=deploy";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
