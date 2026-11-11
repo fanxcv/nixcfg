@@ -21,9 +21,17 @@
 let
   # 桌面会话 home（KasmVNC 会话为 fan）：同 ide-*/chrome.nix 的显式常量
   sessionHome = "/home/fan";
+  # 容器里 nix 构建（cachix 未命中时的回落路径）解包官方 tarball 时，tar 恢复不了
+  #   chrome-sandbox 的 setuid 位 → EPERM → 整包构建失败，连锁拖垮整个 HM 激活
+  #   （ide-auto-deploy 自 2026-10-23 起每 60s 失败于此，见 journalctl -u ide-auto-deploy）。
+  #   同 _container_/chrome.nix 处理 google-chrome 的坑；用 GNU tar 的 TAR_OPTIONS 传入
+  #   --no-same-permissions（比覆盖 unpackPhase 或包 tar 函数侵入更小；2026-11 容器内实测构建通过）。
+  vscode = pkgs.vscode.overrideAttrs (_: {
+    TAR_OPTIONS = "--no-same-permissions";
+  });
   # 仅暴露带容器参数的入口：裸 code 在容器里缺 flag 会直接崩，且 profile 目录不一致
   codeWrapper = pkgs.writeShellScriptBin "code-gui" ''
-    exec ${pkgs.vscode}/bin/code --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=${sessionHome}/.config/Code "$@"
+    exec ${vscode}/bin/code --no-sandbox --disable-gpu --disable-dev-shm-usage --user-data-dir=${sessionHome}/.config/Code "$@"
   '';
   # store 内桌面项：Plank 的 dockitem Launcher 指向它 → 路径永不缺失，不会被 Plank 自动删除
   codeDesktop = pkgs.makeDesktopItem {
@@ -42,7 +50,7 @@ let
 in
 lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
   home.packages = [
-    pkgs.vscode
+    vscode
     codeWrapper
   ];
 
@@ -58,7 +66,7 @@ lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
     #       （iconName 默认 "vs" + executableName → "vscode"，:60；size 由 identify 动态取，故用循环遍历而非写死尺寸）
     dest=${sessionHome}/.local/share/icons/hicolor
     if [ -L "$dest" ]; then rm -f "$dest"; fi   # 旧世代遗留的整目录 symlink（幂等；须 if 形式，hm activate 是 set -eu）
-    src=${pkgs.vscode}/share/icons/hicolor
+    src=${vscode}/share/icons/hicolor
     find "$src" -type f | while read -r iconFile; do
       rel="''${iconFile#$src/}"
       mkdir -p "$dest/$(dirname "$rel")"
