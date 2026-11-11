@@ -15,17 +15,17 @@
   fetchurl,
 }:
 let
-  version = "0.163.0";
+  version = "0.167.1";
 
   # system → 官方 target 三元组 + tarball hash（SRI）
   assets = {
     aarch64-linux = {
       target = "aarch64-unknown-linux-musl";
-      hash = "sha256-nY7PLRnT4YSHeYOQLWyF3kiziI3LcsOCqKDJdYRZJ/s=";
+      hash = "sha256-7z4UQ6d5XVlvFgGlM9ciWhAwSI1gyWWvHwYQq5WIkDE=";
     };
     x86_64-linux = {
       target = "x86_64-unknown-linux-musl";
-      hash = "sha256-WCZGxr8FYesN5UD3/IW5EhsAkagmvG6Wgwt/FyISIYI=";
+      hash = "sha256-qUXfPfg+hJ3Xt0eH4n+KRZwZRrDjr+Pcju+KjRhF/U8=";
     };
   };
 

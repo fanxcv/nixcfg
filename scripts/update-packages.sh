@@ -34,18 +34,33 @@ done
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
 
+# 资产缓存：重跑不再重下（codex 两个资产近 400MB，下不来就表现为「脚本一直超时」）
+cache=${XDG_CACHE_HOME:-$HOME/.cache}/nixcfg-update-packages
+mkdir -p "$cache"
+
 # GitHub 加速前缀（与 tools/config.nix 的 githubProxy 同值；脚本在 nix 之外，无法 import，故手写）
 GH_PROXY="https://ghfast.top/"
 
 # 下载并算 SRI hash。必须先试镜像：本机直连 GitHub release 实测 0 字节（完全不通），
 # 只用直连会永久挂住。镜像只是代理转发，字节相同，hash 与官方一致。
 fetch_sri() {
-  local url=$1 name=$2 hex
-  if ! curl -fsSL --retry 3 --max-time 1800 -o "$tmpdir/$name" "$GH_PROXY$url"; then
-    echo "镜像下载失败，改试直连: $url" >&2
-    curl -fsSL --retry 2 --max-time 1800 -o "$tmpdir/$name" "$url"
+  local url=$1 name=$2 hex key file
+  key=$(printf '%s' "$url" | shasum -a 1 | cut -c1-12)
+  file="$cache/$key-$name"
+  if [ -s "$file" ]; then
+    echo "  $name 命中缓存" >&2
+  else
+    echo "  下载 $name …" >&2
+    if ! curl -fsSL --retry 3 --retry-delay 2 --max-time 1800 -o "$file.part" "$GH_PROXY$url"; then
+      echo "镜像下载失败，改试直连: $url" >&2
+      if ! curl -fsSL --retry 2 --retry-delay 2 --max-time 1800 -o "$file.part" "$url"; then
+        rm -f "$file.part"
+        return 1
+      fi
+    fi
+    mv -f "$file.part" "$file"
   fi
-  hex=$(shasum -a 256 "$tmpdir/$name" | cut -d' ' -f1)
+  hex=$(shasum -a 256 "$file" | cut -d' ' -f1)
   nix hash convert --hash-algo sha256 --to sri "$hex"
 }
 
@@ -137,8 +152,9 @@ update_kasmvnc() {
   [ "$CHECK_ONLY" = 1 ] && { changed=1; return 0; }
 
   base="https://github.com/kasmtech/KasmVNC/releases/download/v$tag"
-  amd=$(fetch_sri "$base/kasmvncserver_noble_${tag}_amd64.deb" kasm-amd64.deb)
-  arm=$(fetch_sri "$base/kasmvncserver_noble_${tag}_arm64.deb" kasm-arm64.deb)
+  # 1.5.2 起资产名把发行版前缀写全：noble -> ubuntu_noble
+  amd=$(fetch_sri "$base/kasmvncserver_ubuntu_noble_${tag}_amd64.deb" kasm-amd64.deb)
+  arm=$(fetch_sri "$base/kasmvncserver_ubuntu_noble_${tag}_arm64.deb" kasm-arm64.deb)
 
   python3 - "$file" "$tag" "$amd" "$arm" <<'PY'
 import re, sys
@@ -161,9 +177,16 @@ wanted() {
   return 1
 }
 
-wanted codex-bin && update_codex
-wanted rustdesk-bin && update_rustdesk
-wanted kasmvnc && update_kasmvnc
+fail=0
+# 各包独立：一个包失败不影响其余包（否则前面的下载与改动都白跑）
+if wanted codex-bin; then update_codex || fail=1; fi
+if wanted rustdesk-bin; then update_rustdesk || fail=1; fi
+if wanted kasmvnc; then update_kasmvnc || fail=1; fi
+
+if [ "$fail" != 0 ]; then
+  echo "有包更新失败" >&2
+  exit 1
+fi
 
 echo
 if [ "$CHECK_ONLY" = 1 ]; then

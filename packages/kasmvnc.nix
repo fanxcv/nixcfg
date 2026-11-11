@@ -54,18 +54,18 @@
   xdpyinfo,
 }:
 let
-  version = "1.5.0";
+  version = "1.5.2";
   debArch =
     {
       x86_64-linux = "amd64";
       aarch64-linux = "arm64";
     }
     .${stdenv.hostPlatform.system} or (throw "kasmvnc: 官方未提供 ${stdenv.hostPlatform.system} 的 deb");
-  debFile = "kasmvncserver_noble_${version}_${debArch}.deb";
+  debFile = "kasmvncserver_ubuntu_noble_${version}_${debArch}.deb";
   debSha256 =
     {
-      amd64 = "f599fe02e2175b9817b6165f74a5d2bebdc73118dde9181ba3410963bed7ae1e";
-      arm64 = "c9199cf4753208bfb69fd016a9780242bebfc43370cc38c97d61e90a3c783e04";
+      amd64 = "sha256-iaXR++ngMrEiICvhWKKyXxXJfgpbjc+SpeaDXHt7Ks0=";
+      arm64 = "sha256-TWgPPR63f7FVrmevf5+iXX+9OKf2muFGeEx/c44u7Ro=";
     }
     .${debArch};
   # nixpkgs 默认 --enable-hashes=strong 只含 [y gy sm3y 7 2b 2y 2a 6]，无 sha256crypt（$5$）
