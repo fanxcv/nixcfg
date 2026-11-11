@@ -25,9 +25,9 @@
     yq
     # 系统信息展示（所有机器；neofetch 已从 nixpkgs 移除，fastfetch 为社区标准替代）
     fastfetch
-    # 默认 node 由 nix 管理（替代原全局默认 mise node@lts，pkgs.nodejs 跟随 nixpkgs LTS）；
-    # 机器级 mise node（mini-m4@24 / ide 容器@22）经 shims 覆盖全局，见 mise.nix
-    nodejs
+    # 默认 node 由 nix 管理：显式 pin nodejs_26，不跟随 nixpkgs 默认的 pkgs.nodejs（当前 LTS 24）；
+    # 机器级 mise node（mini-m4 / ide 容器同为 26）经 shims 覆盖，见各机 mise.nix
+    nodejs_26
   ];
 
   programs.git = {

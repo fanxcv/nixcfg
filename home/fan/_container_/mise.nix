@@ -27,7 +27,7 @@ let
     go = "1.25"
     java = "${java}"
     maven = "3"
-    node = "22"
+    node = "26"
     python = "3.12"
     uv = "latest"
   ''

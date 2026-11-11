@@ -20,7 +20,7 @@ let
     flutter = { version = "latest", platforms = { linux-x64 = { url = "https://mirrors.cernet.edu.cn/flutter/flutter_infra_release/releases/stable/linux/flutter_linux_{{ version }}-stable.tar.xz" }, macos-arm64 = { url = "https://mirrors.cernet.edu.cn/flutter/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_{{ version }}-stable.zip" }, macos-x64 = { url = "https://mirrors.cernet.edu.cn/flutter/flutter_infra_release/releases/stable/macos/flutter_macos_{{ version }}-stable.zip" }, windows-x64 = { url = "https://mirrors.cernet.edu.cn/flutter/flutter_infra_release/releases/stable/windows/flutter_windows_{{ version }}-stable.zip" } }, version_expr = 'fromJSON(body).releases | filter({ #.channel == "stable" }) | map({ replace(#.version, "-stable", "") }) | sortVersions()', version_list_url = "https://mirrors.cernet.edu.cn/flutter/flutter_infra_release/releases/releases_linux.json" }
     go = "1.25"
     java = "oracle-21"   # 默认 21（LTS）：Gradle 8.x 的 Kotlin DSL 解析不了 25 的版本号（IllegalArgumentException: 25.0.4），AGP 8.9 官方兼容 17-21；25 已装但不再默认
-    node = "24"
+    node = "26"
     python = "3"
 
     # ANDROID_HOME / ANDROID_SDK_ROOT / cmdline-tools PATH 由 android-sdk 插件自动注入；
