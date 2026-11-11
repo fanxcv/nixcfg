@@ -37,6 +37,10 @@ services:
       - ./nixcfg:/root/nixcfg
       # AI 密钥等敏感环境变量（chmod 600，不进 nix 配置）
       - ./.secrets:/root/.secrets
+      # DeepSeek Harness（dsh）：本体与插件装在 ~/.local，状态与微信 iLink 登录态在 ~/.dsh
+      #   （安装见 home/fan/_container_/dsh.nix；不挂载则容器重建丢登录态，需重新扫码）
+      - ./local:/root/.local
+      - ./dsh:/root/.dsh
       # 桌面会话降权（fan）：同一宿主源同时挂到 fan 的 home（与上方 /root 侧同源、内容互通），
       #   使以 fan 运行的 KasmVNC 桌面能读写同一批配置；vsc/nixcfg 属 root 服务，保持单挂。
       - ./JetBrains/cache:/home/fan/.cache/JetBrains

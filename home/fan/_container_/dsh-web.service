@@ -1,0 +1,17 @@
+[Unit]
+Description=DeepSeek Harness Web UI（dsh web）
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment=HOME=/root
+# dsh 与子进程（pnpm/插件）需要 node 与 pnpm 在 PATH；缺则 /usr/bin/env: 'node': No such file or directory
+Environment=PATH=/root/.nix-profile/bin:/root/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=@node@ @dshbin@ web --no-open
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
